@@ -22,7 +22,7 @@ const leadValidationSchema = Yup.object({
     .test('valid-phone', 'Invalid phone number', function(value) {
       if (!value) return false;
       try {
-        return isValidPhoneNumber(value);
+        return isValidPhoneNumber(value); 
       } catch {
         return false;
       }
