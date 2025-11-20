@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Home,
@@ -20,6 +20,7 @@ import { filterMenuByRole, SIDEBAR_MENU_CONFIG, ROUTES } from '@/config/roleConf
 
 const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -37,6 +38,11 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
     ShieldCheck,
     Settings,
     CheckSquare,  // NEW: For Tasks
+  };
+
+  // Helper function to check if a link is active
+  const isLinkActive = (href) => {
+    return location.pathname === href;
   };
 
   // Filter menu items based on user role
@@ -185,9 +191,10 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
                             <li key={subIndex}>
                               <a
                                 href={subItem.href}
-                                className="block py-1.5 px-4 rounded transition-all duration-300
+                                className={`block py-1.5 px-4 rounded transition-all duration-300
                                   hover:bg-gradient-to-r hover:from-[#685A3D] hover:to-[#8E7D5A] hover:text-white
-                                  hover:shadow-md hover:translate-x-1 group"
+                                  hover:shadow-md hover:translate-x-1 group
+                                  ${isLinkActive(subItem.href) ? 'bg-gradient-to-r from-[#685A3D] to-[#8E7D5A] text-white shadow-md' : ''}`}
                               >
                                 <div className="flex items-center gap-2">
                                   <subItem.icon size={18} className="transition-transform duration-300 group-hover:scale-110" />
@@ -204,9 +211,10 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
                   // Regular Menu Item
                   <a
                     href={item.href}
-                    className="flex items-center py-2 px-4 rounded transition-all duration-300
+                    className={`flex items-center py-2 px-4 rounded transition-all duration-300
                       hover:bg-gradient-to-r hover:from-[#685A3D] hover:to-[#8E7D5A]
-                      hover:shadow-md group"
+                      hover:shadow-md group
+                      ${isLinkActive(item.href) ? 'bg-gradient-to-r from-[#685A3D] to-[#8E7D5A] text-white shadow-md' : ''}`}
                     title={isCollapsed ? item.label : ''}
                   >
                     <div className="flex items-center gap-2">
@@ -229,6 +237,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
               className={`flex items-center py-2 px-4 rounded transition-all duration-500
               hover:bg-gradient-to-r hover:from-[#685A3D] hover:to-[#8E7D5A]
               hover:shadow-md group
+              ${isLinkActive(item.href) ? 'bg-gradient-to-r from-[#685A3D] to-[#8E7D5A] text-white shadow-md' : ''}
               ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
               style={{ transitionDelay: `${(filteredMenuItems.length + index + 1) * 100}ms` }}
               title={isCollapsed ? item.label : ''}

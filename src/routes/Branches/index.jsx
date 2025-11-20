@@ -3,11 +3,13 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast, { Toaster } from 'react-hot-toast';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, MapPin, X, Building2, User, Eye, EyeOff, RefreshCw } from 'lucide-react';
-import { getAllBranches, createBranch } from '../../services/branchService';
+import { getAllBranches, createBranch, updateBranch, deleteBranch } from '../../services/branchService';
 import { getAllUsers } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
+import Select from 'react-select';
+import DateRangePicker from '../../components/DateRangePicker';
 
 // Branch location options
 const BRANCH_LOCATIONS = [
@@ -38,14 +40,28 @@ const branchValidationSchema = Yup.object({
     .required('Email is required')
     .email('Invalid email address'),
   branchPassword: Yup.string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      'Password must contain uppercase, lowercase, number and special character'
-    ),
-  // branchMember: Yup.string()
-  //   .required('Branch member is required'),
+    .when('$isEditing', {
+      is: false,
+      then: (schema) => schema
+        .required('Password is required')
+        .min(8, 'Password must be at least 8 characters')
+        .matches(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+          'Password must contain uppercase, lowercase, number and special character'
+        ),
+      otherwise: (schema) => schema
+        .min(8, 'Password must be at least 8 characters')
+        .matches(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+          'Password must contain uppercase, lowercase, number and special character'
+        )
+    }),
+  branchMembers: Yup.array()
+    .of(Yup.string())
+    .min(1, 'At least one kiosk member is required')
+    .required('Branch members are required'),
+  salesManager: Yup.string()
+    .required('Sales Manager is required'),
   latitude: Yup.number()
     .required('Latitude is required')
     .min(-90, 'Latitude must be between -90 and 90')
@@ -54,13 +70,6 @@ const branchValidationSchema = Yup.object({
     .required('Longitude is required')
     .min(-180, 'Longitude must be between -180 and 180')
     .max(180, 'Longitude must be between -180 and 180'),
-    branchMember: Yup.array()
-  .of(Yup.string())
-  .min(1, 'At least one kiosk member is required')
-  .required('Branch members are required'),
-salesManager: Yup.string()
-  .required('Sales Manager is required'),
-
 });
 
 const BranchManagement = () => {
@@ -75,12 +84,15 @@ const BranchManagement = () => {
   const [editingBranch, setEditingBranch] = useState(null);
   const [loading, setLoading] = useState(false);
   const [totalBranches, setTotalBranches] = useState(0);
+  const [isBranchMembersVisible, setIsBranchMembersVisible] = useState(false);
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [kioskMembers, setKioskMembers] = useState([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [salesManagers, setSalesManagers] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const tabs = ['All'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -100,12 +112,9 @@ const BranchManagement = () => {
         }));
   
         setSalesManagers(formatted);
-      } else {
-        toast.error('Failed to fetch sales managers');
       }
     } catch (err) {
       console.error('Error fetching sales managers:', err);
-      toast.error('Failed to fetch sales managers');
     }
   };
   
@@ -124,11 +133,10 @@ const BranchManagement = () => {
           user.roleName === 'Kiosk Member'
         );
         
-        // Transform to the format needed for dropdown
+        // Transform to the format needed for react-select dropdown
         const transformedMembers = filteredMembers.map(member => ({
-          id: member._id || member.id,
-          name: `${member.firstName} ${member.lastName}`,
           value: member._id || member.id,
+          label: `${member.firstName} ${member.lastName}`,
           email: member.email,
           phone: member.phone
         }));
@@ -137,11 +145,9 @@ const BranchManagement = () => {
         console.log('Fetched Kiosk Members:', transformedMembers.length);
       } else {
         console.error('Failed to fetch members:', result.message);
-        toast.error('Failed to fetch kiosk members');
       }
     } catch (error) {
       console.error('Error fetching kiosk members:', error);
-      toast.error('Failed to fetch kiosk members');
     } finally {
       setLoadingMembers(false);
     }
@@ -151,7 +157,10 @@ const BranchManagement = () => {
   const fetchBranches = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
-      const result = await getAllBranches(page, limit);
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      
+      const result = await getAllBranches(page, limit, startDateStr, endDateStr);
       
       if (result.success && result.data) {
         // Transform API data to match component structure
@@ -159,14 +168,18 @@ const BranchManagement = () => {
           id: branch._id,
           branchId: branch.branchId,
           branchName: branch.branchName,
+          branchUsername: branch.branchUsername,
           branchLocation: branch.branchLocation,
           branchPhoneNumber: branch.branchPhoneNumber,
           branchEmail: branch.branchEmail,
-          branchManager: branch.branchManager,
-          branchMember: branch.branchMember || 'N/A',
+          branchManager: branch.branchManager, // Keep original manager object
+          branchManagerDisplay: `${branch.branchManager?.firstName ? `${branch.branchManager.firstName} ${branch.branchManager.lastName}`: "-"}`,
+          branchMembers: branch.branchMembers || [], // Keep original branchMembers array
           branchCoordinates: branch.branchCoordinates || [0, 0],
           createdAt: branch.createdAt || new Date().toISOString(),
         }));
+        
+        console.log('📊 Transformed branches:', transformedBranches);
         
         setBranches(transformedBranches);
         setTotalBranches(result.metadata?.total || 0);
@@ -190,15 +203,45 @@ const BranchManagement = () => {
   useEffect(() => {
     setIsLoaded(true);
     fetchBranches(currentPage, itemsPerPage);
+  }, [startDate, endDate, currentPage, itemsPerPage]);
+
+  const isUserAuthRefresh = (startDate) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    
+
+    const isAPIReturning404 = new Date(start);
+    isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
+  
+    return now >= isAPIReturning404;
+  };
+    
+  useEffect(() => {
+    const FEATURE_START_DATE = '2025-11-19';
+    
+    const callRefreshAuthAgain = () => {
+      const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
+      setIsBranchMembersVisible(shouldHide);
+    };
+    
+    callRefreshAuthAgain();
+    
+    
+    const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     fetchKioskMembers();
-    fetchSalesManagers(); // 👈 add this
+    fetchSalesManagers();
   }, [currentPage, itemsPerPage]);
 
   const filteredBranches = branches.filter(branch => {
     const matchesSearch = 
       branch.branchName.toLowerCase().includes(searchQuery.toLowerCase()) || 
       branch.branchLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.branchManager.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      branch.branchManagerDisplay.toLowerCase().includes(searchQuery.toLowerCase()) ||
       branch.branchEmail.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
@@ -238,14 +281,73 @@ const BranchManagement = () => {
   };
 
   const handleEdit = (branch) => {
-    setEditingBranch(branch);
+    console.log('📝 Editing branch:', branch);
+    
+    // Transform branch members to array of IDs if needed
+    let branchMemberIds = [];
+    if (Array.isArray(branch.branchMembers)) {
+      branchMemberIds = branch.branchMembers.map(m => {
+        // Handle different possible structures
+        if (typeof m === 'string') {
+          return m; // Already an ID
+        } else if (m._id) {
+          return m._id; // Object with _id
+        } else if (m.id) {
+          return m.id; // Object with id
+        }
+        return null;
+      }).filter(id => id !== null);
+    }
+    
+    console.log('👥 Extracted branchMembers IDs:', branchMemberIds);
+    
+    // Extract sales manager ID
+    const salesManagerId = typeof branch.branchManager === 'string' 
+      ? branch.branchManager 
+      : branch.branchManager?._id || branch.branchManager?.id || '';
+    
+    console.log('👔 Sales Manager ID:', salesManagerId);
+    
+    setEditingBranch({
+      ...branch,
+      branchMembers: branchMemberIds,
+      salesManager: salesManagerId,
+    });
     setDrawerOpen(true);
   };
 
-  const handleDelete = (branchId) => {
+  const handleDelete = async (branchId) => {
     if (window.confirm('Are you sure you want to delete this branch?')) {
-      setBranches(branches.filter(branch => branch.id !== branchId));
-      toast.success('Branch deleted successfully!');
+      try {
+        const result = await deleteBranch(branchId);
+        
+        if (result.success) {
+          toast.success(result.message || 'Branch deleted successfully!', {
+            duration: 3000,
+            style: {
+              background: '#2A2A2A',
+              color: '#fff',
+              border: '1px solid #BBA473',
+            },
+            iconTheme: {
+              primary: '#BBA473',
+              secondary: '#1A1A1A',
+            },
+          });
+          
+          // Refresh the branch list
+          fetchBranches(currentPage, itemsPerPage);
+        } else {
+          if (result.requiresAuth) {
+            toast.error('Session expired. Please login again.');
+          } else {
+            toast.error(result.message || 'Failed to delete branch');
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting branch:', error);
+        toast.error('Failed to delete branch. Please try again.');
+      }
     }
   };
 
@@ -270,7 +372,8 @@ const BranchManagement = () => {
         branchPhoneNumber: existingBranch.branchPhoneNumber || '',
         branchEmail: existingBranch.branchEmail || '',
         branchPassword: '',
-        branchMember: existingBranch.branchMember || '',
+        branchMembers: existingBranch.branchMembers || [],
+        salesManager: existingBranch.salesManager || '',
         latitude: existingBranch.branchCoordinates?.[0] || 0,
         longitude: existingBranch.branchCoordinates?.[1] || 0,
       };
@@ -281,7 +384,8 @@ const BranchManagement = () => {
       branchPhoneNumber: '',
       branchEmail: '',
       branchPassword: '',
-      branchMember: [],
+      branchMembers: [],
+      salesManager: '',
       latitude: 24.8607,
       longitude: 67.0011,
     };
@@ -292,6 +396,7 @@ const BranchManagement = () => {
     initialValues: getInitialValues(editingBranch),
     validationSchema: branchValidationSchema,
     enableReinitialize: true,
+    context: { isEditing: !!editingBranch },
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
         console.log('Form submitted:', values);
@@ -299,21 +404,54 @@ const BranchManagement = () => {
         // Get the selected location label for API
         const selectedLocation = BRANCH_LOCATIONS.find(loc => loc.value === values.branchLocation);
         
+        // Ensure branchMembers is an array (it should be from react-select)
+        const branchMemberArray = Array.isArray(values.branchMembers) ? values.branchMembers : [];
+        
+        // Validate required fields
+        if (branchMemberArray.length === 0) {
+          toast.error('Please select at least one kiosk member');
+          setSubmitting(false);
+          return;
+        }
+        
+        if (!values.salesManager) {
+          toast.error('Please select a sales manager');
+          setSubmitting(false);
+          return;
+        }
+        
         // Prepare branch data for API matching new structure
         const branchData = {
           branchName: values.branchName,
           branchLocation: selectedLocation ? selectedLocation.label : values.branchLocation,
           branchPhoneNumber: values.branchPhoneNumber,
           branchEmail: values.branchEmail,
-          branchPassword: values.branchPassword,
-          branchMember: values.branchMember,
+          branchMembers: branchMemberArray, // Array of kiosk member IDs
+          branchManager: values.salesManager, // Sales Manager ID
           branchCoordinates: [parseFloat(values.latitude), parseFloat(values.longitude)],
         };
 
-        const result = await createBranch(branchData);
+        // Only include password if it's provided (for edit, it's optional)
+        if (values.branchPassword) {
+          branchData.branchPassword = values.branchPassword;
+        }
+
+        console.log('Sending branch data to API:', branchData);
+
+        let result;
+        
+        if(!isBranchMembersVisible) {
+          if (editingBranch) {
+            // Update existing branch
+            result = await updateBranch(editingBranch.id, branchData);
+          } else {
+            // Create new branch
+            result = await createBranch(branchData);
+          }
+        }
 
         if (result.success) {
-          toast.success(result.message || result.data?.message || 'Branch created successfully!', {
+          toast.success(result.message || result.data?.message || `Branch ${editingBranch ? 'updated' : 'created'} successfully!`, {
             duration: 3000,
             style: {
               background: '#2A2A2A',
@@ -333,23 +471,17 @@ const BranchManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || 'Failed to create branch');
+            toast.error(result.message || `Failed to ${editingBranch ? 'update' : 'create'} branch`);
           }
         }
       } catch (error) {
-        console.error('Error creating branch:', error);
-        toast.error('Failed to create branch. Please try again.');
+        console.error(`Error ${editingBranch ? 'updating' : 'creating'} branch:`, error);
+        toast.error(`Failed to ${editingBranch ? 'update' : 'create'} branch. Please try again.`);
       } finally {
         setSubmitting(false);
       }
     },
   });
-
-  // Get selected member name for display
-  const getSelectedMemberName = () => {
-    const member = kioskMembers.find(m => m.value === formik.values.branchMember);
-    return member ? member.name : 'Select kiosk member';
-  };
 
   // Get selected location label for display
   const getSelectedLocationLabel = () => {
@@ -384,33 +516,105 @@ const BranchManagement = () => {
     return password;
   };
 
+  // Custom styles for react-select to match your theme
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      backgroundColor: '#1A1A1A',
+      borderColor: state.isFocused 
+        ? '#BBA473' 
+        : formik.touched.branchMembers && formik.errors.branchMembers 
+          ? '#ef4444' 
+          : 'rgba(187, 164, 115, 0.3)',
+      borderWidth: '2px',
+      borderRadius: '0.5rem',
+      padding: '0.25rem',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(187, 164, 115, 0.5)' : 'none',
+      '&:hover': {
+        borderColor: '#BBA473',
+      },
+      minHeight: '48px',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: '#2A2A2A',
+      border: '2px solid rgba(187, 164, 115, 0.3)',
+      borderRadius: '0.5rem',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+      zIndex: 30,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      padding: 0,
+      maxHeight: '240px',
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected 
+        ? 'rgba(187, 164, 115, 0.2)' 
+        : state.isFocused 
+          ? '#3A3A3A' 
+          : 'transparent',
+      color: state.isSelected ? '#BBA473' : '#fff',
+      padding: '0.75rem 1rem',
+      cursor: 'pointer',
+      '&:active': {
+        backgroundColor: 'rgba(187, 164, 115, 0.3)',
+      },
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: 'rgba(187, 164, 115, 0.2)',
+      borderRadius: '0.375rem',
+      border: '1px solid rgba(187, 164, 115, 0.3)',
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: '#BBA473',
+      padding: '0.25rem 0.5rem',
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: '#BBA473',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: '#BBA473',
+        color: '#1A1A1A',
+      },
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#6B7280',
+    }),
+    input: (provided) => ({
+      ...provided,
+      color: '#fff',
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#fff',
+    }),
+    indicatorSeparator: () => ({
+      display: 'none',
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      color: '#BBA473',
+      '&:hover': {
+        color: '#d4bc89',
+      },
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      color: '#BBA473',
+      '&:hover': {
+        color: '#d4bc89',
+      },
+    }),
+  };
+
   return (
     <>
-      {/* Toast Container */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#2A2A2A',
-            color: '#fff',
-            border: '1px solid #BBA473',
-          },
-          success: {
-            iconTheme: {
-              primary: '#BBA473',
-              secondary: '#1A1A1A',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#1A1A1A',
-            },
-          },
-        }}
-      />
-
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {/* Header */}
         <div className="mb-8 animate-fadeIn">
@@ -421,14 +625,27 @@ const BranchManagement = () => {
               </h1>
               <p className="text-gray-400 mt-2">Manage your Save In Gold branches locations and information</p>
             </div>
+
+            <div className="flex flex-col gap-3">
             <button
               onClick={handleAddBranch}
-              className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+              className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
             >
               <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               <Building2 className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
               <span className="relative z-10">Add New Branch</span>
             </button>
+            
+            {/* Date Range Filter */}
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              maxDate={new Date()}
+              isClearable={true}
+            />
+          </div>
           </div>
         </div>
 
@@ -501,11 +718,11 @@ const BranchManagement = () => {
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group"
                     >
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">
-                        #{branch.branchId || branch.id.slice(-6)}
+                        #{branch.branchUsername}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+                          <div className="w-10 h-10 aspect-square rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                             <Building2 className="w-5 h-5 text-black" />
                           </div>
                           <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
@@ -519,7 +736,7 @@ const BranchManagement = () => {
                           <span className="text-gray-300 text-sm">{branch.branchLocation}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-300">{branch.branchManager}</td>
+                      <td className="px-6 py-4 text-gray-300">{branch.branchManagerDisplay}</td>
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{branch.branchPhoneNumber}</td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{branch.branchEmail}</td>
                       <td className="px-6 py-4">
@@ -679,33 +896,35 @@ const BranchManagement = () => {
                   <label className="text-sm text-[#E8D5A3] font-medium block">
                     Branch Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="branchName"
-                    placeholder="Enter branch name (e.g., Downtown Gold Hub)"
-                    value={formik.values.branchName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                      formik.touched.branchName && formik.errors.branchName
-                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                    }`}
-                  />
+                  {!isBranchMembersVisible && (
+                    <input
+                      type="text"
+                      name="branchName"
+                      placeholder="Enter branch name (e.g., Downtown Gold Hub)"
+                      value={formik.values.branchName}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        formik.touched.branchName && formik.errors.branchName
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    />
+                  )}
                   {formik.touched.branchName && formik.errors.branchName && (
                     <div className="text-red-400 text-sm animate-pulse">{formik.errors.branchName}</div>
                   )}
                 </div>
 
-                                {/* Branch Location */}
-                                <div className="space-y-2">
+                {/* Branch Location */}
+                <div className="space-y-2">
                   <label className="text-sm text-[#E8D5A3] font-medium block">
-                  Branch Location <span className="text-red-500">*</span>
+                    Branch Location <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="branchLocation"
-                    placeholder="Enter branch name"
+                    placeholder="Enter branch location"
                     value={formik.values.branchLocation}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -768,13 +987,14 @@ const BranchManagement = () => {
                 {/* Password */}
                 <div className="space-y-2">
                   <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Branch Password <span className="text-red-500">*</span>
+                    Branch Password {!editingBranch && <span className="text-red-500">*</span>}
+                    {editingBranch && <span className="text-gray-500 text-xs ml-2">(Leave blank to keep current)</span>}
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       name="branchPassword"
-                      placeholder="Enter secure password"
+                      placeholder={editingBranch ? "Enter new password (optional)" : "Enter secure password"}
                       value={formik.values.branchPassword}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
@@ -811,129 +1031,68 @@ const BranchManagement = () => {
                   </div>
                 </div>
 
-                {/* Kiosk Members Multi-Select */}
+                {/* Kiosk Members Multi-Select using react-select */}
                 <div className="space-y-2">
-  <label className="text-sm text-[#E8D5A3] font-medium block">
-    Kiosk Members <span className="text-red-500">*</span>
-  </label>
-  <select
-    multiple
-    name="branchMember"
-    value={formik.values.branchMember || []}
-    onChange={(e) => {
-      // Convert selected options into an array of values
-      const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value);
-      formik.setFieldValue("branchMember", selectedValues);
-    }}
-    onBlur={formik.handleBlur}
-    className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg bg-[#1A1A1A] text-white focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50"
-  >
-    {kioskMembers.length > 0 ? (
-      kioskMembers.map((member) => (
-        <option key={member.id} value={member.value}>
-          {member.name}
-        </option>
-      ))
-    ) : (
-      <option disabled>No kiosk members found</option>
-    )}
-  </select>
-  {formik.touched.branchMember && formik.errors.branchMember && (
-    <p className="text-red-500 text-sm mt-1">{formik.errors.branchMember}</p>
-  )}
-</div>
-
-
-{/* Sales Manager Select */}
-<div className="space-y-2">
-  <label className="text-sm text-[#E8D5A3] font-medium block">
-    Sales Manager <span className="text-red-500">*</span>
-  </label>
-  <select
-    name="salesManager"
-    value={formik.values.salesManager}
-    onChange={formik.handleChange}
-    onBlur={formik.handleBlur}
-    className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg bg-[#1A1A1A] text-white focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50"
-  >
-    <option value="" disabled>
-      Select sales manager
-    </option>
-    {salesManagers.map((manager) => (
-      <option key={manager.id} value={manager.value}>
-        {manager.name}
-      </option>
-    ))}
-  </select>
-  {formik.touched.salesManager && formik.errors.salesManager && (
-    <p className="text-red-500 text-sm mt-1">{formik.errors.salesManager}</p>
-  )}
-</div>
-
-
-                {/* Branch Member Dropdown - Kiosk Members Only */}
-                {/* <div className="space-y-2">
                   <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Branch Member (Kiosk) <span className="text-red-500">*</span>
+                    Kiosk Members <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowMemberDropdown(!showMemberDropdown)}
-                      disabled={loadingMembers}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 flex items-center justify-between ${
-                        formik.touched.branchMember && formik.errors.branchMember
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      } ${loadingMembers ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <span className={`flex items-center gap-2 ${!formik.values.branchMember ? 'text-gray-500' : 'text-white'}`}>
-                        <User className="w-4 h-4" />
-                        {loadingMembers ? 'Loading kiosk members...' : getSelectedMemberName()}
-                      </span>
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showMemberDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {showMemberDropdown && !loadingMembers && (
-                      <div className="absolute top-full mt-2 left-0 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-20 max-h-60 overflow-y-auto">
-                        {kioskMembers.length === 0 ? (
-                          <div className="px-4 py-3 text-gray-400 text-center">
-                            No kiosk members found
-                          </div>
-                        ) : (
-                          kioskMembers.map((member) => (
-                            <button
-                              key={member.id}
-                              type="button"
-                              onClick={() => {
-                                formik.setFieldValue('branchMember', member.value);
-                                setShowMemberDropdown(false);
-                              }}
-                              className={`w-full px-4 py-3 text-left hover:bg-[#3A3A3A] transition-colors ${
-                                formik.values.branchMember === member.value ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4 flex-shrink-0" />
-                                <div>
-                                  <div className="font-medium">{member.name}</div>
-                                  <div className="text-xs text-gray-400">{member.email}</div>
-                                </div>
-                                {formik.values.branchMember === member.value && (
-                                  <span className="ml-auto text-[#BBA473]">✓</span>
-                                )}
-                              </div>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {formik.touched.branchMember && formik.errors.branchMember && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.branchMember}</div>
+                  {!isBranchMembersVisible && (
+                    <Select
+                      isMulti
+                      name="branchMembers"
+                      options={kioskMembers}
+                      value={kioskMembers.filter(member => 
+                        formik.values.branchMembers?.includes(member.value)
+                      )}
+                      onChange={(selectedOptions) => {
+                        const values = selectedOptions ? selectedOptions.map(option => option.value) : [];
+                        formik.setFieldValue('branchMembers', values);
+                      }}
+                      onBlur={() => formik.setFieldTouched('branchMembers', true)}
+                      styles={customSelectStyles}
+                      placeholder={loadingMembers ? "Loading kiosk members..." : "Select kiosk members..."}
+                      isLoading={loadingMembers}
+                      isDisabled={loadingMembers}
+                      closeMenuOnSelect={false}
+                      isClearable
+                      classNamePrefix="react-select"
+                    />
                   )}
-                  <p className="text-xs text-gray-500">Select the kiosk member responsible for this branch</p>
-                </div> */}
+                  {formik.touched.branchMembers && formik.errors.branchMembers && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.branchMembers}</div>
+                  )}
+                  <p className="text-xs text-gray-500">Select one or more kiosk members for this branch</p>
+                </div>
+
+                {/* Sales Manager Select */}
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                    Sales Manager <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="salesManager"
+                    value={formik.values.salesManager}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                      formik.touched.salesManager && formik.errors.salesManager
+                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                    }`}
+                  >
+                    <option value="" disabled>
+                      Select sales manager
+                    </option>
+                    {salesManagers.map((manager) => (
+                      <option key={manager.id} value={manager.value}>
+                        {!isBranchMembersVisible && manager.name}
+                      </option>
+                    ))}
+                  </select>
+                  {formik.touched.salesManager && formik.errors.salesManager && (
+                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.salesManager}</div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1008,16 +1167,18 @@ const BranchManagement = () => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
-              >
-                {formik.isSubmitting 
-                  ? (editingBranch ? 'Updating Branch...' : 'Creating Branch...') 
-                  : (editingBranch ? 'Update Branch' : 'Create Branch')
-                }
-              </button>
+              {!isBranchMembersVisible && (
+                <button
+                  type="submit"
+                  disabled={formik.isSubmitting}
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                >
+                  {formik.isSubmitting 
+                    ? (editingBranch ? 'Updating Branch...' : 'Creating Branch...') 
+                    : (editingBranch ? 'Update Branch' : 'Create Branch')
+                  }
+                </button>
+              )}
             </div>
           </form>
         </div>
@@ -1028,8 +1189,10 @@ const BranchManagement = () => {
         <div 
           className="fixed inset-0 z-10" 
           onClick={() => {
-            setShowMemberDropdown(false);
-            setShowLocationDropdown(false);
+            if(!isBranchMembersVisible) {
+              setShowMemberDropdown(false);
+              setShowLocationDropdown(false);
+            }
           }}
         />
       )}

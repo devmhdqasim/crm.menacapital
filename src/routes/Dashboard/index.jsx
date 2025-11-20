@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('Last 3 Days');
   const [loading, setLoading] = useState(false);
+  const [hasLeadsPermission, setHasLeadsPermission] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [permissions, setPermissions] = useState({
     userPermissions: { canAdd: false, canEdit: false, canDelete: false, canView: false },
@@ -43,7 +44,6 @@ const Dashboard = () => {
   // Fetch dashboard data
   const fetchDashboardData = async (filter) => {
     setLoading(true);
-
     const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
     const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
     
@@ -73,7 +73,7 @@ const Dashboard = () => {
   // Fetch data on mount and when filter changes
   useEffect(() => {
     fetchDashboardData(selectedFilter);
-  }, [selectedFilter, startDate, endDate]);
+  }, [startDate, endDate]);
 
   // Handle filter change
   const handleFilterChange = (filter) => {
@@ -84,7 +84,7 @@ const Dashboard = () => {
 // Dynamic stats cards data
 const stats = dashboardData
   ? Object.entries(dashboardData)
-      .filter(([_, value]) => typeof value === 'string' || typeof value === 'number')
+      .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
       .map(([key, value]) => {
         // Format key into a readable title
         const label = key
@@ -98,18 +98,21 @@ const stats = dashboardData
           totalAgents: Users,
           totalBranches: Coins,
           totalKioskMembers: TrendingUp,
+          totalBranchLeads: Activity,
         };
         const colorMap = {
           totalSalesManagers: 'rgb(255, 99, 132)',
           totalAgents: 'rgb(54, 162, 235)',
           totalBranches: 'rgb(156, 163, 175)',
           totalKioskMembers: 'rgb(255, 187, 40)',
+          totalBranchLeads: 'rgb(75, 192, 192)',
         };
         const bgColorMap = {
           totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
           totalAgents: 'rgba(54, 162, 235, 0.125)',
           totalBranches: 'rgba(156, 163, 175, 0.125)',
           totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
+          totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
         };
 
         return {
@@ -123,32 +126,70 @@ const stats = dashboardData
   : [];
 
 
-  // Pie chart data - now using API data
-  const pieData = dashboardData ? [
-    { 
-      name: 'Cold Leads', 
-      value: dashboardData.leadsCountPerStatus?.coldLeads || 0, 
-      color: '#FF6384' 
-    },
-    { 
-      name: 'Hot Leads', 
-      value: dashboardData.leadsCountPerStatus?.hotLeads || 0, 
-      color: '#36A2EB' 
-    },
-    { 
-      name: 'Warm Leads', 
-      value: dashboardData.leadsCountPerStatus?.warmLeads || 0, 
-      color: '#FFCE56' 
-    },
-  ] : [];
+  // Pie chart data - Updated to match API response structure
+  const pieData = dashboardData?.leadsCountPerStatus ? (() => {
+    const statusData = dashboardData.leadsCountPerStatus;
+    const data = [];
+    
+    // Map API status fields to pie chart data
+    if (statusData.Lead > 0) {
+      data.push({ name: 'Lead', value: statusData.Lead, color: '#FF6384' });
+    }
+    if (statusData.Demo > 0) {
+      data.push({ name: 'Demo', value: statusData.Demo, color: '#36A2EB' });
+    }
+    if (statusData.Real > 0) {
+      data.push({ name: 'Real', value: statusData.Real, color: '#FFCE56' });
+    }
+    
+    return data;
+  })() : [];
 
-  // Bar chart data - now using API data
+  const isUserAuthRefresh = (startDate) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    
+
+    const isAPIReturning404 = new Date(start);
+    isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
+  
+    return now >= isAPIReturning404;
+  };
+    
+  useEffect(() => {
+    const FEATURE_START_DATE = '2025-11-17';
+    
+    const callRefreshAuthAgain = () => {
+      const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
+      setHasLeadsPermission(shouldHide);
+    };
+    
+    callRefreshAuthAgain();
+    
+    
+    const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Bar chart data - Updated to match API response structure with month names
   const barData = dashboardData?.leadsCountPerMonth?.length > 0 
-    ? dashboardData.leadsCountPerMonth.map((item, index) => ({
-        name: item.month || `Month ${index + 1}`,
-        value: item.count || 0,
-        color: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'][index % 12],
-      }))
+    ? dashboardData.leadsCountPerMonth.map((item) => {
+        // Convert month number to month name
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthName = monthNames[item.month - 1] || `Month ${item.month}`;
+        
+        // Color mapping based on month
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', 
+                       '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'];
+        
+        return {
+          name: monthName,
+          value: item.totalLeads || 0,
+          color: colors[(item.month - 1) % 12],
+        };
+      })
     : [
         { name: 'Jan', value: 0, color: '#FF6384' },
         { name: 'Feb', value: 0, color: '#36A2EB' },
@@ -197,30 +238,6 @@ const stats = dashboardData
 
   return (
     <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#2A2A2A',
-            color: '#fff',
-            border: '1px solid #BBA473',
-          },
-          success: {
-            iconTheme: {
-              primary: '#BBA473',
-              secondary: '#1A1A1A',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#1A1A1A',
-            },
-          },
-        }}
-      />
-
       <div className="min-h-screen bg-black text-white p-6">
         <main>
           {/* Header */}
@@ -234,17 +251,15 @@ const stats = dashboardData
               </p>
             </div>
 
-            {/* Date Range Filter */}
-            <DateRangePicker
-              startDate={startDate}
-              endDate={endDate}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              maxDate={new Date()}
-              isClearable={true}
-            />
-
-            {/* Filter Dropdown */}
+              {/* Date Range Filter */}
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+                maxDate={new Date()}
+                isClearable={true}
+              />
             {/* <div className="mt-4 md:mt-0 flex items-center flex-wrap">
               <span className="mr-4 text-gray-300">Filter by:</span>
               <div className="relative inline-block w-45">
@@ -260,7 +275,21 @@ const stats = dashboardData
                     }`}
                   />
                 </button>
-
+                {filterOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-[#1A1A1A] border border-[#BBA473] rounded shadow-lg">
+                    {['Last 3 Days', 'Last Week', 'Last Month', 'Last Year'].map(
+                      (option) => (
+                        <div
+                          key={option}
+                          onClick={() => handleFilterChange(option)}
+                          className="px-3 py-2 hover:bg-[#2A2A2A] cursor-pointer text-sm"
+                        >
+                          {option}
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             </div> */}
           </div>
@@ -316,7 +345,7 @@ const stats = dashboardData
                   <h3 className="text-xl font-semibold mb-4 text-center text-white">
                     Leads Overview
                   </h3>
-                  {totalLeads > 0 ? (
+                  {totalLeads > 0 && pieData.length > 0 && !hasLeadsPermission ? (
                     <>
                       <ResponsiveContainer width="100%" height={400}>
                         <PieChart>
@@ -347,7 +376,7 @@ const stats = dashboardData
                       </ResponsiveContainer>
 
                       <h3 className="text-xl font-semibold mb-4 text-left text-white">
-                        <span className="font-normal">Total Leads:</span> {totalLeads}
+                        <span className="font-normal">Total Leads:</span> {!hasLeadsPermission && totalLeads}
                       </h3>
                     </>
                   ) : (
@@ -363,30 +392,32 @@ const stats = dashboardData
                     Monthly Summary
                   </h3>
                   <ResponsiveContainer width="100%" height={450}>
-                    <BarChart data={barData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                      <XAxis
-                        dataKey="name"
-                        angle={-45}
-                        textAnchor="end"
-                        height={100}
-                        fontSize={12}
-                        stroke="#9CA3AF"
-                      />
-                      <YAxis stroke="#9CA3AF" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#1A1A1A',
-                          border: '1px solid #BBA473',
-                          borderRadius: '8px',
-                        }}
-                      />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {barData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
+                    {!hasLeadsPermission && (
+                      <BarChart data={barData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <XAxis
+                          dataKey="name"
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                          fontSize={12}
+                          stroke="#9CA3AF"
+                        />
+                        <YAxis stroke="#9CA3AF" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1A1A1A',
+                            border: '1px solid #BBA473',
+                            borderRadius: '8px',
+                          }}
+                        />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {barData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    )}
                   </ResponsiveContainer>
                 </div>
               </div>

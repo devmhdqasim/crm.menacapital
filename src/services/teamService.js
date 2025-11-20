@@ -26,7 +26,7 @@ const getRefreshToken = () => {
  * @param {number} limit - Number of items per page (default: 10)
  * @returns {Promise} - Returns list of users with pagination info
  */
-export const getAllUsers = async (page = 1, limit = 10) => {
+export const getAllUsers = async (page = 1, limit = 10, startDate = '', endDate = '') => {
   try {
     const authToken = localStorage.getItem('refreshToken');
     
@@ -41,7 +41,7 @@ export const getAllUsers = async (page = 1, limit = 10) => {
     console.log('🔑 Using refresh token for API call');
 
     const response = await axios.get(
-      `${API_BASE_URL}/user/getAll/en?paramPage=${page}&paramLimit=${limit}`,
+      `${API_BASE_URL}/user/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`,
       {
         headers: {
           'Content-Type': 'application/json',

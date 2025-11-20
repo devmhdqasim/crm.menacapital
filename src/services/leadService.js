@@ -18,6 +18,263 @@ const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
  */
 const getRefreshToken = () => {
   return localStorage.getItem('refreshToken');
+}; 
+
+/**
+ * Assign a lead to an agent
+ * @param {string} leadId - Lead's ID (_id)
+ * @param {string} agentId - Agent's ID (_id)
+ * @returns {Promise} - Returns assignment result
+ */
+export const assignLeadToAgent = async (leadId, agentId) => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Assigning lead to agent...');
+    console.log('📝 Lead ID:', leadId);
+    console.log('👤 Agent ID:', agentId);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    const payload = {
+      leadId: leadId,
+      agentId: agentId,
+    };
+
+    console.log('📤 Sending payload to API:', payload);
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/lead/assignToAgent/en`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Lead assigned successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      console.log('✅ Assignment successful');
+      console.log('📨 Message:', data.message);
+
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Lead assigned to agent successfully',
+      };
+    } else {
+      console.error('❌ Assignment failed:', data.message);
+      return {
+        success: false,
+        message: data.message || 'Failed to assign lead to agent',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Assign lead to agent error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response?.status === 400) {
+      console.error('❌ Bad request (400), validation error');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Invalid data. Please check lead ID and agent ID.',
+        error: error.response.data,
+      };
+    }
+
+    if (error.response?.status === 404) {
+      console.error('❌ Not found (404)');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Lead or Agent not found.',
+        error: error.response.data,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to assign lead to agent',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+
+/**
+ * Update lead task with response status and remarks
+ * @param {string} leadId - Lead's ID (_id)
+ * @param {Object} taskPayload - Task payload object containing:
+ *   @param {boolean} taskPayload.contacted - Whether the lead was contacted
+ *   @param {boolean} taskPayload.answered - Whether the lead answered
+ *   @param {boolean} taskPayload.interested - Whether the lead is interested
+ *   @param {boolean} taskPayload.hot - Whether it's a hot lead
+ *   @param {boolean} taskPayload.cold - Whether it's a cold lead
+ *   @param {boolean} taskPayload.real - Whether it's a real account
+ *   @param {boolean} taskPayload.deposited - Whether deposit was made
+ *   @param {string} taskPayload.latestRemarks - Remarks or notes about the lead
+ *   @param {string} taskPayload.currentStatus - Current status description
+ * @returns {Promise} - Returns update result
+ */
+export const updateLeadTask = async (leadId, taskPayload) => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Updating lead task...');
+    console.log('🆔 Lead ID:', leadId);
+    console.log('📊 Task Payload:', taskPayload);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    const payload = {
+      _id: leadId,
+      leadAgentId: taskPayload.leadAgentId || localStorage.getItem('userInfo') 
+        ? JSON.parse(localStorage.getItem('userInfo')).id 
+        : null,
+
+      contacted: taskPayload.contacted,
+      answered: taskPayload.answered,
+      interested: taskPayload.interested,
+      hot: taskPayload.hot,
+      cold: taskPayload.cold,
+      real: taskPayload.real,
+      demo: taskPayload.demo,
+      deposited: taskPayload.deposited,
+
+
+      // contacted: true,
+      // answered: true,
+      // interested: true,
+      // hot: false,
+      // cold: false,
+      // real: false,
+      // demo: false,
+      // deposited: false,
+
+      lastUpdatedAt: "2025-11-14T10:25:00.000Z",
+      latestRemarks: taskPayload.latestRemarks || '',
+      currentStatus: taskPayload.currentStatus || ''
+    };
+
+    console.log('📤 Sending payload to API:', payload);
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/lead/updateStatus/en`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Lead task updated successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      console.log('✅ Task update successful');
+      console.log('📨 Message:', data.message);
+
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Lead task updated successfully',
+      };
+    } else {
+      console.error('❌ Task update failed:', data.message);
+      return {
+        success: false,
+        message: data.message || 'Failed to update lead task',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Update lead task error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response?.status === 400) {
+      console.error('❌ Bad request (400), validation error');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Invalid data. Please check all fields.',
+        error: error.response.data,
+      };
+    }
+
+    if (error.response?.status === 404) {
+      console.error('❌ Not found (404)');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Lead not found.',
+        error: error.response.data,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to update lead task',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
 };
 
 /**
@@ -26,7 +283,7 @@ const getRefreshToken = () => {
  * @param {number} limit - Number of items per page (default: 10)
  * @returns {Promise} - Returns list of leads with pagination info
  */
-export const getAllLeads = async (page = 1, limit = 10) => {
+export const getAllLeads = async (page = 1, limit = 10, startDate, endDate) => {
   try {
     const authToken = getRefreshToken();
     
@@ -45,10 +302,10 @@ export const getAllLeads = async (page = 1, limit = 10) => {
     : null;
 
     // ✅ Decide which URL to hit based on role
-    const isBranchLogin = userInfo?.roleName === 'Kiosk Member' || userInfo?.role === 'Kiosk Member';
+    const isBranchLogin = userInfo?.roleName === 'Agent' || userInfo?.role === 'Agent';
     const refreshUrl = isBranchLogin
-      ? `${API_BASE_URL}/lead/branch/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`
-      : `${API_BASE_URL}/lead/getAll/en?paramPage=${page}&paramLimit=${limit}`;
+      ? `${API_BASE_URL}/lead/agents/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`
+      : `${API_BASE_URL}/lead/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`;
 
     const response = await axios.get(
       refreshUrl,
@@ -213,7 +470,86 @@ export const getAllBranchLeads = async (page = 1, limit = 10, startDate, endDate
   }
 };
 
-export const getAllSalesManagerLeads = async (page = 1, limit = 10) => {
+/**
+ * Delete a user (PATCH METHOD)
+ * @param {string} userId - User's ID to delete
+ * @returns {Promise} - Returns deletion result
+ */
+export const deleteBranch = async (userId) => {
+  try {
+    const authToken = localStorage.getItem('refreshToken');
+    
+    console.log('🔵 Deleting user...');
+    console.log('🆔 User ID:', userId);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/lead/branch/delete/en`, 
+      { _id: userId },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ User deleted successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'User deleted successfully',
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || 'Failed to delete user',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Delete user error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to delete user',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '', toDate = '') => {
   try {
     const authToken = getRefreshToken();
     
@@ -232,7 +568,7 @@ export const getAllSalesManagerLeads = async (page = 1, limit = 10) => {
     : null;
 
     // ✅ Decide which URL to hit based on role
-    const refreshUrl = `${API_BASE_URL}/lead/sales/en?paramPage=${page}&paramLimit=${limit}`
+    const refreshUrl = `${API_BASE_URL}/lead/sales/en?paramPage=${page}&paramLimit=${limit}&fromDate=${fromDate}&toDate=${toDate}`
 
     const response = await axios.get(
       refreshUrl,

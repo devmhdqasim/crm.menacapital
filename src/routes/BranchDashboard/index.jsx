@@ -83,7 +83,7 @@ const Dashboard = () => {
 // Dynamic stats cards data
 const stats = dashboardData
   ? Object.entries(dashboardData)
-      .filter(([_, value]) => typeof value === 'string' || typeof value === 'number')
+      .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
       .map(([key, value]) => {
         // Format key into a readable title
         const label = key
@@ -97,18 +97,21 @@ const stats = dashboardData
           totalAgents: Users,
           totalBranches: Coins,
           totalKioskMembers: TrendingUp,
+          totalBranchLeads: Activity,
         };
         const colorMap = {
           totalSalesManagers: 'rgb(255, 99, 132)',
           totalAgents: 'rgb(54, 162, 235)',
           totalBranches: 'rgb(156, 163, 175)',
           totalKioskMembers: 'rgb(255, 187, 40)',
+          totalBranchLeads: 'rgb(75, 192, 192)',
         };
         const bgColorMap = {
           totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
           totalAgents: 'rgba(54, 162, 235, 0.125)',
           totalBranches: 'rgba(156, 163, 175, 0.125)',
           totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
+          totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
         };
 
         return {
@@ -122,32 +125,43 @@ const stats = dashboardData
   : [];
 
 
-  // Pie chart data - now using API data
-  const pieData = dashboardData ? [
-    { 
-      name: 'Cold Leads', 
-      value: dashboardData.leadsCountPerStatus?.coldLeads || 0, 
-      color: '#FF6384' 
-    },
-    { 
-      name: 'Hot Leads', 
-      value: dashboardData.leadsCountPerStatus?.hotLeads || 0, 
-      color: '#36A2EB' 
-    },
-    { 
-      name: 'Warm Leads', 
-      value: dashboardData.leadsCountPerStatus?.warmLeads || 0, 
-      color: '#FFCE56' 
-    },
-  ] : [];
+  // Pie chart data - Updated to match API response structure
+  const pieData = dashboardData?.leadsCountPerStatus ? (() => {
+    const statusData = dashboardData.leadsCountPerStatus;
+    const data = [];
+    
+    // Map API status fields to pie chart data
+    if (statusData.Lead > 0) {
+      data.push({ name: 'Lead', value: statusData.Lead, color: '#FF6384' });
+    }
+    if (statusData.Demo > 0) {
+      data.push({ name: 'Demo', value: statusData.Demo, color: '#36A2EB' });
+    }
+    if (statusData.Real > 0) {
+      data.push({ name: 'Real', value: statusData.Real, color: '#FFCE56' });
+    }
+    
+    return data;
+  })() : [];
 
-  // Bar chart data - now using API data
+  // Bar chart data - Updated to match API response structure with month names
   const barData = dashboardData?.leadsCountPerMonth?.length > 0 
-    ? dashboardData.leadsCountPerMonth.map((item, index) => ({
-        name: item.month || `Month ${index + 1}`,
-        value: item.count || 0,
-        color: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'][index % 12],
-      }))
+    ? dashboardData.leadsCountPerMonth.map((item) => {
+        // Convert month number to month name
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthName = monthNames[item.month - 1] || `Month ${item.month}`;
+        
+        // Color mapping based on month
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', 
+                       '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'];
+        
+        return {
+          name: monthName,
+          value: item.totalLeads || 0,
+          color: colors[(item.month - 1) % 12],
+        };
+      })
     : [
         { name: 'Jan', value: 0, color: '#FF6384' },
         { name: 'Feb', value: 0, color: '#36A2EB' },
@@ -196,30 +210,6 @@ const stats = dashboardData
 
   return (
     <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#2A2A2A',
-            color: '#fff',
-            border: '1px solid #BBA473',
-          },
-          success: {
-            iconTheme: {
-              primary: '#BBA473',
-              secondary: '#1A1A1A',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#1A1A1A',
-            },
-          },
-        }}
-      />
-
       <div className="min-h-screen bg-black text-white p-6">
         <main>
           {/* Header */}
@@ -327,7 +317,7 @@ const stats = dashboardData
                   <h3 className="text-xl font-semibold mb-4 text-center text-white">
                     Leads Overview
                   </h3>
-                  {totalLeads > 0 ? (
+                  {totalLeads > 0 && pieData.length > 0 ? (
                     <>
                       <ResponsiveContainer width="100%" height={400}>
                         <PieChart>

@@ -25,7 +25,7 @@ const getRefreshToken = () => {
  * @param {number} limit - Number of items per page (default: 10)
  * @returns {Promise} - Returns list of roles with pagination info
  */
-export const getAllRoles = async (page = 1, limit = 10) => {
+export const getAllRoles = async (page = 1, limit = 10, startDate = '', endDate = '') => {
   try {
     const authToken = getRefreshToken();
     
@@ -40,7 +40,7 @@ export const getAllRoles = async (page = 1, limit = 10) => {
     console.log('🔑 Using refresh token for API call');
 
     const response = await axios.get(
-      `${API_BASE_URL}/role/getAll/en?paramPage=${page}&paramLimit=${limit}`,
+      `${API_BASE_URL}/role/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`,
       {
         headers: {
           'Content-Type': 'application/json',

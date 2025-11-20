@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye } from 'lucide-react';
-import { getAllBranchLeads, createLead, updateLead } from '../../services/leadService';
+import { getAllBranchLeads, createLead, updateLead, deleteBranch } from '../../services/leadService';
 import { getAllUsers, getAllUsersKioskMembers } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -37,7 +37,7 @@ const leadValidationSchema = Yup.object({
       then: (schema) => schema.required('Deposit status is required when status is Real'),
       otherwise: (schema) => schema.notRequired(),
     }),
-  kioskMember: Yup.string(),
+  kioskMember: Yup.string().required('Kiosk Team is required'),
   remarks: Yup.string().max(500, 'Remarks must not exceed 500 characters'),
 });
 
@@ -132,7 +132,7 @@ const LeadManagement = () => {
           status: lead.leadStatus,
           depositStatus: lead.depositStatus || '',
           kioskName: lead.kioskName || 'N/A',
-          createdAt: new Date().toISOString(),
+          createdAt: lead.createdAt,
         }));
         
         setLeads(transformedLeads);
@@ -141,17 +141,39 @@ const LeadManagement = () => {
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
           // Handle authentication error - redirect to login
-          alert('Session expired. Please login again.');
+          toast.error('Session expired. Please login again.');
           // You can add navigation logic here if needed
         } else {
-          alert(result.message || 'Failed to fetch leads');
+          toast.error(result.message || 'Failed to fetch leads');
         }
       }
     } catch (error) {
       console.error('Error fetching leads:', error);
-      alert('Failed to fetch leads. Please try again.');
+      toast.error('Failed to fetch leads. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (agentId) => {
+    if (window.confirm('Are you sure you want to delete this lead?')) {
+      try {
+        const result = await deleteBranch(agentId);
+        
+        await fetchLeads(currentPage, itemsPerPage);
+        if (result) {
+          toast.success(result.message || 'Lead deleted successfully!');
+        } else {
+          if (result.requiresAuth) {
+            toast.error('Session expired. Please login again.');
+          } else {
+            toast.error(result.message || 'Failed to delete lead');
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting lead:', error);
+        toast.error('Failed to delete lead. Please try again.');
+      }
     }
   };
 
@@ -210,22 +232,22 @@ const LeadManagement = () => {
         const result = editingLead ? await updateLead(editingLead.id, leadData): await createLead(leadData);
 
         if (result.success) {
-          alert(result.message || 'Lead created successfully!');
+          toast.success(result.message || 'Lead created successfully!');
           resetForm();
           setDrawerOpen(false);
           // Refresh the lead list
           fetchLeads(currentPage, itemsPerPage);
         } else {
           if (result.requiresAuth) {
-            alert('Session expired. Please login again.');
+            toast.error('Session expired. Please login again.');
             // You can add navigation logic here if needed
           } else {
-            alert(result.message || 'Failed to create lead');
+            toast.error(result.message || 'Failed to create lead');
           }
         }
       } catch (error) {
         console.error('Error creating lead:', error);
-        alert('Failed to create lead. Please try again.');
+        toast.error('Failed to create lead. Please try again');
       } finally {
         setSubmitting(false);
       }
@@ -233,8 +255,13 @@ const LeadManagement = () => {
   });
 
    const filteredLeads = leads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || lead.phone.includes(searchQuery) || lead.nationality.toLowerCase().includes(searchQuery.toLowerCase()) || lead.source.toLowerCase().includes(searchQuery.toLowerCase()) || lead.language.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === 'All' || activeTab === 'Kiosk Members';
+    const matchesSearch =
+    lead?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
+    lead?.phone?.includes(searchQuery) ||
+    lead?.nationality?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
+    lead?.source?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
+    lead?.language?.toLowerCase()?.includes(searchQuery?.toLowerCase());
+      const matchesTab = activeTab === 'All' || activeTab === 'Kiosk Members';
     
     // Filter by selected kiosk member when on "Kiosk Members" tab
     const matchesKioskMember = activeTab !== 'Kiosk Members' || 
@@ -294,13 +321,6 @@ const LeadManagement = () => {
     setShowActionsDropdown(null);
   };
 
-  const handleDelete = (leadId) => {
-    if (window.confirm('Are you sure you want to delete this lead?')) {
-      setLeads(leads.filter(l => l.id !== leadId));
-      setShowActionsDropdown(null);
-    }
-  };
-
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
     setEditingLead(null);
@@ -323,6 +343,26 @@ const LeadManagement = () => {
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
 
+  function convertToDubaiTime(utcDateString) {
+    const date = new Date(utcDateString);
+  
+    if (isNaN(date)) return false; // only returns false if input is invalid
+  
+    const options = {
+      timeZone: "Asia/Dubai",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",     // ← FIXED
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    };
+  
+    const formatted = new Intl.DateTimeFormat("en-GB", options).format(date);
+  
+    return formatted.replace(",", "");
+  }
+
   return (
     <>
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -342,7 +382,7 @@ const LeadManagement = () => {
                   formik.resetForm();
                   setDrawerOpen(true);
                 }}
-                className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
               >
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
@@ -399,7 +439,7 @@ const LeadManagement = () => {
                     <option key={option._id} value={option._id}>{option.name}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -411,7 +451,7 @@ const LeadManagement = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="Search by name, phone, nationality, language, or source..."
+              placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
@@ -433,6 +473,7 @@ const LeadManagement = () => {
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Nationality</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
                   <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -471,6 +512,8 @@ const LeadManagement = () => {
                           {lead.status == 'Real' ? `${lead.status} ${lead.depositStatus && `- ${lead.depositStatus}`}` : lead.status || 'N/A'}
                         </span>
                       </td>
+                      <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
+                      
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button
@@ -653,26 +696,28 @@ const LeadManagement = () => {
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Preferred Language <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="language"
-                      value={formik.values.language}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.language && formik.errors.language
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Language</option>
-                      {languages.map((language) => (
-                        <option key={language} value={language}>{language}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        name="language"
+                        value={formik.values.language}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.language && formik.errors.language
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Language</option>
+                        {languages.map((language) => (
+                          <option key={language} value={language}>{language}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
                     {formik.touched.language && formik.errors.language && (
                       <div className="text-red-400 text-sm animate-pulse">{formik.errors.language}</div>
                     )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-[42px] w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
 
                   {/* Status */}
@@ -680,32 +725,34 @@ const LeadManagement = () => {
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Status <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="status"
-                      value={formik.values.status}
-                      onChange={(e) => {
-                        formik.handleChange(e);
-                        // Clear depositStatus if status is not "Real"
-                        if (e.target.value !== 'Real') {
-                          formik.setFieldValue('depositStatus', '');
-                        }
-                      }}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.status && formik.errors.status
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Status</option>
-                      {statusOptions.map((status) => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        name="status"
+                        value={formik.values.status}
+                        onChange={(e) => {
+                          formik.handleChange(e);
+                          // Clear depositStatus if status is not "Real"
+                          if (e.target.value !== 'Real') {
+                            formik.setFieldValue('depositStatus', '');
+                          }
+                        }}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.status && formik.errors.status
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Status</option>
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
                     {formik.touched.status && formik.errors.status && (
                       <div className="text-red-400 text-sm animate-pulse">{formik.errors.status}</div>
                     )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-[42px] w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
 
                   {/* Deposit Status - Shows only when Status is "Real" */}
@@ -714,54 +761,58 @@ const LeadManagement = () => {
                       <label className="text-sm text-[#E8D5A3] font-medium block">
                         Deposit Status <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        name="depositStatus"
-                        value={formik.values.depositStatus}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                          formik.touched.depositStatus && formik.errors.depositStatus
-                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                        }`}
-                      >
-                        <option value="">Select Deposit Status</option>
-                        {depositStatusOptions.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          name="depositStatus"
+                          value={formik.values.depositStatus}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                            formik.touched.depositStatus && formik.errors.depositStatus
+                              ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                              : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          }`}
+                        >
+                          <option value="">Select Deposit Status</option>
+                          {depositStatusOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="leads-chevron-icon absolute right-3 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                      </div>
                       {formik.touched.depositStatus && formik.errors.depositStatus && (
                         <div className="text-red-400 text-sm animate-pulse">{formik.errors.depositStatus}</div>
                       )}
-                      <ChevronDown className="leads-chevron-icon absolute right-3 top-[42px] w-5 h-5 text-gray-400 pointer-events-none" />
                     </div>
                   )}
 
                   {/* Kiosk Member */}
                   <div className="relative space-y-2">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Kiosk Name
+                      Kiosk Team <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="kioskMember"
-                      value={formik.values.kioskMember}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.kioskMember && formik.errors.kioskMember
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Kiosk Member</option>
-                      {kioskMembers.map((member) => (
-                        <option key={member.id} value={member.id}>{member.name}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        name="kioskMember"
+                        value={formik.values.kioskMember}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.kioskMember && formik.errors.kioskMember
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Kiosk Member</option>
+                        {kioskMembers.map((member) => (
+                          <option key={member.id} value={member.id}>{member.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
                     {formik.touched.kioskMember && formik.errors.kioskMember && (
                       <div className="text-red-400 text-sm animate-pulse">{formik.errors.kioskMember}</div>
                     )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-[42px] w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
 
                   {/* Nationality */}
@@ -769,26 +820,28 @@ const LeadManagement = () => {
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Nationality
                     </label>
-                    <select
-                      name="nationality"
-                      value={formik.values.nationality}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.nationality && formik.errors.nationality
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Nationality</option>
-                      {nationalities.map((nationality) => (
-                        <option key={nationality} value={nationality}>{nationality}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        name="nationality"
+                        value={formik.values.nationality}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.nationality && formik.errors.nationality
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Nationality</option>
+                        {nationalities.map((nationality) => (
+                          <option key={nationality} value={nationality}>{nationality}</option>
+                        ))}
+                      </select>
+                     <ChevronDown className="leads-chevron-icon absolute right-3 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
                     {formik.touched.nationality && formik.errors.nationality && (
                       <div className="text-red-400 text-sm animate-pulse">{formik.errors.nationality}</div>
                     )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-[42px] w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
 
                   {/* Source */}
@@ -796,26 +849,28 @@ const LeadManagement = () => {
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Lead Source
                     </label>
-                    <select
-                      name="source"
-                      value={formik.values.source}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.source && formik.errors.source
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Source</option>
-                      {sources.map((source) => (
-                        <option key={source} value={source}>{source}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        name="source"
+                        value={formik.values.source}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.source && formik.errors.source
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Source</option>
+                        {sources.map((source) => (
+                          <option key={source} value={source}>{source}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
                     {formik.touched.source && formik.errors.source && (
                       <div className="text-red-400 text-sm animate-pulse">{formik.errors.source}</div>
                     )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-[42px] w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
 

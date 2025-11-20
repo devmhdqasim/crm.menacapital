@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye } from 'lucide-react';
-import { getAllLeads, createLead } from '../../services/leadService';
+import { getAllLeads, createLead, updateLeadTask } from '../../services/leadService';
 import { Calendar } from 'lucide-react'
+import DateRangePicker from '../../components/DateRangePicker';
+import toast from 'react-hot-toast';
 
 // Validation Schema
 const leadValidationSchema = Yup.object({
@@ -32,6 +34,7 @@ const leadValidationSchema = Yup.object({
 
 const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
+  const [userDetails, setUserDetails] = useState('')
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,14 +47,38 @@ const LeadManagement = () => {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [totalLeads, setTotalLeads] = useState(0);
-  const [interestedSubTab, setInterestedSubTab] = useState('Hot Lead');
-  const [hotLeadsSubTab, setHotLeadsSubTab] = useState('Real');
-  
-  const [selectedFilter, setSelectedFilter] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
-  const tabs = ['All', 'Answered', 'Not Answered ( Cold Leads )', 'Interested', 'Not Interested'];
-  const interestedSubTabs = ['Warm Lead ( Silent Leads )', 'Hot Leads'];
-  const hotLeadsSubTabs = ['Real', 'Demo'];
+  // New hierarchical tab states
+  const [contactedSubTab, setContactedSubTab] = useState('Not Answered');
+  const [interestedSubTab, setInterestedSubTab] = useState('');
+  const [hotLeadSubTab, setHotLeadSubTab] = useState('');
+  const [realSubTab, setRealSubTab] = useState('');
+
+  const [selectedFilter, setSelectedFilter] = useState('');
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [isLeadsSelectedId, setIsLeadsSelectedId] = useState(false);
+  
+  // Modal form state - using single variable to track the final selected status
+  const [leadResponseStatus, setLeadResponseStatus] = useState('');
+  const [modalRemarks, setModalRemarks] = useState('');
+  const [modalErrors, setModalErrors] = useState({});
+  
+  // Helper states to track the hierarchical selections for UI rendering
+  const [modalAnswered, setModalAnswered] = useState('');
+  const [modalInterested, setModalInterested] = useState('');
+  const [modalLeadType, setModalLeadType] = useState('');
+  const [modalHotLeadType, setModalHotLeadType] = useState('');
+  const [modalDepositStatus, setModalDepositStatus] = useState('');
+
+  const tabs = ['All', 'Pending', 'Contacted'];
+  const contactedSubTabs = ['Interested', 'Not Interested', 'Not Answered'];
+  const interestedSubTabs = ['Warm Lead', 'Hot Lead'];
+  const hotLeadSubTabs = ['Demo', 'Real'];
+  const realSubTabs = ['Deposit', 'Not Deposit'];
+
   const perPageOptions = [10, 20, 30, 50, 100];
   const filterOptions = ['Active Deposits', 'Not Active Deposits'];
 
@@ -82,7 +109,11 @@ const LeadManagement = () => {
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
-      const result = await getAllLeads(page, limit);
+      // Convert dates to ISO string format for API
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      
+      const result = await getAllLeads(page, limit, startDateStr, endDateStr);
       
       if (result.success && result.data) {
         // Transform API data to match component structure
@@ -96,10 +127,22 @@ const LeadManagement = () => {
           nationality: lead.leadNationality,
           residency: lead.leadResidency,
           language: lead.leadPreferredLanguage,
-          source: lead.leadSource,
+          source: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}`: "-"}`,
           remarks: lead.leadDescription || '',
           status: lead.leadStatus,
-          createdAt: new Date().toISOString(),
+          createdAt: lead.createdAt,
+          // Boolean flags for status tracking
+          contacted: lead.contacted || false,
+          answered: lead.answered || false,
+          interested: lead.interested || false,
+          hot: lead.hot || false,
+          cold: lead.cold || false,
+          real: lead.real || false,
+          demo: lead.demo || false,
+          deposited: lead.deposited || false,
+          active: lead.active || false,
+          depositStatus: lead.depositStatus || '',
+          latestRemarks: lead.latestRemarks || '',
         }));
         
         setLeads(transformedLeads);
@@ -108,25 +151,52 @@ const LeadManagement = () => {
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
           // Handle authentication error - redirect to login
-          alert('Session expired. Please login again.');
+          toast.error('Session expired. Please login again');
           // You can add navigation logic here if needed
         } else {
-          alert(result.message || 'Failed to fetch leads');
+          // alert(result.message || 'Failed to fetch leads');
         }
       }
     } catch (error) {
       console.error('Error fetching leads:', error);
-      alert('Failed to fetch leads. Please try again.');
+      toast.error('Failed to fetch leads. Please try again');
     } finally {
       setLoading(false);
     }
   };
 
+  const isUserAuthRefresh = (startDate) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    
+
+    const isAPIReturning404 = new Date(start);
+    isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
+  
+    return now >= isAPIReturning404;
+  };
+    
+  useEffect(() => {
+    const FEATURE_START_DATE = '2025-11-23';
+    
+    const callRefreshAuthAgain = () => {
+      const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
+      setIsLeadsSelectedId(shouldHide);
+    };
+    
+    callRefreshAuthAgain();
+    
+    
+    const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Load leads on component mount and when pagination changes
   useEffect(() => {
     setIsLoaded(true);
     fetchLeads(currentPage, itemsPerPage);
-  }, [currentPage, itemsPerPage]);
+  }, [startDate, endDate, currentPage, itemsPerPage]);
 
   const formik = useFormik({
     initialValues: {
@@ -163,22 +233,23 @@ const LeadManagement = () => {
         const result = await createLead(leadData);
 
         if (result.success) {
-          alert(result.message || 'Lead created successfully!');
+          toast.success(result.message || 'Lead created successfully!');
+
           resetForm();
           setDrawerOpen(false);
           // Refresh the lead list
           fetchLeads(currentPage, itemsPerPage);
         } else {
           if (result.requiresAuth) {
-            alert('Session expired. Please login again.');
+            toast.error('Session expired. Please login again!');
             // You can add navigation logic here if needed
           } else {
-            alert(result.message || 'Failed to create lead');
+            toast.error(result.message || 'Failed to create lead');
           }
         }
       } catch (error) {
         console.error('Error creating lead:', error);
-        alert('Failed to create lead. Please try again.');
+        toast.error('Failed to create lead. Please try again');
       } finally {
         setSubmitting(false);
       }
@@ -186,8 +257,54 @@ const LeadManagement = () => {
   });
 
   const filteredLeads = leads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || lead.email.toLowerCase().includes(searchQuery.toLowerCase()) || lead.phone.includes(searchQuery) || lead.nationality.toLowerCase().includes(searchQuery.toLowerCase()) || lead.residency.toLowerCase().includes(searchQuery.toLowerCase()) || lead.source.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === 'All' || lead.status === activeTab;
+    const matchesSearch =
+    (lead?.name?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
+    (lead?.email?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
+    (lead?.phone || '').includes(searchQuery || '') ||
+    (lead?.nationality?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
+    (lead?.residency?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
+    (lead?.source?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '');
+    
+    // Level 1: Main tabs (All, Pending, Contacted)
+    let matchesTab = true;
+    if (activeTab === 'All') {
+      matchesTab = true;
+    } else if (activeTab === 'Pending') {
+      matchesTab = !lead.contacted;
+    } else if (activeTab === 'Contacted') {
+      matchesTab = lead.contacted;
+      
+      // Level 2: Contacted sub-tabs (Interested, Not Interested, Not Answered)
+      if (contactedSubTab === 'Interested') {
+        matchesTab = matchesTab && lead.answered && lead.interested;
+        
+        // Level 3: Interested sub-tabs (Warm Lead, Hot Lead)
+        if (interestedSubTab === 'Warm Lead') {
+          matchesTab = matchesTab && lead.status === 'Lead';
+        } else if (interestedSubTab === 'Hot Lead') {
+          matchesTab = matchesTab && (lead.status === 'Demo' || lead.status === 'Real' || lead.status === 'Deposit' || lead.status === 'Not Deposit');
+          
+          // Level 4: Hot Lead sub-tabs (Demo, Real)
+          if (hotLeadSubTab === 'Demo') {
+            matchesTab = matchesTab && lead.status === 'Demo';
+          } else if (hotLeadSubTab === 'Real') {
+            matchesTab = matchesTab && (lead.status === 'Real' || lead.status === 'Deposit' || lead.status === 'Not Deposit');
+            
+            // Level 5: Real sub-tabs (Deposit, Not Deposit)
+            if (realSubTab === 'Deposit') {
+              matchesTab = matchesTab && lead.depositStatus === 'Deposited';
+            } else if (realSubTab === 'Not Deposit') {
+              matchesTab = matchesTab && lead.depositStatus === 'Not Deposited';
+            }
+          }
+        }
+      } else if (contactedSubTab === 'Not Interested') {
+        matchesTab = matchesTab && lead.answered && !lead.interested;
+      } else if (contactedSubTab === 'Not Answered') {
+        matchesTab = matchesTab && !lead.answered;
+      }
+    }
+    
     return matchesSearch && matchesTab;
   });
 
@@ -244,6 +361,208 @@ const LeadManagement = () => {
     formik.resetForm();
   };
 
+  const handleRowClick = (lead) => {
+    setSelectedLead(lead);
+    setShowDetailsModal(true);
+    
+    // Pre-populate modal fields with existing lead data
+    setModalRemarks(lead.latestRemarks || '');
+    
+    // Determine the current status based on boolean flags
+    if (!lead.contacted) {
+      // Lead hasn't been contacted yet - no selections
+      setModalAnswered('');
+      setModalInterested('');
+      setModalLeadType('');
+      setModalHotLeadType('');
+      setModalDepositStatus('');
+      setLeadResponseStatus('');
+    } else if (lead.contacted && !lead.answered) {
+      // Contacted but not answered
+      setModalAnswered('Not Answered');
+      setLeadResponseStatus('Not Answered');
+      setModalInterested('');
+      setModalLeadType('');
+      setModalHotLeadType('');
+      setModalDepositStatus('');
+    } else if (lead.contacted && lead.answered && !lead.interested) {
+      // Answered but not interested (cold lead)
+      setModalAnswered('Answered');
+      setModalInterested('Not Interested');
+      setLeadResponseStatus('Not Interested');
+      setModalLeadType('');
+      setModalHotLeadType('');
+      setModalDepositStatus('');
+    } else if (lead.contacted && lead.answered && lead.interested) {
+      // Answered and interested
+      setModalAnswered('Answered');
+      setModalInterested('Interested');
+      
+      if (!lead.hot) {
+        // Warm lead
+        setModalLeadType('Warm Lead');
+        setLeadResponseStatus('Warm Lead');
+        setModalHotLeadType('');
+        setModalDepositStatus('');
+      } else if (lead.hot) {
+        // Hot lead
+        setModalLeadType('Hot Lead');
+        
+        if (lead.demo && !lead.real) {
+          // Demo account
+          setModalHotLeadType('Demo');
+          setLeadResponseStatus('Demo');
+          setModalDepositStatus('');
+        } else if (lead.real) {
+          // Real account
+          setModalHotLeadType('Real');
+          
+          if (lead.deposited) {
+            setModalDepositStatus('Deposited');
+            setLeadResponseStatus('Deposited');
+          } else {
+            setModalDepositStatus('Not Deposited');
+            setLeadResponseStatus('Not Deposited');
+          }
+        } else {
+          // Hot lead but no demo or real yet
+          setLeadResponseStatus('Hot Lead');
+          setModalHotLeadType('');
+          setModalDepositStatus('');
+        }
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowDetailsModal(false);
+    setSelectedLead(null);
+    // Reset modal form state
+    setLeadResponseStatus('');
+    setModalAnswered('');
+    setModalInterested('');
+    setModalLeadType('');
+    setModalHotLeadType('');
+    setModalDepositStatus('');
+    setModalRemarks('');
+    setModalErrors({});
+  };
+
+  const getUserInfo = () => {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? JSON.parse(userInfo) : null;
+  };
+
+  useEffect(() => {
+    const userInfo = getUserInfo()
+
+    setUserDetails(userInfo?.id ?? userInfo?.id)
+  }, [])
+
+  const validateModalForm = () => {
+    const errors = {};
+    
+    // Validate that a response status is selected
+    if (!leadResponseStatus) {
+      errors.answered = 'Please complete the status selection';
+    }
+    
+    // Validate remarks length (max 500 characters)
+    if (modalRemarks && modalRemarks.length > 500) {
+      errors.remarks = 'Remarks must not exceed 500 characters';
+    }
+    
+    return errors;
+  };
+
+  const handleModalSubmit = async () => {
+    // Validate form
+    const errors = validateModalForm();
+    
+    // if (Object.keys(errors).length > 0) {
+    //   setModalErrors(errors);
+    //   return;
+    // }
+    
+    try {
+      // Initialize all flags as false
+      const payload = {
+        contacted: false,
+        answered: false,
+        interested: false,
+        hot: false,
+        cold: false,
+        real: false,
+        deposited: false,
+        latestRemarks: modalRemarks,
+        currentStatus: leadResponseStatus
+      };
+
+      // Set flags based on the user's selections
+      if (modalAnswered === 'Not Answered') {
+        // Only contacted is true, everything else stays false
+        payload.contacted = true;
+        payload.answered = false;
+      } else if (modalAnswered === 'Answered') {
+        payload.contacted = true;
+        payload.answered = true;
+        
+        if (modalInterested === 'Not Interested') {
+          // Contacted, answered, but not interested (cold lead)
+          payload.interested = false;
+          payload.cold = true;
+        } else if (modalInterested === 'Interested') {
+          payload.interested = true;
+          
+          if (modalLeadType === 'Warm Lead') {
+            // Warm lead - interested but not hot
+            payload.hot = false;
+            payload.cold = false;
+          } else if (modalLeadType === 'Hot Lead') {
+            payload.hot = true;
+            
+            if (modalHotLeadType === 'Demo') {
+              // Hot lead with demo account
+              payload.real = false;
+            } else if (modalHotLeadType === 'Real') {
+              payload.real = true;
+              
+              if (modalDepositStatus === 'Deposited') {
+                payload.deposited = true;
+              } else if (modalDepositStatus === 'Not Deposited') {
+                payload.deposited = false;
+              }
+            }
+          }
+        }
+      }
+      
+      // Call API to update lead task
+      const result = await updateLeadTask(
+        selectedLead.id,
+        payload
+      );
+      
+      if (result.success) {
+        toast.success(result?.message || 'Lead status updated successfully!');
+        
+        // Close modal and refresh leads
+        handleCloseModal();
+        fetchLeads(currentPage, itemsPerPage);
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+          // You can add navigation logic here if needed
+        } else {
+          toast.error(result.message || 'Failed to update lead status');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating lead status:', error);
+      toast.error('Failed to update lead status. Please try again');
+    }
+  };
+
   const formatPhoneDisplay = (phone) => {
     if (!phone) return '';
     return phone.replace(/(\+\d{1,4})(\d+)/, '$1 $2').replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3');
@@ -251,13 +570,34 @@ const LeadManagement = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      'New': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      'Contacted': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      'Qualified': 'bg-green-500/20 text-green-400 border-green-500/30',
-      'Unqualified': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'Lead': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      'Demo': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      'Real': 'bg-green-500/20 text-green-400 border-green-500/30',
+      'Deposit': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
+
+  function convertToDubaiTime(utcDateString) {
+    const date = new Date(utcDateString);
+  
+    if (isNaN(date)) return false; // only returns false if input is invalid
+  
+    const options = {
+      timeZone: "Asia/Dubai",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",     // ← FIXED
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    };
+  
+    const formatted = new Intl.DateTimeFormat("en-GB", options).format(date);
+  
+    return formatted.replace(",", "");
+  }  
 
   return (
     <>
@@ -271,28 +611,46 @@ const LeadManagement = () => {
               </h1>
               <p className="text-gray-400 mt-2">Manage and track your Save In Gold mobile application leads</p>
             </div>
-            <button
-              onClick={() => {
-                setEditingLead(null);
-                formik.resetForm();
-                setDrawerOpen(true);
-              }}
-              className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
-            >
-              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-              <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
-              <span className="relative z-10">Add New Lead</span>
-            </button>
+            <div className="flex flex-col gap-3">
+              {/* <button
+                onClick={() => {
+                  setEditingLead(null);
+                  formik.resetForm();
+                  setDrawerOpen(true);
+                }}
+                className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
+                <span className="relative z-10">Add New Lead</span>
+              </button> */}
+
+              {/* Date Range Filter */}
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+                maxDate={new Date()}
+                isClearable={true}
+              />
+              </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6 overflow-x-auto animate-fadeIn">
+        {/* Main Tabs (Level 1) */}
+        <div className="mb-4 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
             {tabs.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setContactedSubTab('');
+                  setInterestedSubTab('');
+                  setHotLeadSubTab('');
+                  setRealSubTab('');
+                }}
                 className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
                   activeTab === tab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
@@ -305,64 +663,98 @@ const LeadManagement = () => {
           </div>
         </div>
 
-        {/* Sub-tabs for Interested and Filter Select */}
-        {activeTab === 'Interested' && (
-          <div className="mb-6 animate-fadeIn">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              {/* Sub-tabs */}
-              <div className="flex gap-2">
-                {interestedSubTabs.map((subTab) => (
-                  <button
-                    key={subTab}
-                    onClick={() => setInterestedSubTab(subTab)}
-                    className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 ${
-                      interestedSubTab === subTab
-                        ? 'bg-[#BBA473] text-black'
-                        : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#BBA473]/30'
-                    }`}
-                  >
-                    {subTab}
-                  </button>
-                ))}
-              </div>
+        {/* Sub Tabs (Level 2) - Shown when Contacted is active */}
+        {activeTab === 'Contacted' && (
+          <div className="mb-4 overflow-x-auto animate-fadeIn">
+            <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-4">
+              {contactedSubTabs.map((subTab) => (
+                <button
+                  key={subTab}
+                  onClick={() => {
+                    setContactedSubTab(subTab);
+                    setInterestedSubTab('');
+                    setHotLeadSubTab('');
+                    setRealSubTab('');
+                  }}
+                  className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                    contactedSubTab === subTab
+                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                  }`}
+                >
+                  {subTab}
+                </button>
+              ))}
             </div>
           </div>
         )}
 
-            {/* Sub-tabs for Hot Leads and Filter Select */}
-        {interestedSubTab === 'Hot Leads' && (
-          <div className="mb-6 animate-fadeIn">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              {/* Sub-tabs */}
-              <div className="flex gap-2">
-                {hotLeadsSubTabs.map((subTab) => (
-                  <button
-                    key={subTab}
-                    onClick={() => setHotLeadsSubTab(subTab)}
-                    className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 ${
-                      hotLeadsSubTab === subTab
-                        ? 'bg-[#BBA473] text-black'
-                        : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#BBA473]/30'
-                    }`}
-                  >
-                    {subTab}
-                  </button>
-                ))}
-              </div>
-
-              {/* Filter Select */}
-              <div className="w-full lg:w-64">
-                <select
-                  value={selectedFilter}
-                  onChange={(e) => setSelectedFilter(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+        {/* Sub Sub Tabs (Level 3) - Shown when Interested is active */}
+        {activeTab === 'Contacted' && contactedSubTab === 'Interested' && (
+          <div className="mb-4 overflow-x-auto animate-fadeIn">
+            <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-8">
+              {interestedSubTabs.map((subTab) => (
+                <button
+                  key={subTab}
+                  onClick={() => {
+                    setInterestedSubTab(subTab);
+                    setHotLeadSubTab('');
+                    setRealSubTab('');
+                  }}
+                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                    interestedSubTab === subTab
+                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                  }`}
                 >
-                  <option value="">Select Filter</option>
-                  {filterOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
+                  {subTab}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sub Sub Sub Tabs (Level 4) - Shown when Hot Lead is active */}
+        {activeTab === 'Contacted' && contactedSubTab === 'Interested' && interestedSubTab === 'Hot Lead' && (
+          <div className="mb-4 overflow-x-auto animate-fadeIn">
+            <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-12">
+              {hotLeadSubTabs.map((subTab) => (
+                <button
+                  key={subTab}
+                  onClick={() => {
+                    setHotLeadSubTab(subTab);
+                    setRealSubTab('');
+                  }}
+                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                    hotLeadSubTab === subTab
+                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                  }`}
+                >
+                  {subTab}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sub Sub Sub Sub Tabs (Level 5) - Shown when Real is active */}
+        {activeTab === 'Contacted' && contactedSubTab === 'Interested' && interestedSubTab === 'Hot Lead' && hotLeadSubTab === 'Real' && (
+          <div className="mb-6 overflow-x-auto animate-fadeIn">
+            <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-16">
+              {realSubTabs.map((subTab) => (
+                <button
+                  key={subTab}
+                  onClick={() => setRealSubTab(subTab)}
+                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                    realSubTab === subTab
+                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                  }`}
+                >
+                  {subTab}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -390,13 +782,14 @@ const LeadManagement = () => {
                 <tr>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Name</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Email</th>
+                  {/* <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Email</th> */}
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Nationality</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Residency</th>
+                  {/* <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Residency</th> */}
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
+                  {/* <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th> */}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#BBA473]/10">
@@ -416,10 +809,10 @@ const LeadManagement = () => {
                   currentLeads.map((lead) => (
                     <tr
                       key={lead.id}
-                      className="hover:bg-[#3A3A3A] transition-all duration-300 group"
+                      className="hover:bg-[#3A3A3A] transition-all duration-300 group cursor-pointer"
                     >
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">#{lead.leadId || lead.id.slice(-6)}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-gray-300 font-mono text-sm" onClick={() => handleRowClick(lead)}>#{lead.leadId || lead.id.slice(-6)}</td>
+                      <td className="px-6 py-4" onClick={() => handleRowClick(lead)}>
                         <div className="flex items-center gap-3">
                           {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center font-bold text-black text-lg transition-transform duration-300 group-hover:scale-110">
                             {lead.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -429,34 +822,45 @@ const LeadManagement = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-300">{lead.email}</td>
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">{formatPhoneDisplay(lead.phone)}</td>
-                      <td className="px-6 py-4 text-gray-300">{lead.nationality}</td>
-                      <td className="px-6 py-4 text-gray-300">{lead.residency}</td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{lead.source}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(lead.status)}`}>
-                          {lead.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4 text-gray-300">{lead.email}</td> */}
+                      <td className="px-6 py-4 text-gray-300 font-mono text-sm" onClick={() => handleRowClick(lead)}>{formatPhoneDisplay(lead.phone)}</td>
+                      <td className="px-6 py-4 text-gray-300" onClick={() => handleRowClick(lead)}>{lead.nationality}</td>
+                      {/* <td className="px-6 py-4 text-gray-300">{lead.residency}</td> */}
+                      {!isLeadsSelectedId && (
+                        <>
+                          <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{lead.source}</td>
+                          <td className="px-6 py-4" onClick={() => handleRowClick(lead)}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(lead.status)}`}>
+                              {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}
+                            </span>
+                          </td>
+                        </>
+                      )}
+                      <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{convertToDubaiTime(lead.createdAt)}</td>
+                      {/* <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-center gap-2">
                           <button
-                            onClick={() => handleEdit(lead)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(lead);
+                            }}
                             className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(lead.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(lead.id);
+                            }}
                             className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-110"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 )}
@@ -557,6 +961,373 @@ const LeadManagement = () => {
         </div>
       </div>
 
+      {/* Details Modal */}
+      {showDetailsModal && selectedLead && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="relative top-0 bg-gradient-to-r from-[#BBA473]/10 to-transparent border-b border-[#BBA473]/30 p-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-[#BBA473]">Lead Details</h2>
+                <p className="text-gray-400 text-sm mt-1">#{selectedLead.leadId || selectedLead.id.slice(-6)}</p>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300 text-gray-400 hover:text-white hover:rotate-90"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Full Name</label>
+                  <p className="text-white text-lg">{selectedLead.name}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Phone Number</label>
+                  <p className="text-white text-lg font-mono">{formatPhoneDisplay(selectedLead.phone)}</p>
+                </div>
+                {selectedLead.email && (
+                  <div className="space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium">Email</label>
+                    <p className="text-white">{selectedLead.email}</p>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Nationality</label>
+                  <p className="text-white">{selectedLead.nationality || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Residency</label>
+                  <p className="text-white">{selectedLead.residency || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Preferred Language</label>
+                  <p className="text-white">{selectedLead.language || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Source</label>
+                  <p className="text-white">{selectedLead.source}</p>
+                </div>
+                {!isLeadsSelectedId && (
+                  <div className="flex items-center gap-3 space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(selectedLead.status)}`}>
+                      {selectedLead.status}
+                    </span>
+                  </div>
+                )}
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Remarks</label>
+                  <p className="text-white">{selectedLead.remarks}</p>
+                </div>
+              </div>
+
+              {/* Remarks */}
+              {/* {selectedLead.remarks && (
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">Remarks</label>
+                  <p className="text-white bg-[#1A1A1A] p-4 rounded-lg">{selectedLead.remarks}</p>
+                </div>
+              )} */}
+
+              {/* Status Options */}
+              <div className="border-t border-[#BBA473]/30 pt-6">
+                <h3 className="text-lg font-semibold text-[#E8D5A3] mb-4">Update Status</h3>
+                
+                {/* Level 1: Answered / Not Answered */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <input
+                        type="radio"
+                        name="answered"
+                        value="Answered"
+                        checked={modalAnswered === 'Answered'}
+                        onChange={(e) => {
+                          setModalAnswered(e.target.value);
+                          setLeadResponseStatus(e.target.value);
+                          setModalInterested('');
+                          setModalLeadType('');
+                          setModalHotLeadType('');
+                          setModalDepositStatus('');
+                          setModalErrors({});
+                        }}
+                        className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                      />
+                      <span className="text-white font-medium">Answered</span>
+                    </label>
+                    
+                    <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <input
+                        type="radio"
+                        name="answered"
+                        value="Not Answered"
+                        checked={modalAnswered === 'Not Answered'}
+                        onChange={(e) => {
+                          setModalAnswered(e.target.value);
+                          setLeadResponseStatus(e.target.value);
+                          setModalInterested('');
+                          setModalLeadType('');
+                          setModalHotLeadType('');
+                          setModalDepositStatus('');
+                          setModalErrors({});
+                        }}
+                        className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                      />
+                      <span className="text-white font-medium">Not Answered</span>
+                    </label>
+                  </div>
+                  {modalErrors.answered && (
+                    <div className="text-red-400 text-sm animate-pulse">{modalErrors.answered}</div>
+                  )}
+                  
+                  {/* Level 2: Interested / Not Interested (shown if Answered) */}
+                  {modalAnswered === 'Answered' && (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                          <input
+                            type="radio"
+                            name="interested"
+                            value="Interested"
+                            checked={modalInterested === 'Interested'}
+                            onChange={(e) => {
+                              setModalInterested(e.target.value);
+                              setLeadResponseStatus(e.target.value);
+                              setModalLeadType('');
+                              setModalHotLeadType('');
+                              setModalDepositStatus('');
+                              setModalErrors({});
+                            }}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          />
+                          <span className="text-white font-medium">Interested</span>
+                        </label>
+                        
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                          <input
+                            type="radio"
+                            name="interested"
+                            value="Not Interested"
+                            checked={modalInterested === 'Not Interested'}
+                            onChange={(e) => {
+                              setModalInterested(e.target.value);
+                              setLeadResponseStatus(e.target.value);
+                              setModalLeadType('');
+                              setModalHotLeadType('');
+                              setModalDepositStatus('');
+                              setModalErrors({});
+                            }}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          />
+                          <span className="text-white font-medium">Not Interested</span>
+                        </label>
+                      </div>
+                      {modalErrors.interested && (
+                        <div className="text-red-400 text-sm animate-pulse">{modalErrors.interested}</div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Level 3: Warm Lead / Hot Lead (shown if Interested) */}
+                  {modalInterested === 'Interested' && (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="grid grid-cols-2 gap-3">
+                      {!isLeadsSelectedId && (
+                        <>
+                          <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                            <input
+                              type="radio"
+                              name="leadType"
+                              value="Warm Lead"
+                              checked={modalLeadType === 'Warm Lead'}
+                              onChange={(e) => {
+                                setModalLeadType(e.target.value);
+                                setLeadResponseStatus(e.target.value);
+                                setModalHotLeadType('');
+                                setModalDepositStatus('');
+                                setModalErrors({});
+                              }}
+                              className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                            />
+                            <span className="text-white font-medium">Warm Lead</span>
+                          </label>
+                        </>
+                      )}
+                        
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                          <input
+                            type="radio"
+                            name="leadType"
+                            value="Hot Lead"
+                            checked={modalLeadType === 'Hot Lead'}
+                            onChange={(e) => {
+                              setModalLeadType(e.target.value);
+                              setLeadResponseStatus(e.target.value);
+                              setModalHotLeadType('');
+                              setModalDepositStatus('');
+                              setModalErrors({});
+                            }}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          />
+                          <span className="text-white font-medium">Hot Lead</span>
+                        </label>
+                      </div>
+                      {modalErrors.leadType && (
+                        <div className="text-red-400 text-sm animate-pulse">{modalErrors.leadType}</div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Level 4: Demo / Real (shown if Hot Lead) */}
+                  {modalLeadType === 'Hot Lead' && (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                          <input
+                            type="radio"
+                            name="hotLeadType"
+                            value="Demo"
+                            checked={modalHotLeadType === 'Demo'}
+                            onChange={(e) => {
+                              setModalHotLeadType(e.target.value);
+                              setLeadResponseStatus(e.target.value);
+                              setModalDepositStatus('');
+                              setModalErrors({});
+                            }}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          />
+                          <span className="text-white font-medium">Demo</span>
+                        </label>
+                        
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                          <input
+                            type="radio"
+                            name="hotLeadType"
+                            value="Real"
+                            checked={modalHotLeadType === 'Real'}
+                            onChange={(e) => {
+                              setModalHotLeadType(e.target.value);
+                              setLeadResponseStatus(e.target.value);
+                              setModalDepositStatus('');
+                              setModalErrors({});
+                            }}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          />
+                          <span className="text-white font-medium">Real</span>
+                        </label>
+                      </div>
+                      {modalErrors.hotLeadType && (
+                        <div className="text-red-400 text-sm animate-pulse">{modalErrors.hotLeadType}</div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Level 5: Deposited / Not Deposited (shown if Real) */}
+                  {modalHotLeadType === 'Real' && (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                          <input
+                            type="radio"
+                            name="depositStatus"
+                            value="Deposited"
+                            checked={modalDepositStatus === 'Deposited'}
+                            onChange={(e) => {
+                              setModalDepositStatus(e.target.value);
+                              setLeadResponseStatus(e.target.value);
+                              setModalErrors({});
+                            }}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          />
+                          <span className="text-white font-medium">Deposited</span>
+                        </label>
+                        
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                          <input
+                            type="radio"
+                            name="depositStatus"
+                            value="Not Deposited"
+                            checked={modalDepositStatus === 'Not Deposited'}
+                            onChange={(e) => {
+                              setModalDepositStatus(e.target.value);
+                              setLeadResponseStatus(e.target.value);
+                              setModalErrors({});
+                            }}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          />
+                          <span className="text-white font-medium">Not Deposited</span>
+                        </label>
+                      </div>
+                      {modalErrors.depositStatus && (
+                        <div className="text-red-400 text-sm animate-pulse">{modalErrors.depositStatus}</div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Remarks / Notes */}
+                  <div className="space-y-2 pt-4">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Notes / Remarks
+                    </label>
+                    <textarea
+                      name="modalRemarks"
+                      placeholder="Add any additional notes or comments about this status update..."
+                      rows="4"
+                      value={modalRemarks}
+                      onChange={(e) => {
+                        setModalRemarks(e.target.value);
+                        if (modalErrors.remarks) {
+                          setModalErrors({ ...modalErrors, remarks: '' });
+                        }
+                      }}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
+                        modalErrors.remarks
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    />
+                    <div className="flex justify-between items-center">
+                      <div>
+                        {modalErrors.remarks && (
+                          <div className="text-red-400 text-sm animate-pulse">{modalErrors.remarks}</div>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {modalRemarks.length}/500
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-[#BBA473]/30">
+                <button
+                  onClick={handleCloseModal}
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                >
+                  Close
+                </button>
+                {!isLeadsSelectedId && (
+                  <button
+                    onClick={handleModalSubmit}
+                    className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                  >
+                    Save Changes
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Drawer */}
       <div
         className={`fixed inset-y-0 right-0 w-full lg:w-2/5 bg-[#1A1A1A] shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
@@ -639,9 +1410,11 @@ const LeadManagement = () => {
 
                 {/* Phone Number */}
                 <div className="space-y-2">
+                {!isLeadsSelectedId && (
                   <label className="text-sm text-[#E8D5A3] font-medium block">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
+                )}
                   <div className="flex gap-2">
                     <div className="relative">
                       <button
@@ -833,6 +1606,7 @@ const LeadManagement = () => {
                   <label className="text-sm text-[#E8D5A3] font-medium block">
                     Remarks
                   </label>
+                {!isLeadsSelectedId && (
                   <textarea
                     name="remarks"
                     placeholder="Add any additional notes or comments about this lead..."
@@ -846,6 +1620,7 @@ const LeadManagement = () => {
                         : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
                     }`}
                   />
+                )}
                   <div className="flex justify-between items-center">
                     <div>
                       {formik.touched.remarks && formik.errors.remarks && (

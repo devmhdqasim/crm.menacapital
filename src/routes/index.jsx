@@ -19,6 +19,7 @@ const BranchDashboardPage = lazy(() => import('@/routes/BranchDashboard'));
 const AgentsPage = lazy(() => import('@/routes/Agents'));
 const KioskMembersPage = lazy(() => import('@/routes/KioskMembers'));
 const LeadsPage = lazy(() => import('@/routes/Leads'));
+const AdminLeadsPage = lazy(() => import('@/routes/LeadsAdmin'));
 const BranchesPage = lazy(() => import('@/routes/Branches'));
 const BranchLeadsPage = lazy(() => import('@/routes/BranchLeads'));
 const SalesManagerLeadsPage = lazy(() => import('@/routes/SalesManagerLeads'));
@@ -95,6 +96,17 @@ export function AppRoutes() {
         </Suspense>
       ),
     },
+    {
+      path: '/ad-leads',
+      element: (
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <ProtectedRoute requiredRoute={ROUTES.ADMINLEADS}>
+            <AdminLeadsPage />
+          </ProtectedRoute>
+        </Suspense>
+      ),
+    },
+
     {
       path: '/sm-leads',
       element: (
@@ -192,15 +204,14 @@ export function AppRoutes() {
           }
         `}
       >
-        {/* {!isLoginPage && (
+        {!isLoginPage && (
           <Header
-            rightWidget={<UserWidget />}
             menuItems={[
               { label: 'Home', href: '/dashboard', testId: 'home-link' },
               { label: 'Agents', href: '/agents', testId: 'agents-link' },  // Changed from 'Clients' and '/agent' to 'Agents' and '/agents'
             ]}
           />
-        )} */}
+        )}
 
         {/* Main Content Area with fade-in animation */}
         <main 

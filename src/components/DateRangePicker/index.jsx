@@ -49,6 +49,14 @@ const DateRangePicker = ({
   const startDateObj = parseDate(startDate);
   const endDateObj = parseDate(endDate);
 
+  const normalizeDate = (date) => {
+    if (!date) return null;
+    // Prevent timezone shifting by setting fixed noon time
+    const normalized = new Date(date);
+    normalized.setHours(12, 0, 0, 0);
+    return normalized;
+  };
+
   // Validate date range
   const validateDateRange = (start, end) => {
     if (start && end && start > end) {
@@ -60,13 +68,15 @@ const DateRangePicker = ({
   };
 
   const handleStartDateChange = (date) => {
-    validateDateRange(date, endDateObj);
-    onStartDateChange(date);
+    const fixedDate = normalizeDate(date);
+    validateDateRange(fixedDate, endDateObj);
+    onStartDateChange(fixedDate);
   };
-
+  
   const handleEndDateChange = (date) => {
-    validateDateRange(startDateObj, date);
-    onEndDateChange(date);
+    const fixedDate = normalizeDate(date);
+    validateDateRange(startDateObj, fixedDate);
+    onEndDateChange(fixedDate);
   };
 
   const displayError = showError || localError;
@@ -95,7 +105,7 @@ const DateRangePicker = ({
               calendarClassName="date-picker-calendar"
               wrapperClassName="date-picker-wrapper"
             />
-            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+            <Calendar className="absolute right-7 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
           </div>
         </div>
 
@@ -123,7 +133,7 @@ const DateRangePicker = ({
               calendarClassName="date-picker-calendar"
               wrapperClassName="date-picker-wrapper"
             />
-            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+            <Calendar className="absolute right-7 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
           </div>
         </div>
       </div>

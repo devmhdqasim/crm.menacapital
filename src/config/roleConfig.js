@@ -18,6 +18,7 @@ export const ROUTES = {
   AGENT: '/agents',                    // Changed from '/agent' to '/agents'
   LEADS: '/leads',
   BRANCHLEADS: '/br-leads',
+  ADMINLEADS: '/ad-leads',
   SALESMANAGERLEADS: '/sm-leads',
   BRANCHES: '/branches',
   KIOSKMEMBER: '/kiosk-members',
@@ -56,7 +57,7 @@ export const ROLE_PERMISSIONS = {
       ROUTES.SALES_MANAGERS,  // Admin can access Sales Managers
       ROUTES.AGENT,           // Admin can access Agents
       ROUTES.KIOSKMEMBER,
-      ROUTES.LEADS,
+      ROUTES.ADMINLEADS,
       ROUTES.BRANCHES,
       ROUTES.ROLE_MANAGEMENT,
     ],
@@ -135,6 +136,11 @@ export const SIDEBAR_MENU_CONFIG = [
   {
     label: 'Leads',
     route: ROUTES.LEADS,
+    icon: 'TrendingUp',
+  },
+  {
+    label: 'Leads',
+    route: ROUTES.ADMINLEADS,
     icon: 'TrendingUp',
   },
   {

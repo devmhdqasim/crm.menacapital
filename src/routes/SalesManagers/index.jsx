@@ -8,6 +8,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { getAllBranches } from '../../services/branchService';
+import DateRangePicker from '../../components/DateRangePicker';
 
 // Validation Schema
 const salesManagerValidationSchema = Yup.object({
@@ -79,13 +80,15 @@ const SalesManagers = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [totalSalesManagers, setTotalSalesManagers] = useState(0);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   // States for branches
   const [branches, setBranches] = useState([]);
   const [totalBranches, setTotalBranches] = useState(0);
 
   const perPageOptions = [10, 20, 30, 50, 100];
-  const departments = ['Sales', 'Marketing', 'Operations'];
+  const departments = ['Sales'];
 
   // Fetch branches from API
   const fetchBranches = async (page = 1, limit = 100) => {
@@ -125,7 +128,10 @@ const SalesManagers = () => {
   const fetchSalesManagers = async (page = 1, limit = 100) => {
     setLoading(true);
     try {
-      const result = await getAllUsers(1, 100); // Fetch more to ensure we get all sales managers
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      
+      const result = await getAllUsers(page, limit, startDateStr, endDateStr);
       
       if (result.success && result.data) {
         // Filter only Sales Manager users
@@ -135,6 +141,7 @@ const SalesManagers = () => {
         
         const transformedSalesManagers = salesManagersData.map((user) => ({
           id: user._id,
+          username: user?.username,
           firstName: user.firstName,
           lastName: user.lastName,
           fullName: `${user.firstName} ${user.lastName}`,
@@ -143,7 +150,7 @@ const SalesManagers = () => {
           dateOfBirth: user.dateOfBirthday,
           department: user.department || 'Sales',
           role: user.roleName || 'Sales Manager',
-        //   branch: user.inBranch,
+          branch: user?.branchData?.length ? user?.branchData[0]?.branchName : '-',
           image: user.imageUrl,
           permissions: user.permissions,
           createdAt: new Date().toISOString(),
@@ -169,8 +176,11 @@ const SalesManagers = () => {
 
   useEffect(() => {
     setIsLoaded(true);
-    fetchBranches();
     fetchSalesManagers();
+  }, [startDate, endDate, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchBranches();
   }, []);
 
   const formik = useFormik({
@@ -388,30 +398,6 @@ const SalesManagers = () => {
 
   return (
     <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#2A2A2A',
-            color: '#fff',
-            border: '1px solid #BBA473',
-          },
-          success: {
-            iconTheme: {
-              primary: '#BBA473',
-              secondary: '#1A1A1A',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#1A1A1A',
-            },
-          },
-        }}
-      />
-
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {/* Header */}
         <div className="mb-8 animate-fadeIn">
@@ -422,14 +408,27 @@ const SalesManagers = () => {
               </h1>
               <p className="text-gray-400 mt-2">Manage all Save In Gold Sales Managers</p>
             </div>
+
+            <div className="flex flex-col gap-3">
             <button
               onClick={handleAddSalesManager}
-              className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+              className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
             >
               <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
               <span className="relative z-10">Add New Sales Manager</span>
             </button>
+
+            {/* Date Range Filter */}
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              maxDate={new Date()}
+              isClearable={true}
+            />
+          </div>
           </div>
         </div>
 
@@ -483,7 +482,7 @@ const SalesManagers = () => {
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group"
                     >
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">
-                        #{manager.id.slice(-6)}
+                        {manager.username}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -512,7 +511,7 @@ const SalesManagers = () => {
                           {manager.department}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{getBranchNameById(manager.branch)}</td>
+                      <td className="px-6 py-4 text-gray-300 text-sm">{manager.branch}</td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button

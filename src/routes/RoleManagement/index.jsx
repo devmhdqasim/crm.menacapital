@@ -3,6 +3,8 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, Shield, X, CheckCircle } from 'lucide-react';
 import { getAllRoles, createRole } from '../../services/roleService';
+import DateRangePicker from '../../components/DateRangePicker';
+import toast from 'react-hot-toast';
 
 // Validation Schema
 const roleValidationSchema = Yup.object({
@@ -42,6 +44,8 @@ const RoleManagement = () => {
   const [editingRole, setEditingRole] = useState(null);
   const [loading, setLoading] = useState(false);
   const [totalRoles, setTotalRoles] = useState(0);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const tabs = ['All', 'Sales Managers', 'Agents', 'Kiosk Team'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -51,7 +55,10 @@ const RoleManagement = () => {
   const fetchRoles = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
-      const result = await getAllRoles(page, limit);
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      
+      const result = await getAllRoles(page, limit, startDateStr, endDateStr);
       
       if (result.success && result.data) {
         // Transform API data to match component structure
@@ -71,14 +78,14 @@ const RoleManagement = () => {
       } else {
         console.error('Failed to fetch roles:', result.message);
         if (result.requiresAuth) {
-          alert('Session expired. Please login again.');
+          toast.error('Session expired. Please login again');
         } else {
-          alert(result.message || 'Failed to fetch roles');
+          toast.error(result.message || 'Failed to fetch roles');
         }
       }
     } catch (error) {
       console.error('Error fetching roles:', error);
-      alert('Failed to fetch roles. Please try again.');
+      toast.error('Failed to fetch roles. Please try again');
     } finally {
       setLoading(false);
     }
@@ -88,7 +95,7 @@ const RoleManagement = () => {
   useEffect(() => {
     setIsLoaded(true);
     fetchRoles(currentPage, itemsPerPage);
-  }, [currentPage, itemsPerPage]);
+  }, [startDate, endDate, currentPage, itemsPerPage]);
 
   const filteredRoles = roles.filter(role => {
     const matchesSearch = role.roleName.toLowerCase().includes(searchQuery.toLowerCase()) || (role.department && role.department.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -246,21 +253,21 @@ const RoleManagement = () => {
         const result = await createRole(roleData);
 
         if (result.success) {
-          alert(result.message || 'Role created successfully!');
+          toast.success(result.message || 'Role created successfully!');
           resetForm();
           handleCloseDrawer();
           // Refresh the role list
           fetchRoles(currentPage, itemsPerPage);
         } else {
           if (result.requiresAuth) {
-            alert('Session expired. Please login again.');
+            toast.error('Session expired. Please login again');
           } else {
-            alert(result.message || 'Failed to create role');
+            toast.error(result.message || 'Failed to create role');
           }
         }
       } catch (error) {
         console.error('Error creating role:', error);
-        alert('Failed to create role. Please try again.');
+        toast.error('Failed to create role. Please try again');
       } finally {
         setSubmitting(false);
       }
@@ -315,14 +322,27 @@ const RoleManagement = () => {
               </h1>
               <p className="text-gray-400 mt-2">Create and manage user roles with custom permissions</p>
             </div>
+            <div className="flex flex-col gap-3">
             <button
               onClick={handleAddRole}
-              className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+              className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
             >
               <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               <Shield className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
               <span className="relative z-10">Create New Role</span>
             </button>
+
+            {/* Date Range Filter */}
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              maxDate={new Date()}
+              isClearable={true}
+            />
+          </div>
+
           </div>
         </div>
 

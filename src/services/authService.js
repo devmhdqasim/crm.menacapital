@@ -87,7 +87,7 @@ export const loginUser = async (login, password, loginBy = 'email') => {
       console.error('❌ Login response missing payload or userInfo');
       return {
         success: false,
-        message: data.message || 'Login failed',
+        message: data.payload.message || 'Login failed',
       };
     }
   } catch (error) {
@@ -108,7 +108,7 @@ export const loginUser = async (login, password, loginBy = 'email') => {
     } else {
       return {
         success: false,
-        message: error.message || 'An unexpected error occurred',
+        message: data.payload.message || 'An unexpected error occurred',
       };
     }
   }

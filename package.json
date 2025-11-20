@@ -1,7 +1,7 @@
 {
   "name": "save-in-gold-crm",
   "version": "1.5.106",
-  "packageManager": "yarn@4.9.4",
+  "packageManager": "npm@10.8.1",
   "author": "Marco Turi <marco.turi@hotmail.it>",
   "description": "A production ready, batteries included starter template for Vite + React projects",
   "license": "MIT",
@@ -23,8 +23,7 @@
     "outdated": "yarn upgrade-interactive"
   },
   "engines": {
-    "node": ">=22.0.0",
-    "yarn": ">=4.0.0"
+    "node": "20.0.0"
   },
   "lint-staged": {
     "*.{ts, tsx}": [

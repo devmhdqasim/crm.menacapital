@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Mail } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const EmailSchema = Yup.object().shape({
   email: Yup.string()
@@ -18,7 +19,7 @@ export default function ForgotPasswordForm({ setCurrentStep }) {
     onSubmit: (values) => {
       console.log('Form submitted:', values);
       // Add your forgot password logic here
-      alert('Password reset link sent to your email!');
+      toast.success('Password reset link sent to your email!');
     },
   });
 
