@@ -514,9 +514,7 @@ const Tasks = () => {
                   : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                   }`}
               >
-                {!clearFilter && (
-                  { tab }
-                )}
+                {!clearFilter && tab}
               </button>
             ))}
           </div>
