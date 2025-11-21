@@ -2,7 +2,7 @@ import axios from 'axios';
 
 /**
  * Auth Service
- * Handles all authentication related API calls including:
+ * Handles all authentication related API calls including: 
  * - Login (with email or username)
  * - Refresh Token
  * - OTP Verification
