@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, AlertTriangle } from 'lucide-react';
 import { getAllBranchLeads, createLead, updateLead, deleteBranch } from '../../services/leadService';
 import { getAllUsers, getAllUsersKioskMembers } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import DateRangePicker from '../../components/DateRangePicker';
+import toast from 'react-hot-toast';
 
 // Validation Schema
 const leadValidationSchema = Yup.object({
@@ -59,6 +60,10 @@ const LeadManagement = () => {
   const [selectedKioskMemberFilter, setSelectedKioskMemberFilter] = useState('');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [showAssignedLeadModal, setShowAssignedLeadModal] = useState(false);
+  const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState(null);
 
   const tabs = ['All', 'Kiosk Members'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -85,6 +90,20 @@ const LeadManagement = () => {
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
 
   const sources = ['Kiosk'];
+
+  // Check if lead is assigned to an agent
+  const isLeadAssigned = (lead) => {
+    return lead.leadAgentId && lead.leadAgentId !== null && lead.leadAgentId !== undefined && lead.leadAgentId !== '';
+  };
+
+  // Get agent name from lead (you might need to adjust based on your API response structure)
+  const getAgentName = (lead) => {
+    // If the leadAgentId is populated with agent details, use them
+    if (lead.leadAgentId && typeof lead.leadAgentId === 'object') {
+      return `${lead.leadAgentId.firstName || ''} ${lead.leadAgentId.lastName || ''}`.trim() || 'an agent';
+    }
+    return 'an agent';
+  };
 
   // Fetch kiosk members from API
   const fetchKioskMembers = async () => {
@@ -132,6 +151,7 @@ const LeadManagement = () => {
           status: lead.leadStatus,
           depositStatus: lead.depositStatus || '',
           kioskName: lead.kioskName || 'N/A',
+          leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
         }));
         
@@ -155,26 +175,48 @@ const LeadManagement = () => {
     }
   };
 
-  const handleDelete = async (agentId) => {
-    if (window.confirm('Are you sure you want to delete this lead?')) {
-      try {
-        const result = await deleteBranch(agentId);
-        
-        await fetchLeads(currentPage, itemsPerPage);
-        if (result) {
-          toast.success(result.message || 'Lead deleted successfully!');
-        } else {
-          if (result.requiresAuth) {
-            toast.error('Session expired. Please login again.');
-          } else {
-            toast.error(result.message || 'Failed to delete lead');
-          }
-        }
-      } catch (error) {
-        console.error('Error deleting lead:', error);
-        toast.error('Failed to delete lead. Please try again.');
-      }
+  const handleDelete = (lead) => {
+    // Check if lead is assigned
+    if (isLeadAssigned(lead)) {
+      const agentName = getAgentName(lead);
+      setAssignedLeadMessage(`This lead is currently assigned to ${agentName} and cannot be deleted.`);
+      setShowAssignedLeadModal(true);
+      return;
     }
+
+    // Show custom confirmation modal
+    setLeadToDelete(lead);
+    setShowDeleteConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!leadToDelete) return;
+
+    try {
+      const result = await deleteBranch(leadToDelete.id);
+      
+      if (result) {
+        toast.success(result.message || 'Lead deleted successfully!');
+        await fetchLeads(currentPage, itemsPerPage);
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.message || 'Failed to delete lead');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting lead:', error);
+      toast.error('Failed to delete lead. Please try again.');
+    } finally {
+      setShowDeleteConfirmModal(false);
+      setLeadToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirmModal(false);
+    setLeadToDelete(null);
   };
 
   // Load leads on component mount and when pagination changes
@@ -232,9 +274,10 @@ const LeadManagement = () => {
         const result = editingLead ? await updateLead(editingLead.id, leadData): await createLead(leadData);
 
         if (result.success) {
-          toast.success(result.message || 'Lead created successfully!');
+          toast.success(result.message || (editingLead ? 'Lead updated successfully!' : 'Lead created successfully!'));
           resetForm();
           setDrawerOpen(false);
+          setEditingLead(null);
           // Refresh the lead list
           fetchLeads(currentPage, itemsPerPage);
         } else {
@@ -242,12 +285,13 @@ const LeadManagement = () => {
             toast.error('Session expired. Please login again.');
             // You can add navigation logic here if needed
           } else {
-            toast.error(result.message || 'Failed to create lead');
+            console.log(result, 'sdklfjskldjflsdjfkljsdlfj')
+            toast.error(result.error.payload.message || (editingLead ? 'Failed to update lead' : 'Failed to create lead'));
           }
         }
       } catch (error) {
         console.error('Error creating lead:', error);
-        toast.error('Failed to create lead. Please try again');
+        toast.error(editingLead ? 'Failed to update lead. Please try again' : 'Failed to create lead. Please try again');
       } finally {
         setSubmitting(false);
       }
@@ -305,6 +349,14 @@ const LeadManagement = () => {
   };
 
   const handleEdit = (lead) => {
+    // Check if lead is assigned
+    if (isLeadAssigned(lead)) {
+      const agentName = getAgentName(lead);
+      setAssignedLeadMessage(`This lead is currently assigned to ${agentName} and cannot be edited.`);
+      setShowAssignedLeadModal(true);
+      return;
+    }
+
     formik.setValues({
       name: lead.name || '',
       phone: lead.phone || '',
@@ -474,7 +526,7 @@ const LeadManagement = () => {
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  {/* <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th> */}
+                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#BBA473]/10">
@@ -514,7 +566,7 @@ const LeadManagement = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
                       
-                      {/* <td className="px-6 py-4">
+                      <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => handleEdit(lead)}
@@ -524,14 +576,14 @@ const LeadManagement = () => {
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(lead.id)}
+                            onClick={() => handleDelete(lead)}
                             className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-110"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </td> */}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -631,6 +683,79 @@ const LeadManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* Assigned Lead Modal */}
+      {showAssignedLeadModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn">
+          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 max-w-md w-full p-6 transform transition-all duration-300 scale-100">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-yellow-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-[#BBA473] mb-2">
+                  Cannot Modify Assigned Lead
+                </h3>
+                <p className="text-gray-300 leading-relaxed">
+                  {assignedLeadMessage}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowAssignedLeadModal(false)}
+                className="px-6 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn">
+          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 max-w-md w-full p-6 transform transition-all duration-300 scale-100">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-[#BBA473] mb-2">
+                  Delete Lead
+                </h3>
+                <p className="text-gray-300 leading-relaxed mb-1">
+                  Are you sure you want to delete this lead?
+                </p>
+                {leadToDelete && (
+                  <div className="mt-3 p-3 bg-[#1A1A1A] rounded-lg border border-[#BBA473]/20">
+                    <p className="text-white font-semibold">{leadToDelete.name}</p>
+                    <p className="text-gray-400 text-sm">{formatPhoneDisplay(leadToDelete.phone)}</p>
+                  </div>
+                )}
+                <p className="text-red-400 text-sm mt-3">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={cancelDelete}
+                className="px-6 py-2.5 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-6 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-500/40 transform hover:scale-105 active:scale-95"
+              >
+                Delete Lead
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Drawer */}
       <div
