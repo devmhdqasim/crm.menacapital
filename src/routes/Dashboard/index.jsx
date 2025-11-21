@@ -81,50 +81,49 @@ const Dashboard = () => {
     setFilterOpen(false);
   };
 
-// Dynamic stats cards data
-const stats = dashboardData
-  ? Object.entries(dashboardData)
-      .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
-      .map(([key, value]) => {
-        // Format key into a readable title
-        const label = key
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, (str) => str.toUpperCase())
-          .trim();
+  // Dynamic stats cards data
+  const stats = dashboardData
+    ? Object.entries(dashboardData)
+        .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
+        .map(([key, value]) => {
+          // Format key into a readable title
+          const label = key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, (str) => str.toUpperCase())
+            .trim();
 
-        // Optional: map icons/colors based on key
-        const iconMap = {
-          totalSalesManagers: ShoppingCart,
-          totalAgents: Users,
-          totalBranches: Coins,
-          totalKioskMembers: TrendingUp,
-          totalBranchLeads: Activity,
-        };
-        const colorMap = {
-          totalSalesManagers: 'rgb(255, 99, 132)',
-          totalAgents: 'rgb(54, 162, 235)',
-          totalBranches: 'rgb(156, 163, 175)',
-          totalKioskMembers: 'rgb(255, 187, 40)',
-          totalBranchLeads: 'rgb(75, 192, 192)',
-        };
-        const bgColorMap = {
-          totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
-          totalAgents: 'rgba(54, 162, 235, 0.125)',
-          totalBranches: 'rgba(156, 163, 175, 0.125)',
-          totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
-          totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
-        };
+          // Optional: map icons/colors based on key
+          const iconMap = {
+            totalSalesManagers: ShoppingCart,
+            totalAgents: Users,
+            totalBranches: Coins,
+            totalKioskMembers: TrendingUp,
+            totalBranchLeads: Activity,
+          };
+          const colorMap = {
+            totalSalesManagers: 'rgb(255, 99, 132)',
+            totalAgents: 'rgb(54, 162, 235)',
+            totalBranches: 'rgb(156, 163, 175)',
+            totalKioskMembers: 'rgb(255, 187, 40)',
+            totalBranchLeads: 'rgb(75, 192, 192)',
+          };
+          const bgColorMap = {
+            totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
+            totalAgents: 'rgba(54, 162, 235, 0.125)',
+            totalBranches: 'rgba(156, 163, 175, 0.125)',
+            totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
+            totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
+          };
 
-        return {
-          label,
-          value,
-          icon: iconMap[key] || Users, // fallback icon
-          color: colorMap[key] || 'rgb(255,255,255)',
-          bgColor: bgColorMap[key] || 'rgba(255,255,255,0.1)',
-        };
-      })
-  : [];
-
+          return {
+            label,
+            value,
+            icon: iconMap[key] || Users, // fallback icon
+            color: colorMap[key] || 'rgb(255,255,255)',
+            bgColor: bgColorMap[key] || 'rgba(255,255,255,0.1)',
+          };
+        })
+    : [];
 
   // Pie chart data - Updated to match API response structure
   const pieData = dashboardData?.leadsCountPerStatus ? (() => {
@@ -149,7 +148,6 @@ const stats = dashboardData
     const start = new Date(startDate);
     const now = new Date();
     
-
     const isAPIReturning404 = new Date(start);
     isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
   
@@ -165,7 +163,6 @@ const stats = dashboardData
     };
     
     callRefreshAuthAgain();
-    
     
     const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
     
@@ -227,7 +224,7 @@ const stats = dashboardData
         fill={pieData.find((item) => item.name === name)?.color}
         textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
-        className="text-xs"
+        className="text-xs font-semibold"
       >
         {`${name}: ${(percent * 100).toFixed(0)}%`}
       </text>
@@ -236,22 +233,74 @@ const stats = dashboardData
 
   const totalLeads = dashboardData?.leadsCountPerStatus?.total || 0;
 
+  // Enhanced Skeleton Loader Component
+  const SkeletonLoader = () => (
+    <div className="animate-pulse">
+      {/* Stats Grid Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="border border-[#BBA473]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="h-4 bg-gray-700 rounded w-32 mb-3"></div>
+                <div className="h-8 bg-gray-600 rounded w-20"></div>
+              </div>
+              <div className="w-12 h-12 bg-gray-700 rounded-full"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts Grid Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="border border-[#BBA473]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
+          >
+            <div className="h-6 bg-gray-700 rounded w-48 mx-auto mb-6"></div>
+            <div className="h-[400px] bg-gray-800/30 rounded"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Custom Tooltip for Charts
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#1A1A1A] border-2 border-[#BBA473] rounded-lg p-4 shadow-2xl backdrop-blur-sm">
+          <p className="text-white font-semibold mb-2">{label}</p>
+          <p className="text-[#BBA473] font-bold text-lg">
+            {payload[0].value} leads
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <>
       <div className="min-h-screen bg-black text-white p-6">
         <main>
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-white mb-2">
+          {/* Header with Gradient Background */}
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between mb-8 bg-gradient-to-r from-[#BBA473]/10 to-transparent border border-[#BBA473]/30 rounded-2xl p-6 backdrop-blur-sm z-10">
+            <div className="flex-1">
+              <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#BBA473] to-yellow-200 mb-3 animate-fade-in">
                 Welcome to the Save In Gold Sales CRM
               </h2>
-              <p className="text-gray-400">
+              <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                 Monitor your monthly performance, revenue growth, and conversion progress in real-time.
               </p>
             </div>
 
-              {/* Date Range Filter */}
+            {/* Date Range Filter with Enhanced Styling */}
+            <div className="mt-4 md:mt-0 md:ml-6 relative z-50">
               <DateRangePicker
                 startDate={startDate}
                 endDate={endDate}
@@ -260,51 +309,33 @@ const stats = dashboardData
                 maxDate={new Date()}
                 isClearable={true}
               />
-            {/* <div className="mt-4 md:mt-0 flex items-center flex-wrap">
-              <span className="mr-4 text-gray-300">Filter by:</span>
-              <div className="relative inline-block w-45">
-                <button
-                  type="button"
-                  onClick={() => setFilterOpen(!filterOpen)}
-                  className="cursor-pointer w-full flex items-center justify-between h-10 px-3 bg-[#1A1A1A] border border-[#BBA473] focus:outline-none transition-colors duration-200 rounded"
-                >
-                  <span className="text-sm">{selectedFilter}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 ml-2 text-white transition-transform duration-200 ${
-                      filterOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-                {filterOpen && (
-                  <div className="absolute z-10 w-full mt-1 bg-[#1A1A1A] border border-[#BBA473] rounded shadow-lg">
-                    {['Last 3 Days', 'Last Week', 'Last Month', 'Last Year'].map(
-                      (option) => (
-                        <div
-                          key={option}
-                          onClick={() => handleFilterChange(option)}
-                          className="px-3 py-2 hover:bg-[#2A2A2A] cursor-pointer text-sm"
-                        >
-                          {option}
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            </div> */}
+            </div>
           </div>
 
-          {/* Loading State */}
+          {/* Loading State with Enhanced Animation */}
           {loading && (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#BBA473]"></div>
-              <p className="text-gray-400 mt-4">Loading dashboard data...</p>
+            <div className="text-center py-16">
+              <div className="relative inline-block">
+                {/* Outer spinning ring */}
+                <div className="absolute inset-0 rounded-full border-4 border-[#BBA473]/20 animate-pulse"></div>
+                {/* Main spinner */}
+                <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#BBA473]"></div>
+                {/* Inner spinning dot */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#BBA473] rounded-full animate-ping"></div>
+              </div>
+              <p className="text-gray-300 mt-6 text-lg font-medium animate-pulse">
+                Loading dashboard data...
+              </p>
+              <p className="text-gray-500 mt-2 text-sm">Please wait while we fetch your analytics</p>
             </div>
           )}
 
-          {/* Stats Grid */}
+          {/* Skeleton Loader */}
+          {loading && <SkeletonLoader />}
+
+          {/* Stats Grid with Enhanced Cards */}
           {!loading && dashboardData && (
-            <>
+            <div className="animate-fade-in">
               <div 
                 className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 ${
                   stats.length === 1 ? 'sm:justify-items-center' : ''
@@ -315,38 +346,61 @@ const stats = dashboardData
                   return (
                     <div
                       key={index}
-                      className="w-full border border-[#BBA473] rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-yellow-400"
+                      className="group relative w-full border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-105 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                      style={{
+                        animation: `slideInUp 0.5s ease-out ${index * 0.1}s both`,
+                      }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-400 text-sm font-medium">
+                      {/* Gradient Overlay on Hover */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      
+                      {/* Animated Corner Accent */}
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
+                      
+                      <div className="relative flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
                             {stat.label}
                           </p>
-                          <p className="text-2xl font-bold text-white mt-1">
+                          <p className="text-3xl font-bold text-white mt-1 group-hover:text-[#BBA473] transition-colors duration-300">
                             {stat.value}
                           </p>
                         </div>
                         <div
-                          className="p-3 rounded-full"
+                          className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
                           style={{ backgroundColor: stat.bgColor }}
                         >
-                          <Icon style={{ color: stat.color }} />
+                          <Icon 
+                            style={{ color: stat.color }} 
+                            className="w-8 h-8 group-hover:animate-pulse"
+                          />
                         </div>
                       </div>
+
+                      {/* Bottom Accent Line */}
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Charts Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                {/* Pie Chart */}
-                <div className="border border-[#BBA473] rounded-lg p-6 shadow-lg">
-                  <h3 className="text-xl font-semibold mb-4 text-center text-white">
-                    Leads Overview
-                  </h3>
+              {/* Charts Grid with Enhanced Design */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                {/* Pie Chart with Enhanced Styling */}
+                <div 
+                  className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
+                  style={{ animation: 'slideInLeft 0.6s ease-out' }}
+                >
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="h-1 w-12 bg-gradient-to-r from-transparent to-[#BBA473] mr-3"></div>
+                    <h3 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                      Leads Overview
+                    </h3>
+                    <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
+                  </div>
+                  
                   {totalLeads > 0 && pieData.length > 0 && !hasLeadsPermission ? (
-                    <>
+                    <div className="space-y-4">
                       <ResponsiveContainer width="100%" height={400}>
                         <PieChart>
                           <Pie
@@ -358,43 +412,66 @@ const stats = dashboardData
                             outerRadius={120}
                             fill="#8884d8"
                             dataKey="value"
-                            stroke="#fff"
-                            strokeWidth={2}
+                            stroke="#000"
+                            strokeWidth={3}
+                            animationBegin={0}
+                            animationDuration={1000}
                           >
                             {pieData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.color}
+                                className="hover:opacity-80 transition-opacity duration-300 cursor-pointer"
+                              />
                             ))}
                           </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: '#1A1A1A',
-                              border: '1px solid #BBA473',
-                              borderRadius: '8px',
-                            }}
-                          />
+                          <Tooltip content={<CustomTooltip />} />
                         </PieChart>
                       </ResponsiveContainer>
 
-                      <h3 className="text-xl font-semibold mb-4 text-left text-white">
-                        <span className="font-normal">Total Leads:</span> {!hasLeadsPermission && totalLeads}
-                      </h3>
-                    </>
+                      <div className="bg-[#0A0A0A] rounded-lg p-4 border border-[#BBA473]/30">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-300">
+                            Total Leads
+                          </h3>
+                          <span className="text-3xl font-bold text-[#BBA473] animate-pulse">
+                            {!hasLeadsPermission && totalLeads}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="flex items-center justify-center h-[400px]">
+                    <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
+                      <Activity className="w-16 h-16 text-gray-600 animate-pulse" />
                       <p className="text-gray-400 text-lg">No leads data available</p>
+                      <p className="text-gray-500 text-sm">Data will appear once leads are created</p>
                     </div>
                   )}
                 </div>
 
-                {/* Bar Chart */}
-                <div className="border border-[#BBA473] rounded-lg p-6 shadow-lg">
-                  <h3 className="text-xl font-semibold mb-4 text-center text-white">
-                    Monthly Summary
-                  </h3>
+                {/* Bar Chart with Enhanced Styling */}
+                <div 
+                  className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
+                  style={{ animation: 'slideInRight 0.6s ease-out' }}
+                >
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="h-1 w-12 bg-gradient-to-r from-transparent to-[#BBA473] mr-3"></div>
+                    <h3 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                      Monthly Summary
+                    </h3>
+                    <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
+                  </div>
+                  
                   <ResponsiveContainer width="100%" height={450}>
-                    {!hasLeadsPermission && (
+                    {!hasLeadsPermission ? (
                       <BarChart data={barData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <defs>
+                          <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#BBA473" stopOpacity={0.8}/>
+                            <stop offset="100%" stopColor="#BBA473" stopOpacity={0.3}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                         <XAxis
                           dataKey="name"
                           angle={-45}
@@ -402,36 +479,118 @@ const stats = dashboardData
                           height={100}
                           fontSize={12}
                           stroke="#9CA3AF"
+                          tick={{ fill: '#9CA3AF' }}
                         />
-                        <YAxis stroke="#9CA3AF" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#1A1A1A',
-                            border: '1px solid #BBA473',
-                            borderRadius: '8px',
-                          }}
+                        <YAxis 
+                          stroke="#9CA3AF"
+                          tick={{ fill: '#9CA3AF' }}
                         />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar 
+                          dataKey="value" 
+                          radius={[8, 8, 0, 0]}
+                          animationBegin={0}
+                          animationDuration={1000}
+                        >
                           {barData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.color}
+                              className="hover:opacity-80 transition-opacity duration-300 cursor-pointer"
+                            />
                           ))}
                         </Bar>
                       </BarChart>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full space-y-4">
+                        <Activity className="w-16 h-16 text-gray-600 animate-pulse" />
+                        <p className="text-gray-400 text-lg">No data available</p>
+                      </div>
                     )}
                   </ResponsiveContainer>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
-          {/* No Data State */}
+          {/* No Data State with Enhanced Design */}
           {!loading && !dashboardData && (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">No dashboard data available</p>
+            <div className="text-center py-20 animate-fade-in">
+              <div className="inline-block p-8 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] rounded-2xl border border-[#BBA473]/30 shadow-2xl">
+                <Activity className="w-20 h-20 text-gray-600 mx-auto mb-4 animate-pulse" />
+                <p className="text-gray-400 text-xl font-semibold mb-2">No dashboard data available</p>
+                <p className="text-gray-500 text-sm">Please check back later or adjust your filters</p>
+              </div>
             </div>
           )}
         </main>
       </div>
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out;
+        }
+
+        /* Remove white border on chart clicks */
+        .recharts-surface:focus,
+        .recharts-wrapper:focus,
+        .recharts-sector:focus,
+        .recharts-bar-rectangle:focus {
+          outline: none !important;
+        }
+
+        /* Remove all focus outlines from chart elements */
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        
+        svg:focus {
+          outline: none !important;
+        }
+      `}</style>
     </>
   );
 };
