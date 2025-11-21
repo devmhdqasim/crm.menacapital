@@ -61,9 +61,9 @@ const Tasks = () => {
   const [leads, setLeads] = useState([]);
   const [salesManagers, setSalesManagers] = useState([]);
 
-  const tabs = ['All', 'In Progress', 'Completed'];
+  const tabs = ['All', 'Pending', 'Completed'];
   const priorities = ['All', 'High', 'Normal', 'Low'];
-  const statusOptions = ['Open', 'In Progress', 'Completed', 'Pending'];
+  const statusOptions = ['Open', 'Pending', 'Completed'];
   const priorityOptions = ['High', 'Normal', 'Low'];
   const responseStatusOptions = ['', 'Answered', 'Not Answered', 'Interested', 'Not Interested', 'Real', 'Demo', 'Warm Lead', 'Hot Lead'];
 
@@ -514,9 +514,7 @@ const Tasks = () => {
                   : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                   }`}
               >
-                {!clearFilter && (
-                  { tab }
-                )}
+                {!clearFilter && tab}
               </button>
             ))}
           </div>
