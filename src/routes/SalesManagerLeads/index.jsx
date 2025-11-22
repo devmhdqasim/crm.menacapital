@@ -604,7 +604,7 @@ const filteredLeads = leads.filter(lead => {
             </div>
 
             <div className="flex flex-col gap-3">
-            <button
+            {/* <button
                 onClick={() => {
                   if(!drawerOpen) {
                     setEditingLead(null);
@@ -617,7 +617,7 @@ const filteredLeads = leads.filter(lead => {
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
                 <span className="relative z-10">Add New Lead</span>
-              </button>
+              </button> */}
 
             {/* Date Range Filter */}
             <DateRangePicker
@@ -764,7 +764,7 @@ const filteredLeads = leads.filter(lead => {
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  {/* <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th> */}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#BBA473]/10">
@@ -805,7 +805,7 @@ const filteredLeads = leads.filter(lead => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                         <button
                             onClick={() => handleEdit(lead)}
@@ -822,7 +822,7 @@ const filteredLeads = leads.filter(lead => {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 )}
