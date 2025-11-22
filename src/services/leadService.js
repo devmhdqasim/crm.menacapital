@@ -907,7 +907,7 @@ export const deleteLead = async (leadId) => {
       ? `${API_BASE_URL}/lead/branch/delete/en`
       : `${API_BASE_URL}/lead/delete/en`;
 
-    const response = await axios.delete(
+    const response = await axios.patch(
       refreshUrl,
       {_id: leadId},
       {

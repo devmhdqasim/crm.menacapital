@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye } from 'lucide-react';
-import { getAllSalesManagerLeads, createLead, assignLeadToAgent, deleteLead } from '../../services/leadService';
+import { getAllSalesManagerLeads, createLead, assignLeadToAgent, updateLead, deleteLead } from '../../services/leadService';
 import { Calendar } from 'lucide-react'
 import { getAllUsers, getKioskMembersbySalesManager } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
@@ -11,7 +11,7 @@ import { isValidPhoneNumber } from 'libphonenumber-js';
 import DateRangePicker from '../../components/DateRangePicker';
 import toast from 'react-hot-toast';
 
-// Validation Schema
+// Validation Schema 
 const leadValidationSchema = Yup.object({
   name: Yup.string()
     .required('Name is required')
@@ -30,12 +30,12 @@ const leadValidationSchema = Yup.object({
   email: Yup.string()
     .email('Invalid email address'),
   dateOfBirth: Yup.date()
-    .max(new Date(), 'Date of birth cannot be in the future')
-    .test('age', 'Must be at least 18 years old', function(value) {
-      const cutoff = new Date();
-      cutoff.setFullYear(cutoff.getFullYear() - 18);
-      return value <= cutoff;
-    }),
+    .max(new Date(), 'Date of birth cannot be in the future'),
+    // .test('age', 'Must be at least 18 years old', function(value) {
+    //   const cutoff = new Date();
+    //   cutoff.setFullYear(cutoff.getFullYear() - 18);
+    //   return value <= cutoff;
+    // }),
   nationality: Yup.string(),
   residency: Yup.string(),
   language: Yup.string(),
@@ -127,7 +127,7 @@ const LeadManagement = () => {
 
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
 
-  const sources = ['Website', 'Social Media (Facebook)', 'Social Media (Instagram)', 'Social Media (LinkedIn)', 'Social Media (Twitter)', 'Google Ads', 'Referral', 'Walk-in', 'Phone Call', 'Email Campaign', 'Exhibition/Event', 'WhatsApp', 'Agent', 'Partner', 'Other'];
+  const sources = ['Kiosk'];
 
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
@@ -263,12 +263,22 @@ const LeadManagement = () => {
           leadStatus: "New", // Default status for new leads
         };
 
-        const result = await createLead(leadData);
+        let result;
+        
+        // Check if editing existing lead or creating new one
+        if (editingLead) {
+          // Update existing lead
+          result = await updateLead(editingLead.id, leadData);
+        } else {
+          // Create new lead
+          result = await createLead(leadData);
+        }
 
         if (result.success) {
-          toast.success(result.message || 'Lead created successfully!');
+          toast.success(result.message || (editingLead ? 'Lead updated successfully!' : 'Lead created successfully!'));
           resetForm();
           setDrawerOpen(false);
+          setEditingLead(null);
           // Refresh the lead list
           fetchLeads(currentPage, itemsPerPage);
         } else {
@@ -276,12 +286,12 @@ const LeadManagement = () => {
             toast.error('Session expired. Please login again');
             // You can add navigation logic here if needed
           } else {
-            toast.error(result.error.payload.message || 'Failed to create lead');
+            toast.error(result.error.payload.message || (editingLead ? 'Failed to update lead' : 'Failed to create lead'));
           }
         }
       } catch (error) {
-        console.error('Error creating lead:', error);
-        toast.error('Failed to create lead. Please try again');
+        console.error(editingLead ? 'Error updating lead:' : 'Error creating lead:', error);
+        toast.error(editingLead ? 'Failed to update lead. Please try again' : 'Failed to create lead. Please try again');
       } finally {
         setSubmitting(false);
       }
@@ -413,22 +423,41 @@ const filteredLeads = leads.filter(lead => {
     setEditingLead(lead);
     setDrawerOpen(true);
     setShowActionsDropdown(null);
+    
+    // Populate form with lead data
+    formik.setValues({
+      name: lead.name || '',
+      email: lead.email || '',
+      phone: lead.phone || '',
+      dateOfBirth: lead.dateOfBirth || '',
+      nationality: lead.nationality || '',
+      residency: lead.residency || '',
+      language: lead.language || '',
+      source: lead.source || '',
+      remarks: lead.remarks || '',
+    });
   };
 
-  const handleDelete =  async (leadId) => {
+  const handleDelete = async (leadId) => {
     if (window.confirm('Are you sure you want to delete this lead?')) {
       try {
-        const res = await deleteLead(leadId);
+        const result = await deleteLead(leadId);
 
-        if(res.code == 1){
-          console.log(res)
-        }else {
-          console.log()
+        if (result.success) {
+          toast.success(result.message || 'Lead deleted successfully!');
+          // Refresh the lead list after successful deletion
+          fetchLeads(currentPage, itemsPerPage);
+        } else {
+          if (result.requiresAuth) {
+            toast.error('Session expired. Please login again');
+          } else {
+            toast.error(result.error?.payload?.message || 'Failed to delete lead');
+          }
         }
-      }catch(err) {
-        console.log(err)
+      } catch (err) {
+        console.error('Error deleting lead:', err);
+        toast.error('Failed to delete lead. Please try again');
       }
-      // setLeads(leads.filter(l => l.id !== leadId));
       setShowActionsDropdown(null);
     }
   };
@@ -574,6 +603,22 @@ const filteredLeads = leads.filter(lead => {
               <p className="text-gray-400 mt-2">Manage and track your Save In Gold mobile application leads</p>
             </div>
 
+            <div className="flex flex-col gap-3">
+            <button
+                onClick={() => {
+                  if(!drawerOpen) {
+                    setEditingLead(null);
+                    formik.resetForm();
+                    setDrawerOpen(true);
+                  }
+                }}
+                className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
+                <span className="relative z-10">Add New Lead</span>
+              </button>
+
             {/* Date Range Filter */}
             <DateRangePicker
               startDate={startDate}
@@ -583,6 +628,7 @@ const filteredLeads = leads.filter(lead => {
               maxDate={new Date()}
               isClearable={true}
             />
+            </div>
           </div>
         </div>
 
@@ -718,7 +764,7 @@ const filteredLeads = leads.filter(lead => {
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  {/* <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th> */}
+                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#BBA473]/10">
@@ -759,8 +805,15 @@ const filteredLeads = leads.filter(lead => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
-                      {/* <td className="px-6 py-4">
+                      <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
+                        <button
+                            onClick={() => handleEdit(lead)}
+                            className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => handleDelete(lead.id)}
                             className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-110"
@@ -769,7 +822,7 @@ const filteredLeads = leads.filter(lead => {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </td> */}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -1010,13 +1063,294 @@ const filteredLeads = leads.filter(lead => {
           <form onSubmit={formik.handleSubmit} className="flex-1 overflow-y-auto p-6">
             <div className="space-y-6">
               {/* Personal Information Section */}
-              <div className="grid space-y-4">
+              <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-[#E8D5A3] border-b border-[#BBA473]/30 pb-2">
                   Lead Information
                 </h3>
 
-                {/* Form fields remain the same as original... */}
-                {/* ... rest of the form ... */}
+                {/* Two Column Grid - Row 1 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Full Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder="Enter full name"
+                      value={formik.values.name}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        formik.touched.name && formik.errors.name
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    />
+                    {formik.touched.name && formik.errors.name && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.name}</div>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Email Address 
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Enter email address"
+                      value={formik.values.email}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        formik.touched.email && formik.errors.email
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    />
+                    {formik.touched.email && formik.errors.email && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.email}</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Phone Number - Full Width */}
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                        className="h-full px-3 py-3 border-2 border-[#BBA473]/30 rounded-lg bg-[#1A1A1A] hover:border-[#BBA473] transition-all duration-300 flex items-center gap-2 min-w-[100px]"
+                      >
+                        <span className="text-xl">{selectedCountry.flag}</span>
+                        <span className="text-white text-sm">{selectedCountry.dialCode}</span>
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      </button>
+                      {showCountryDropdown && (
+                        <div className="absolute top-full mt-2 left-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[280px] max-h-60 overflow-y-auto">
+                          {countryCodes.map((country) => (
+                            <button
+                              key={country.code}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCountry(country);
+                                setShowCountryDropdown(false);
+                                const phoneWithoutCode = formik.values.phone.replace(/^\+\d{1,4}\s/, '');
+                                formik.setFieldValue('phone', `${country.dialCode} ${phoneWithoutCode}`);
+                              }}
+                              className="w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors flex items-center gap-3 first:rounded-t-lg last:rounded-b-lg"
+                            >
+                              <span className="text-xl">{country.flag}</span>
+                              <div className="flex-1">
+                                <div className="text-white text-sm">{country.name}</div>
+                                <div className="text-gray-400 text-xs">{country.dialCode}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                      <input
+                        type="text"
+                        name="phone"
+                        placeholder="50 123 4567"
+                        value={formik.values.phone.replace(/^\+\d{1,4}\s/, '')}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          formik.setFieldValue('phone', `${selectedCountry.dialCode} ${value}`);
+                        }}
+                        onBlur={formik.handleBlur}
+                        className={`flex-1 px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.phone && formik.errors.phone
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      />
+                  </div>
+                  {formik.touched.phone && formik.errors.phone && (
+                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.phone}</div>
+                  )}
+                </div>
+
+                {/* Two Column Grid - Row 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Date of Birth */}
+                  <div className="space-y-2 relative">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">Date of Birth</label>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formik.values.dateOfBirth}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        formik.touched.dateOfBirth && formik.errors.dateOfBirth
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    {formik.touched.dateOfBirth && formik.errors.dateOfBirth && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.dateOfBirth}</div>
+                    )}
+                  </div>
+
+                  {/* Nationality */}
+                  <div className="relative space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Nationality
+                    </label>
+                    <div className="relative">
+                    <select
+                      name="nationality"
+                      value={formik.values.nationality}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        formik.touched.nationality && formik.errors.nationality
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    >
+                      <option value="">Select Nationality</option>
+                      {nationalities.map((nationality) => (
+                        <option key={nationality} value={nationality}>{nationality}</option>
+                      ))}
+                    </select>
+                    </div>
+                    {formik.touched.nationality && formik.errors.nationality && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.nationality}</div>
+                    )}
+                    <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Two Column Grid - Row 3 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Residency */}
+                  <div className="relative space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Country of Residency
+                    </label>
+                    <div className="relative">
+                    <select
+                      name="residency"
+                      value={formik.values.residency}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        formik.touched.residency && formik.errors.residency
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    >
+                      <option value="">Select Residency</option>
+                      {residencies.map((residency) => (
+                        <option key={residency} value={residency}>{residency}</option>
+                      ))}
+                    </select>
+                    </div>
+                    {formik.touched.residency && formik.errors.residency && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.residency}</div>
+                    )}
+                    <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+
+                  {/* Language */}
+                  <div className="relative space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Preferred Language
+                    </label>
+                    <div className="relative">
+                    <select
+                      name="language"
+                      value={formik.values.language}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        formik.touched.language && formik.errors.language
+                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
+                    >
+                      <option value="">Select Language</option>
+                      {languages.map((language) => (
+                        <option key={language} value={language}>{language}</option>
+                      ))}
+                    </select>
+                    </div>
+                    {formik.touched.language && formik.errors.language && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.language}</div>
+                    )}
+                    <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Source - Full Width */}
+                <div className="relative space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                    Lead Source
+                  </label>
+                  <div className="relative">
+                  <select
+                    name="source"
+                    value={formik.values.source}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                      formik.touched.source && formik.errors.source
+                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                    }`}
+                  >
+                    <option value="">Select Source</option>
+                    {sources.map((source) => (
+                      <option key={source} value={source}>{source}</option>
+                    ))}
+                  </select>
+                  </div>
+                  {formik.touched.source && formik.errors.source && (
+                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.source}</div>
+                  )}
+                  <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+
+                {/* Remarks - Full Width */}
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                    Remarks
+                  </label>
+                  <textarea
+                    name="remarks"
+                    placeholder="Add any additional notes or comments about this lead..."
+                    rows="4"
+                    value={formik.values.remarks}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
+                      formik.touched.remarks && formik.errors.remarks
+                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                    }`}
+                  />
+                  <div className="flex justify-between items-center">
+                    <div>
+                      {formik.touched.remarks && formik.errors.remarks && (
+                        <div className="text-red-400 text-sm animate-pulse">{formik.errors.remarks}</div>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formik.values.remarks.length}/500
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1029,16 +1363,16 @@ const filteredLeads = leads.filter(lead => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
-              >
-                {formik.isSubmitting 
-                  ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 
-                  : (editingLead ? 'Update Lead' : 'Create Lead')
-                }
-              </button>
+                <button
+                  type="submit"
+                  disabled={formik.isSubmitting}
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                >
+                  {formik.isSubmitting 
+                    ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 
+                    : (editingLead ? 'Update Lead' : 'Create Lead')
+                  }
+                </button>
             </div>
           </form>
         </div>
