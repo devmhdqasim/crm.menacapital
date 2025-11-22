@@ -98,9 +98,9 @@ const LeadManagement = () => {
 
   // Get agent name from lead (you might need to adjust based on your API response structure)
   const getAgentName = (lead) => {
-    // If the leadAgentId is populated with agent details, use them
-    if (lead.leadAgentId && typeof lead.leadAgentId === 'object') {
-      return `${lead.leadAgentId.firstName || ''} ${lead.leadAgentId.lastName || ''}`.trim() || 'an agent';
+    // If the leadAgentData is populated with agent details, use them
+    if (lead.leadAgentData && typeof lead.leadAgentData === 'object') {
+      return `${lead.leadAgentData.firstName || ''} ${lead.leadAgentData.lastName || ''}`.trim() || 'an agent';
     }
     return 'an agent';
   };
