@@ -115,7 +115,7 @@ const SalesManagers = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch branches');
+          toast.error(result.error.payload.message || 'Failed to fetch branches');
         }
       }
     } catch (error) {
@@ -163,7 +163,7 @@ const SalesManagers = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch sales managers');
+          toast.error(result.error.payload.message || 'Failed to fetch sales managers');
         }
       }
     } catch (error) {
@@ -251,7 +251,7 @@ const SalesManagers = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || (editingSalesManager ? 'Failed to update sales manager' : 'Failed to create sales manager'));
+            toast.error(result.error.payload.message || (editingSalesManager ? 'Failed to update sales manager' : 'Failed to create sales manager'));
           }
         }
       } catch (error) {
@@ -323,7 +323,7 @@ const SalesManagers = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || 'Failed to delete sales manager');
+            toast.error(result.error.payload.message || 'Failed to delete sales manager');
           }
         }
       } catch (error) {

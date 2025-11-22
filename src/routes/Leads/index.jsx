@@ -244,7 +244,7 @@ const LeadManagement = () => {
             toast.error('Session expired. Please login again!');
             // You can add navigation logic here if needed
           } else {
-            toast.error(result.message || 'Failed to create lead');
+            toast.error(result.error.payload.message || 'Failed to create lead');
           }
         }
       } catch (error) {
@@ -554,7 +554,7 @@ const LeadManagement = () => {
           toast.error('Session expired. Please login again');
           // You can add navigation logic here if needed
         } else {
-          toast.error(result.message || 'Failed to update lead status');
+          toast.error(result.error.payload.message || 'Failed to update lead status');
         }
       }
     } catch (error) {

@@ -15,7 +15,7 @@ const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
  * @param {string} login - User's email address or username
  * @param {string} password - User's password
  * @param {string} loginBy - Either "email" or "username"
- * @returns {Promise} - Returns user info and access token
+ * @returns {Promise} - Returns user info and access token 
  */
 export const loginUser = async (login, password, loginBy = 'email') => {
   try {

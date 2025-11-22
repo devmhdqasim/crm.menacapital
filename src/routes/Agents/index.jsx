@@ -117,7 +117,7 @@ const AgentManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch branches');
+          toast.error(result.error.payload.message || 'Failed to fetch branches');
         }
       }
     } catch (error) {
@@ -165,7 +165,7 @@ const AgentManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch agents');
+          toast.error(result.error.payload.message || 'Failed to fetch agents');
         }
       }
     } catch (error) {
@@ -278,7 +278,7 @@ const AgentManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || (editingAgent ? 'Failed to update agent' : 'Failed to create agent'));
+            toast.error(result.error.payload.message || (editingAgent ? 'Failed to update agent' : 'Failed to create agent'));
           }
         }
       } catch (error) {
@@ -350,7 +350,7 @@ const AgentManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || 'Failed to delete agent');
+            toast.error(result.error.payload.message || 'Failed to delete agent');
           }
         }
       } catch (error) {

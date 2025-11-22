@@ -194,7 +194,7 @@ const LeadManagement = () => {
             toast.error('Session expired. Please login again');
             // You can add navigation logic here if needed
           } else {
-            toast.error(result.message || `Failed to ${editingLead ? 'update' : 'create'} lead`);
+            toast.error(result.error.payload.message || `Failed to ${editingLead ? 'update' : 'create'} lead`);
           }
         }
       } catch (error) {
@@ -301,7 +301,7 @@ const LeadManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again');
           } else {
-            toast.error(result.message || 'Failed to delete lead');
+            toast.error(result.error.payload.message || 'Failed to delete lead');
           }
         }
       } catch (error) {

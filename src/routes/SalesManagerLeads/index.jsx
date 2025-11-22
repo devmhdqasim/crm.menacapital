@@ -176,7 +176,7 @@ const LeadManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
-          toast.error(result.message || 'Failed to fetch leads');
+          toast.error(result.error.payload.message || 'Failed to fetch leads');
         }
       }
     } catch (error) {
@@ -276,7 +276,7 @@ const LeadManagement = () => {
             toast.error('Session expired. Please login again');
             // You can add navigation logic here if needed
           } else {
-            toast.error(result.message || 'Failed to create lead');
+            toast.error(result.error.payload.message || 'Failed to create lead');
           }
         }
       } catch (error) {
@@ -474,7 +474,7 @@ const filteredLeads = leads.filter(lead => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
-          toast.error(result.message || 'Failed to assign lead to agent');
+          toast.error(result.error.payload.message || 'Failed to assign lead to agent');
         }
       }
     } catch (error) {

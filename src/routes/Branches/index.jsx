@@ -188,7 +188,7 @@ const BranchManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch branches');
+          toast.error(result.error.payload.message || 'Failed to fetch branches');
         }
       }
     } catch (error) {
@@ -341,7 +341,7 @@ const BranchManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || 'Failed to delete branch');
+            toast.error(result.error.payload.message || 'Failed to delete branch');
           }
         }
       } catch (error) {
@@ -471,7 +471,7 @@ const BranchManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || `Failed to ${editingBranch ? 'update' : 'create'} branch`);
+            toast.error(result.error.payload.message || `Failed to ${editingBranch ? 'update' : 'create'} branch`);
           }
         }
       } catch (error) {

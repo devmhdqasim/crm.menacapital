@@ -116,7 +116,7 @@ const SalesManagers = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch branches');
+          toast.error(result.error.payload.message || 'Failed to fetch branches');
         }
       }
     } catch (error) {
@@ -166,7 +166,7 @@ const SalesManagers = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch Kiosk Members');
+          toast.error(result.error.payload.message || 'Failed to fetch Kiosk Members');
         }
       }
     } catch (error) {
@@ -254,7 +254,7 @@ const SalesManagers = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || (editingSalesManager ? 'Failed to update Kiosk Member' : 'Failed to create Kiosk Member'));
+            toast.error(result.error.payload.message || (editingSalesManager ? 'Failed to update Kiosk Member' : 'Failed to create Kiosk Member'));
           }
         }
       } catch (error) {
@@ -326,7 +326,7 @@ const SalesManagers = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || 'Failed to delete Kiosk Member');
+            toast.error(result.error.payload.message || 'Failed to delete Kiosk Member');
           }
         }
       } catch (error) {

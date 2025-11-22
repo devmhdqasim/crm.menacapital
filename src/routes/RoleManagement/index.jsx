@@ -80,7 +80,7 @@ const RoleManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
-          toast.error(result.message || 'Failed to fetch roles');
+          toast.error(result.error.payload.message || 'Failed to fetch roles');
         }
       }
     } catch (error) {
@@ -262,7 +262,7 @@ const RoleManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again');
           } else {
-            toast.error(result.message || 'Failed to create role');
+            toast.error(result.error.payload.message || 'Failed to create role');
           }
         }
       } catch (error) {

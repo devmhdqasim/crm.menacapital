@@ -59,7 +59,7 @@ const Dashboard = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.message || 'Failed to fetch dashboard data');
+          toast.error(result.error.payload.message || 'Failed to fetch dashboard data');
         }
       }
     } catch (error) {

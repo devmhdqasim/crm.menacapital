@@ -117,7 +117,7 @@ const Tasks = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.message || 'Failed to save task');
+            toast.error(result.error.payload.message || 'Failed to save task');
           }
         }
       } catch (error) {
@@ -183,7 +183,7 @@ const Tasks = () => {
         setTotalTasks(result.metadata?.total || transformedTasks.length);
       } else {
         console.error('❌ Failed to fetch tasks:', result.message);
-        toast.error(result.message || 'Failed to fetch tasks');
+        toast.error(result.error.payload.message || 'Failed to fetch tasks');
         setTasks([]);
       }
     } catch (error) {
@@ -324,7 +324,7 @@ const Tasks = () => {
           setTasks(tasks.filter(t => t.id !== taskId));
           toast.success('Task deleted successfully!');
         } else {
-          toast.error(result.message || 'Failed to delete task');
+          toast.error(result.error.payload.message || 'Failed to delete task');
         }
       } catch (error) {
         console.error('Error deleting task:', error);
