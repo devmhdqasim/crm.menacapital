@@ -1,0 +1,740 @@
+import React, { useState, useEffect } from 'react';
+import { Bell, Check, CheckCheck, Trash2, ChevronDown, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const NotificationsPage = () => {
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "New Interested Lead",
+      message: "John Smith showed interest in your product. Follow up recommended within 24 hours.",
+      type: "interested",
+      time: "2024-11-24T10:30:00Z",
+      unread: true,
+      icon: "👍",
+      priority: "high"
+    },
+    {
+      id: 2,
+      title: "Lead Status Update",
+      message: "Sarah Johnson marked as Not Interested. Reason: Already invested elsewhere.",
+      type: "not_interested",
+      time: "2024-11-24T09:15:00Z",
+      unread: true,
+      icon: "👎",
+      priority: "medium"
+    },
+    {
+      id: 3,
+      title: "Hot Lead Alert",
+      message: "Michael Brown upgraded to Hot Lead status. Schedule a demo call ASAP.",
+      type: "hot_lead",
+      time: "2024-11-24T08:00:00Z",
+      unread: true,
+      icon: "🔥",
+      priority: "high"
+    },
+    {
+      id: 4,
+      title: "Demo Account Created",
+      message: "Emma Wilson created a demo trading account. Provide onboarding support.",
+      type: "demo",
+      time: "2024-11-24T07:45:00Z",
+      unread: true,
+      icon: "🎮",
+      priority: "medium"
+    },
+    {
+      id: 5,
+      title: "Real Account Opened",
+      message: "David Lee opened a real trading account with account number #RT-45892.",
+      type: "real",
+      time: "2024-11-23T16:20:00Z",
+      unread: false,
+      icon: "💼",
+      priority: "high"
+    },
+    {
+      id: 6,
+      title: "Deposit Received",
+      message: "Lisa Chen made a deposit of $5,000. Transaction ID: TXN-789456123.",
+      type: "deposit",
+      time: "2024-11-23T14:10:00Z",
+      unread: false,
+      icon: "💰",
+      priority: "high"
+    },
+    {
+      id: 7,
+      title: "Lead Not Answered",
+      message: "Tom Anderson didn't answer your call. Attempted 3 times. Try again later.",
+      type: "not_answered",
+      time: "2024-11-23T11:30:00Z",
+      unread: false,
+      icon: "📞",
+      priority: "low"
+    },
+    {
+      id: 8,
+      title: "Warm Lead Created",
+      message: "Jessica Martinez marked as Warm Lead. Schedule follow-up for next week.",
+      type: "warm_lead",
+      time: "2024-11-23T09:00:00Z",
+      unread: false,
+      icon: "🌡️",
+      priority: "medium"
+    },
+    {
+      id: 9,
+      title: "Lead Assignment",
+      message: "You have been assigned a new lead: Robert Chen from Dubai.",
+      type: "assignment",
+      time: "2024-11-22T15:45:00Z",
+      unread: false,
+      icon: "👤",
+      priority: "medium"
+    },
+    {
+      id: 10,
+      title: "Meeting Reminder",
+      message: "Scheduled call with Alex Turner in 1 hour. Prepare presentation materials.",
+      type: "reminder",
+      time: "2024-11-22T14:00:00Z",
+      unread: false,
+      icon: "🔔",
+      priority: "high"
+    },
+    {
+      id: 11,
+      title: "Commission Earned",
+      message: "You earned $250 commission from David Lee's deposit. Check your wallet.",
+      type: "commission",
+      time: "2024-11-22T10:30:00Z",
+      unread: false,
+      icon: "💵",
+      priority: "medium"
+    },
+    {
+      id: 12,
+      title: "Lead Follow-up Required",
+      message: "Maria Garcia hasn't been contacted in 7 days. Follow-up needed.",
+      type: "follow_up",
+      time: "2024-11-21T16:20:00Z",
+      unread: false,
+      icon: "⏰",
+      priority: "high"
+    },
+    {
+      id: 13,
+      title: "Account Verification",
+      message: "Peter Wilson completed KYC verification. Account now fully active.",
+      type: "verification",
+      time: "2024-11-21T13:15:00Z",
+      unread: false,
+      icon: "✅",
+      priority: "medium"
+    },
+    {
+      id: 14,
+      title: "Cold Lead Alert",
+      message: "Amanda Davis marked as cold lead after 5 unsuccessful contact attempts.",
+      type: "cold_lead",
+      time: "2024-11-21T10:00:00Z",
+      unread: false,
+      icon: "❄️",
+      priority: "low"
+    },
+    {
+      id: 15,
+      title: "Monthly Target Update",
+      message: "You've achieved 75% of your monthly target. $25,000 more to go!",
+      type: "target",
+      time: "2024-11-20T09:00:00Z",
+      unread: false,
+      icon: "🎯",
+      priority: "medium"
+    },
+    {
+      id: 16,
+      title: "New Message Received",
+      message: "Karen White sent you a message regarding investment options.",
+      type: "message",
+      time: "2024-11-20T08:30:00Z",
+      unread: false,
+      icon: "💬",
+      priority: "medium"
+    },
+    {
+      id: 17,
+      title: "System Update",
+      message: "CRM system will undergo maintenance on Saturday 2 AM - 4 AM GST.",
+      type: "system",
+      time: "2024-11-19T17:00:00Z",
+      unread: false,
+      icon: "⚙️",
+      priority: "low"
+    },
+    {
+      id: 18,
+      title: "Training Session",
+      message: "New product training scheduled for December 1st at 10 AM. Register now.",
+      type: "training",
+      time: "2024-11-19T14:00:00Z",
+      unread: false,
+      icon: "📚",
+      priority: "medium"
+    },
+    {
+      id: 19,
+      title: "Withdrawal Request",
+      message: "Thomas Brown requested withdrawal of $2,000. Verify and process.",
+      type: "withdrawal",
+      time: "2024-11-19T11:20:00Z",
+      unread: false,
+      icon: "💸",
+      priority: "high"
+    },
+    {
+      id: 20,
+      title: "Performance Report",
+      message: "Your weekly performance report is ready. 15 leads converted this week.",
+      type: "report",
+      time: "2024-11-18T09:00:00Z",
+      unread: false,
+      icon: "📊",
+      priority: "low"
+    }
+  ]);
+
+  const [activeTab, setActiveTab] = useState('All');
+  const [selectedNotifications, setSelectedNotifications] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const tabs = ['All', 'Unread', 'Read'];
+  const perPageOptions = [10, 20, 30, 50];
+  const priorityOptions = ['All', 'High', 'Medium', 'Low'];
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  const markAsRead = (id) => {
+    setNotifications(notifications.map(n => 
+      n.id === id ? { ...n, unread: false } : n
+    ));
+    toast.success('Notification marked as read');
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+    toast.success('All notifications marked as read');
+  };
+
+  const deleteNotification = (id) => {
+    setNotifications(notifications.filter(n => n.id !== id));
+    toast.success('Notification deleted');
+  };
+
+  const deleteSelected = () => {
+    if (selectedNotifications.length === 0) {
+      toast.error('No notifications selected');
+      return;
+    }
+    setNotifications(notifications.filter(n => !selectedNotifications.includes(n.id)));
+    setSelectedNotifications([]);
+    toast.success(`${selectedNotifications.length} notification(s) deleted`);
+  };
+
+  const toggleSelectNotification = (id) => {
+    if (selectedNotifications.includes(id)) {
+      setSelectedNotifications(selectedNotifications.filter(nId => nId !== id));
+    } else {
+      setSelectedNotifications([...selectedNotifications, id]);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedNotifications.length === filteredNotifications.length) {
+      setSelectedNotifications([]);
+    } else {
+      setSelectedNotifications(filteredNotifications.map(n => n.id));
+    }
+  };
+
+  const getNotificationTypeColor = (type) => {
+    const colors = {
+      interested: 'from-green-500/20 to-green-600/20 border-green-500/30',
+      not_interested: 'from-red-500/20 to-red-600/20 border-red-500/30',
+      hot_lead: 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
+      demo: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
+      real: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+      deposit: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
+      not_answered: 'from-gray-500/20 to-gray-600/20 border-gray-500/30',
+      warm_lead: 'from-cyan-500/20 to-cyan-600/20 border-cyan-500/30',
+      assignment: 'from-indigo-500/20 to-indigo-600/20 border-indigo-500/30',
+      reminder: 'from-pink-500/20 to-pink-600/20 border-pink-500/30',
+      commission: 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30',
+      follow_up: 'from-amber-500/20 to-amber-600/20 border-amber-500/30',
+      verification: 'from-teal-500/20 to-teal-600/20 border-teal-500/30',
+      cold_lead: 'from-slate-500/20 to-slate-600/20 border-slate-500/30',
+      target: 'from-violet-500/20 to-violet-600/20 border-violet-500/30',
+      message: 'from-sky-500/20 to-sky-600/20 border-sky-500/30',
+      system: 'from-zinc-500/20 to-zinc-600/20 border-zinc-500/30',
+      training: 'from-lime-500/20 to-lime-600/20 border-lime-500/30',
+      withdrawal: 'from-rose-500/20 to-rose-600/20 border-rose-500/30',
+      report: 'from-fuchsia-500/20 to-fuchsia-600/20 border-fuchsia-500/30'
+    };
+    return colors[type] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
+  };
+
+  const getPriorityBadge = (priority) => {
+    const badges = {
+      high: 'bg-red-500/20 text-red-400 border-red-500/30',
+      medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      low: 'bg-green-500/20 text-green-400 border-green-500/30'
+    };
+    return badges[priority] || badges.low;
+  };
+
+  const formatTime = (utcDateString) => {
+    const date = new Date(utcDateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(date);
+  };
+
+  // Filtering logic
+  const filteredNotifications = notifications.filter(notification => {
+    // Tab filter
+    let matchesTab = true;
+    if (activeTab === 'Unread') {
+      matchesTab = notification.unread;
+    } else if (activeTab === 'Read') {
+      matchesTab = !notification.unread;
+    }
+
+    // Priority filter
+    let matchesPriority = true;
+    if (priorityFilter !== 'All') {
+      matchesPriority = notification.priority.toLowerCase() === priorityFilter.toLowerCase();
+    }
+
+    return matchesTab && matchesPriority;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentNotifications = filteredNotifications.slice(startIndex, endIndex);
+  const showingFrom = filteredNotifications.length > 0 ? startIndex + 1 : 0;
+  const showingTo = Math.min(endIndex, filteredNotifications.length);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePerPageChange = (value) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
+    setShowPerPageDropdown(false);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 3;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 2) {
+        pages.push(1, 2, 3);
+      } else if (currentPage >= totalPages - 1) {
+        pages.push(totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(currentPage - 1, currentPage, currentPage + 1);
+      }
+    }
+    return pages;
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  const handlePriorityFilterChange = (priority) => {
+    setPriorityFilter(priority);
+    setCurrentPage(1);
+    setShowFilterDropdown(false);
+  };
+
+  return (
+    <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Header */}
+      <div className="mb-8 animate-fadeIn">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-[#BBA473]/20 to-[#8E7D5A]/20 rounded-xl border border-[#BBA473]/30">
+              <Bell className="w-8 h-8 text-[#BBA473]" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+                Notifications
+              </h1>
+              <p className="text-gray-400 mt-2">
+                Stay updated with your leads and activities
+                {unreadCount > 0 && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                    {unreadCount} new
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border border-[#BBA473]/30 hover:border-[#BBA473]/50 transition-all duration-300"
+              >
+                <CheckCheck className="w-4 h-4" />
+                <span className="text-sm font-medium">Mark All Read</span>
+              </button>
+            )}
+            
+            {selectedNotifications.length > 0 && (
+              <button
+                onClick={deleteSelected}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 hover:border-red-500/50 transition-all duration-300"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Delete Selected ({selectedNotifications.length})</span>
+              </button>
+            )}
+
+            {/* Priority Filter */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border border-[#BBA473]/30 hover:border-[#BBA473]/50 transition-all duration-300"
+              >
+                <Filter className="w-4 h-4" />
+                <span className="text-sm font-medium">{priorityFilter} Priority</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              {showFilterDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-20 overflow-hidden animate-slideDown">
+                  {priorityOptions.map(priority => (
+                    <button
+                      key={priority}
+                      onClick={() => handlePriorityFilterChange(priority)}
+                      className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors text-sm ${
+                        priority === priorityFilter ? 'bg-[#BBA473]/20 text-[#BBA473] font-medium' : 'text-white'
+                      }`}
+                    >
+                      {priority} Priority
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-6 overflow-x-auto animate-fadeIn">
+        <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => handleTabChange(tab)}
+              className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
+                activeTab === tab
+                  ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                  : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+              }`}
+            >
+              {tab}
+              {tab === 'Unread' && unreadCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+        {/* Select All Header */}
+        {filteredNotifications.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-3 bg-[#1A1A1A] border-b border-[#BBA473]/30">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={selectedNotifications.length === filteredNotifications.length && filteredNotifications.length > 0}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 rounded border-[#BBA473]/30 bg-[#1A1A1A] text-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer"
+              />
+              <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
+                Select All ({filteredNotifications.length})
+              </span>
+            </label>
+
+            <div className="text-sm text-gray-400">
+              {selectedNotifications.length > 0 && (
+                <span>{selectedNotifications.length} selected</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Notifications */}
+        <div className="divide-y divide-[#BBA473]/10">
+          {currentNotifications.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#BBA473]/10 mb-4">
+                <Bell className="w-8 h-8 text-[#BBA473]/50" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Notifications</h3>
+              <p className="text-gray-500">
+                {activeTab === 'Unread' 
+                  ? "You're all caught up! No unread notifications." 
+                  : "No notifications found."}
+              </p>
+            </div>
+          ) : (
+            currentNotifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`group relative px-6 py-4 hover:bg-[#3A3A3A] transition-all duration-300 ${
+                  notification.unread ? 'bg-[#BBA473]/5' : ''
+                } ${selectedNotifications.includes(notification.id) ? 'bg-[#BBA473]/10' : ''}`}
+              >
+                <div className="flex gap-4">
+                  {/* Checkbox */}
+                  <div className="flex-shrink-0 pt-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedNotifications.includes(notification.id)}
+                      onChange={() => toggleSelectNotification(notification.id)}
+                      className="w-4 h-4 rounded border-[#BBA473]/30 bg-[#1A1A1A] text-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+
+                  {/* Icon */}
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br ${getNotificationTypeColor(notification.type)} border flex items-center justify-center text-xl`}>
+                    {notification.icon}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-white font-semibold text-sm group-hover:text-[#BBA473] transition-colors">
+                            {notification.title}
+                          </h3>
+                          {notification.unread && (
+                            <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-pulse"></div>
+                          )}
+                        </div>
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                          {notification.message}
+                        </p>
+                      </div>
+
+                      {/* Priority Badge */}
+                      <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border uppercase ${getPriorityBadge(notification.priority)}`}>
+                        {notification.priority}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#BBA473]/70 text-xs">
+                        {formatTime(notification.time)}
+                      </span>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {notification.unread && (
+                          <button
+                            onClick={() => markAsRead(notification.id)}
+                            className="p-1.5 rounded-lg bg-[#BBA473]/20 hover:bg-[#BBA473]/30 text-[#BBA473] transition-all duration-300"
+                            title="Mark as read"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteNotification(notification.id)}
+                          className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all duration-300"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Pagination */}
+        {filteredNotifications.length > 0 && (
+          <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-gray-400 text-sm">
+                Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
+                <span className="text-white font-semibold">{showingTo}</span> of{' '}
+                <span className="text-white font-semibold">{filteredNotifications.length}</span> notifications
+              </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                >
+                  <span className="text-sm">{itemsPerPage} per page</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {showPerPageDropdown && (
+                  <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
+                    {perPageOptions.map(option => (
+                      <button
+                        key={option}
+                        onClick={() => handlePerPageChange(option)}
+                        className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                          option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                        }`}
+                      >
+                        {option} per page
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              {currentPage > 2 && totalPages > 3 && (
+                <>
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                  >
+                    1
+                  </button>
+                  {currentPage > 3 && <span className="text-gray-400">...</span>}
+                </>
+              )}
+
+              {getPageNumbers().map(page => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
+                    currentPage === page
+                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
+                      : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              {currentPage < totalPages - 1 && totalPages > 3 && (
+                <>
+                  {currentPage < totalPages - 2 && <span className="text-gray-400">...</span>}
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.2s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default NotificationsPage;

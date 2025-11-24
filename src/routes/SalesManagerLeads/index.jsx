@@ -159,6 +159,8 @@ const LeadManagement = () => {
           depositStatus: lead.depositStatus || '',
           status: lead.leadStatus,
           createdAt: lead.createdAt,
+          leadSourceId: lead?.leadSourceId?.[0],
+
           // ADD THESE BOOLEAN FLAGS FROM API:
           contacted: lead.contacted || false,
           answered: lead.answered || false,
@@ -824,7 +826,7 @@ const filteredLeads = leads.filter(lead => {
                       onClick={(e) => handleRowClick(lead, e)}
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group cursor-pointer"
                     >
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">#{lead.leadId || lead.id.slice(-6)}</td>
+                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">{lead.leadId || lead.id.slice(-6)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
@@ -835,7 +837,7 @@ const filteredLeads = leads.filter(lead => {
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{formatPhoneDisplay(lead.phone)}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.nationality}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.agent}</td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{lead.source ?? 'Kiosk'}</td>
+                      <td className="px-6 py-4 text-gray-300 text-sm">{lead.source ?? 'Kiosk'} {lead?.leadSourceId?.firstName ? ` - ${lead?.leadSourceId?.firstName} ${lead?.leadSourceId?.lastName}` : '' }</td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(lead.status)}`}>
                           {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}

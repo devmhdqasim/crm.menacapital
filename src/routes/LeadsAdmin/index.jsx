@@ -555,7 +555,7 @@ const LeadManagement = () => {
                       key={lead.id}
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group"
                     >
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">#{lead.leadId || lead.id.slice(-6)}</td>
+                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">{lead.leadId || lead.id.slice(-6)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
