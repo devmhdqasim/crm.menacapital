@@ -153,6 +153,7 @@ const LeadManagement = () => {
           kioskName: lead.kioskName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
+          leadAgentData: lead?.leadAgentData?.[0],
         }));
         
         setLeads(transformedLeads);
