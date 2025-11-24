@@ -416,7 +416,7 @@ const Tasks = () => {
                   <Filter className="w-5 h-5" />
                   {showFilters ? 'Hide Filters' : 'Show Filters'}
                 </button>
-                <button
+                {/* <button
                   onClick={() => {
                     setEditingTask(null);
                     formik.resetForm();
@@ -430,7 +430,7 @@ const Tasks = () => {
                       Add New Task
                     </>
                   )}
-                </button>
+                </button> */}
               </div>
 
               {/* Date Range Filter */}
