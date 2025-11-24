@@ -99,6 +99,7 @@ const Dashboard = () => {
             totalBranches: Coins,
             totalKioskMembers: TrendingUp,
             totalBranchLeads: Activity,
+            leads: Activity,
           };
           const colorMap = {
             totalSalesManagers: 'rgb(255, 99, 132)',
@@ -106,6 +107,7 @@ const Dashboard = () => {
             totalBranches: 'rgb(156, 163, 175)',
             totalKioskMembers: 'rgb(255, 187, 40)',
             totalBranchLeads: 'rgb(75, 192, 192)',
+            leads: 'rgb(75, 192, 192)',
           };
           const bgColorMap = {
             totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
@@ -113,6 +115,7 @@ const Dashboard = () => {
             totalBranches: 'rgba(156, 163, 175, 0.125)',
             totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
             totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
+            leads: 'rgba(75, 192, 192, 0.125)',
           };
 
           return {

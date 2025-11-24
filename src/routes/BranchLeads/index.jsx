@@ -730,7 +730,7 @@ const LeadManagement = () => {
                 </p>
                 {leadToDelete && (
                   <div className="mt-3 p-3 bg-[#1A1A1A] rounded-lg border border-[#BBA473]/20">
-                    <p className="text-white font-semibold">{leadToDelete.name}</p>
+                    <p className="text-white capitalize font-semibold">{leadToDelete.name}</p>
                     <p className="text-gray-400 text-sm">{formatPhoneDisplay(leadToDelete.phone)}</p>
                   </div>
                 )}
