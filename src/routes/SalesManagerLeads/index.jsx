@@ -69,6 +69,7 @@ const LeadManagement = () => {
   const [assigningLead, setAssigningLead] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [originalFormValues, setOriginalFormValues] = useState(null);
 
   // Tab hierarchy configuration
   const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted'];
@@ -231,6 +232,17 @@ const LeadManagement = () => {
     fetchLeads(currentPage, itemsPerPage);
   }, [startDate, endDate, currentPage, itemsPerPage]);
 
+  // Helper function to check if form values have changed
+  const hasFormValuesChanged = (currentValues, originalValues) => {
+    if (!originalValues) return false;
+    
+    return Object.keys(currentValues).some(key => {
+      const current = currentValues[key] || '';
+      const original = originalValues[key] || '';
+      return current !== original;
+    });
+  };
+
   const formik = useFormik({
     initialValues: {
       name: '',
@@ -246,6 +258,13 @@ const LeadManagement = () => {
     validationSchema: leadValidationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
+        // Check if editing and no changes were made
+        if (editingLead && !hasFormValuesChanged(values, originalFormValues)) {
+          toast.info('No changes detected');
+          setSubmitting(false);
+          return;
+        }
+
         // Format phone number for API (remove spaces)
         const phoneNumber = values.phone.replace(/\s/g, '');
         
@@ -279,6 +298,7 @@ const LeadManagement = () => {
           resetForm();
           setDrawerOpen(false);
           setEditingLead(null);
+          setOriginalFormValues(null);
           // Refresh the lead list
           fetchLeads(currentPage, itemsPerPage);
         } else {
@@ -425,7 +445,7 @@ const filteredLeads = leads.filter(lead => {
     setShowActionsDropdown(null);
     
     // Populate form with lead data
-    formik.setValues({
+    const formValues = {
       name: lead.name || '',
       email: lead.email || '',
       phone: lead.phone || '',
@@ -435,7 +455,11 @@ const filteredLeads = leads.filter(lead => {
       language: lead.language || '',
       source: lead.source || '',
       remarks: lead.remarks || '',
-    });
+    };
+    
+    formik.setValues(formValues);
+    // Store original values for comparison
+    setOriginalFormValues(formValues);
   };
 
   const handleDelete = async (leadId) => {
@@ -465,6 +489,7 @@ const filteredLeads = leads.filter(lead => {
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
     setEditingLead(null);
+    setOriginalFormValues(null);
     formik.resetForm();
   };
 
@@ -608,6 +633,7 @@ const filteredLeads = leads.filter(lead => {
                 onClick={() => {
                   if(!drawerOpen) {
                     setEditingLead(null);
+                    setOriginalFormValues(null);
                     formik.resetForm();
                     setDrawerOpen(true);
                   }
@@ -635,19 +661,30 @@ const filteredLeads = leads.filter(lead => {
         {/* Main Tabs (Level 1) */}
         <div className="mb-4 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabChange(tab)}
-                className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
-                  activeTab === tab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const unassignedCount = tab === 'Not Assigned' 
+                ? leads.filter(lead => lead.agentId === null || lead.agent === 'Not Assigned').length 
+                : 0;
+              
+              return (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${
+                    activeTab === tab
+                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                  }`}
+                >
+                  <span>{tab}</span>
+                  {tab === 'Not Assigned' && unassignedCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                      {unassignedCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
