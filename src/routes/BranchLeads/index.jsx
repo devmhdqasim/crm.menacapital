@@ -159,7 +159,7 @@ const LeadManagement = () => {
         
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
-      } else {
+      } else { 
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
           // Handle authentication error - redirect to login
