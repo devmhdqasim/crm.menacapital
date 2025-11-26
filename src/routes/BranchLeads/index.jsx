@@ -64,6 +64,11 @@ const LeadManagement = () => {
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
+  
+  // New states for nationality dropdown
+  const [countries, setCountries] = useState([]);
+  const [nationalitySearch, setNationalitySearch] = useState('');
+  const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
 
   const tabs = ['All', 'Kiosk Members'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -85,11 +90,50 @@ const LeadManagement = () => {
 
   const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
 
-  const nationalities = ['Afghan', 'Albanian', 'Algerian', 'American', 'Argentinian', 'Australian', 'Austrian', 'Bangladeshi', 'Belgian', 'Brazilian', 'British', 'Canadian', 'Chinese', 'Colombian', 'Danish', 'Dutch', 'Egyptian', 'Emirati', 'Filipino', 'Finnish', 'French', 'German', 'Greek', 'Indian', 'Indonesian', 'Iranian', 'Iraqi', 'Irish', 'Italian', 'Japanese', 'Jordanian', 'Kenyan', 'Korean', 'Kuwaiti', 'Lebanese', 'Malaysian', 'Mexican', 'Moroccan', 'Nigerian', 'Norwegian', 'Pakistani', 'Palestinian', 'Polish', 'Portuguese', 'Qatari', 'Romanian', 'Russian', 'Saudi', 'Singaporean', 'South African', 'Spanish', 'Sri Lankan', 'Swedish', 'Swiss', 'Syrian', 'Thai', 'Turkish', 'Ukrainian', 'Yemeni'];
-
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
 
   const sources = ['Kiosk'];
+
+  // Fetch countries from REST Countries API
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch('https://restcountries.com/v3.1/all?fields=name');
+      const data = await response.json();
+      
+      // Extract demonyms (nationality names) and sort alphabetically
+      const countryList = data
+        .map(country => {
+          // Get the common demonym (nationality name)
+          const demonym = country.demonyms?.eng?.common || country.name.common;
+          return demonym;
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+      
+      // Remove duplicates
+      const uniqueCountries = [...new Set(countryList)];
+      setCountries(uniqueCountries);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      // Fallback to a basic list if API fails
+      setCountries([
+        'Afghan', 'Albanian', 'Algerian', 'American', 'Argentinian', 'Australian', 
+        'Austrian', 'Bangladeshi', 'Belgian', 'Brazilian', 'British', 'Canadian', 
+        'Chinese', 'Colombian', 'Danish', 'Dutch', 'Egyptian', 'Emirati', 'Filipino', 
+        'Finnish', 'French', 'German', 'Greek', 'Indian', 'Indonesian', 'Iranian', 
+        'Iraqi', 'Irish', 'Italian', 'Japanese', 'Jordanian', 'Kenyan', 'Korean', 
+        'Kuwaiti', 'Lebanese', 'Malaysian', 'Mexican', 'Moroccan', 'Nigerian', 
+        'Norwegian', 'Pakistani', 'Palestinian', 'Polish', 'Portuguese', 'Qatari', 
+        'Romanian', 'Russian', 'Saudi', 'Singaporean', 'South African', 'Spanish', 
+        'Sri Lankan', 'Swedish', 'Swiss', 'Syrian', 'Thai', 'Turkish', 'Ukrainian', 'Yemeni'
+      ]);
+    }
+  };
+
+  // Filter countries based on search
+  const filteredCountries = countries.filter(country =>
+    country.toLowerCase().includes(nationalitySearch.toLowerCase())
+  );
 
   // Check if lead is assigned to an agent
   const isLeadAssigned = (lead) => {
@@ -153,7 +197,7 @@ const LeadManagement = () => {
           kioskName: lead.kioskName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
-          kioskLeadStatus: `- ${lead.kioskLeadStatus ? lead.kioskLeadStatus : 'N/A'}`,
+          kioskLeadStatus: `${lead.kioskLeadStatus ? lead.kioskLeadStatus : 'N/A'}`,
           leadAgentData: lead?.leadAgentData?.[0],
         }));
         
@@ -230,6 +274,7 @@ const LeadManagement = () => {
   useEffect(() => {
     setIsLoaded(true);
     fetchKioskMembers();
+    fetchCountries();
   }, []); // Empty dependency array means it runs only once on mount
 
   // useEffect(() => {
@@ -378,6 +423,8 @@ const LeadManagement = () => {
     setDrawerOpen(false);
     setEditingLead(null);
     formik.resetForm();
+    setNationalitySearch('');
+    setShowNationalityDropdown(false);
   };
 
   const formatPhoneDisplay = (phone) => {
@@ -415,6 +462,14 @@ const LeadManagement = () => {
   
     return formatted.replace(",", "");
   }
+
+  // Get display text for nationality field
+  const getNationalityDisplayText = () => {
+    if (formik.values.nationality) {
+      return formik.values.nationality;
+    }
+    return 'Select Nationality';
+  };
 
   return (
     <>
@@ -559,13 +614,12 @@ const LeadManagement = () => {
                       <td className="px-6 py-4 text-gray-300">{lead.language}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.nationality || 'N/A'}</td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead?.leadSourceName}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                          {/* {lead.status || 'N/A'} */}
-                          {lead.status == 'Real' ? `${lead.status} ${lead.depositStatus && `- ${lead.depositStatus}`}` : lead.status || 'N/A'} 
-                        </span>
-                        <span className='px-3 py-1 text-xs font-medium text-gray-200 whitespace-nowrap'>
+                      <td className="flex items-center gap-1.5 px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
                           {lead?.kioskLeadStatus}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                          {lead.status == 'Real' ? `${lead.status} ${lead.depositStatus && `- ${lead.depositStatus}`}` : lead.status || 'N/A'} 
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
@@ -787,7 +841,7 @@ const LeadManagement = () => {
           </div>
 
           {/* Drawer Form */}
-          <form onSubmit={formik.handleSubmit} className="flex-1 overflow-y-auto p-6">
+          <form onSubmit={formik.handleSubmit} className="flex-1 flex flex-col overflow-y-auto p-6">
             <div className="space-y-6">
               {/* Personal Information Section */}
               <div className="grid space-y-4">
@@ -944,29 +998,71 @@ const LeadManagement = () => {
                     )}
                   </div>
 
-                  {/* Nationality */}
+                  {/* Nationality - Now with Custom Searchable Dropdown */}
                   <div className="relative space-y-2">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Nationality
                     </label>
                     <div className="relative">
-                      <select
-                        name="nationality"
-                        value={formik.values.nationality}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                      <div
+                        onClick={() => setShowNationalityDropdown(!showNationalityDropdown)}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 cursor-pointer flex items-center justify-between ${
                           formik.touched.nationality && formik.errors.nationality
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#BBA473]/30 hover:border-[#BBA473]'
                         }`}
                       >
-                        <option value="">Select Nationality</option>
-                        {nationalities.map((nationality) => (
-                          <option key={nationality} value={nationality}>{nationality}</option>
-                        ))}
-                      </select>
-                     <ChevronDown className="leads-chevron-icon absolute right-3 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                        <span className={formik.values.nationality ? 'text-white' : 'text-gray-400'}>
+                          {getNationalityDisplayText()}
+                        </span>
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      </div>
+                      
+                      {showNationalityDropdown && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#2A2A2A] border-2 border-[#BBA473]/30 rounded-lg shadow-xl max-h-64 overflow-hidden">
+                          {/* Search Input */}
+                          <div className="p-2 border-b border-[#BBA473]/30">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                              <input
+                                type="text"
+                                placeholder="Search nationality..."
+                                value={nationalitySearch}
+                                onChange={(e) => setNationalitySearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473]"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Options List */}
+                          <div className="overflow-y-auto max-h-52">
+                            {filteredCountries.length > 0 ? (
+                              filteredCountries.map((country) => (
+                                <div
+                                  key={country}
+                                  onClick={() => {
+                                    formik.setFieldValue('nationality', country);
+                                    setShowNationalityDropdown(false);
+                                    setNationalitySearch('');
+                                  }}
+                                  className={`px-4 py-2 cursor-pointer transition-colors ${
+                                    formik.values.nationality === country
+                                      ? 'bg-[#BBA473]/20 text-[#BBA473]'
+                                      : 'text-white hover:bg-[#3A3A3A]'
+                                  }`}
+                                >
+                                  {country}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-4 py-3 text-gray-400 text-sm text-center">
+                                No nationalities found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     {formik.touched.nationality && formik.errors.nationality && (
                       <div className="text-red-400 text-sm animate-pulse">{formik.errors.nationality}</div>
@@ -1058,7 +1154,7 @@ const LeadManagement = () => {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-6">
+            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-auto">
               <button
                 type="button"
                 onClick={handleCloseDrawer}
