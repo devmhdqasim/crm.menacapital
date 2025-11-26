@@ -153,7 +153,7 @@ const LeadManagement = () => {
           kioskName: lead.kioskName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
-          kioskLeadStatus: lead.kioskLeadStatus,
+          kioskLeadStatus: `- ${lead.kioskLeadStatus ? lead.kioskLeadStatus : 'N/A'}`,
           leadAgentData: lead?.leadAgentData?.[0],
         }));
         
@@ -564,7 +564,7 @@ const LeadManagement = () => {
                           {/* {lead.status || 'N/A'} */}
                           {lead.status == 'Real' ? `${lead.status} ${lead.depositStatus && `- ${lead.depositStatus}`}` : lead.status || 'N/A'} 
                         </span>
-                        <span className='px-3 py-1 text-xs font-semibold whitespace-nowrap'>
+                        <span className='px-3 py-1 text-xs font-medium text-gray-200 whitespace-nowrap'>
                           {lead?.kioskLeadStatus}
                         </span>
                       </td>
