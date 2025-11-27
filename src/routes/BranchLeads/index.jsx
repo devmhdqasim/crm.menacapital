@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, AlertTriangle, Clock } from 'lucide-react';
 import { getAllBranchLeads, createLead, updateLead, deleteBranch } from '../../services/leadService';
 import { getAllUsers, getAllUsersKioskMembers } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
@@ -69,6 +69,8 @@ const LeadManagement = () => {
   const [countries, setCountries] = useState([]);
   const [nationalitySearch, setNationalitySearch] = useState('');
   const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
+  const [hasFormChanged, setHasFormChanged] = useState(false);
+  const [initialFormValues, setInitialFormValues] = useState(null);
 
   const tabs = ['All', 'Kiosk Members'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -325,6 +327,8 @@ const LeadManagement = () => {
           resetForm();
           setDrawerOpen(false);
           setEditingLead(null);
+          setHasFormChanged(false);
+          setInitialFormValues(null);
           // Refresh the lead list
           fetchLeads(currentPage, itemsPerPage);
         } else {
@@ -343,6 +347,18 @@ const LeadManagement = () => {
       }
     },
   });
+
+  // useEffect to detect form changes
+  useEffect(() => {
+    if (editingLead && initialFormValues) {
+      const currentValues = JSON.stringify(formik.values);
+      const initialValues = JSON.stringify(initialFormValues);
+      setHasFormChanged(currentValues !== initialValues);
+    } else if (!editingLead) {
+      // For new leads, enable button if form is not empty
+      setHasFormChanged(true);
+    }
+  }, [formik.values, editingLead, initialFormValues]);
 
    const filteredLeads = leads.filter(lead => {
     const matchesSearch =
@@ -403,7 +419,7 @@ const LeadManagement = () => {
       return;
     }
 
-    formik.setValues({
+    const formValues = {
       name: lead.name || '',
       phone: lead.phone || '',
       nationality: lead.nationality || '',
@@ -413,7 +429,11 @@ const LeadManagement = () => {
       depositStatus: lead.depositStatus || '',
       kioskMember: lead.leadSourceId ? lead.leadSourceId._id : '',
       remarks: lead.remarks || '',
-    });
+    };
+    
+    formik.setValues(formValues);
+    setInitialFormValues(formValues);
+    setHasFormChanged(false);
     setEditingLead(lead);
     setDrawerOpen(true);
     setShowActionsDropdown(null);
@@ -425,6 +445,8 @@ const LeadManagement = () => {
     formik.resetForm();
     setNationalitySearch('');
     setShowNationalityDropdown(false);
+    setHasFormChanged(false);
+    setInitialFormValues(null);
   };
 
   const formatPhoneDisplay = (phone) => {
@@ -471,6 +493,213 @@ const LeadManagement = () => {
     return 'Select Nationality';
   };
 
+  // Helper function to get flag emoji from nationality/country name
+  const getNationalityFlag = (nationality) => {
+    if (!nationality) return '';
+    
+    // Map country names to their ISO country codes
+    const countryNameToCode = {
+      'Afghan': 'AF', 'Afghanistan': 'AF',
+      'Albanian': 'AL', 'Albania': 'AL',
+      'Algerian': 'DZ', 'Algeria': 'DZ',
+      'American': 'US', 'United States': 'US', 'United States of America': 'US',
+      'Andorran': 'AD', 'Andorra': 'AD',
+      'Angolan': 'AO', 'Angola': 'AO',
+      'Antiguan': 'AG', 'Antigua and Barbuda': 'AG',
+      'Argentinian': 'AR', 'Argentine': 'AR', 'Argentina': 'AR',
+      'Armenian': 'AM', 'Armenia': 'AM',
+      'Australian': 'AU', 'Australia': 'AU',
+      'Austrian': 'AT', 'Austria': 'AT',
+      'Azerbaijani': 'AZ', 'Azerbaijan': 'AZ',
+      'Bahamian': 'BS', 'Bahamas': 'BS',
+      'Bahraini': 'BH', 'Bahrain': 'BH',
+      'Bangladeshi': 'BD', 'Bangladesh': 'BD',
+      'Barbadian': 'BB', 'Barbados': 'BB',
+      'Belarusian': 'BY', 'Belarus': 'BY',
+      'Belgian': 'BE', 'Belgium': 'BE',
+      'Belizean': 'BZ', 'Belize': 'BZ',
+      'Beninese': 'BJ', 'Benin': 'BJ',
+      'Bhutanese': 'BT', 'Bhutan': 'BT',
+      'Bolivian': 'BO', 'Bolivia': 'BO',
+      'Bosnian': 'BA', 'Bosnia and Herzegovina': 'BA',
+      'Botswanan': 'BW', 'Botswana': 'BW',
+      'Brazilian': 'BR', 'Brazil': 'BR',
+      'British': 'GB', 'United Kingdom': 'GB',
+      'Bruneian': 'BN', 'Brunei': 'BN',
+      'Bulgarian': 'BG', 'Bulgaria': 'BG',
+      'Burkinabe': 'BF', 'Burkina Faso': 'BF',
+      'Burmese': 'MM', 'Myanmar': 'MM',
+      'Burundian': 'BI', 'Burundi': 'BI',
+      'Cambodian': 'KH', 'Cambodia': 'KH',
+      'Cameroonian': 'CM', 'Cameroon': 'CM',
+      'Canadian': 'CA', 'Canada': 'CA',
+      'Cape Verdean': 'CV', 'Cape Verde': 'CV',
+      'Central African': 'CF', 'Central African Republic': 'CF',
+      'Chadian': 'TD', 'Chad': 'TD',
+      'Chilean': 'CL', 'Chile': 'CL',
+      'Chinese': 'CN', 'China': 'CN',
+      'Colombian': 'CO', 'Colombia': 'CO',
+      'Comoran': 'KM', 'Comoros': 'KM',
+      'Congolese': 'CG', 'Republic of the Congo': 'CG', 'Congo': 'CG',
+      'Costa Rican': 'CR', 'Costa Rica': 'CR',
+      'Croatian': 'HR', 'Croatia': 'HR',
+      'Cuban': 'CU', 'Cuba': 'CU',
+      'Cypriot': 'CY', 'Cyprus': 'CY',
+      'Czech': 'CZ', 'Czechia': 'CZ', 'Czech Republic': 'CZ',
+      'Danish': 'DK', 'Denmark': 'DK',
+      'Djiboutian': 'DJ', 'Djibouti': 'DJ',
+      'Dominican': 'DO', 'Dominican Republic': 'DO',
+      'Dutch': 'NL', 'Netherlands': 'NL',
+      'Ecuadorian': 'EC', 'Ecuador': 'EC',
+      'Egyptian': 'EG', 'Egypt': 'EG',
+      'Emirati': 'AE', 'United Arab Emirates': 'AE', 'UAE': 'AE',
+      'Equatorial Guinean': 'GQ', 'Equatorial Guinea': 'GQ',
+      'Eritrean': 'ER', 'Eritrea': 'ER',
+      'Estonian': 'EE', 'Estonia': 'EE',
+      'Eswatini': 'SZ', 'Swazi': 'SZ',
+      'Ethiopian': 'ET', 'Ethiopia': 'ET',
+      'Fijian': 'FJ', 'Fiji': 'FJ',
+      'Filipino': 'PH', 'Philippines': 'PH',
+      'Finnish': 'FI', 'Finland': 'FI',
+      'French': 'FR', 'France': 'FR',
+      'Gabonese': 'GA', 'Gabon': 'GA',
+      'Gambian': 'GM', 'Gambia': 'GM',
+      'Georgian': 'GE', 'Georgia': 'GE',
+      'German': 'DE', 'Germany': 'DE',
+      'Ghanaian': 'GH', 'Ghana': 'GH',
+      'Greek': 'GR', 'Greece': 'GR',
+      'Grenadian': 'GD', 'Grenada': 'GD',
+      'Guatemalan': 'GT', 'Guatemala': 'GT',
+      'Guinean': 'GN', 'Guinea': 'GN',
+      'Guyanese': 'GY', 'Guyana': 'GY',
+      'Haitian': 'HT', 'Haiti': 'HT',
+      'Honduran': 'HN', 'Honduras': 'HN',
+      'Hungarian': 'HU', 'Hungary': 'HU',
+      'Icelandic': 'IS', 'Iceland': 'IS',
+      'Indian': 'IN', 'India': 'IN',
+      'Indonesian': 'ID', 'Indonesia': 'ID',
+      'Iranian': 'IR', 'Iran': 'IR',
+      'Iraqi': 'IQ', 'Iraq': 'IQ',
+      'Irish': 'IE', 'Ireland': 'IE',
+      'Israeli': 'IL', 'Israel': 'IL',
+      'Italian': 'IT', 'Italy': 'IT',
+      'Ivorian': 'CI', 'Ivory Coast': 'CI',
+      'Jamaican': 'JM', 'Jamaica': 'JM',
+      'Japanese': 'JP', 'Japan': 'JP',
+      'Jordanian': 'JO', 'Jordan': 'JO',
+      'Kazakh': 'KZ', 'Kazakhstan': 'KZ',
+      'Kenyan': 'KE', 'Kenya': 'KE',
+      'Kiribati': 'KI',
+      'Korean': 'KR', 'South Korea': 'KR',
+      'Kuwaiti': 'KW', 'Kuwait': 'KW',
+      'Kyrgyz': 'KG', 'Kyrgyzstan': 'KG',
+      'Laotian': 'LA', 'Laos': 'LA',
+      'Latvian': 'LV', 'Latvia': 'LV',
+      'Lebanese': 'LB', 'Lebanon': 'LB',
+      'Liberian': 'LR', 'Liberia': 'LR',
+      'Libyan': 'LY', 'Libya': 'LY',
+      'Liechtensteiner': 'LI', 'Liechtenstein': 'LI',
+      'Lithuanian': 'LT', 'Lithuania': 'LT',
+      'Luxembourgish': 'LU', 'Luxembourg': 'LU',
+      'Macedonian': 'MK', 'North Macedonia': 'MK',
+      'Malagasy': 'MG', 'Madagascar': 'MG',
+      'Malawian': 'MW', 'Malawi': 'MW',
+      'Malaysian': 'MY', 'Malaysia': 'MY',
+      'Maldivian': 'MV', 'Maldives': 'MV',
+      'Malian': 'ML', 'Mali': 'ML',
+      'Maltese': 'MT', 'Malta': 'MT',
+      'Marshallese': 'MH', 'Marshall Islands': 'MH',
+      'Mauritanian': 'MR', 'Mauritania': 'MR',
+      'Mauritian': 'MU', 'Mauritius': 'MU',
+      'Mexican': 'MX', 'Mexico': 'MX',
+      'Micronesian': 'FM', 'Micronesia': 'FM',
+      'Moldovan': 'MD', 'Moldova': 'MD',
+      'Monacan': 'MC', 'Monaco': 'MC',
+      'Mongolian': 'MN', 'Mongolia': 'MN',
+      'Montenegrin': 'ME', 'Montenegro': 'ME',
+      'Moroccan': 'MA', 'Morocco': 'MA',
+      'Mozambican': 'MZ', 'Mozambique': 'MZ',
+      'Namibian': 'NA', 'Namibia': 'NA',
+      'Nauruan': 'NR', 'Nauru': 'NR',
+      'Nepalese': 'NP', 'Nepal': 'NP',
+      'New Zealander': 'NZ', 'New Zealand': 'NZ',
+      'Nicaraguan': 'NI', 'Nicaragua': 'NI',
+      'Nigerian': 'NG', 'Nigeria': 'NG',
+      'Nigerien': 'NE', 'Niger': 'NE',
+      'North Korean': 'KP', 'North Korea': 'KP',
+      'Norwegian': 'NO', 'Norway': 'NO',
+      'Omani': 'OM', 'Oman': 'OM',
+      'Pakistani': 'PK', 'Pakistan': 'PK',
+      'Palauan': 'PW', 'Palau': 'PW',
+      'Palestinian': 'PS', 'Palestine': 'PS',
+      'Panamanian': 'PA', 'Panama': 'PA',
+      'Papua New Guinean': 'PG', 'Papua New Guinea': 'PG',
+      'Paraguayan': 'PY', 'Paraguay': 'PY',
+      'Peruvian': 'PE', 'Peru': 'PE',
+      'Polish': 'PL', 'Poland': 'PL',
+      'Portuguese': 'PT', 'Portugal': 'PT',
+      'Qatari': 'QA', 'Qatar': 'QA',
+      'Romanian': 'RO', 'Romania': 'RO',
+      'Russian': 'RU', 'Russia': 'RU',
+      'Rwandan': 'RW', 'Rwanda': 'RW',
+      'Saint Lucian': 'LC', 'Saint Lucia': 'LC',
+      'Salvadoran': 'SV', 'El Salvador': 'SV',
+      'Samoan': 'WS', 'Samoa': 'WS',
+      'San Marinese': 'SM', 'San Marino': 'SM',
+      'Saudi': 'SA', 'Saudi Arabia': 'SA', 'Saudi Arabian': 'SA',
+      'Senegalese': 'SN', 'Senegal': 'SN',
+      'Serbian': 'RS', 'Serbia': 'RS',
+      'Seychellois': 'SC', 'Seychelles': 'SC',
+      'Sierra Leonean': 'SL', 'Sierra Leone': 'SL',
+      'Singaporean': 'SG', 'Singapore': 'SG',
+      'Slovak': 'SK', 'Slovakia': 'SK',
+      'Slovenian': 'SI', 'Slovenia': 'SI',
+      'Somali': 'SO', 'Somalia': 'SO',
+      'South African': 'ZA', 'South Africa': 'ZA',
+      'South Korean': 'KR',
+      'South Sudanese': 'SS', 'South Sudan': 'SS',
+      'Spanish': 'ES', 'Spain': 'ES',
+      'Sri Lankan': 'LK', 'Sri Lanka': 'LK',
+      'Sudanese': 'SD', 'Sudan': 'SD',
+      'Surinamese': 'SR', 'Suriname': 'SR',
+      'Swedish': 'SE', 'Sweden': 'SE',
+      'Swiss': 'CH', 'Switzerland': 'CH',
+      'Syrian': 'SY', 'Syria': 'SY',
+      'Taiwanese': 'TW', 'Taiwan': 'TW',
+      'Tajik': 'TJ', 'Tajikistan': 'TJ',
+      'Tanzanian': 'TZ', 'Tanzania': 'TZ',
+      'Thai': 'TH', 'Thailand': 'TH',
+      'Togolese': 'TG', 'Togo': 'TG',
+      'Tongan': 'TO', 'Tonga': 'TO',
+      'Trinidadian': 'TT', 'Trinidad and Tobago': 'TT',
+      'Tunisian': 'TN', 'Tunisia': 'TN',
+      'Turkish': 'TR', 'Turkey': 'TR',
+      'Turkmen': 'TM', 'Turkmenistan': 'TM',
+      'Tuvaluan': 'TV', 'Tuvalu': 'TV',
+      'Ugandan': 'UG', 'Uganda': 'UG',
+      'Ukrainian': 'UA', 'Ukraine': 'UA',
+      'Uruguayan': 'UY', 'Uruguay': 'UY',
+      'Uzbek': 'UZ', 'Uzbekistan': 'UZ',
+      'Vanuatuan': 'VU', 'Vanuatu': 'VU',
+      'Vatican': 'VA', 'Vatican City': 'VA',
+      'Venezuelan': 'VE', 'Venezuela': 'VE',
+      'Vietnamese': 'VN', 'Vietnam': 'VN',
+      'Yemeni': 'YE', 'Yemen': 'YE',
+      'Zambian': 'ZM', 'Zambia': 'ZM',
+      'Zimbabwean': 'ZW', 'Zimbabwe': 'ZW'
+    };
+
+    const countryCode = countryNameToCode[nationality];
+    if (!countryCode) return '';
+
+    // Convert country code to flag emoji
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt());
+    return String.fromCodePoint(...codePoints);
+  };
+
   return (
     <>
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -488,6 +717,8 @@ const LeadManagement = () => {
                 onClick={() => {
                   setEditingLead(null);
                   formik.resetForm();
+                  setHasFormChanged(true);
+                  setInitialFormValues(null);
                   setDrawerOpen(true);
                 }}
                 className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
@@ -612,7 +843,14 @@ const LeadManagement = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{formatPhoneDisplay(lead.phone)}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.language}</td>
-                      <td className="px-6 py-4 text-gray-300">{lead.nationality || 'N/A'}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {getNationalityFlag(lead.nationality) && (
+                            <span className="text-xl">{getNationalityFlag(lead.nationality)}</span>
+                          )}
+                          <span className="text-gray-300">{lead.nationality || 'N/A'}</span>
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead?.leadSourceName}</td>
                       <td className="flex items-center gap-1.5 px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
@@ -622,7 +860,12 @@ const LeadManagement = () => {
                           {lead.status == 'Real' ? `${lead.status}` : lead.status || 'N/A'} 
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-gray-300">
+                          <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="text-sm">{convertToDubaiTime(lead.createdAt)}</span>
+                        </div>
+                      </td>
                       
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
@@ -1180,8 +1423,8 @@ const LeadManagement = () => {
               </button>
               <button
                 type="submit"
-                disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                disabled={formik.isSubmitting || (editingLead && !hasFormChanged)}
+                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:hover:scale-100"
               >
                 {formik.isSubmitting 
                   ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 
