@@ -837,7 +837,7 @@ const filteredLeads = leads.filter(lead => {
                       <td className="px-6 py-4 text-gray-300">{lead.agent}</td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead.source ?? 'Kiosk'}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(lead.status)}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                           {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}
                         </span>
                       </td>
@@ -1006,7 +1006,7 @@ const filteredLeads = leads.filter(lead => {
                   <div>
                     <span className="text-gray-400">Status:</span>
                     <p className="mt-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(selectedLead.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
                         {selectedLead.status}
                       </span>
                     </p>

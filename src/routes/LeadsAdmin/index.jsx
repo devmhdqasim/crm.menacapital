@@ -570,7 +570,7 @@ const LeadManagement = () => {
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead.source}</td>
                       {!isLeadsDrawerOpen && (
                         <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(lead.status)}`}>
+                          <span className={`px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(lead.status)}`}>
                             {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}
                           </span>
                         </td>

@@ -830,7 +830,7 @@ const LeadManagement = () => {
                         <>
                           <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{lead.source}</td>
                           <td className="px-6 py-4" onClick={() => handleRowClick(lead)}>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(lead.status)}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(lead.status)}`}>
                               {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}
                             </span>
                           </td>
@@ -1016,7 +1016,7 @@ const LeadManagement = () => {
                 {!isLeadsSelectedId && (
                   <div className="flex items-center gap-3 space-y-2">
                     <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(selectedLead.status)}`}>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
                       {selectedLead.status}
                     </span>
                   </div>
