@@ -998,7 +998,7 @@ const LeadManagement = () => {
                     )}
                   </div>
 
-                  {/* Nationality - Now with Custom Searchable Dropdown */}
+                  {/* Nationality - Now with Custom Searchable Dropdown and Clear Button */}
                   <div className="relative space-y-2">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Nationality
@@ -1015,7 +1015,23 @@ const LeadManagement = () => {
                         <span className={formik.values.nationality ? 'text-white' : 'text-gray-400'}>
                           {getNationalityDisplayText()}
                         </span>
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                        <div className="flex items-center gap-2">
+                          {formik.values.nationality && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                formik.setFieldValue('nationality', '');
+                                setNationalitySearch('');
+                              }}
+                              className="p-1 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all duration-300"
+                              title="Clear nationality"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        </div>
                       </div>
                       
                       {showNationalityDropdown && (
