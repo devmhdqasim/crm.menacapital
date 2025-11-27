@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, AlertTriangle, Clock } from 'lucide-react';
-import { getAllBranchLeads, createLead, updateLead, deleteBranch } from '../../services/leadService';
+import { getAllBranchLeads, createBranchLead, updateLead, deleteBranch } from '../../services/leadService';
 import { getAllUsers, getAllUsersKioskMembers } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -199,7 +199,7 @@ const LeadManagement = () => {
           kioskName: lead.kioskName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
-          kioskLeadStatus: `${lead.kioskLeadStatus ? lead.kioskLeadStatus : 'N/A'}`,
+          kioskLeadStatus: lead.kioskLeadStatus,
           leadAgentData: lead?.leadAgentData?.[0],
         }));
         
@@ -310,7 +310,7 @@ const LeadManagement = () => {
           leadNationality: values.nationality,
           leadDescription: values.remarks,
           leadSource: values.source,
-          leadStatus: values.status,
+          kioskLeadStatus: values.status,
           leadSourceId: values.kioskMember,
           depositStatus: values.depositStatus,
         };
@@ -320,7 +320,7 @@ const LeadManagement = () => {
         //   leadData.depositStatus = values.depositStatus;
         // }
 
-        const result = editingLead ? await updateLead(editingLead.id, leadData): await createLead(leadData);
+        const result = editingLead ? await updateLead(editingLead.id, leadData): await createBranchLead(leadData);
 
         if (result.success) {
           toast.success(result.message || (editingLead ? 'Lead updated successfully!' : 'Lead created successfully!'));
@@ -805,14 +805,14 @@ const LeadManagement = () => {
             <table className="w-full">
               <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
                 <tr>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Lead ID</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Name</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Language</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Nationality</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Created At</th>
                   <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -837,7 +837,7 @@ const LeadManagement = () => {
                     >
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{lead.leadId || lead.id.slice(-6) || '-'}</td>
                       <td className="px-6 py-4">
-                        <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                        <span className="font-medium capitalize text-white group-hover:text-[#BBA473] transition-colors duration-300">
                           {lead.name}
                         </span>
                       </td>
@@ -853,9 +853,9 @@ const LeadManagement = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead?.leadSourceName}</td>
                       <td className="flex items-center gap-1.5 px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
+                        {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
                           {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
-                        </span>
+                        </span> : ''}
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                           {lead.status == 'Real' ? `${lead.status}` : lead.status || 'N/A'} 
                         </span>
