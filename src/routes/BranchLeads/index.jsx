@@ -616,10 +616,10 @@ const LeadManagement = () => {
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead?.leadSourceName}</td>
                       <td className="flex items-center gap-1.5 px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                          {lead?.kioskLeadStatus}
+                          {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
                         </span>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                          {lead.status == 'Real' ? `${lead.status} ${lead.depositStatus && `- ${lead.depositStatus}`}` : lead.status || 'N/A'} 
+                          {lead.status == 'Real' ? `${lead.status}` : lead.status || 'N/A'} 
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
