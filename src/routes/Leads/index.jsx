@@ -129,8 +129,9 @@ const LeadManagement = () => {
           language: lead.leadPreferredLanguage,
           source: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}`: "-"}`,
           remarks: lead.leadDescription || '',
-          status: lead.leadStatus,
+          status: lead.leadStatus ?? '-',
           createdAt: lead.createdAt,
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
           // Boolean flags for status tracking
           contacted: lead.contacted || false,
           answered: lead.answered || false,
@@ -829,10 +830,19 @@ const LeadManagement = () => {
                       {!isLeadsSelectedId && (
                         <>
                           <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{lead.source}</td>
-                          <td className="px-6 py-4" onClick={() => handleRowClick(lead)}>
+                          {/* <td className="px-6 py-4" onClick={() => handleRowClick(lead)}>
                             <span className={`px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(lead.status)}`}>
                               {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}
                             </span>
+                          </td> */}
+
+                          <td className="flex items-center gap-1.5 px-6 py-4" onClick={() => handleRowClick(lead)}> 
+                            {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
+                              {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
+                            </span> : ''}
+                            {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                              {lead.status}
+                            </span>: ''}
                           </td>
                         </>
                       )}
@@ -1015,7 +1025,7 @@ const LeadManagement = () => {
                 </div>
                 {!isLeadsSelectedId && (
                   <div className="flex items-center gap-3 space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
+                    <label className="text-sm text-[#E8D5A3] font-medium mb-0">Status</label>
                     <span className={`inline-block px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
                       {selectedLead.status}
                     </span>

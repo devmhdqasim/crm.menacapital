@@ -157,7 +157,7 @@ const LeadManagement = () => {
           source: lead.leadSource,
           remarks: lead.leadDescription || '',
           depositStatus: lead.depositStatus || '',
-          status: lead.leadStatus,
+          status: lead.kioskLeadStatus,
           createdAt: lead.createdAt,
           leadSourceId: lead?.leadSourceId?.[0],
 

@@ -110,7 +110,8 @@ const LeadManagement = () => {
           // depositStatus: lead.depositStatus,
           source: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}`: "-"}`,
           remarks: lead.leadDescription || '',
-          status: lead.leadStatus,
+          status: lead.leadStatus ?? '-',
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
           createdAt: lead.createdAt,
         }));
         
@@ -569,10 +570,17 @@ const LeadManagement = () => {
                       {/* <td className="px-6 py-4 text-gray-300">{lead.residency}</td> */}
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead.source}</td>
                       {!isLeadsDrawerOpen && (
-                        <td className="px-6 py-4">
+                      <td className="flex items-center gap-1.5 px-6 py-4">
+                        {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
+                          {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
+                        </span> : ''}
+                        {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                          {lead.status}
+                        </span>: ''}
+{/*                         
                           <span className={`px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(lead.status)}`}>
                             {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}
-                          </span>
+                          </span> */}
                         </td>
                       )}
                       <td className="px-6 py-4 text-gray-300 text-sm">{convertToDubaiTime(lead.createdAt)}</td>

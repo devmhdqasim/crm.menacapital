@@ -194,12 +194,12 @@ const LeadManagement = () => {
           leadSourceName: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}`: "-"}`,
           leadSourceId: lead.leadSourceId.at(-1),
           remarks: lead.leadDescription || '',
-          status: lead.leadStatus,
+          status: lead.leadStatus ?? '-',
           depositStatus: lead.depositStatus || '',
           kioskName: lead.kioskName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
-          kioskLeadStatus: lead.kioskLeadStatus,
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
           leadAgentData: lead?.leadAgentData?.[0],
         }));
         
