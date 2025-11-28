@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, AlertTriangle, Clock } from 'lucide-react';
 import { getAllSalesManagerLeads, createLead, assignLeadToAgent, updateLead, deleteLead } from '../../services/leadService';
 import { Calendar } from 'lucide-react'
 import { getAllUsers, getKioskMembersbySalesManager } from '../../services/teamService';
@@ -17,7 +17,7 @@ const leadValidationSchema = Yup.object({
     .required('Name is required')
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name must not exceed 100 characters'),
-    phone: Yup.string()
+  phone: Yup.string()
     .required('Phone number is required')
     .test('valid-phone', 'Invalid phone number', function(value) {
       if (!value) return false;
@@ -27,19 +27,19 @@ const leadValidationSchema = Yup.object({
         return false;
       }
     }),
-  email: Yup.string()
-    .email('Invalid email address'),
-  dateOfBirth: Yup.date()
-    .max(new Date(), 'Date of birth cannot be in the future'),
-    // .test('age', 'Must be at least 18 years old', function(value) {
-    //   const cutoff = new Date();
-    //   cutoff.setFullYear(cutoff.getFullYear() - 18);
-    //   return value <= cutoff;
-    // }),
   nationality: Yup.string(),
-  residency: Yup.string(),
-  language: Yup.string(),
-  source: Yup.string(),
+  language: Yup.string()
+    .required('Preferred language is required'),
+  source: Yup.string().required('Source is required'),
+  status: Yup.string()
+    .required('Status is required'),
+  depositStatus: Yup.string()
+    .when('status', {
+      is: 'Real',
+      then: (schema) => schema.required('Deposit status is required when status is Real'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+  kioskMember: Yup.string().required('Kiosk Team is required'),
   remarks: Yup.string().max(500, 'Remarks must not exceed 500 characters'),
 });
 
@@ -70,6 +70,18 @@ const LeadManagement = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [originalFormValues, setOriginalFormValues] = useState(null);
+  const [assignToSelf, setAssignToSelf] = useState(false);
+  const [originalAssignedAgent, setOriginalAssignedAgent] = useState('');
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [kioskMembers, setKioskMembers] = useState([]);
+  
+  // New states for nationality dropdown
+  const [countries, setCountries] = useState([]);
+  const [nationalitySearch, setNationalitySearch] = useState('');
+  const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
+  const [hasFormChanged, setHasFormChanged] = useState(false);
+  const [initialFormValues, setInitialFormValues] = useState(null);
+  const [assignToSelfOnCreate, setAssignToSelfOnCreate] = useState(false);
 
   // Tab hierarchy configuration
   const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted'];
@@ -122,13 +134,50 @@ const LeadManagement = () => {
 
   const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
 
-  const nationalities = ['Afghan', 'Albanian', 'Algerian', 'American', 'Argentinian', 'Australian', 'Austrian', 'Bangladeshi', 'Belgian', 'Brazilian', 'British', 'Canadian', 'Chinese', 'Colombian', 'Danish', 'Dutch', 'Egyptian', 'Emirati', 'Filipino', 'Finnish', 'French', 'German', 'Greek', 'Indian', 'Indonesian', 'Iranian', 'Iraqi', 'Irish', 'Italian', 'Japanese', 'Jordanian', 'Kenyan', 'Korean', 'Kuwaiti', 'Lebanese', 'Malaysian', 'Mexican', 'Moroccan', 'Nigerian', 'Norwegian', 'Pakistani', 'Palestinian', 'Polish', 'Portuguese', 'Qatari', 'Romanian', 'Russian', 'Saudi', 'Singaporean', 'South African', 'Spanish', 'Sri Lankan', 'Swedish', 'Swiss', 'Syrian', 'Thai', 'Turkish', 'Ukrainian', 'Yemeni'];
-
-  const residencies = ['United Arab Emirates', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Pakistan', 'India', 'Egypt', 'Jordan', 'Lebanon', 'United Kingdom', 'United States', 'Canada', 'Australia', 'Other'];
-
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
 
   const sources = ['Kiosk'];
+
+  // Fetch countries from REST Countries API
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch('https://restcountries.com/v3.1/all?fields=name,demonyms');
+      const data = await response.json();
+      
+      // Extract demonyms (nationality names) and sort alphabetically
+      const countryList = data
+        .map(country => {
+          // Get the common demonym (nationality name)
+          const demonym = country.demonyms?.eng?.common || country.name.common;
+          return demonym;
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+      
+      // Remove duplicates
+      const uniqueCountries = [...new Set(countryList)];
+      setCountries(uniqueCountries);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      // Fallback to a basic list if API fails
+      setCountries([
+        'Afghan', 'Albanian', 'Algerian', 'American', 'Argentinian', 'Australian', 
+        'Austrian', 'Bangladeshi', 'Belgian', 'Brazilian', 'British', 'Canadian', 
+        'Chinese', 'Colombian', 'Danish', 'Dutch', 'Egyptian', 'Emirati', 'Filipino', 
+        'Finnish', 'French', 'German', 'Greek', 'Indian', 'Indonesian', 'Iranian', 
+        'Iraqi', 'Irish', 'Italian', 'Japanese', 'Jordanian', 'Kenyan', 'Korean', 
+        'Kuwaiti', 'Lebanese', 'Malaysian', 'Mexican', 'Moroccan', 'Nigerian', 
+        'Norwegian', 'Pakistani', 'Palestinian', 'Polish', 'Portuguese', 'Qatari', 
+        'Romanian', 'Russian', 'Saudi', 'Singaporean', 'South African', 'Spanish', 
+        'Sri Lankan', 'Swedish', 'Swiss', 'Syrian', 'Thai', 'Turkish', 'Ukrainian', 'Yemeni'
+      ]);
+    }
+  };
+
+  // Filter countries based on search
+  const filteredCountries = countries.filter(country =>
+    country.toLowerCase().includes(nationalitySearch.toLowerCase())
+  );
 
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
@@ -151,7 +200,7 @@ const LeadManagement = () => {
             : 'Not Assigned',
           agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
           dateOfBirth: lead.leadDateOfBirth,
-          nationality: lead.leadNationality,
+          nationality: lead.leadNationality ?? '-',
           residency: lead.leadResidency,
           language: lead.leadPreferredLanguage,
           source: lead.leadSource,
@@ -160,6 +209,7 @@ const LeadManagement = () => {
           status: lead.kioskLeadStatus,
           createdAt: lead.createdAt,
           leadSourceId: lead?.leadSourceId?.[0],
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
 
           // ADD THESE BOOLEAN FLAGS FROM API:
           contacted: lead.contacted || false,
@@ -215,6 +265,10 @@ const LeadManagement = () => {
         
         setAgents(transformedAgents);
         console.log('✅ Fetched agents:', transformedAgents.length);
+        
+        // Get current user ID from localStorage or API
+        const userData = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        setCurrentUserId(userData._id || userData.id);
       } else {
         console.error('Failed to fetch agents:', result.message);
       }
@@ -223,8 +277,30 @@ const LeadManagement = () => {
     }
   };
 
+  // Fetch kiosk members from API
+  const fetchKioskMembers = async () => {
+    try {
+      const result = await getAllUsers(1, 100);
+      if (result.success && result.data) {
+        const kioskMembersData = result.data.filter(user => 
+          user.roleName === 'Kiosk Member'
+        );
+        const transformedKioskMembers = kioskMembersData.map((user) => ({
+          id: user._id,
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+        }));
+        setKioskMembers(transformedKioskMembers);
+      }
+    } catch (error) {
+      console.error('Error fetching kiosk members:', error);
+    }
+  };
+
   useEffect(() => {
     fetchAgents();
+    fetchKioskMembers();
+    fetchCountries();
   }, []); // Empty dependency array means it runs only once on mount
 
 
@@ -248,20 +324,20 @@ const LeadManagement = () => {
   const formik = useFormik({
     initialValues: {
       name: '',
-      email: '',
       phone: '',
-      dateOfBirth: '',
       nationality: '',
-      residency: '',
       language: '',
-      source: '',
+      source: 'Kiosk',
+      status: '',
+      depositStatus: '',
+      kioskMember: '',
       remarks: '',
     },
     validationSchema: leadValidationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
         // Check if editing and no changes were made
-        if (editingLead && !hasFormValuesChanged(values, originalFormValues)) {
+        if (editingLead && !hasFormChanged) {
           toast.info('No changes detected');
           setSubmitting(false);
           return;
@@ -273,15 +349,14 @@ const LeadManagement = () => {
         // Prepare lead data for API
         const leadData = {
           leadName: values.name,
-          leadEmail: values.email,
           leadPhoneNumber: phoneNumber,
-          leadResidency: values.residency,
           leadPreferredLanguage: values.language,
-          leadDateOfBirth: values.dateOfBirth,
           leadNationality: values.nationality,
           leadDescription: values.remarks,
           leadSource: values.source,
-          leadStatus: "New", // Default status for new leads
+          kioskLeadStatus: values.status,
+          leadSourceId: values.kioskMember,
+          depositStatus: values.depositStatus,
         };
 
         let result;
@@ -290,9 +365,30 @@ const LeadManagement = () => {
         if (editingLead) {
           // Update existing lead
           result = await updateLead(editingLead.id, leadData);
+          
+          // If assign to self switch changed, also update agent assignment
+          if (result.success) {
+            const wasAssignedToSelf = editingLead.agentId === currentUserId;
+            const shouldBeAssignedToSelf = assignToSelfOnCreate;
+            
+            if (wasAssignedToSelf !== shouldBeAssignedToSelf) {
+              if (shouldBeAssignedToSelf) {
+                // Assign to self
+                await assignLeadToAgent(editingLead.id, currentUserId);
+              } else {
+                // Unassign (you might need a separate API for this or pass null)
+                // await assignLeadToAgent(editingLead.id, null);
+              }
+            }
+          }
         } else {
           // Create new lead
           result = await createLead(leadData);
+          
+          // If assign to self is enabled, assign the lead after creation
+          if (result.success && assignToSelfOnCreate && result.data && result.data._id) {
+            await assignLeadToAgent(result.data._id, currentUserId);
+          }
         }
 
         if (result.success) {
@@ -301,6 +397,11 @@ const LeadManagement = () => {
           setDrawerOpen(false);
           setEditingLead(null);
           setOriginalFormValues(null);
+          setAssignToSelfOnCreate(false);
+          setHasFormChanged(false);
+          setInitialFormValues(null);
+          setNationalitySearch('');
+          setShowNationalityDropdown(false);
           // Refresh the lead list
           fetchLeads(currentPage, itemsPerPage);
         } else {
@@ -319,6 +420,19 @@ const LeadManagement = () => {
       }
     },
   });
+
+  // useEffect to detect form changes
+  useEffect(() => {
+    if (editingLead && initialFormValues) {
+      const currentValues = JSON.stringify(formik.values);
+      const initialValues = JSON.stringify(initialFormValues);
+      const switchChanged = assignToSelfOnCreate !== (editingLead.agentId === currentUserId);
+      setHasFormChanged(currentValues !== initialValues || switchChanged);
+    } else if (!editingLead) {
+      // For new leads, enable button if form is not empty
+      setHasFormChanged(true);
+    }
+  }, [formik.values, editingLead, initialFormValues, assignToSelfOnCreate]);
 
 const filteredLeads = leads.filter(lead => {
   const matchesSearch =
@@ -442,26 +556,26 @@ const filteredLeads = leads.filter(lead => {
   };
 
   const handleEdit = (lead) => {
-    setEditingLead(lead);
-    setDrawerOpen(true);
-    setShowActionsDropdown(null);
-    
-    // Populate form with lead data
     const formValues = {
       name: lead.name || '',
-      email: lead.email || '',
       phone: lead.phone || '',
-      dateOfBirth: lead.dateOfBirth || '',
       nationality: lead.nationality || '',
-      residency: lead.residency || '',
       language: lead.language || '',
-      source: lead.source || '',
+      source: lead.source || 'Kiosk',
+      status: lead.kioskLeadStatus || '',
+      depositStatus: lead.depositStatus || '',
+      kioskMember: lead.leadSourceId ? lead.leadSourceId._id : '',
       remarks: lead.remarks || '',
     };
     
     formik.setValues(formValues);
-    // Store original values for comparison
-    setOriginalFormValues(formValues);
+    setInitialFormValues(formValues);
+    setHasFormChanged(false);
+    // Set assign to self switch based on whether lead is assigned to current user
+    setAssignToSelfOnCreate(lead.agentId === currentUserId);
+    setEditingLead(lead);
+    setDrawerOpen(true);
+    setShowActionsDropdown(null);
   };
 
   const handleDelete = async (leadId) => {
@@ -492,6 +606,11 @@ const filteredLeads = leads.filter(lead => {
     setDrawerOpen(false);
     setEditingLead(null);
     setOriginalFormValues(null);
+    setAssignToSelfOnCreate(false);
+    setHasFormChanged(false);
+    setInitialFormValues(null);
+    setNationalitySearch('');
+    setShowNationalityDropdown(false);
     formik.resetForm();
   };
 
@@ -501,13 +620,19 @@ const filteredLeads = leads.filter(lead => {
       return;
     }
     setSelectedLead(lead);
+    // Store original assigned agent
+    setOriginalAssignedAgent(lead.agentId || '');
     // Pre-select agent if already assigned
     setSelectedAgentForLead(lead.agentId || '');
+    // Reset assign to self switch
+    setAssignToSelf(false);
     setShowRowModal(true);
   };
 
   const handleAssignAgent = async () => {
-    if (!selectedAgentForLead) {
+    const agentToAssign = assignToSelf ? currentUserId : selectedAgentForLead;
+    
+    if (!agentToAssign) {
       toast.error('Please select an agent');
       return;
     }
@@ -515,15 +640,17 @@ const filteredLeads = leads.filter(lead => {
     setAssigningLead(true);
     
     try {
-      console.log('🔵 Assigning lead:', selectedLead.id, 'to agent:', selectedAgentForLead);
+      console.log('🔵 Assigning lead:', selectedLead.id, 'to agent:', agentToAssign);
       
-      const result = await assignLeadToAgent(selectedLead.id, selectedAgentForLead);
+      const result = await assignLeadToAgent(selectedLead.id, agentToAssign);
       
       if (result.success) {
         toast.success(result.message || 'Lead assigned to agent successfully!');
         setShowRowModal(false);
         setSelectedLead(null);
         setSelectedAgentForLead('');
+        setAssignToSelf(false);
+        setOriginalAssignedAgent('');
         // Refresh leads list
         await fetchLeads(currentPage, itemsPerPage);
       } else {
@@ -541,6 +668,12 @@ const filteredLeads = leads.filter(lead => {
     }
   };
 
+  // Check if assignment has changed
+  const hasAssignmentChanged = () => {
+    const currentAssignment = assignToSelf ? currentUserId : selectedAgentForLead;
+    return currentAssignment !== originalAssignedAgent;
+  };
+
   const formatPhoneDisplay = (phone) => {
     if (!phone) return '';
     return phone;
@@ -554,7 +687,9 @@ const filteredLeads = leads.filter(lead => {
       'New': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       'Contacted': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       'Qualified': 'bg-green-500/20 text-green-400 border-green-500/30',
-      'Unqualified': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'Unqualified': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'Deposit': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      'No Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
@@ -616,6 +751,14 @@ const filteredLeads = leads.filter(lead => {
   const handleSubSubSubSubTabChange = (subSubSubSubTab) => {
     setActiveSubSubSubSubTab(subSubSubSubTab);
   };
+
+  // Get display text for nationality field
+  const getNationalityDisplayText = () => {
+    if (formik.values.nationality) {
+      return formik.values.nationality;
+    }
+    return 'Select Nationality';
+  };
   
   return (
     <>
@@ -636,6 +779,9 @@ const filteredLeads = leads.filter(lead => {
                   if(!drawerOpen) {
                     setEditingLead(null);
                     setOriginalFormValues(null);
+                    setAssignToSelfOnCreate(false);
+                    setHasFormChanged(true);
+                    setInitialFormValues(null);
                     formik.resetForm();
                     setDrawerOpen(true);
                   }
@@ -829,7 +975,7 @@ const filteredLeads = leads.filter(lead => {
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{lead.leadId || lead.id.slice(-6)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                          <span className="font-medium capitalize text-white group-hover:text-[#BBA473] transition-colors duration-300">
                             {lead.name}
                           </span>
                         </div>
@@ -962,7 +1108,7 @@ const filteredLeads = leads.filter(lead => {
         </div>
       </div>
 
-      {/* Row Click Modal - UPDATED WITH PRE-SELECTED AGENT AND REMARKS */}
+      {/* Row Click Modal - UPDATED WITH ASSIGN TO SELF SWITCH */}
       {showRowModal && selectedLead && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-md animate-fadeIn">
@@ -977,6 +1123,8 @@ const filteredLeads = leads.filter(lead => {
                   setShowRowModal(false);
                   setSelectedLead(null);
                   setSelectedAgentForLead('');
+                  setAssignToSelf(false);
+                  setOriginalAssignedAgent('');
                 }}
                 className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300 text-gray-400 hover:text-white"
               >
@@ -1005,8 +1153,8 @@ const filteredLeads = leads.filter(lead => {
                     <span className="text-gray-400">Language:</span>
                     <p className="text-white font-medium mt-1">{selectedLead.language}</p>
                   </div>
-                  <div>
-                    <span className="text-gray-400">Status:</span>
+                  <div className='flex items-center gap-2'>
+                    <span className="text-gray-400 mb-0">Status:</span>
                     <p className="mt-1">
                       <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
                         {selectedLead.status}
@@ -1024,6 +1172,34 @@ const filteredLeads = leads.filter(lead => {
                 )}
               </div>
 
+              {/* Assign to Self Switch */}
+              <div className="bg-[#1A1A1A] rounded-lg p-4 border border-[#BBA473]/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Assign to Yourself
+                    </label>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Toggle to quickly assign this lead to yourself
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAssignToSelf(!assignToSelf)}
+                    disabled={assigningLead}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#1A1A1A] disabled:opacity-50 disabled:cursor-not-allowed ${
+                      assignToSelf ? 'bg-[#BBA473]' : 'bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                        assignToSelf ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
               {/* Agent Selection */}
               <div className="relative space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
@@ -1033,8 +1209,10 @@ const filteredLeads = leads.filter(lead => {
                   <select
                     value={selectedAgentForLead}
                     onChange={(e) => setSelectedAgentForLead(e.target.value)}
-                    disabled={assigningLead}
-                    className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={assigningLead || assignToSelf}
+                    className={`w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] disabled:opacity-50 disabled:cursor-not-allowed ${
+                      assignToSelf ? 'opacity-50' : ''
+                    }`}
                   >
                     <option value="">Choose agent...</option>
                     {agents.map((agent) => (
@@ -1055,6 +1233,8 @@ const filteredLeads = leads.filter(lead => {
                   setShowRowModal(false);
                   setSelectedLead(null);
                   setSelectedAgentForLead('');
+                  setAssignToSelf(false);
+                  setOriginalAssignedAgent('');
                 }}
                 disabled={assigningLead}
                 className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1063,7 +1243,7 @@ const filteredLeads = leads.filter(lead => {
               </button>
               <button
                 onClick={handleAssignAgent}
-                disabled={assigningLead || !selectedAgentForLead}
+                disabled={assigningLead || (!assignToSelf && !selectedAgentForLead) || !hasAssignmentChanged()}
                 className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {assigningLead ? 'Assigning...' : 'Assign'}
@@ -1099,15 +1279,15 @@ const filteredLeads = leads.filter(lead => {
           </div>
 
           {/* Drawer Form */}
-          <form onSubmit={formik.handleSubmit} className="flex-1 overflow-y-auto p-6">
+          <form onSubmit={formik.handleSubmit} className="flex-1 flex flex-col overflow-y-auto p-6">
             <div className="space-y-6">
               {/* Personal Information Section */}
-              <div className="space-y-4">
+              <div className="grid space-y-4">
                 <h3 className="text-lg font-semibold text-[#E8D5A3] border-b border-[#BBA473]/30 pb-2">
                   Lead Information
                 </h3>
 
-                {/* Two Column Grid - Row 1 */}
+                {/* Two Column Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Full Name */}
                   <div className="space-y-2">
@@ -1132,26 +1312,243 @@ const filteredLeads = leads.filter(lead => {
                     )}
                   </div>
 
-                  {/* Email */}
-                  <div className="space-y-2">
+                  {/* Language */}
+                  <div className="relative space-y-2">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Email Address 
+                      Preferred Language <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="Enter email address"
-                      value={formik.values.email}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.email && formik.errors.email
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    />
-                    {formik.touched.email && formik.errors.email && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.email}</div>
+                    <div className="relative">
+                      <select
+                        name="language"
+                        value={formik.values.language}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.language && formik.errors.language
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Language</option>
+                        {languages.map((language) => (
+                          <option key={language} value={language}>{language}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                    {formik.touched.language && formik.errors.language && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.language}</div>
+                    )}
+                  </div>
+
+                  {/* Status */}
+                  <div className="relative space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Status <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="status"
+                        value={formik.values.status}
+                        onChange={(e) => {
+                          formik.handleChange(e);
+                          // Clear depositStatus if status is not "Real"
+                          if (e.target.value !== 'Real') {
+                            formik.setFieldValue('depositStatus', '');
+                          }
+                        }}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.status && formik.errors.status
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Status</option>
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                    {formik.touched.status && formik.errors.status && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.status}</div>
+                    )}
+                  </div>
+
+                  {/* Deposit Status - Shows only when Status is "Real" */}
+                  {formik.values.status === 'Real' && (
+                    <div className="relative space-y-2">
+                      <label className="text-sm text-[#E8D5A3] font-medium block">
+                        Deposit Status <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          name="depositStatus"
+                          value={formik.values.depositStatus}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                            formik.touched.depositStatus && formik.errors.depositStatus
+                              ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                              : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          }`}
+                        >
+                          <option value="">Select Deposit Status</option>
+                          {depositStatusOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                      </div>
+                      {formik.touched.depositStatus && formik.errors.depositStatus && (
+                        <div className="text-red-400 text-sm animate-pulse">{formik.errors.depositStatus}</div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Kiosk Member */}
+                  <div className="relative space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Kiosk Team <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="kioskMember"
+                        value={formik.values.kioskMember}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.kioskMember && formik.errors.kioskMember
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Kiosk Member</option>
+                        {kioskMembers.map((member) => (
+                          <option key={member.id} value={member.id}>{member.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                    {formik.touched.kioskMember && formik.errors.kioskMember && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.kioskMember}</div>
+                    )}
+                  </div>
+
+                  {/* Nationality - Now with Custom Searchable Dropdown and Clear Button */}
+                  <div className="relative space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Nationality
+                    </label>
+                    <div className="relative">
+                      <div
+                        onClick={() => setShowNationalityDropdown(!showNationalityDropdown)}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 cursor-pointer flex items-center justify-between ${
+                          formik.touched.nationality && formik.errors.nationality
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <span className={formik.values.nationality ? 'text-white' : 'text-gray-400'}>
+                          {getNationalityDisplayText()}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {formik.values.nationality && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                formik.setFieldValue('nationality', '');
+                                setNationalitySearch('');
+                              }}
+                              className="p-1 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all duration-300"
+                              title="Clear nationality"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
+                      
+                      {showNationalityDropdown && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#2A2A2A] border-2 border-[#BBA473]/30 rounded-lg shadow-xl max-h-64 overflow-hidden">
+                          {/* Search Input */}
+                          <div className="p-2 border-b border-[#BBA473]/30">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                              <input
+                                type="text"
+                                placeholder="Search nationality..."
+                                value={nationalitySearch}
+                                onChange={(e) => setNationalitySearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473]"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Options List */}
+                          <div className="overflow-y-auto max-h-52">
+                            {filteredCountries.length > 0 ? (
+                              filteredCountries.map((country) => (
+                                <div
+                                  key={country}
+                                  onClick={() => {
+                                    formik.setFieldValue('nationality', country);
+                                    setShowNationalityDropdown(false);
+                                    setNationalitySearch('');
+                                  }}
+                                  className={`px-4 py-2 cursor-pointer transition-colors ${
+                                    formik.values.nationality === country
+                                      ? 'bg-[#BBA473]/20 text-[#BBA473]'
+                                      : 'text-white hover:bg-[#3A3A3A]'
+                                  }`}
+                                >
+                                  {country}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-4 py-3 text-gray-400 text-sm text-center">
+                                No nationalities found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {formik.touched.nationality && formik.errors.nationality && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.nationality}</div>
+                    )}
+                  </div>
+
+                  {/* Source */}
+                  <div className="relative space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Lead Source
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="source"
+                        value={formik.values.source}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                          formik.touched.source && formik.errors.source
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Source</option>
+                        {sources.map((source) => (
+                          <option key={source} value={source}>{source}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                    {formik.touched.source && formik.errors.source && (
+                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.source}</div>
                     )}
                   </div>
                 </div>
@@ -1161,204 +1558,21 @@ const filteredLeads = leads.filter(lead => {
                   <label className="text-sm text-[#E8D5A3] font-medium block">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                        className="h-full px-3 py-3 border-2 border-[#BBA473]/30 rounded-lg bg-[#1A1A1A] hover:border-[#BBA473] transition-all duration-300 flex items-center gap-2 min-w-[100px]"
-                      >
-                        <span className="text-xl">{selectedCountry.flag}</span>
-                        <span className="text-white text-sm">{selectedCountry.dialCode}</span>
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </button>
-                      {showCountryDropdown && (
-                        <div className="absolute top-full mt-2 left-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[280px] max-h-60 overflow-y-auto">
-                          {countryCodes.map((country) => (
-                            <button
-                              key={country.code}
-                              type="button"
-                              onClick={() => {
-                                setSelectedCountry(country);
-                                setShowCountryDropdown(false);
-                                const phoneWithoutCode = formik.values.phone.replace(/^\+\d{1,4}\s/, '');
-                                formik.setFieldValue('phone', `${country.dialCode} ${phoneWithoutCode}`);
-                              }}
-                              className="w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors flex items-center gap-3 first:rounded-t-lg last:rounded-b-lg"
-                            >
-                              <span className="text-xl">{country.flag}</span>
-                              <div className="flex-1">
-                                <div className="text-white text-sm">{country.name}</div>
-                                <div className="text-gray-400 text-xs">{country.dialCode}</div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                      <input
-                        type="text"
-                        name="phone"
-                        placeholder="50 123 4567"
-                        value={formik.values.phone.replace(/^\+\d{1,4}\s/, '')}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          formik.setFieldValue('phone', `${selectedCountry.dialCode} ${value}`);
-                        }}
-                        onBlur={formik.handleBlur}
-                        className={`flex-1 px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                          formik.touched.phone && formik.errors.phone
-                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                        }`}
-                      />
-                  </div>
+                  <PhoneInput
+                    international
+                    defaultCountry="AE"
+                    value={formik.values.phone}
+                    onChange={(value) => formik.setFieldValue('phone', value || '')}
+                    onBlur={() => formik.setFieldTouched('phone', true)}
+                    className={`phone-input-custom ${
+                      formik.touched.phone && formik.errors.phone
+                        ? 'phone-input-error'
+                        : ''
+                    }`}
+                  />
                   {formik.touched.phone && formik.errors.phone && (
                     <div className="text-red-400 text-sm animate-pulse">{formik.errors.phone}</div>
                   )}
-                </div>
-
-                {/* Two Column Grid - Row 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Date of Birth */}
-                  <div className="space-y-2 relative">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">Date of Birth</label>
-                    <input
-                      type="date"
-                      name="dateOfBirth"
-                      value={formik.values.dateOfBirth}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.dateOfBirth && formik.errors.dateOfBirth
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                    {formik.touched.dateOfBirth && formik.errors.dateOfBirth && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.dateOfBirth}</div>
-                    )}
-                  </div>
-
-                  {/* Nationality */}
-                  <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Nationality
-                    </label>
-                    <div className="relative">
-                    <select
-                      name="nationality"
-                      value={formik.values.nationality}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.nationality && formik.errors.nationality
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Nationality</option>
-                      {nationalities.map((nationality) => (
-                        <option key={nationality} value={nationality}>{nationality}</option>
-                      ))}
-                    </select>
-                    </div>
-                    {formik.touched.nationality && formik.errors.nationality && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.nationality}</div>
-                    )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Two Column Grid - Row 3 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Residency */}
-                  <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Country of Residency
-                    </label>
-                    <div className="relative">
-                    <select
-                      name="residency"
-                      value={formik.values.residency}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.residency && formik.errors.residency
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Residency</option>
-                      {residencies.map((residency) => (
-                        <option key={residency} value={residency}>{residency}</option>
-                      ))}
-                    </select>
-                    </div>
-                    {formik.touched.residency && formik.errors.residency && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.residency}</div>
-                    )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-
-                  {/* Language */}
-                  <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Preferred Language
-                    </label>
-                    <div className="relative">
-                    <select
-                      name="language"
-                      value={formik.values.language}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.language && formik.errors.language
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Language</option>
-                      {languages.map((language) => (
-                        <option key={language} value={language}>{language}</option>
-                      ))}
-                    </select>
-                    </div>
-                    {formik.touched.language && formik.errors.language && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.language}</div>
-                    )}
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Source - Full Width */}
-                <div className="relative space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Lead Source
-                  </label>
-                  <div className="relative">
-                  <select
-                    name="source"
-                    value={formik.values.source}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                      formik.touched.source && formik.errors.source
-                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                    }`}
-                  >
-                    <option value="">Select Source</option>
-                    {sources.map((source) => (
-                      <option key={source} value={source}>{source}</option>
-                    ))}
-                  </select>
-                  </div>
-                  {formik.touched.source && formik.errors.source && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.source}</div>
-                  )}
-                  <ChevronDown className="leads-chevron-icon absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
 
                 {/* Remarks - Full Width */}
@@ -1394,7 +1608,7 @@ const filteredLeads = leads.filter(lead => {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-6">
+            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-auto">
               <button
                 type="button"
                 onClick={handleCloseDrawer}
@@ -1402,16 +1616,16 @@ const filteredLeads = leads.filter(lead => {
               >
                 Cancel
               </button>
-                <button
-                  type="submit"
-                  disabled={formik.isSubmitting}
-                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
-                >
-                  {formik.isSubmitting 
-                    ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 
-                    : (editingLead ? 'Update Lead' : 'Create Lead')
-                  }
-                </button>
+              <button
+                type="submit"
+                disabled={formik.isSubmitting || (editingLead && !hasFormChanged)}
+                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:hover:scale-100"
+              >
+                {formik.isSubmitting 
+                  ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 
+                  : (editingLead ? 'Update Lead' : 'Create Lead')
+                }
+              </button>
             </div>
           </form>
         </div>
