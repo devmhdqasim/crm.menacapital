@@ -505,18 +505,29 @@ const Tasks = () => {
         {/* Tabs */}
         <div className="mb-6 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${activeTab === tab
-                  ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                  : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                  }`}
-              >
-                {!clearFilter && tab}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const pendingCount = tab === 'Pending' 
+                ? tasks.filter(task => task.status === 'Pending').length 
+                : 0;
+              
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${activeTab === tab
+                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                    }`}
+                >
+                  <span>{!clearFilter && tab}</span>
+                  {tab === 'Pending' && pendingCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 

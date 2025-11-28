@@ -26,6 +26,8 @@ export const ROUTES = {
   SETTINGS: '/settings',
   TASKS: '/tasks',
   SALES_MANAGERS: '/sales-managers',   // Changed from '/sales-manager' to '/sales-managers'
+  UPDATE_PASSWORD: '/update-password',
+  NOTIFICATIONS: 'notifications',
 };
 
 /**
@@ -60,6 +62,8 @@ export const ROLE_PERMISSIONS = {
       ROUTES.ADMINLEADS,
       ROUTES.BRANCHES,
       ROUTES.ROLE_MANAGEMENT,
+      ROUTES.UPDATE_PASSWORD,
+      ROUTES.NOTIFICATIONS,
     ],
     label: 'Admin',
     description: 'Access to dashboard, sales managers, agents, leads, branches, and role management',
@@ -71,6 +75,8 @@ export const ROLE_PERMISSIONS = {
       ROUTES.AGENT,           // Sales Manager can access Agents
       ROUTES.SALESMANAGERLEADS,
       ROUTES.TASKS,           // Sales Manager can access Tasks
+      ROUTES.UPDATE_PASSWORD,
+      ROUTES.NOTIFICATIONS,
       // ROUTES.KIOSKMEMBER,
     ],
     label: 'Sales Manager',
@@ -82,6 +88,8 @@ export const ROLE_PERMISSIONS = {
       ROUTES.DASHBOARD,
       ROUTES.LEADS,
       ROUTES.TASKS,           // Agents can access Tasks
+      ROUTES.UPDATE_PASSWORD,
+      ROUTES.NOTIFICATIONS,
     ],
     label: 'Agent',
     description: 'Access to dashboard, leads, and tasks',
@@ -91,6 +99,8 @@ export const ROLE_PERMISSIONS = {
     allowedRoutes: [
       ROUTES.BRANCHDASHBOARD,
       ROUTES.BRANCHLEADS,
+      ROUTES.UPDATE_PASSWORD,
+      ROUTES.NOTIFICATIONS,
     ],
     label: 'Kiosk Member',
     description: 'Access to dashboard and leads only',

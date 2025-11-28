@@ -718,7 +718,7 @@ const BranchManagement = () => {
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group"
                     >
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">
-                        #{branch.branchUsername}
+                        {branch.branchUsername}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">

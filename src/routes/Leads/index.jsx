@@ -811,7 +811,7 @@ const LeadManagement = () => {
                       key={lead.id}
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group cursor-pointer"
                     >
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm" onClick={() => handleRowClick(lead)}>#{lead.leadId || lead.id.slice(-6)}</td>
+                      <td className="px-6 py-4 text-gray-300 font-mono text-sm" onClick={() => handleRowClick(lead)}>{lead.leadId || lead.id.slice(-6)}</td>
                       <td className="px-6 py-4" onClick={() => handleRowClick(lead)}>
                         <div className="flex items-center gap-3">
                           {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center font-bold text-black text-lg transition-transform duration-300 group-hover:scale-110">
@@ -969,7 +969,7 @@ const LeadManagement = () => {
             <div className="relative top-0 bg-gradient-to-r from-[#BBA473]/10 to-transparent border-b border-[#BBA473]/30 p-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-[#BBA473]">Lead Details</h2>
-                <p className="text-gray-400 text-sm mt-1">#{selectedLead.leadId || selectedLead.id.slice(-6)}</p>
+                <p className="text-gray-400 text-sm mt-1">{selectedLead.leadId || selectedLead.id.slice(-6)}</p>
               </div>
               <button
                 onClick={handleCloseModal}

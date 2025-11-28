@@ -8,7 +8,7 @@ import axios from 'axios';
  * - OTP Verification
  */
 
-const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
+const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
 
 /**
  * Login user with email/username and password
@@ -298,6 +298,85 @@ export const refreshToken = async (token = null) => {
       message: error.response?.data?.message || 'Failed to refresh token',
       error: error.response?.data,
     };
+  }
+};
+
+
+/**
+ * Change user password
+ * @param {string} email - User's email address
+ * @param {string} currentPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Promise} - Returns password change result
+ */
+export const changePassword = async (email, currentPassword, newPassword) => {
+  try {
+    const refreshToken = getRefreshToken();
+    
+    console.log('🔵 Attempting password change...');
+    console.log('📝 Email:', email);
+    
+    if (!refreshToken) {
+      console.error('❌ No refresh token available');
+      throw new Error('Authentication required. Please login first.');
+    }
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/auth/userProfile/password/update/en`,
+      {
+        email,
+        currentPassword,
+        newPassword,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${refreshToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Password change response:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      console.log('✅ Password changed successfully');
+      
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Password changed successfully',
+      };
+    } else {
+      console.error('❌ Password change failed:', data.message);
+      return {
+        success: false,
+        message: data.message || 'Password change failed',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Password change error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.payload?.message || error.response.data?.message || 'Failed to change password. Please try again.',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
   }
 };
 

@@ -14,7 +14,9 @@ import { ROUTES, getAllowedRoutes } from '@/config/roleConfig';
 
 // ⭐ Lazy load route components for better performance
 const LoginPage = lazy(() => import('@/routes/Login'));
+const UpdatePasswordPage = lazy(() => import('@/routes/UpdatePassword'));
 const DashboardPage = lazy(() => import('@/routes/Dashboard'));
+const NotificationsPage = lazy(() => import('@/routes/Notifications'));
 const BranchDashboardPage = lazy(() => import('@/routes/BranchDashboard'));
 const AgentsPage = lazy(() => import('@/routes/Agents'));
 const KioskMembersPage = lazy(() => import('@/routes/KioskMembers'));
@@ -167,6 +169,28 @@ export function AppRoutes() {
         </Suspense>
       ),
     },
+    
+    {
+      path: '/update-password',  // Changed from '/sales-manager' to '/sales-managers'
+      element: (
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <ProtectedRoute requiredRoute={ROUTES.UPDATE_PASSWORD}>
+            <UpdatePasswordPage />
+          </ProtectedRoute>
+        </Suspense>
+      ),
+    },
+    {
+      path: '/notifications',  // Changed from '/sales-manager' to '/sales-managers'
+      element: (
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <ProtectedRoute requiredRoute={ROUTES.NOTIFICATIONS}>
+            <NotificationsPage />
+          </ProtectedRoute>
+        </Suspense>
+      ),
+    },
+    
     // Catch-all route for undefined paths
     {
       path: '*',

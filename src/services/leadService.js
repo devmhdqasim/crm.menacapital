@@ -10,7 +10,7 @@ import axios from 'axios';
  * - Delete Lead
  */
 
-const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
+const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
 
 /**
  * Get refresh token from localStorage
@@ -640,6 +640,154 @@ export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '
     }
   }
 };
+
+/**
+ * Create a new lead
+ * @param {Object} leadData - Lead data object
+ * @param {string} leadData.leadName - Lead's full name
+ * @param {string} leadData.leadEmail - Lead's email address
+ * @param {string} leadData.leadPhoneNumber - Lead's phone number
+ * @param {string} leadData.leadResidency - Lead's country of residency
+ * @param {string} leadData.leadPreferredLanguage - Lead's preferred language
+ * @param {string} leadData.leadDateOfBirth - Lead's date of birth (YYYY-MM-DD)
+ * @param {string} leadData.leadNationality - Lead's nationality
+ * @param {string} leadData.leadDescription - Description or notes about the lead
+ * @param {string} leadData.leadSource - Source of the lead (e.g., "Facebook Ads", "Website")
+ * @param {string} leadData.leadSourceId - Source of the lead (e.g., "Facebook Ads", "Website")
+ * @param {string} leadData.kioskLeadStatus - Status of the lead (e.g., "New", "Contacted", "Qualified")
+ * @returns {Promise} - Returns created lead info
+ */
+export const createBranchLead = async (leadData) => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Creating new lead...');
+    console.log('📝 Lead data:', {
+      leadName: leadData.leadName,
+      leadEmail: leadData.leadEmail,
+      leadSource: leadData.leadSource,
+      leadSourceId: leadData.leadSourceId, 
+      kioskLeadStatus: leadData.kioskLeadStatus,
+    });
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    // Prepare the payload
+    const payload = {
+      leadName: leadData.leadName,
+      leadEmail: leadData.leadEmail,
+      leadPhoneNumber: leadData.leadPhoneNumber,
+      leadResidency: leadData.leadResidency,
+      leadPreferredLanguage: leadData.leadPreferredLanguage || 'English',
+      leadDateOfBirth: leadData.leadDateOfBirth,
+      leadNationality: leadData.leadNationality,
+      leadDescription: leadData.leadDescription || '',
+      leadSource: leadData.leadSource,
+      leadSourceId: leadData.leadSourceId,
+      kioskLeadStatus: leadData.kioskLeadStatus || 'New',
+      depositStatus: leadData.depositStatus || '',
+    };
+
+    console.log('📤 Sending payload to API');
+
+    const userInfo = localStorage.getItem('userInfo')
+    ? JSON.parse(localStorage.getItem('userInfo'))
+    : null;
+
+    // ✅ Decide which URL to hit based on role
+    const isBranchLogin = userInfo?.roleName === 'Kiosk Member' || userInfo?.role === 'Kiosk Member';
+    const refreshUrl = isBranchLogin
+      ? `${API_BASE_URL}/lead/branch/create/en`
+      : `${API_BASE_URL}/lead/create/en`;
+
+    const response = await axios.post(
+      refreshUrl,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Lead created successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      console.log('✅ Lead creation successful');
+      console.log('📨 Message:', data.payload?.message);
+
+      return {
+        success: true,
+        data: data.payload,
+        message: data.payload?.message || data.message || 'Lead created successfully',
+      };
+    } else {
+      console.error('❌ Lead creation failed:', data.message);
+      return {
+        success: false,
+        message: data.message || 'Failed to create lead',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Create lead error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response?.status === 400) {
+      console.error('❌ Bad request (400), validation error');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Invalid lead data. Please check all fields.',
+        error: error.response.data,
+      };
+    }
+
+    if (error.response?.status === 409) {
+      console.error('❌ Conflict (409), lead may already exist');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Lead with this email or phone already exists.',
+        error: error.response.data,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to create lead',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
 
 /**
  * Create a new lead

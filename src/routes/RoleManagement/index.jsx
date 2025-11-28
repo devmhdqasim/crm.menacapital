@@ -414,7 +414,7 @@ const RoleManagement = () => {
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group"
                     >
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">
-                        #{role.roleId || role.id.slice(-6)}
+                        {role.roleId || role.id.slice(-6)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
