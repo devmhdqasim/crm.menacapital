@@ -856,9 +856,9 @@ const LeadManagement = () => {
                         {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
                           {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
                         </span> : ''}
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                          {lead.status == 'Real' ? `${lead.status}` : lead.status || 'N/A'} 
-                        </span>
+                        {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                          {lead.status}
+                        </span>: ''}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 text-gray-300">
