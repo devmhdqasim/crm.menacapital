@@ -69,11 +69,8 @@ const LeadManagement = () => {
   const [countries, setCountries] = useState([]);
   const [nationalitySearch, setNationalitySearch] = useState('');
   const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
-<<<<<<< HEAD
-=======
   const [hasFormChanged, setHasFormChanged] = useState(false);
   const [initialFormValues, setInitialFormValues] = useState(null);
->>>>>>> 55709cc5c6fca3d02703de1760ea94eca4e38219
 
   const tabs = ['All', 'Kiosk Members'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -202,11 +199,7 @@ const LeadManagement = () => {
           kioskName: lead.kioskName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
-<<<<<<< HEAD
-          kioskLeadStatus: `${lead.kioskLeadStatus ? lead.kioskLeadStatus : 'N/A'}`,
-=======
           kioskLeadStatus: lead.kioskLeadStatus,
->>>>>>> 55709cc5c6fca3d02703de1760ea94eca4e38219
           leadAgentData: lead?.leadAgentData?.[0],
         }));
         
@@ -432,7 +425,7 @@ const LeadManagement = () => {
       nationality: lead.nationality || '',
       language: lead.language || '',
       source: lead.source || 'Kiosk',
-      status: lead.status || '',
+      status: lead.kioskLeadStatus || '',
       depositStatus: lead.depositStatus || '',
       kioskMember: lead.leadSourceId ? lead.leadSourceId._id : '',
       remarks: lead.remarks || '',
@@ -452,11 +445,8 @@ const LeadManagement = () => {
     formik.resetForm();
     setNationalitySearch('');
     setShowNationalityDropdown(false);
-<<<<<<< HEAD
-=======
     setHasFormChanged(false);
     setInitialFormValues(null);
->>>>>>> 55709cc5c6fca3d02703de1760ea94eca4e38219
   };
 
   const formatPhoneDisplay = (phone) => {
@@ -503,8 +493,6 @@ const LeadManagement = () => {
     return 'Select Nationality';
   };
 
-<<<<<<< HEAD
-=======
   // Helper function to get flag emoji from nationality/country name
   const getNationalityFlag = (nationality) => {
     if (!nationality) return '';
@@ -712,7 +700,6 @@ const LeadManagement = () => {
     return String.fromCodePoint(...codePoints);
   };
 
->>>>>>> 55709cc5c6fca3d02703de1760ea94eca4e38219
   return (
     <>
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -856,17 +843,6 @@ const LeadManagement = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{formatPhoneDisplay(lead.phone)}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.language}</td>
-<<<<<<< HEAD
-                      <td className="px-6 py-4 text-gray-300">{lead.nationality || 'N/A'}</td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{lead?.leadSourceName}</td>
-                      <td className="flex items-center gap-1.5 px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                          {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                          {lead.status == 'Real' ? `${lead.status}` : lead.status || 'N/A'} 
-                        </span>
-=======
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           {getNationalityFlag(lead.nationality) && (
@@ -889,7 +865,6 @@ const LeadManagement = () => {
                           <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
                           <span className="text-sm">{convertToDubaiTime(lead.createdAt)}</span>
                         </div>
->>>>>>> 55709cc5c6fca3d02703de1760ea94eca4e38219
                       </td>
                       
                       <td className="px-6 py-4">
@@ -1266,11 +1241,7 @@ const LeadManagement = () => {
                     )}
                   </div>
 
-<<<<<<< HEAD
-                  {/* Nationality - Now with Custom Searchable Dropdown */}
-=======
                   {/* Nationality - Now with Custom Searchable Dropdown and Clear Button */}
->>>>>>> 55709cc5c6fca3d02703de1760ea94eca4e38219
                   <div className="relative space-y-2">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Nationality
@@ -1287,9 +1258,6 @@ const LeadManagement = () => {
                         <span className={formik.values.nationality ? 'text-white' : 'text-gray-400'}>
                           {getNationalityDisplayText()}
                         </span>
-<<<<<<< HEAD
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
-=======
                         <div className="flex items-center gap-2">
                           {formik.values.nationality && (
                             <button
@@ -1307,7 +1275,6 @@ const LeadManagement = () => {
                           )}
                           <ChevronDown className="w-5 h-5 text-gray-400" />
                         </div>
->>>>>>> 55709cc5c6fca3d02703de1760ea94eca4e38219
                       </div>
                       
                       {showNationalityDropdown && (
