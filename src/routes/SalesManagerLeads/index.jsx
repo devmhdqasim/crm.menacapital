@@ -985,9 +985,12 @@ const filteredLeads = leads.filter(lead => {
                       <td className="px-6 py-4 text-gray-300">{lead.agent}</td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead.source ?? 'Kiosk'} {lead?.leadSourceId?.firstName ? ` - ${lead?.leadSourceId?.firstName} ${lead?.leadSourceId?.lastName}` : '' }</td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                          {lead.status} {lead.depositStatus ? ` - ${lead.depositStatus}` : ''}
-                        </span>
+                        {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
+                          {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
+                        </span> : ''}
+                        {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                          {lead.status}
+                        </span>: ''}
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
                       <td className="px-6 py-4">
