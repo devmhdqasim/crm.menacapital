@@ -1,8 +1,9 @@
+// lead 1
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, AlertTriangle, Clock } from 'lucide-react';
-import { getAllSalesManagerLeads, createLead, assignLeadToAgent, updateLead, deleteLead } from '../../services/leadService';
+import { getAllSalesManagerLeads, createLead, assignLeadToAgent, updateLead, deleteLead, updateLeadTask } from '../../services/leadService';
 import { Calendar } from 'lucide-react'
 import { getAllUsers, getKioskMembersbySalesManager } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
@@ -82,6 +83,19 @@ const LeadManagement = () => {
   const [hasFormChanged, setHasFormChanged] = useState(false);
   const [initialFormValues, setInitialFormValues] = useState(null);
   const [assignToSelfOnCreate, setAssignToSelfOnCreate] = useState(false);
+
+  // NEW: Modal tab state (for assigned leads)
+  const [activeModalTab, setActiveModalTab] = useState('assign'); // 'assign' or 'status'
+  
+  // NEW: Status update states (from file 2)
+  const [leadResponseStatus, setLeadResponseStatus] = useState('');
+  const [modalRemarks, setModalRemarks] = useState('');
+  const [modalErrors, setModalErrors] = useState({});
+  const [modalAnswered, setModalAnswered] = useState('');
+  const [modalInterested, setModalInterested] = useState('');
+  const [modalLeadType, setModalLeadType] = useState('');
+  const [modalHotLeadType, setModalHotLeadType] = useState('');
+  const [modalDepositStatus, setModalDepositStatus] = useState('');
 
   // Tab hierarchy configuration
   const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted'];
@@ -220,6 +234,7 @@ const LeadManagement = () => {
           real: lead.real || false,
           demo: lead.demo || false,
           deposited: lead.deposited || false,
+          latestRemarks: lead.latestRemarks || '',
         }));
         
         setLeads(transformedLeads);
@@ -619,13 +634,82 @@ const filteredLeads = leads.filter(lead => {
     if (e.target.closest('button')) {
       return;
     }
+    
     setSelectedLead(lead);
     // Store original assigned agent
     setOriginalAssignedAgent(lead.agentId || '');
     // Pre-select agent if already assigned
     setSelectedAgentForLead(lead.agentId || '');
-    // Reset assign to self switch
-    setAssignToSelf(false);
+    // Set assign to self switch based on whether lead is assigned to current user
+    setAssignToSelf(lead.agentId === currentUserId);
+    
+    // NEW: Determine which tab to show based on whether lead is assigned to sales manager
+    if (lead.agentId === currentUserId) {
+      // Lead is assigned to sales manager - show both tabs, default to status
+      setActiveModalTab('status');
+      
+      // Pre-populate status fields based on lead data (from file 2 logic)
+      setModalRemarks(lead.latestRemarks || '');
+      
+      if (!lead.contacted) {
+        setModalAnswered('');
+        setModalInterested('');
+        setModalLeadType('');
+        setModalHotLeadType('');
+        setModalDepositStatus('');
+        setLeadResponseStatus('');
+      } else if (lead.contacted && !lead.answered) {
+        setModalAnswered('Not Answered');
+        setLeadResponseStatus('Not Answered');
+        setModalInterested('');
+        setModalLeadType('');
+        setModalHotLeadType('');
+        setModalDepositStatus('');
+      } else if (lead.contacted && lead.answered && !lead.interested) {
+        setModalAnswered('Answered');
+        setModalInterested('Not Interested');
+        setLeadResponseStatus('Not Interested');
+        setModalLeadType('');
+        setModalHotLeadType('');
+        setModalDepositStatus('');
+      } else if (lead.contacted && lead.answered && lead.interested) {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        
+        if (!lead.hot) {
+          setModalLeadType('Warm Lead');
+          setLeadResponseStatus('Warm Lead');
+          setModalHotLeadType('');
+          setModalDepositStatus('');
+        } else if (lead.hot) {
+          setModalLeadType('Hot Lead');
+          
+          if (lead.demo && !lead.real) {
+            setModalHotLeadType('Demo');
+            setLeadResponseStatus('Demo');
+            setModalDepositStatus('');
+          } else if (lead.real) {
+            setModalHotLeadType('Real');
+            
+            if (lead.deposited) {
+              setModalDepositStatus('Deposited');
+              setLeadResponseStatus('Deposited');
+            } else {
+              setModalDepositStatus('Not Deposited');
+              setLeadResponseStatus('Not Deposited');
+            }
+          } else {
+            setLeadResponseStatus('Hot Lead');
+            setModalHotLeadType('');
+            setModalDepositStatus('');
+          }
+        }
+      }
+    } else {
+      // Lead is not assigned to sales manager - only show assign tab
+      setActiveModalTab('assign');
+    }
+    
     setShowRowModal(true);
   };
 
@@ -668,10 +752,118 @@ const filteredLeads = leads.filter(lead => {
     }
   };
 
+  // NEW: Validate modal form for status update
+  const validateModalForm = () => {
+    const errors = {};
+    
+    if (!leadResponseStatus) {
+      errors.answered = 'Please complete the status selection';
+    }
+    
+    if (modalRemarks && modalRemarks.length > 500) {
+      errors.remarks = 'Remarks must not exceed 500 characters';
+    }
+    
+    return errors;
+  };
+
+  // NEW: Handle status update submission
+  const handleStatusUpdate = async () => {
+    const errors = validateModalForm();
+    
+    if (Object.keys(errors).length > 0) {
+      setModalErrors(errors);
+      return;
+    }
+    
+    try {
+      const payload = {
+        contacted: false,
+        answered: false,
+        interested: false,
+        hot: false,
+        cold: false,
+        real: false,
+        deposited: false,
+        latestRemarks: modalRemarks,
+        currentStatus: leadResponseStatus
+      };
+
+      if (modalAnswered === 'Not Answered') {
+        payload.contacted = true;
+        payload.answered = false;
+      } else if (modalAnswered === 'Answered') {
+        payload.contacted = true;
+        payload.answered = true;
+        
+        if (modalInterested === 'Not Interested') {
+          payload.interested = false;
+          payload.cold = true;
+        } else if (modalInterested === 'Interested') {
+          payload.interested = true;
+          
+          if (modalLeadType === 'Warm Lead') {
+            payload.hot = false;
+            payload.cold = false;
+          } else if (modalLeadType === 'Hot Lead') {
+            payload.hot = true;
+            
+            if (modalHotLeadType === 'Demo') {
+              payload.real = false;
+            } else if (modalHotLeadType === 'Real') {
+              payload.real = true;
+              
+              if (modalDepositStatus === 'Deposited') {
+                payload.deposited = true;
+              } else if (modalDepositStatus === 'Not Deposited') {
+                payload.deposited = false;
+              }
+            }
+          }
+        }
+      }
+      
+      const result = await updateLeadTask(selectedLead.id, payload);
+      
+      if (result.success) {
+        toast.success(result?.message || 'Lead status updated successfully!');
+        handleCloseModal();
+        fetchLeads(currentPage, itemsPerPage);
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.error.payload.message || 'Failed to update lead status');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating lead status:', error);
+      toast.error('Failed to update lead status. Please try again');
+    }
+  };
+
   // Check if assignment has changed
   const hasAssignmentChanged = () => {
     const currentAssignment = assignToSelf ? currentUserId : selectedAgentForLead;
     return currentAssignment !== originalAssignedAgent;
+  };
+
+  const handleCloseModal = () => {
+    setShowRowModal(false);
+    setSelectedLead(null);
+    setSelectedAgentForLead('');
+    setAssignToSelf(false);
+    setOriginalAssignedAgent('');
+    setActiveModalTab('assign');
+    // Reset status update fields
+    setLeadResponseStatus('');
+    setModalAnswered('');
+    setModalInterested('');
+    setModalLeadType('');
+    setModalHotLeadType('');
+    setModalDepositStatus('');
+    setModalRemarks('');
+    setModalErrors({});
   };
 
   const formatPhoneDisplay = (phone) => {
@@ -697,13 +889,13 @@ const filteredLeads = leads.filter(lead => {
   function convertToDubaiTime(utcDateString) {
     const date = new Date(utcDateString);
   
-    if (isNaN(date)) return false; // only returns false if input is invalid
+    if (isNaN(date)) return false;
   
     const options = {
       timeZone: "Asia/Dubai",
       day: "2-digit",
       month: "2-digit",
-      year: "numeric",     // ← FIXED
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -936,8 +1128,7 @@ const filteredLeads = leads.filter(lead => {
 
         {/* Table Container */}
         <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Table */}          <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
                 <tr>
@@ -1158,10 +1349,13 @@ const filteredLeads = leads.filter(lead => {
                   </div>
                   <div className='flex items-center gap-2'>
                     <span className="text-gray-400 mb-0">Status:</span>
-                    <p className="mt-1">
-                      <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
-                        {selectedLead.status}
-                      </span>
+                    <p className="flex items-center gap-2 mt-1">
+                        {selectedLead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(selectedLead.kioskLeadStatus)}`}>
+                          {selectedLead?.kioskLeadStatus} {selectedLead.depositStatus && `- ${selectedLead.depositStatus}`}
+                        </span> : ''}
+                        {selectedLead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(selectedLead.status)}`}>
+                          {selectedLead.status}
+                        </span>: ''}
                     </p>
                   </div>
                 </div>
