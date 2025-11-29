@@ -206,7 +206,7 @@ const LeadManagement = () => {
           source: lead.leadSource,
           remarks: lead.leadDescription || '',
           depositStatus: lead.depositStatus || '',
-          status: lead.kioskLeadStatus,
+          status: lead.leadStatus,
           createdAt: lead.createdAt,
           leadSourceId: lead?.leadSourceId?.[0],
           kioskLeadStatus: lead.kioskLeadStatus ?? '-',
@@ -984,7 +984,7 @@ const filteredLeads = leads.filter(lead => {
                       <td className="px-6 py-4 text-gray-300">{lead.nationality}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.agent}</td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead.source ?? 'Kiosk'} {lead?.leadSourceId?.firstName ? ` - ${lead?.leadSourceId?.firstName} ${lead?.leadSourceId?.lastName}` : '' }</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 flex items-center gap-2">
                         {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
                           {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
                         </span> : ''}
