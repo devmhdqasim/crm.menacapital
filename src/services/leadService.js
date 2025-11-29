@@ -18,7 +18,7 @@ const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
  */
 const getRefreshToken = () => {
   return localStorage.getItem('refreshToken');
-}; 
+};  
 
 /**
  * Assign a lead to an agent
