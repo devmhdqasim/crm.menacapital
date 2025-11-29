@@ -23,7 +23,7 @@ const getRefreshToken = () => {
 /** 
  * Assign a lead to an agent
  * @param {string} leadId - Lead's ID (_id)
- * @param {string} agentId - Agent's ID (_id)
+ * @param {string} agentId - Agent's ID (_id) 
  * @returns {Promise} - Returns assignment result
  */
 export const assignLeadToAgent = async (leadId, agentId) => {
