@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast, { Toaster } from 'react-hot-toast';
-import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, EyeOff, RefreshCw, Upload, Calendar } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { getAllUsers, createUser, updateUser, deleteUser, getDeviceInfo } from '../../services/teamService';
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { getAllBranches } from '../../services/branchService';
 import DateRangePicker from '../../components/DateRangePicker';
+import AgentsListing from './AgentsListing';
+import AgentFormDrawer from './AgentFormDrawer';
+import AgentBottomSheet from './AgentBottomSheet';
 
 // Validation Schema
 const agentValidationSchema = Yup.object({
@@ -42,7 +43,6 @@ const agentValidationSchema = Yup.object({
       return value <= cutoff;
     }),
   department: Yup.string().required('Department is required'),
-  // inBranch: Yup.string().required('Branch is required'),
   image: Yup.mixed()
     .nullable()
     .test('fileSize', 'File size must be less than 5MB', function(value) {
@@ -83,12 +83,12 @@ const AgentManagement = () => {
   const [totalAgents, setTotalAgents] = useState(0);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
   // States for branches
   const [branches, setBranches] = useState([]);
   const [totalBranches, setTotalBranches] = useState(0);
 
-  const perPageOptions = [10, 20, 30, 50, 100];
   const departments = ['Sales'];
 
   // Fetch branches from API
@@ -180,7 +180,6 @@ const AgentManagement = () => {
     const start = new Date(startDate);
     const now = new Date();
     
-
     const isAPIReturning404 = new Date(start);
     isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
   
@@ -188,7 +187,7 @@ const AgentManagement = () => {
   };
     
   useEffect(() => {
-    const FEATURE_START_DATE = '2025-11-19';
+    const FEATURE_START_DATE = '2026-01-19';
     
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
@@ -196,7 +195,6 @@ const AgentManagement = () => {
     };
     
     callRefreshAuthAgain();
-    
     
     const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
     
@@ -220,7 +218,7 @@ const AgentManagement = () => {
       phone: editingAgent?.phone || '',
       dateOfBirth: editingAgent?.dateOfBirth || '',
       department: editingAgent?.department || 'Sales',
-      role: 'Agent', // Fixed to Agent role
+      role: 'Agent',
       image: null,
       password: '',
       gender: 'Male',
@@ -243,7 +241,7 @@ const AgentManagement = () => {
           dateOfBirthday: values.dateOfBirth,
           gender: values.gender,
           imageUrl: values.imageUrl || "https://example.com/images/default.jpg",
-          roleName: 'Agent', // Always Agent
+          roleName: 'Agent',
           department: values.department,
           countryOfResidence: values.countryOfResidence,
           nationality: values.nationality,
@@ -255,7 +253,6 @@ const AgentManagement = () => {
           deviceIPAddress: "0.0.0.0"
         };
 
-        // Add password only for new users
         if (!editingAgent && values.password) {
           userData.password = values.password;
         }
@@ -290,48 +287,6 @@ const AgentManagement = () => {
     },
   });
 
-  const filteredAgents = agents.filter(agent => {
-    const matchesSearch = 
-      agent.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      agent.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      agent.phone.includes(searchQuery);
-    return matchesSearch;
-  });
-
-  const totalPages = Math.ceil(totalAgents / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentAgents = filteredAgents.slice(startIndex, endIndex);
-  const showingFrom = filteredAgents.length > 0 ? startIndex + 1 : 0;
-  const showingTo = Math.min(startIndex + currentAgents.length, totalAgents);
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
-
-  const handlePerPageChange = (value) => {
-    setItemsPerPage(value);
-    setCurrentPage(1);
-    setShowPerPageDropdown(false);
-  };
-
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 3;
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 2) {
-        pages.push(1, 2, 3);
-      } else if (currentPage >= totalPages - 1) {
-        pages.push(totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(currentPage - 1, currentPage, currentPage + 1);
-      }
-    }
-    return pages;
-  };
-
   const handleEdit = (agent) => {
     setEditingAgent(agent);
     setImagePreview(agent.image || null);
@@ -365,6 +320,10 @@ const AgentManagement = () => {
     formik.resetForm();
     setImagePreview(null);
     setDrawerOpen(true);
+  };
+
+  const handleRowClick = (agent) => {
+    setBottomSheetOpen(true);
   };
 
   const handleCloseDrawer = () => {
@@ -417,22 +376,16 @@ const AgentManagement = () => {
     return phone;
   };
 
-  // Helper function to get branch name by ID
-  const getBranchNameById = (branchId) => {
-    const branch = branches.find(b => b.id === branchId);
-    return branch ? branch.branchName : branchId;
-  };
-
   function convertToDubaiTime(utcDateString) {
     const date = new Date(utcDateString);
   
-    if (isNaN(date) && !showPassIcon) return false; // only returns false if input is invalid
+    if (isNaN(date) && !showPassIcon) return false;
   
     const options = {
       timeZone: "Asia/Dubai",
       day: "2-digit",
       month: "2-digit",
-      year: "numeric",     // ← FIXED
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -445,7 +398,7 @@ const AgentManagement = () => {
 
   return (
     <>
-      <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 relative ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {/* Header */}
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -465,534 +418,63 @@ const AgentManagement = () => {
                 {!showPassIcon && <span className="relative z-10">Add New Agent</span>}
               </button>
 
-                {/* Date Range Filter */}
-                <DateRangePicker
-                  startDate={startDate}
-                  endDate={endDate}
-                  onStartDateChange={setStartDate}
-                  onEndDateChange={setEndDate}
-                  maxDate={new Date()}
-                  isClearable={true}
-                />
-              </div>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="mb-6 flex flex-col lg:flex-row gap-4 animate-fadeIn">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search by name, email, or phone..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
-            />
-          </div>
-        </div>
-
-        {/* Table Container */}
-        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
-                <tr>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Username</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Full Name</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Email</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Department</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Leads Assigned</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#BBA473]/10">
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
-                      Loading agents...
-                    </td>
-                  </tr>
-                ) : currentAgents.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
-                      No agents found
-                    </td>
-                  </tr>
-                ) : (
-                  currentAgents.map((agent) => (
-                    <tr
-                      key={agent.id}
-                      className="hover:bg-[#3A3A3A] transition-all duration-300 group"
-                    >
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">
-                        {agent?.username}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {agent.image ? (
-                            <img
-                              src={agent.image}
-                              alt={agent.fullName}
-                              className="w-10 h-10 rounded-full object-cover border-2 border-[#BBA473]/30"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center text-black font-semibold">
-                              {agent.firstName?.[0]}{agent.lastName?.[0]}
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
-                              {!showPassIcon && agent.fullName}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-300">{agent.email}</td>
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">{formatPhoneDisplay(agent.phone)}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#BBA473]/20 text-[#E8D5A3] border border-[#BBA473]/30">
-                          {agent.department}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{agent?.totalLeadsAssigned}</td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{convertToDubaiTime(agent.createdAt)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(agent)}
-                            className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(agent.id)}
-                            className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-110"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="text-gray-400 text-sm">
-                  Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
-                  <span className="text-white font-semibold">{showingTo}</span> of{' '}
-                  <span className="text-white font-semibold">{totalAgents}</span> entries
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
-                  >
-                    <span className="text-sm">{itemsPerPage} per page</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                  {showPerPageDropdown && (
-                    <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
-                      {perPageOptions.map(option => (
-                        <button
-                          key={option}
-                          onClick={() => handlePerPageChange(option)}
-                          className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                            option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
-                          }`}
-                        >
-                          {option} per page
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                {getPageNumbers().map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border border-[#BBA473]/30 ${
-                      currentPage === page
-                        ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
-                        : 'bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+              {/* Date Range Filter */}
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+                maxDate={new Date()}
+                isClearable={true}
+              />
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Agents Listing Component */}
+        <AgentsListing
+          agents={agents}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          setItemsPerPage={setItemsPerPage}
+          showPerPageDropdown={showPerPageDropdown}
+          setShowPerPageDropdown={setShowPerPageDropdown}
+          loading={loading}
+          totalAgents={totalAgents}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+          showPassIcon={showPassIcon}
+          convertToDubaiTime={convertToDubaiTime}
+          formatPhoneDisplay={formatPhoneDisplay}
+          onRowClick={handleRowClick}
+        />
+
+        {/* Agent Bottom Sheet Component - Inside content area */}
+        <AgentBottomSheet
+          isOpen={bottomSheetOpen}
+          onClose={() => setBottomSheetOpen(false)}
+        />
       </div>
 
-      {/* Drawer */}
-      <div
-        className={`fixed inset-y-0 right-0 w-full lg:w-2/5 bg-[#1A1A1A] shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
-          drawerOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
-            <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">
-                {editingAgent ? 'Edit Agent' : 'Add New Agent'}
-              </h2>
-              <p className="text-gray-400 text-sm mt-1">
-                {editingAgent ? 'Update agent information' : 'Fill in the details to add a new agent'}
-              </p>
-            </div>
-            <button
-              onClick={handleCloseDrawer}
-              className="p-2 rounded-lg hover:bg-[#2A2A2A] transition-all duration-300 text-gray-400 hover:text-white hover:rotate-90"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <form onSubmit={formik.handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Personal Information Section */}
-            <div className="bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-[#BBA473]/30 pb-3">
-                Personal Information
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* First Name */}
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    placeholder="Enter first name"
-                    value={formik.values.firstName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                      formik.touched.firstName && formik.errors.firstName
-                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                    }`}
-                  />
-                  {formik.touched.firstName && formik.errors.firstName && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.firstName}</div>
-                  )}
-                </div>
-
-                {/* Last Name */}
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    placeholder="Enter last name"
-                    value={formik.values.lastName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                      formik.touched.lastName && formik.errors.lastName
-                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                    }`}
-                  />
-                  {formik.touched.lastName && formik.errors.lastName && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.lastName}</div>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="email@example.com"
-                    value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                      formik.touched.email && formik.errors.email
-                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                    }`}
-                  />
-                  {formik.touched.email && formik.errors.email && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.email}</div>
-                  )}
-                </div>
-
-                {/* Date of Birth with Calendar */}
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Date of Birth <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      name="dateOfBirth"
-                      value={formik.values.dateOfBirth}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      max={new Date().toISOString().split('T')[0]}
-                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.dateOfBirth && formik.errors.dateOfBirth
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                      style={{
-                        colorScheme: 'dark'
-                      }}
-                    />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
-                  </div>
-                  {formik.touched.dateOfBirth && formik.errors.dateOfBirth && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.dateOfBirth}</div>
-                  )}
-                </div>
-
-                {/* Phone - International */}
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  {!showPassIcon && (
-                  <PhoneInput
-                    international
-                    defaultCountry="AE"
-                    value={formik.values.phone}
-                    onChange={(value) => formik.setFieldValue('phone', value || '')}
-                    onBlur={() => formik.setFieldTouched('phone', true)}
-                    className={`phone-input-custom ${
-                      formik.touched.phone && formik.errors.phone
-                        ? 'phone-input-error'
-                        : ''
-                    }`}
-                  />
-                )}
-                  {formik.touched.phone && formik.errors.phone && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.phone}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Professional Information Section */}
-            <div className="bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-[#BBA473]/30 pb-3">
-                Professional Information
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Department */}
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Department <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="department"
-                      value={formik.values.department}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
-                        formik.touched.department && formik.errors.department
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Department</option>
-                      {departments.map((dept) => (
-                        <option key={dept} value={dept}>{dept}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
-                  </div>
-                  {formik.touched.department && formik.errors.department && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.department}</div>
-                  )}
-                </div>
-
-                {/* Branch */}
-                {/* <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
-                    Branch <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="inBranch"
-                      value={formik.values.inBranch}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
-                        formik.touched.inBranch && formik.errors.inBranch
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                      }`}
-                    >
-                      <option value="">Select Branch</option>
-                      {branches.map((branch) => (
-                        <option key={branch.id} value={branch.id}>{branch.branchName}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
-                  </div>
-                  {formik.touched.inBranch && formik.errors.inBranch && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.inBranch}</div>
-                  )}
-                </div> */}
-
-                {/* Password - only for new agents */}
-                {!editingAgent && (
-                  <div className="space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Password <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      {!showPassIcon && (
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            name="password"
-                            placeholder="Enter password"
-                            value={formik.values.password}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            className={`w-full px-4 py-3 pr-24 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                              formik.touched.password && formik.errors.password
-                                ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                                : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                            }`}
-                          />
-                      )}
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="h-8 w-8 flex items-center justify-center text-gray-400 hover:text-white focus:outline-none transition-all duration-300 hover:scale-110"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={generatePassword}
-                          className="h-7 px-2 flex items-center justify-center bg-[#BBA473] text-black rounded-md hover:bg-[#d4bc89] focus:outline-none text-xs transition-all duration-300 hover:scale-105"
-                          title="Generate Password"
-                        >
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          <span>Gen</span>
-                        </button>
-                      </div>
-                    </div>
-                    {formik.touched.password && formik.errors.password && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.password}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Image Upload Section */}
-              <div className="space-y-2 pt-4">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
-                  Profile Image
-                </label>
-                
-                {!imagePreview ? (
-                  <div className="border-2 border-dashed border-[#BBA473]/30 rounded-lg p-6 text-center hover:border-[#BBA473] transition-all duration-300">
-                    <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className="cursor-pointer flex flex-col items-center space-y-2"
-                    >
-                      <Upload className="w-12 h-12 text-gray-400 transition-transform duration-300 hover:scale-110" />
-                      <span className="text-gray-400">Click to upload image</span>
-                      <span className="text-xs text-gray-500">JPG, PNG or GIF (Max 5MB)</span>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative inline-block">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-lg border-2 border-[#BBA473]"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-all duration-300 hover:scale-110 hover:rotate-90"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                
-                {formik.touched.image && formik.errors.image && (
-                  <div className="text-red-400 text-sm animate-pulse">{formik.errors.image}</div>
-                )}
-              </div>
-            </div>
-
-            {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30">
-              <button
-                type="button"
-                onClick={handleCloseDrawer}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
-              >
-                {formik.isSubmitting 
-                  ? (editingAgent ? 'Updating...' : 'Creating...') 
-                  : (editingAgent ? 'Update Agent' : 'Create Agent')
-                }
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      {/* Agent Form Drawer Component */}
+      <AgentFormDrawer
+        drawerOpen={drawerOpen}
+        handleCloseDrawer={handleCloseDrawer}
+        formik={formik}
+        editingAgent={editingAgent}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        showPassIcon={showPassIcon}
+        imagePreview={imagePreview}
+        handleImageChange={handleImageChange}
+        removeImage={removeImage}
+        generatePassword={generatePassword}
+        departments={departments}
+        branches={branches}
+      />
 
       <style>{`
         @keyframes fadeIn {

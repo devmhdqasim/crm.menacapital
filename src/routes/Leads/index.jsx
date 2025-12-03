@@ -98,7 +98,7 @@ const LeadManagement = () => {
   };
     
   useEffect(() => {
-    const FEATURE_START_DATE = '2025-11-23';
+    const FEATURE_START_DATE = '2026-01-23';
     
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
