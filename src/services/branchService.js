@@ -15,7 +15,7 @@ const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
  * Get refresh token from localStorage
  * @returns {string|null} - Returns refresh token or null
  */
-const getRefreshToken = () => {
+const getRefreshToken = () => { 
   return localStorage.getItem('refreshToken');
 };
 
