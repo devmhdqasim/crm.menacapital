@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import AssignedLeadsDetail from '../AssignedLeadsDetail';
+import React, { useState, useEffect, useRef } from 'react';
 
 const AgentBottomSheet = ({ isOpen, onClose }) => {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -146,18 +147,12 @@ const AgentBottomSheet = ({ isOpen, onClose }) => {
             </div>
 
             {/* Header Content */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#BBA473]/30">
+            <div className="flex items-center justify-between px-6 py-2 border-b border-[#BBA473]/30">
               <div>
-                <h2 className="text-2xl font-bold text-[#BBA473]">
-                  Agent Details
-                </h2>
-                <p className="text-gray-400 text-sm mt-1">
-                  View and manage agent information
-                </p>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-[#2A2A2A] transition-all duration-300 text-gray-400 hover:text-white hover:rotate-90"
+                className="p-2 absolute top-1 right-12 rounded-lg hover:bg-[#2A2A2A] transition-all duration-300 text-gray-400 hover:text-white hover:rotate-90"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -166,17 +161,8 @@ const AgentBottomSheet = ({ isOpen, onClose }) => {
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
-              {/* Sample Content */}
-              <div className="bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg p-8 text-center">
-                <h3 className="text-3xl font-bold text-white mb-4">
-                    Agent Details
-                </h3>
-                <p className="text-gray-400 text-lg">
-                    View and manage agent information
-                </p>
-              </div>
-
+            <div className="max-w-full mx-auto space-y-6">
+              <AssignedLeadsDetail />
               <div className="h-20" /> {/* Bottom spacing */}
             </div>
           </div>

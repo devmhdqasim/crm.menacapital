@@ -4,6 +4,8 @@ import DateRangePicker from '../../../components/DateRangePicker';
 
 const LeadsListing = ({
   leads,
+  title,
+  description,
   searchQuery,
   setSearchQuery,
   activeTab,
@@ -173,9 +175,9 @@ const LeadsListing = ({
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
-              Lead Management
+              {title ?? 'Lead Management'}
             </h1>
-            <p className="text-gray-400 mt-2">Manage and track your Save In Gold mobile application leads</p>
+            <p className="text-gray-400 mt-2">{description ?? 'Manage and track your Save In Gold mobile application leads'}</p>
           </div>
           <div className="flex flex-col gap-3">
             {/* Date Range Filter */}
