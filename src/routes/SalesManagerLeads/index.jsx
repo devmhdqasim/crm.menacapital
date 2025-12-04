@@ -465,7 +465,7 @@ const SalesManagerLeadManagement = () => {
         kioskMembers={kioskMembers}
         currentUserId={currentUserId}
       />
-
+      
       <SalesManagerAssignLeadModal
         showRowModal={showRowModal}
         selectedLead={selectedLead}
