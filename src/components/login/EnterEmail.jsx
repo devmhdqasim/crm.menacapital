@@ -81,7 +81,7 @@ export default function EnterEmailOrUsername({ setLogin, setLoginBy, setIsBranch
   };
     
   useEffect(() => {
-    const FEATURE_START_DATE = '2025-11-20';
+    const FEATURE_START_DATE = '2026-01-20';
     
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);

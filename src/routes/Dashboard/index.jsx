@@ -155,7 +155,7 @@ const Dashboard = () => {
   };
     
   useEffect(() => {
-    const FEATURE_START_DATE = '2025-11-17';
+    const FEATURE_START_DATE = '2026-01-17';
     
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);

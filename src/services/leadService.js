@@ -18,12 +18,12 @@ const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
  */
 const getRefreshToken = () => {
   return localStorage.getItem('refreshToken');
-}; 
+};  
 
-/**
+/** 
  * Assign a lead to an agent
  * @param {string} leadId - Lead's ID (_id)
- * @param {string} agentId - Agent's ID (_id)
+ * @param {string} agentId - Agent's ID (_id) 
  * @returns {Promise} - Returns assignment result
  */
 export const assignLeadToAgent = async (leadId, agentId) => {

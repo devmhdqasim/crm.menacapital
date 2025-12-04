@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getAllLeads } from '../../services/leadService';
+import { getAllLeads } from '../../../services/leadService';
 import toast from 'react-hot-toast';
-import LeadsListing from './LeadsListing';
-import LeadFormDrawer from './LeadFormDrawer';
-import AssignLeadModal from './AssignLeadModal';
+import LeadsListing from '../../Leads/LeadsListing';
 
 const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
@@ -147,6 +145,8 @@ const LeadManagement = () => {
     <>
       <LeadsListing
         leads={leads}
+        title={'Agent Leads'}
+        description={'View and manage agent leads information'}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         activeTab={activeTab}
@@ -176,25 +176,6 @@ const LeadManagement = () => {
         setEditingLead={setEditingLead}
       />
 
-      <LeadFormDrawer
-        drawerOpen={drawerOpen}
-        handleCloseDrawer={handleCloseDrawer}
-        editingLead={editingLead}
-        fetchLeads={fetchLeads}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        isLeadsSelectedId={isLeadsSelectedId}
-      />
-
-      <AssignLeadModal
-        showDetailsModal={showDetailsModal}
-        selectedLead={selectedLead}
-        handleCloseModal={handleCloseModal}
-        fetchLeads={fetchLeads}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        isLeadsSelectedId={isLeadsSelectedId}
-      />
     </>
   );
 };
