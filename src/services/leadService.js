@@ -378,27 +378,35 @@ export const getAllLeads = async (page = 1, limit = 10, startDate, endDate) => {
   }
 };
 
-export const getAllBranchLeads = async (page = 1, limit = 10, startDate, endDate) => {
+export const getAllBranchLeads = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '') => {
   try {
     const authToken = getRefreshToken();
-    
     console.log('🔵 Fetching leads...');
-    console.log('📄 Page:', page, 'Limit:', limit);
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
       throw new Error('No refresh token available. Please login first.');
     }
-
+    
     console.log('🔑 Using refresh token for API call');
-
+    
     const userInfo = localStorage.getItem('userInfo')
-    ? JSON.parse(localStorage.getItem('userInfo'))
-    : null;
-
-    // ✅ Decide which URL to hit based on role
-    const refreshUrl =`${API_BASE_URL}/lead/branch/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`
-
+      ? JSON.parse(localStorage.getItem('userInfo'))
+      : null;
+    
+    // ✅ Build query parameters
+    const queryParams = new URLSearchParams({
+      paramPage: page,
+      paramLimit: limit,
+      fromDate: startDate || '',
+      toDate: endDate || '',
+      status: status || '',
+      keyword: keyword || '',
+    });
+    
+    const refreshUrl = `${API_BASE_URL}/lead/branch/getAll/en?${queryParams.toString()}`;
+    
     const response = await axios.get(
       refreshUrl,
       {
@@ -409,11 +417,10 @@ export const getAllBranchLeads = async (page = 1, limit = 10, startDate, endDate
         timeout: 30000,
       }
     );
-
+    
     console.log('✅ Leads fetched successfully:', response.data);
-
     const data = response.data;
-
+    
     if (data.status === 'success' && data.payload?.allLeads?.[0]?.data) {
       const leadsData = data.payload.allLeads[0].data;
       const metadata = data.payload.allLeads[0].metadata?.[0] || {};
@@ -421,7 +428,7 @@ export const getAllBranchLeads = async (page = 1, limit = 10, startDate, endDate
       console.log('📊 Retrieved', leadsData.length, 'leads');
       console.log('📊 Total leads:', metadata.total);
       console.log('📊 Current page:', metadata.page);
-
+      
       return {
         success: true,
         data: leadsData,

@@ -49,6 +49,7 @@ const LeadManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(30);
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showActionsDropdown, setShowActionsDropdown] = useState(null);
@@ -66,7 +67,8 @@ const LeadManagement = () => {
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
-  
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
   // New states for nationality dropdown
   const [countries, setCountries] = useState([]);
   const [nationalitySearch, setNationalitySearch] = useState('');
@@ -91,8 +93,6 @@ const LeadManagement = () => {
     { code: 'kw', name: 'Kuwait', dialCode: '+965', flag: '🇰🇼' },
     { code: 'qa', name: 'Qatar', dialCode: '+974', flag: '🇶🇦' },
   ];
-
-  const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
 
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
 
@@ -133,6 +133,17 @@ const LeadManagement = () => {
       ]);
     }
   };
+
+  // Debouncing effect for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
   // Filter countries based on search
   const filteredCountries = countries.filter(country =>
@@ -181,7 +192,14 @@ const LeadManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
-      const result = await getAllBranchLeads(page, limit, startDateStr, endDateStr);
+      const result = await getAllBranchLeads(
+        page, 
+        limit, 
+        startDateStr, 
+        endDateStr, 
+        debouncedSearchQuery,  // Use debounced search query
+        statusFilter           // Pass status filter to API
+      );
       
       if (result.success && result.data) {
         // Transform API data to match component structure
@@ -196,12 +214,12 @@ const LeadManagement = () => {
           leadSourceName: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}`: "-"}`,
           leadSourceId: lead.leadSourceId.at(-1),
           remarks: lead.leadDescription || '',
-          status: lead.leadStatus ?? '-',
+          status: lead.leadStatus ?? '',
           depositStatus: lead.depositStatus || '',
           kioskName: lead.kioskName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
-          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+          kioskLeadStatus: lead.kioskLeadStatus ?? '',
           leadAgentData: lead?.leadAgentData?.[0],
         }));
         
@@ -210,11 +228,9 @@ const LeadManagement = () => {
       } else { 
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
-          // Handle authentication error - redirect to login
           toast.error('Session expired. Please login again.');
-          // You can add navigation logic here if needed
         } else {
-          toast.error(result.error.payload.message || 'Failed to fetch leads');
+          toast.error(result.error?.payload?.message || 'Failed to fetch leads');
         }
       }
     } catch (error) {
@@ -269,23 +285,20 @@ const LeadManagement = () => {
     setLeadToDelete(null);
   };
 
-  // Load leads on component mount and when pagination changes
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, statusFilter, selectedKioskMemberFilter, activeTab]);
 
   useEffect(() => {
     fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, statusFilter]);
 
   useEffect(() => {
     setIsLoaded(true);
     fetchKioskMembers();
     fetchCountries();
   }, []); // Empty dependency array means it runs only once on mount
-
-  // useEffect(() => {
-  //   setIsLoaded(true);
-  //   fetchKioskMembers();
-  //   fetchLeads(currentPage, itemsPerPage);
-  // }, [currentPage, itemsPerPage]);
 
   const formik = useFormik({
     initialValues: {
@@ -362,28 +375,18 @@ const LeadManagement = () => {
     }
   }, [formik.values, editingLead, initialFormValues]);
 
-   const filteredLeads = leads.filter(lead => {
-    const matchesSearch =
-    lead?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-    lead?.phone?.includes(searchQuery) ||
-    lead?.nationality?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-    lead?.source?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-    lead?.language?.toLowerCase()?.includes(searchQuery?.toLowerCase());
-      const matchesTab = activeTab === 'All' || activeTab === 'Kiosk Members';
-    
-    // Filter by selected kiosk member when on "Kiosk Members" tab
+  const filteredLeads = leads.filter(lead => {
+    // Only apply kiosk member filter on frontend if needed
     const matchesKioskMember = activeTab !== 'Kiosk Members' || 
       !selectedKioskMemberFilter || 
       (lead.leadSourceName && lead.leadSourceName === selectedKioskMemberFilter);
-    return matchesSearch && matchesTab && matchesKioskMember;
+    return matchesKioskMember;
   });
 
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
   const currentLeads = filteredLeads;
-  const showingFrom = startIndex + 1;
-  const showingTo = Math.min(startIndex + currentLeads.length, totalLeads);
+  const showingFrom = totalLeads > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const showingTo = Math.min((currentPage - 1) * itemsPerPage + leads.length, totalLeads);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
