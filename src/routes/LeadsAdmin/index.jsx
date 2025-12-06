@@ -53,6 +53,7 @@ const leadValidationSchema = Yup.object({
 const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
@@ -171,7 +172,17 @@ const LeadManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
-      const result = await getAllLeads(page, limit, startDateStr, endDateStr);
+      // Determine status filter based on activeTab
+      const statusParam = activeTab === 'All' ? '' : activeTab;
+      
+      const result = await getAllLeads(
+        page, 
+        limit, 
+        startDateStr, 
+        endDateStr,
+        debouncedSearchQuery,  // Use debounced search query
+        statusParam            // Pass status filter to API
+      );
       
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
@@ -211,16 +222,34 @@ const LeadManagement = () => {
     }
   };
 
-  // Load leads on component mount and when pagination changes
+
+  // Debouncing effect for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Load leads on component mount
   useEffect(() => {
     setIsLoaded(true);
     fetchCountries();
     fetchKioskMembers();
   }, []);
 
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, activeTab]);
+
+  // Fetch leads when page, filters, or dates change
   useEffect(() => {
     fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab]);
 
   const formik = useFormik({
     initialValues: {
@@ -301,24 +330,14 @@ const LeadManagement = () => {
     }
   }, [formik.values, editingLead, initialFormValues]);
 
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch =
-    (lead?.name?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.email?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.phone || '').includes(searchQuery || '') ||
-    (lead?.nationality?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.residency?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.source?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '');
-      const matchesTab = activeTab === 'All' || lead.status === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  // No frontend filtering needed - all handled by API
+  const filteredLeads = leads;
 
+  // Pagination calculations based on API metadata
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
   const currentLeads = filteredLeads;
-  const showingFrom = startIndex + 1;
-  const showingTo = Math.min(startIndex + currentLeads.length, totalLeads);
+  const showingFrom = totalLeads > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const showingTo = Math.min((currentPage - 1) * itemsPerPage + leads.length, totalLeads);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -681,7 +700,7 @@ const LeadManagement = () => {
   return (
     <>
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Header */}
+      {/* Header */}
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -727,7 +746,12 @@ const LeadManagement = () => {
             {tabs.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  // Clear search when switching tabs
+                  setSearchQuery('');
+                  setDebouncedSearchQuery('');
+                }}
                 className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
                   activeTab === tab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
@@ -820,7 +844,7 @@ const LeadManagement = () => {
         <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-h-96">
               <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
                 <tr>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
@@ -837,7 +861,10 @@ const LeadManagement = () => {
                 {loading ? (
                   <tr>
                     <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
-                      Loading leads...
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#BBA473]"></div>
+                        <span>Loading leads...</span>
+                      </div>
                     </td>
                   </tr>
                 ) : currentLeads.length === 0 ? (
@@ -871,13 +898,13 @@ const LeadManagement = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead.source}</td>
                       {!isLeadsDrawerOpen && (
-                      <td className="flex items-center gap-1.5 px-6 py-4">
-                        {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                          {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
-                        </span> : ''}
-                        {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                          {lead.status}
-                        </span>: ''}
+                        <td className="flex items-center gap-1.5 px-6 py-4">
+                          {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
+                            {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
+                          </span> : ''}
+                          {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                            {lead.status}
+                          </span>: ''}
                         </td>
                       )}
                       <td className="px-6 py-4">
@@ -911,7 +938,7 @@ const LeadManagement = () => {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* Pagination - Updated to show proper counts */}
           <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="text-gray-400 text-sm">

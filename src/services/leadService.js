@@ -283,12 +283,12 @@ export const updateLeadTask = async (leadId, taskPayload) => {
  * @param {number} limit - Number of items per page (default: 10)
  * @returns {Promise} - Returns list of leads with pagination info
  */
-export const getAllLeads = async (page = 1, limit = 10, startDate, endDate) => {
+export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '') => {
   try {
     const authToken = getRefreshToken();
     
     console.log('🔵 Fetching leads...');
-    console.log('📄 Page:', page, 'Limit:', limit);
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
@@ -298,14 +298,24 @@ export const getAllLeads = async (page = 1, limit = 10, startDate, endDate) => {
     console.log('🔑 Using refresh token for API call');
 
     const userInfo = localStorage.getItem('userInfo')
-    ? JSON.parse(localStorage.getItem('userInfo'))
-    : null;
+      ? JSON.parse(localStorage.getItem('userInfo'))
+      : null;
+
+    // ✅ Build query parameters
+    const queryParams = new URLSearchParams({
+      paramPage: page,
+      paramLimit: limit,
+      fromDate: startDate || '',
+      toDate: endDate || '',
+      keyword: keyword || '',
+      status: status || '',
+    });
 
     // ✅ Decide which URL to hit based on role
     const isBranchLogin = userInfo?.roleName === 'Agent' || userInfo?.role === 'Agent';
     const refreshUrl = isBranchLogin
-      ? `${API_BASE_URL}/lead/agents/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`
-      : `${API_BASE_URL}/lead/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`;
+      ? `${API_BASE_URL}/lead/agents/en?${queryParams.toString()}`
+      : `${API_BASE_URL}/lead/getAll/en?${queryParams.toString()}`;
 
     const response = await axios.get(
       refreshUrl,

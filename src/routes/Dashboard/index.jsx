@@ -399,7 +399,7 @@ const Dashboard = () => {
                     <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
                   </div>
                   
-                  {totalLeads > 0 && pieData.length > 0 && !hasLeadsPermission ? (
+                  {pieData.length > 0 && !hasLeadsPermission ? (
                     <div className="space-y-4">
                       <ResponsiveContainer width="100%" height={400}>
                         <PieChart>
