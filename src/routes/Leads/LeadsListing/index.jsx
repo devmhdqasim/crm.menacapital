@@ -44,67 +44,17 @@ const LeadsListing = ({
 
   const perPageOptions = [10, 20, 30, 50, 100];
 
-  // Calculate pending leads count
+  // Calculate pending leads count (only from current page data for badge display)
   const pendingLeadsCount = leads.filter(lead => !lead.contacted).length;
 
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch =
-    (lead?.name?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.email?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.phone || '').includes(searchQuery || '') ||
-    (lead?.nationality?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.residency?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') ||
-    (lead?.source?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '');
-    
-    // Level 1: Main tabs (All, Pending, Contacted)
-    let matchesTab = true;
-    if (activeTab === 'All') {
-      matchesTab = true;
-    } else if (activeTab === 'Pending') {
-      matchesTab = !lead.contacted;
-    } else if (activeTab === 'Contacted') {
-      matchesTab = lead.contacted;
-      
-      // Level 2: Contacted sub-tabs (Interested, Not Interested, Not Answered)
-      if (contactedSubTab === 'Interested') {
-        matchesTab = matchesTab && lead.answered && lead.interested;
-        
-        // Level 3: Interested sub-tabs (Warm Lead, Hot Lead)
-        if (interestedSubTab === 'Warm Lead') {
-          matchesTab = matchesTab && lead.status === 'Lead';
-        } else if (interestedSubTab === 'Hot Lead') {
-          matchesTab = matchesTab && (lead.status === 'Demo' || lead.status === 'Real' || lead.status === 'Deposit' || lead.status === 'Not Deposit');
-          
-          // Level 4: Hot Lead sub-tabs (Demo, Real)
-          if (hotLeadSubTab === 'Demo') {
-            matchesTab = matchesTab && lead.status === 'Demo';
-          } else if (hotLeadSubTab === 'Real') {
-            matchesTab = matchesTab && (lead.status === 'Real' || lead.status === 'Deposit' || lead.status === 'Not Deposit');
-            
-            // Level 5: Real sub-tabs (Deposit, Not Deposit)
-            if (realSubTab === 'Deposit') {
-              matchesTab = matchesTab && lead.depositStatus === 'Deposited';
-            } else if (realSubTab === 'Not Deposit') {
-              matchesTab = matchesTab && lead.depositStatus === 'Not Deposited';
-            }
-          }
-        }
-      } else if (contactedSubTab === 'Not Interested') {
-        matchesTab = matchesTab && lead.answered && !lead.interested;
-      } else if (contactedSubTab === 'Not Answered') {
-        matchesTab = matchesTab && !lead.answered;
-      }
-    }
-    
-    return matchesSearch && matchesTab;
-  });
+  const filteredLeads = leads; // No frontend filtering needed - all handled by API
 
+  // Update pagination calculations to use API metadata:
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
   const currentLeads = filteredLeads;
-  const showingFrom = startIndex + 1;
-  const showingTo = Math.min(startIndex + currentLeads.length, totalLeads);
-
+  const showingFrom = totalLeads > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const showingTo = Math.min((currentPage - 1) * itemsPerPage + leads.length, totalLeads);
+  
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
@@ -199,13 +149,7 @@ const LeadsListing = ({
           {tabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setContactedSubTab('');
-                setInterestedSubTab('');
-                setHotLeadSubTab('');
-                setRealSubTab('');
-              }}
+              onClick={() => setActiveTab(tab)}
               className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${
                 activeTab === tab
                   ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
@@ -213,12 +157,8 @@ const LeadsListing = ({
               }`}
             >
               <span>{tab}</span>
-              {tab === 'Pending' && pendingLeadsCount > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-xs font-bold transition-all duration-300 ${
-                  activeTab === tab
-                    ? 'bg-[#BBA473] text-black'
-                    : 'bg-red-500 text-white'
-                }`}>
+              {tab === 'Pending' && activeTab === 'All' && pendingLeadsCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white">
                   {pendingLeadsCount}
                 </span>
               )}
@@ -234,12 +174,7 @@ const LeadsListing = ({
             {contactedSubTabs.map((subTab) => (
               <button
                 key={subTab}
-                onClick={() => {
-                  setContactedSubTab(subTab);
-                  setInterestedSubTab('');
-                  setHotLeadSubTab('');
-                  setRealSubTab('');
-                }}
+                onClick={() => setContactedSubTab(subTab)}
                 className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
                   contactedSubTab === subTab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
@@ -260,11 +195,7 @@ const LeadsListing = ({
             {interestedSubTabs.map((subTab) => (
               <button
                 key={subTab}
-                onClick={() => {
-                  setInterestedSubTab(subTab);
-                  setHotLeadSubTab('');
-                  setRealSubTab('');
-                }}
+                onClick={() => setInterestedSubTab(subTab)}
                 className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
                   interestedSubTab === subTab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
@@ -285,10 +216,7 @@ const LeadsListing = ({
             {hotLeadSubTabs.map((subTab) => (
               <button
                 key={subTab}
-                onClick={() => {
-                  setHotLeadSubTab(subTab);
-                  setRealSubTab('');
-                }}
+                onClick={() => setHotLeadSubTab(subTab)}
                 className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
                   hotLeadSubTab === subTab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
@@ -341,28 +269,35 @@ const LeadsListing = ({
       <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-h-96">
             <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
               <tr>
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Name</th>
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Nationality</th>
-                <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
-                <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
+                {!isLeadsSelectedId && (
+                  <>
+                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
+                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
+                  </>
+                )}
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#BBA473]/10">
               {loading ? (
                 <tr>
-                  <td colSpan="9" className="px-6 py-12 text-center text-gray-400">
-                    Loading leads...
+                  <td colSpan={isLeadsSelectedId ? "5" : "7"} className="px-6 py-12 text-center text-gray-400">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#BBA473]"></div>
+                      <span>Loading leads...</span>
+                    </div>
                   </td>
                 </tr>
               ) : currentLeads.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={isLeadsSelectedId ? "5" : "7"} className="px-6 py-12 text-center text-gray-400">
                     No leads found
                   </td>
                 </tr>

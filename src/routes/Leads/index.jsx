@@ -7,8 +7,9 @@ import AssignLeadModal from './AssignLeadModal';
 
 const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
-  const [userDetails, setUserDetails] = useState('')
+  const [userDetails, setUserDetails] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
@@ -30,6 +31,49 @@ const LeadManagement = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [isLeadsSelectedId, setIsLeadsSelectedId] = useState(false);
 
+  // Debouncing effect for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Helper function to build status parameter based on active tabs
+  const getStatusParam = () => {
+    if (activeTab === 'All') {
+      return '';
+    } else if (activeTab === 'Contacted') {
+      if (contactedSubTab === 'Not Answered') {
+        return 'not-answered';
+      } else if (contactedSubTab === 'Interested') {
+        if (interestedSubTab === 'Warm Lead') {
+          return 'warm-lead';
+        } else if (interestedSubTab === 'Hot Lead') {
+          if (hotLeadSubTab === 'Demo') {
+            return 'demo';
+          } else if (hotLeadSubTab === 'Real') {
+            if (realSubTab === 'Deposit') {
+              return 'deposited';
+            } else if (realSubTab === 'Not Deposit') {
+              return 'not-deposited';
+            }
+            return 'real';
+          }
+          return 'hot-lead';
+        }
+        return 'interested';
+      } else if (contactedSubTab === 'Not Interested') {
+        return 'not-interested';
+      }
+      return 'contacted';
+    }
+    return '';
+  };
+
   // Fetch leads from API
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
@@ -38,7 +82,16 @@ const LeadManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
-      const result = await getAllLeads(page, limit, startDateStr, endDateStr);
+      const statusParam = getStatusParam();
+      
+      const result = await getAllLeads(
+        page, 
+        limit, 
+        startDateStr, 
+        endDateStr,
+        debouncedSearchQuery,
+        statusParam
+      );
       
       if (result.success && result.data) {
         // Transform API data to match component structure
@@ -112,11 +165,20 @@ const LeadManagement = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load leads on component mount and when pagination changes
+  // Load leads on component mount
   useEffect(() => {
     setIsLoaded(true);
+  }, []);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, activeTab, contactedSubTab, interestedSubTab, hotLeadSubTab, realSubTab]);
+
+  // Fetch leads when page, filters, or dates change
+  useEffect(() => {
     fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, contactedSubTab, interestedSubTab, hotLeadSubTab, realSubTab]);
 
   const getUserInfo = () => {
     const userInfo = localStorage.getItem('userInfo');
@@ -124,9 +186,46 @@ const LeadManagement = () => {
   };
 
   useEffect(() => {
-    const userInfo = getUserInfo()
-    setUserDetails(userInfo?.id ?? userInfo?.id)
-  }, [])
+    const userInfo = getUserInfo();
+    setUserDetails(userInfo?.id ?? userInfo?.id);
+  }, []);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Clear sub-tabs when changing main tab
+    setContactedSubTab('Not Answered');
+    setInterestedSubTab('');
+    setHotLeadSubTab('');
+    setRealSubTab('');
+    // Clear search when switching tabs
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
+  };
+
+  const handleContactedSubTabChange = (subTab) => {
+    setContactedSubTab(subTab);
+    // Clear nested sub-tabs
+    setInterestedSubTab('');
+    setHotLeadSubTab('');
+    setRealSubTab('');
+  };
+
+  const handleInterestedSubTabChange = (subTab) => {
+    setInterestedSubTab(subTab);
+    // Clear nested sub-tabs
+    setHotLeadSubTab('');
+    setRealSubTab('');
+  };
+
+  const handleHotLeadSubTabChange = (subTab) => {
+    setHotLeadSubTab(subTab);
+    // Clear nested sub-tabs
+    setRealSubTab('');
+  };
+
+  const handleRealSubTabChange = (subTab) => {
+    setRealSubTab(subTab);
+  };
 
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
@@ -150,15 +249,15 @@ const LeadManagement = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         contactedSubTab={contactedSubTab}
-        setContactedSubTab={setContactedSubTab}
+        setContactedSubTab={handleContactedSubTabChange}
         interestedSubTab={interestedSubTab}
-        setInterestedSubTab={setInterestedSubTab}
+        setInterestedSubTab={handleInterestedSubTabChange}
         hotLeadSubTab={hotLeadSubTab}
-        setHotLeadSubTab={setHotLeadSubTab}
+        setHotLeadSubTab={handleHotLeadSubTabChange}
         realSubTab={realSubTab}
-        setRealSubTab={setRealSubTab}
+        setRealSubTab={handleRealSubTabChange}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         itemsPerPage={itemsPerPage}
