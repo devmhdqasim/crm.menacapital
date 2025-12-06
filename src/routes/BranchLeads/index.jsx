@@ -810,6 +810,7 @@ const LeadManagement = () => {
 
         {/* Table Container */}
         <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+        
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full min-h-96">
