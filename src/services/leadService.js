@@ -308,8 +308,12 @@ export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate 
       fromDate: startDate || '',
       toDate: endDate || '',
       keyword: keyword || '',
-      status: status || '',
     });
+
+    // Add status parameter if provided
+    if (status) {
+      queryParams.append('status', status);
+    }
 
     // ✅ Decide which URL to hit based on role
     const isBranchLogin = userInfo?.roleName === 'Agent' || userInfo?.role === 'Agent';
@@ -411,9 +415,13 @@ export const getAllBranchLeads = async (page = 1, limit = 10, startDate = '', en
       paramLimit: limit,
       fromDate: startDate || '',
       toDate: endDate || '',
-      status: status || '',
       keyword: keyword || '',
     });
+
+    // Add status parameter if provided
+    if (status) {
+      queryParams.append('status', status);
+    }
     
     const refreshUrl = `${API_BASE_URL}/lead/branch/getAll/en?${queryParams.toString()}`;
     
@@ -566,12 +574,12 @@ export const deleteBranch = async (userId) => {
   }
 };
 
-export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '', toDate = '') => {
+export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '') => {
   try {
     const authToken = getRefreshToken();
     
     console.log('🔵 Fetching leads...');
-    console.log('📄 Page:', page, 'Limit:', limit);
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
@@ -581,11 +589,24 @@ export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '
     console.log('🔑 Using refresh token for API call');
 
     const userInfo = localStorage.getItem('userInfo')
-    ? JSON.parse(localStorage.getItem('userInfo'))
-    : null;
+      ? JSON.parse(localStorage.getItem('userInfo'))
+      : null;
 
-    // ✅ Decide which URL to hit based on role
-    const refreshUrl = `${API_BASE_URL}/lead/sales/en?paramPage=${page}&paramLimit=${limit}&fromDate=${fromDate}&toDate=${toDate}`
+    // ✅ Build query parameters
+    const queryParams = new URLSearchParams({
+      paramPage: page,
+      paramLimit: limit,
+      fromDate: fromDate || '',
+      toDate: toDate || '',
+      keyword: keyword || '',
+    });
+
+    // Add status parameter if provided
+    if (status) {
+      queryParams.append('status', status);
+    }
+
+    const refreshUrl = `${API_BASE_URL}/lead/sales/en?${queryParams.toString()}`;
 
     const response = await axios.get(
       refreshUrl,

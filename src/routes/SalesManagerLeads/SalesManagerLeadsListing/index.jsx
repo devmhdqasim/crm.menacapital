@@ -67,83 +67,17 @@ const SalesManagerLeadsListing = ({
     return [];
   };
 
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch =
-      lead?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-      lead?.email?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-      lead?.phone?.includes(searchQuery) ||
-      lead?.nationality?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-      lead?.residency?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-      lead?.source?.toLowerCase()?.includes(searchQuery?.toLowerCase());
-    
-    if (activeTab === 'All') {
-      return matchesSearch;
-    }
-    
-    if (activeTab === 'Assigned') {
-      return matchesSearch && lead.agentId !== null;
-    }
-    
-    if (activeTab === 'Not Assigned') {
-      return matchesSearch && (lead.agentId === null || lead.agent === 'Not Assigned');
-    }
-    
-    if (activeTab === 'Contacted') {
-      if (!activeSubTab) {
-        return matchesSearch && lead.contacted === true;
-      }
-      
-      if (activeSubTab === 'Interested') {
-        if (!activeSubSubTab) {
-          return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === true;
-        }
-        
-        if (activeSubSubTab === 'Warm Lead') {
-          return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === true && lead.hot === false;
-        }
-        
-        if (activeSubSubTab === 'Hot Lead') {
-          if (!activeSubSubSubTab) {
-            return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === true && lead.hot === true;
-          }
-          
-          if (activeSubSubSubTab === 'Demo') {
-            return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === true && lead.hot === true && lead.demo === true;
-          }
-          
-          if (activeSubSubSubTab === 'Real') {
-            if (!activeSubSubSubSubTab) {
-              return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === true && lead.hot === true && lead.real === true;
-            }
-            
-            if (activeSubSubSubSubTab === 'Deposit') {
-              return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === true && lead.hot === true && lead.real === true && lead.deposited === true;
-            }
-            
-            if (activeSubSubSubSubTab === 'Not Deposit') {
-              return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === true && lead.hot === true && lead.real === true && lead.deposited === false;
-            }
-          }
-        }
-      }
-      
-      if (activeSubTab === 'Not Interested') {
-        return matchesSearch && lead.contacted === true && lead.answered === true && lead.interested === false;
-      }
-      
-      if (activeSubTab === 'Not Answered') {
-        return matchesSearch && lead.contacted === true && lead.answered === false;
-      }
-    }
-    
-    return matchesSearch;
-  });
+  // No frontend filtering needed - all handled by API
+  const filteredLeads = leads;
 
+  // Get unassigned count for the badge (from current filtered leads)
+  const unassignedCount = leads.filter(lead => lead.agentId === null || lead.agent === 'Not Assigned').length;
+
+  // Pagination calculations based on API metadata
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
   const currentLeads = filteredLeads;
-  const showingFrom = startIndex + 1;
-  const showingTo = Math.min(startIndex + currentLeads.length, totalLeads);
+  const showingFrom = totalLeads > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const showingTo = Math.min((currentPage - 1) * itemsPerPage + leads.length, totalLeads);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -282,10 +216,6 @@ const SalesManagerLeadsListing = ({
       <div className="mb-4 overflow-x-auto animate-fadeIn">
         <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
           {tabs.map((tab) => {
-            const unassignedCount = tab === 'Not Assigned' 
-              ? leads.filter(lead => lead.agentId === null || lead.agent === 'Not Assigned').length 
-              : 0;
-            
             return (
               <button
                 key={tab}
@@ -297,7 +227,7 @@ const SalesManagerLeadsListing = ({
                 }`}
               >
                 <span>{tab}</span>
-                {tab === 'Not Assigned' && unassignedCount > 0 && (
+                {tab === 'Not Assigned' && activeTab === 'All' && unassignedCount > 0 && (
                   <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                     {unassignedCount}
                   </span>
@@ -409,7 +339,7 @@ const SalesManagerLeadsListing = ({
       {/* Table Container */}
       <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-h-96">
             <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
               <tr>
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
@@ -427,7 +357,10 @@ const SalesManagerLeadsListing = ({
               {loading ? (
                 <tr>
                   <td colSpan="9" className="px-6 py-12 text-center text-gray-400">
-                    Loading leads...
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#BBA473]"></div>
+                      <span>Loading leads...</span>
+                    </div>
                   </td>
                 </tr>
               ) : currentLeads.length === 0 ? (
@@ -489,7 +422,7 @@ const SalesManagerLeadsListing = ({
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination - Updated to show proper counts */}
         <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="text-gray-400 text-sm">

@@ -9,6 +9,7 @@ import SalesManagerAssignLeadModal from './SalesManagerAssignLeadModal';
 const SalesManagerLeadManagement = () => {
   const [leads, setLeads] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [activeSubTab, setActiveSubTab] = useState('');
   const [activeSubSubTab, setActiveSubSubTab] = useState('');
@@ -44,13 +45,67 @@ const SalesManagerLeadManagement = () => {
   const [modalHotLeadType, setModalHotLeadType] = useState('');
   const [modalDepositStatus, setModalDepositStatus] = useState('');
 
+  // Debouncing effect for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Helper function to build status parameter based on active tabs
+  const getStatusParam = () => {
+    if (activeTab === 'Assigned') {
+      return 'assigned';
+    } else if (activeTab === 'Not Assigned') {
+      return 'not-assigned';
+    } else if (activeTab === 'Contacted') {
+      if (activeSubTab === 'Interested') {
+        if (activeSubSubTab === 'Warm Lead') {
+          return 'warm-lead';
+        } else if (activeSubSubTab === 'Hot Lead') {
+          if (activeSubSubSubTab === 'Demo') {
+            return 'demo';
+          } else if (activeSubSubSubTab === 'Real') {
+            if (activeSubSubSubSubTab === 'Deposit') {
+              return 'deposited';
+            } else if (activeSubSubSubSubTab === 'Not Deposit') {
+              return 'not-deposited';
+            }
+            return 'real';
+          }
+          return 'hot-lead';
+        }
+        return 'interested';
+      } else if (activeSubTab === 'Not Interested') {
+        return 'not-interested';
+      } else if (activeSubTab === 'Not Answered') {
+        return 'not-answered';
+      }
+      return 'contacted';
+    }
+    return ''; // All tab - no status filter
+  };
+
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
-      const result = await getAllSalesManagerLeads(page, limit, startDateStr, endDateStr);
+      const statusParam = getStatusParam();
+      
+      const result = await getAllSalesManagerLeads(
+        page, 
+        limit, 
+        startDateStr, 
+        endDateStr,
+        debouncedSearchQuery,
+        statusParam
+      );
       
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
@@ -92,7 +147,7 @@ const SalesManagerLeadManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
-          toast.error(result.error.payload.message || 'Failed to fetch leads');
+          toast.error(result.error?.payload?.message || 'Failed to fetch leads');
         }
       }
     } catch (error) {
@@ -162,8 +217,17 @@ const SalesManagerLeadManagement = () => {
 
   useEffect(() => {
     setIsLoaded(true);
+  }, []);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab]);
+
+  // Fetch leads when page, filters, or dates change
+  useEffect(() => {
     fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -171,6 +235,9 @@ const SalesManagerLeadManagement = () => {
     setActiveSubSubTab('');
     setActiveSubSubSubTab('');
     setActiveSubSubSubSubTab('');
+    // Clear search when switching tabs
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
   };
 
   const handleSubTabChange = (subTab) => {
@@ -296,7 +363,7 @@ const SalesManagerLeadManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
-          toast.error(result.error.payload.message || 'Failed to assign lead to agent');
+          toast.error(result.error?.payload?.message || 'Failed to assign lead to agent');
         }
       }
     } catch (error) {
@@ -386,7 +453,7 @@ const SalesManagerLeadManagement = () => {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
-          toast.error(result.error.payload.message || 'Failed to update lead status');
+          toast.error(result.error?.payload?.message || 'Failed to update lead status');
         }
       }
     } catch (error) {
