@@ -173,7 +173,7 @@ const LeadManagement = () => {
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
       // Determine status filter based on activeTab
-      const statusParam = activeTab === 'All' ? '' : activeTab?.toLowerCase();
+      const statusParam = activeTab === 'All' ? '' : activeTab;
       
       const result = await getAllLeads(
         page, 

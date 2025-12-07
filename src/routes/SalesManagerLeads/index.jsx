@@ -59,33 +59,33 @@ const SalesManagerLeadManagement = () => {
   // Helper function to build status parameter based on active tabs
   const getStatusParam = () => {
     if (activeTab === 'Assigned') {
-      return 'assigned';
+      return 'Assigned';
     } else if (activeTab === 'Not Assigned') {
-      return 'not-assigned';
+      return 'Not-Assigned';
     } else if (activeTab === 'Contacted') {
       if (activeSubTab === 'Interested') {
         if (activeSubSubTab === 'Warm Lead') {
-          return 'warm-lead';
+          return 'Warm-Lead';
         } else if (activeSubSubTab === 'Hot Lead') {
           if (activeSubSubSubTab === 'Demo') {
-            return 'demo';
+            return 'Demo';
           } else if (activeSubSubSubTab === 'Real') {
             if (activeSubSubSubSubTab === 'Deposit') {
-              return 'deposited';
+              return 'Deposit';
             } else if (activeSubSubSubSubTab === 'Not Deposit') {
-              return 'not-deposited';
+              return 'Not-Deposit';
             }
-            return 'real';
+            return 'Real';
           }
-          return 'hot-lead';
+          return 'Hot-Lead';
         }
-        return 'interested';
+        return 'Interested';
       } else if (activeSubTab === 'Not Interested') {
-        return 'not-interested';
+        return 'Not-Interested';
       } else if (activeSubTab === 'Not Answered') {
-        return 'not-answered';
+        return 'Not-Answered';
       }
-      return 'contacted';
+      return 'Contacted';
     }
     return ''; // All tab - no status filter
   };
