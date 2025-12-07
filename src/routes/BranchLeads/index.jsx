@@ -810,10 +810,10 @@ const LeadManagement = () => {
 
         {/* Table Container */}
         <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
-        
+
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full ">
+            <table className="w-full">
               <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
                 <tr>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Lead ID</th>
