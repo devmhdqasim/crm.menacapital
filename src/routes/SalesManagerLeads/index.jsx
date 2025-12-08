@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import SalesManagerLeadsListing from './SalesManagerLeadsListing';
 import SalesManagerLeadFormDrawer from './SalesManagerLeadFormDrawer';
 import SalesManagerAssignLeadModal from './SalesManagerAssignLeadModal';
+import ReminderModal from './TaskManagementModal';
 
 const SalesManagerLeadManagement = () => {
   const [leads, setLeads] = useState([]);
@@ -44,6 +45,10 @@ const SalesManagerLeadManagement = () => {
   const [modalLeadType, setModalLeadType] = useState('');
   const [modalHotLeadType, setModalHotLeadType] = useState('');
   const [modalDepositStatus, setModalDepositStatus] = useState('');
+
+  // Task modal state
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [taskLead, setTaskLead] = useState(null);
 
   // Debouncing effect for search query
   useEffect(() => {
@@ -447,8 +452,18 @@ const SalesManagerLeadManagement = () => {
       
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
+        
+        // Store the lead for task modal
+        const leadForTask = { ...selectedLead };
+        
+        // Close this modal and refresh leads
         handleCloseModal();
         fetchLeads(currentPage, itemsPerPage);
+        
+        // Open task modal after a short delay
+        setTimeout(() => {
+          handleOpenTaskModal(leadForTask);
+        }, 300);
       } else {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
@@ -487,6 +502,16 @@ const SalesManagerLeadManagement = () => {
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
     setEditingLead(null);
+  };
+
+  const handleOpenTaskModal = (lead) => {
+    setTaskLead(lead);
+    setShowTaskModal(true);
+  };
+
+  const handleCloseTaskModal = () => {
+    setShowTaskModal(false);
+    setTaskLead(null);
   };
 
   return (
@@ -565,6 +590,13 @@ const SalesManagerLeadManagement = () => {
         modalDepositStatus={modalDepositStatus}
         setModalDepositStatus={setModalDepositStatus}
         handleStatusUpdate={handleStatusUpdate}
+        onOpenTaskModal={handleOpenTaskModal}
+      />
+
+      <ReminderModal
+        showReminderModal={showTaskModal}
+        selectedLead={taskLead}
+        handleCloseReminderModal={handleCloseTaskModal}
       />
     </>
   );

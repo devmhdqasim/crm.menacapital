@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import LeadsListing from './LeadsListing';
 import LeadFormDrawer from './LeadFormDrawer';
 import AssignLeadModal from './AssignLeadModal';
+import ReminderModal from './TaskManagementModal';
 
 const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
@@ -30,6 +31,10 @@ const LeadManagement = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [isLeadsSelectedId, setIsLeadsSelectedId] = useState(false);
+
+  // Reminder modal state
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderLead, setReminderLead] = useState(null);
 
   // Debouncing effect for search query
   useEffect(() => {
@@ -242,6 +247,16 @@ const LeadManagement = () => {
     setSelectedLead(null);
   };
 
+  const handleOpenReminderModal = (lead) => {
+    setReminderLead(lead);
+    setShowReminderModal(true);
+  };
+
+  const handleCloseReminderModal = () => {
+    setShowReminderModal(false);
+    setReminderLead(null);
+  };
+
   return (
     <>
       <LeadsListing
@@ -293,6 +308,13 @@ const LeadManagement = () => {
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         isLeadsSelectedId={isLeadsSelectedId}
+        onOpenReminderModal={handleOpenReminderModal}
+      />
+
+      <ReminderModal
+        showReminderModal={showReminderModal}
+        selectedLead={reminderLead}
+        handleCloseReminderModal={handleCloseReminderModal}
       />
     </>
   );
