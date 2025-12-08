@@ -392,11 +392,11 @@ export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate 
   }
 };
 
-export const getAllBranchLeads = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '') => {
+export const getAllBranchLeads = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', agentId = '') => {
   try {
     const authToken = getRefreshToken();
     console.log('🔵 Fetching leads...');
-    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status);
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status, 'AgentId:', agentId);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
@@ -421,6 +421,11 @@ export const getAllBranchLeads = async (page = 1, limit = 10, startDate = '', en
     // Add status parameter if provided
     if (status) {
       queryParams.append('status', status);
+    }
+
+    // Add agentId parameter if provided (for Kiosk Member filter)
+    if (agentId) {
+      queryParams.append('agentId', agentId);
     }
     
     const refreshUrl = `${API_BASE_URL}/lead/branch/getAll/en?${queryParams.toString()}`;
@@ -574,12 +579,12 @@ export const deleteBranch = async (userId) => {
   }
 };
 
-export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '') => {
+export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '', agentId = '') => {
   try {
     const authToken = getRefreshToken();
     
     console.log('🔵 Fetching leads...');
-    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status);
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status, 'AgentId:', agentId);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
@@ -604,6 +609,11 @@ export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '
     // Add status parameter if provided
     if (status) {
       queryParams.append('status', status);
+    }
+
+    // Add agentId parameter if provided
+    if (agentId) {
+      queryParams.append('agentId', agentId);
     }
 
     const refreshUrl = `${API_BASE_URL}/lead/sales/en?${queryParams.toString()}`;

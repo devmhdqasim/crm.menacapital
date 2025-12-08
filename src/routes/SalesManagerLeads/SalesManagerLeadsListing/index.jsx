@@ -32,7 +32,10 @@ const SalesManagerLeadsListing = ({
   handleRowClick,
   setDrawerOpen,
   setEditingLead,
-  drawerOpen
+  drawerOpen,
+  agents,
+  selectedAgentFilter,
+  setSelectedAgentFilter,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
 
@@ -199,6 +202,28 @@ const SalesManagerLeadsListing = ({
               <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
               <span className="relative z-10">Add New Lead</span>
             </button>
+
+            {/* Agent Filter */}
+            <div className="flex items-center gap-4 ml-auto">
+            <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+              Filter by Kiosk Member:
+            </label>
+            <div className="relative w-full max-w-xs min-w-64">
+              <select
+                value={selectedAgentFilter}
+                onChange={(e) => setSelectedAgentFilter(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+              >
+                <option value="">All Agents</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.fullName}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+            </div>
 
             <DateRangePicker
               startDate={startDate}

@@ -35,6 +35,7 @@ const SalesManagerLeadManagement = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [kioskMembers, setKioskMembers] = useState([]);
   const [activeModalTab, setActiveModalTab] = useState('assign');
+  const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
   
   // Status update states
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
@@ -102,6 +103,7 @@ const SalesManagerLeadManagement = () => {
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
       const statusParam = getStatusParam();
+      const agentId = selectedAgentFilter || '';
       
       const result = await getAllSalesManagerLeads(
         page, 
@@ -109,7 +111,8 @@ const SalesManagerLeadManagement = () => {
         startDateStr, 
         endDateStr,
         debouncedSearchQuery,
-        statusParam
+        statusParam,
+        agentId
       );
       
       if (result.success && result.data) {
@@ -227,12 +230,12 @@ const SalesManagerLeadManagement = () => {
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab]);
+  }, [debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab, selectedAgentFilter]);
 
   // Fetch leads when page, filters, or dates change
   useEffect(() => {
     fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab, selectedAgentFilter]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -545,6 +548,9 @@ const SalesManagerLeadManagement = () => {
         setDrawerOpen={setDrawerOpen}
         setEditingLead={setEditingLead}
         drawerOpen={drawerOpen}
+        agents={agents}
+        selectedAgentFilter={selectedAgentFilter}
+        setSelectedAgentFilter={setSelectedAgentFilter}
       />
 
       <SalesManagerLeadFormDrawer
