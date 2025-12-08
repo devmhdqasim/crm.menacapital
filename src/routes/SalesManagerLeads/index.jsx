@@ -70,9 +70,9 @@ const SalesManagerLeadManagement = () => {
       return 'Not-Assigned';
     } else if (activeTab === 'Contacted') {
       if (activeSubTab === 'Interested') {
-        if (activeSubSubTab === 'Warm Lead') {
-          return 'Warm-Lead';
-        } else if (activeSubSubTab === 'Hot Lead') {
+        if (activeSubSubTab === 'Warm') {
+          return 'Warm';
+        } else if (activeSubSubTab === 'Hot') {
           if (activeSubSubSubTab === 'Demo') {
             return 'Demo';
           } else if (activeSubSubSubTab === 'Real') {
@@ -83,7 +83,7 @@ const SalesManagerLeadManagement = () => {
             }
             return 'Real';
           }
-          return 'Hot-Lead';
+          return 'Hot';
         }
         return 'Interested';
       } else if (activeSubTab === 'Not Interested') {
@@ -316,7 +316,7 @@ const SalesManagerLeadManagement = () => {
           setModalHotLeadType('');
           setModalDepositStatus('');
         } else if (lead.hot) {
-          setModalLeadType('Hot Lead');
+          setModalLeadType('Hot');
           
           if (lead.demo && !lead.real) {
             setModalHotLeadType('Demo');
@@ -326,14 +326,14 @@ const SalesManagerLeadManagement = () => {
             setModalHotLeadType('Real');
             
             if (lead.deposited) {
-              setModalDepositStatus('Deposited');
-              setLeadResponseStatus('Deposited');
+              setModalDepositStatus('Deposit');
+              setLeadResponseStatus('Deposit');
             } else {
-              setModalDepositStatus('Not Deposited');
-              setLeadResponseStatus('Not Deposited');
+              setModalDepositStatus('Not Deposit');
+              setLeadResponseStatus('Not Deposit');
             }
           } else {
-            setLeadResponseStatus('Hot Lead');
+            setLeadResponseStatus('Hot');
             setModalHotLeadType('');
             setModalDepositStatus('');
           }
@@ -430,10 +430,10 @@ const SalesManagerLeadManagement = () => {
         } else if (modalInterested === 'Interested') {
           payload.interested = true;
           
-          if (modalLeadType === 'Warm Lead') {
+          if (modalLeadType === 'Warm') {
             payload.hot = false;
             payload.cold = false;
-          } else if (modalLeadType === 'Hot Lead') {
+          } else if (modalLeadType === 'Hot') {
             payload.hot = true;
             
             if (modalHotLeadType === 'Demo') {
@@ -441,9 +441,9 @@ const SalesManagerLeadManagement = () => {
             } else if (modalHotLeadType === 'Real') {
               payload.real = true;
               
-              if (modalDepositStatus === 'Deposited') {
+              if (modalDepositStatus === 'Deposit') {
                 payload.deposited = true;
-              } else if (modalDepositStatus === 'Not Deposited') {
+              } else if (modalDepositStatus === 'Not Deposit') {
                 payload.deposited = false;
               }
             }
@@ -521,7 +521,6 @@ const SalesManagerLeadManagement = () => {
 
   return (
     <>
-    <h1>{leadResponseStatus} leadResponseStatus</h1>
       <SalesManagerLeadsListing
         leads={leads}
         searchQuery={searchQuery}

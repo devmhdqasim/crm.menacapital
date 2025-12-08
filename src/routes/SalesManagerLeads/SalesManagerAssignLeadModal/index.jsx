@@ -348,8 +348,8 @@ const SalesManagerAssignLeadModal = ({
                           <input
                             type="radio"
                             name="leadType"
-                            value="Hot Lead"
-                            checked={modalLeadType === 'Hot Lead'}
+                            value="Hot"
+                            checked={modalLeadType === 'Hot'}
                             onChange={(e) => {
                               setModalLeadType(e.target.value);
                               setLeadResponseStatus(e.target.value);
@@ -366,7 +366,7 @@ const SalesManagerAssignLeadModal = ({
                   )}
                   
                   {/* Level 4: Demo / Real */}
-                  {modalLeadType === 'Hot Lead' && (
+                  {modalLeadType === 'Hot' && (
                     <div className="space-y-3 animate-fadeIn">
                       <div className="grid grid-cols-2 gap-3">
                         <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
@@ -414,8 +414,8 @@ const SalesManagerAssignLeadModal = ({
                           <input
                             type="radio"
                             name="depositStatus"
-                            value="Deposited"
-                            checked={modalDepositStatus === 'Deposited'}
+                            value="Deposit"
+                            checked={modalDepositStatus === 'Deposit'}
                             onChange={(e) => {
                               setModalDepositStatus(e.target.value);
                               setLeadResponseStatus(e.target.value);
@@ -423,15 +423,15 @@ const SalesManagerAssignLeadModal = ({
                             }}
                             className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
                           />
-                          <span className="text-white font-medium">Deposited</span>
+                          <span className="text-white font-medium">Deposit</span>
                         </label>
                         
                         <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
                           <input
                             type="radio"
                             name="depositStatus"
-                            value="Not Deposited"
-                            checked={modalDepositStatus === 'Not Deposited'}
+                            value="Not Deposit"
+                            checked={modalDepositStatus === 'Not Deposit'}
                             onChange={(e) => {
                               setModalDepositStatus(e.target.value);
                               setLeadResponseStatus(e.target.value);
@@ -439,7 +439,7 @@ const SalesManagerAssignLeadModal = ({
                             }}
                             className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
                           />
-                          <span className="text-white font-medium">Not Deposited</span>
+                          <span className="text-white font-medium">Not Deposit</span>
                         </label>
                       </div>
                     </div>

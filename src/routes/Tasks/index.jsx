@@ -65,7 +65,7 @@ const Tasks = () => {
   const priorities = ['All', 'High', 'Normal', 'Low'];
   const statusOptions = ['Open', 'Pending', 'Completed'];
   const priorityOptions = ['High', 'Normal', 'Low'];
-  const responseStatusOptions = ['', 'Answered', 'Not Answered', 'Interested', 'Not Interested', 'Real', 'Demo', 'Warm Lead', 'Hot Lead'];
+  const responseStatusOptions = ['', 'Answered', 'Not Answered', 'Interested', 'Not Interested', 'Real', 'Demo', 'Warm', 'Hot'];
 
   // Formik setup
   const formik = useFormik({

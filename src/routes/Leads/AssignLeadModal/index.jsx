@@ -66,13 +66,13 @@ const AssignLeadModal = ({
         
         if (!selectedLead.hot) {
           // Warm lead
-          setModalLeadType('Warm Lead');
-          setLeadResponseStatus('Warm Lead');
+          setModalLeadType('Warm');
+          setLeadResponseStatus('Warm');
           setModalHotLeadType('');
           setModalDepositStatus('');
         } else if (selectedLead.hot) {
           // Hot lead
-          setModalLeadType('Hot Lead');
+          setModalLeadType('Hot');
           
           if (selectedLead.demo && !selectedLead.real) {
             // Demo account
@@ -84,15 +84,15 @@ const AssignLeadModal = ({
             setModalHotLeadType('Real');
             
             if (selectedLead.deposited) {
-              setModalDepositStatus('Deposited');
-              setLeadResponseStatus('Deposited');
+              setModalDepositStatus('Deposit');
+              setLeadResponseStatus('Deposit');
             } else {
-              setModalDepositStatus('Not Deposited');
-              setLeadResponseStatus('Not Deposited');
+              setModalDepositStatus('Not Deposit');
+              setLeadResponseStatus('Not Deposit');
             }
           } else {
             // Hot lead but no demo or real yet
-            setLeadResponseStatus('Hot Lead');
+            setLeadResponseStatus('Hot');
             setModalHotLeadType('');
             setModalDepositStatus('');
           }
@@ -169,7 +169,7 @@ const AssignLeadModal = ({
             // Warm lead - interested but not hot
             payload.hot = false;
             payload.cold = false;
-          } else if (modalLeadType === 'Hot Lead') {
+          } else if (modalLeadType === 'Hot') {
             payload.hot = true;
             
             if (modalHotLeadType === 'Demo') {
@@ -178,9 +178,9 @@ const AssignLeadModal = ({
             } else if (modalHotLeadType === 'Real') {
               payload.real = true;
               
-              if (modalDepositStatus === 'Deposited') {
+              if (modalDepositStatus === 'Deposit') {
                 payload.deposited = true;
-              } else if (modalDepositStatus === 'Not Deposited') {
+              } else if (modalDepositStatus === 'Not Deposit') {
                 payload.deposited = false;
               }
             }
@@ -450,8 +450,8 @@ const AssignLeadModal = ({
                         <input
                           type="radio"
                           name="leadType"
-                          value="Hot Lead"
-                          checked={modalLeadType === 'Hot Lead'}
+                          value="Hot"
+                          checked={modalLeadType === 'Hot'}
                           onChange={(e) => {
                             setModalLeadType(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -471,7 +471,7 @@ const AssignLeadModal = ({
                 )}
                 
                 {/* Level 4: Demo / Real (shown if Hot Lead) */}
-                {modalLeadType === 'Hot Lead' && (
+                {modalLeadType === 'Hot' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
@@ -522,8 +522,8 @@ const AssignLeadModal = ({
                         <input
                           type="radio"
                           name="depositStatus"
-                          value="Deposited"
-                          checked={modalDepositStatus === 'Deposited'}
+                          value="Deposit"
+                          checked={modalDepositStatus === 'Deposit'}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -531,15 +531,15 @@ const AssignLeadModal = ({
                           }}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
                         />
-                        <span className="text-white font-medium">Deposited</span>
+                        <span className="text-white font-medium">Deposit</span>
                       </label>
                       
                       <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
                         <input
                           type="radio"
                           name="depositStatus"
-                          value="Not Deposited"
-                          checked={modalDepositStatus === 'Not Deposited'}
+                          value="Not Deposit"
+                          checked={modalDepositStatus === 'Not Deposit'}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -547,7 +547,7 @@ const AssignLeadModal = ({
                           }}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
                         />
-                        <span className="text-white font-medium">Not Deposited</span>
+                        <span className="text-white font-medium">Not Deposit</span>
                       </label>
                     </div>
                     {modalErrors.depositStatus && (

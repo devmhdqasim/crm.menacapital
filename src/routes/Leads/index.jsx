@@ -56,20 +56,20 @@ const LeadManagement = () => {
       if (contactedSubTab === 'Not Answered') {
         return 'Not-Answered';
       } else if (contactedSubTab === 'Interested') {
-        if (interestedSubTab === 'Warm Lead') {
-          return 'Warm-Lead';
-        } else if (interestedSubTab === 'Hot Lead') {
+        if (interestedSubTab === 'Warm') {
+          return 'Warm';
+        } else if (interestedSubTab === 'Hot') {
           if (hotLeadSubTab === 'Demo') {
             return 'Demo';
           } else if (hotLeadSubTab === 'Real') {
             if (realSubTab === 'Deposit') {
-              return 'Deposited';
+              return 'Deposit';
             } else if (realSubTab === 'Not Deposit') {
-              return 'Not-Deposited';
+              return 'Not-Deposit';
             }
             return 'Real';
           }
-          return 'Hot-Lead';
+          return 'Hot';
         }
         return 'Interested';
       } else if (contactedSubTab === 'Not Interested') {

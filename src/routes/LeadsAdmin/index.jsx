@@ -66,7 +66,7 @@ const LeadManagement = () => {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [totalLeads, setTotalLeads] = useState(0);
-  const [interestedSubTab, setInterestedSubTab] = useState('Hot Lead');
+  const [interestedSubTab, setInterestedSubTab] = useState('Hot');
   const [hotLeadsSubTab, setHotLeadsSubTab] = useState('Real');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);

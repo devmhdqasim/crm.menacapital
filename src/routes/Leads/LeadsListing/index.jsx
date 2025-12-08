@@ -38,7 +38,7 @@ const LeadsListing = ({
 
   const tabs = ['All', 'Pending', 'Contacted'];
   const contactedSubTabs = ['Interested', 'Not Interested', 'Not Answered'];
-  const interestedSubTabs = ['Warm Lead', 'Hot Lead'];
+  const interestedSubTabs = ['Warm', 'Hot'];
   const hotLeadSubTabs = ['Demo', 'Real'];
   const realSubTabs = ['Deposit', 'Not Deposit'];
 
@@ -210,7 +210,7 @@ const LeadsListing = ({
       )}
 
       {/* Sub Sub Sub Tabs (Level 4) - Shown when Hot Lead is active */}
-      {activeTab === 'Contacted' && contactedSubTab === 'Interested' && interestedSubTab === 'Hot Lead' && (
+      {activeTab === 'Contacted' && contactedSubTab === 'Interested' && interestedSubTab === 'Hot' && (
         <div className="mb-4 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-12">
             {hotLeadSubTabs.map((subTab) => (
@@ -231,7 +231,7 @@ const LeadsListing = ({
       )}
 
       {/* Sub Sub Sub Sub Tabs (Level 5) - Shown when Real is active */}
-      {activeTab === 'Contacted' && contactedSubTab === 'Interested' && interestedSubTab === 'Hot Lead' && hotLeadSubTab === 'Real' && (
+      {activeTab === 'Contacted' && contactedSubTab === 'Interested' && interestedSubTab === 'Hot' && hotLeadSubTab === 'Real' && (
         <div className="mb-6 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-16">
             {realSubTabs.map((subTab) => (

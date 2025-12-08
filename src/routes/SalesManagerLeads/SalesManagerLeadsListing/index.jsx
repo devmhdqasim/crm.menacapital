@@ -51,20 +51,20 @@ const SalesManagerLeadsListing = ({
 
   const getSubSubTabs = () => {
     if (activeTab === 'Contacted' && activeSubTab === 'Interested') {
-      return ['Warm Lead', 'Hot Lead'];
+      return ['Warm', 'Hot'];
     }
     return [];
   };
 
   const getSubSubSubTabs = () => {
-    if (activeTab === 'Contacted' && activeSubTab === 'Interested' && activeSubSubTab === 'Hot Lead') {
+    if (activeTab === 'Contacted' && activeSubTab === 'Interested' && activeSubSubTab === 'Hot') {
       return ['Demo', 'Real'];
     }
     return [];
   };
 
   const getSubSubSubSubTabs = () => {
-    if (activeTab === 'Contacted' && activeSubTab === 'Interested' && activeSubSubTab === 'Hot Lead' && activeSubSubSubTab === 'Real') {
+    if (activeTab === 'Contacted' && activeSubTab === 'Interested' && activeSubSubTab === 'Hot' && activeSubSubSubTab === 'Real') {
       return ['Deposit', 'Not Deposit'];
     }
     return [];
