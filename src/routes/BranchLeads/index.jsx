@@ -228,6 +228,7 @@ const BranchLeadsManagement = () => {
           onDelete={handleDelete}
         />
       </div>
+      
 
       {/* Lead Form Drawer Component */}
       <LeadFormDrawer
