@@ -425,7 +425,7 @@ export const getAllBranchLeads = async (page = 1, limit = 10, startDate = '', en
 
     // Add agentId parameter if provided (for Kiosk Member filter)
     if (agentId) {
-      queryParams.append('agentId', agentId);
+      queryParams.append('agent', agentId);
     }
     
     const refreshUrl = `${API_BASE_URL}/lead/branch/getAll/en?${queryParams.toString()}`;
@@ -613,7 +613,7 @@ export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '
 
     // Add agentId parameter if provided
     if (agentId) {
-      queryParams.append('agentId', agentId);
+      queryParams.append('agent', agentId);
     }
 
     const refreshUrl = `${API_BASE_URL}/lead/sales/en?${queryParams.toString()}`;
