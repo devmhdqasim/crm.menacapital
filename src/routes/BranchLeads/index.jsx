@@ -479,7 +479,7 @@ const LeadManagement = () => {
       timeZone: "Asia/Dubai",
       day: "2-digit",
       month: "2-digit",
-      year: "numeric",     // ← FIXED
+      year: "numeric",     
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -837,7 +837,7 @@ const LeadManagement = () => {
                 ) : currentLeads.length === 0 ? (
                   <tr>
                     <td colSpan="9" className="px-6 py-12 text-center text-gray-400">
-                      No leads found
+                      No leads found 
                     </td>
                   </tr>
                 ) : (
