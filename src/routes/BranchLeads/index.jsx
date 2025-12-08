@@ -204,6 +204,7 @@ const BranchLeadsManagement = () => {
           </div>
         </div>
 
+
         {/* Leads Listing Table Component */}
         <LeadsListingTable
           leads={leads}
