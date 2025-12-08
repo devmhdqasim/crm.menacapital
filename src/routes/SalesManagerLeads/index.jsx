@@ -517,8 +517,11 @@ const SalesManagerLeadManagement = () => {
     setTaskLead(null);
   };
 
+  console.log(leadResponseStatus, 'leadResponseStatus')
+
   return (
     <>
+    <h1>{leadResponseStatus} leadResponseStatus</h1>
       <SalesManagerLeadsListing
         leads={leads}
         searchQuery={searchQuery}

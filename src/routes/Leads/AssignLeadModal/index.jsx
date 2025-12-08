@@ -11,7 +11,8 @@ const AssignLeadModal = ({
   currentPage, 
   itemsPerPage,
   isLeadsSelectedId,
-  onOpenReminderModal
+  onOpenReminderModal,
+  setLeadResponseStatusCurrent,
 }) => {
   // Modal form state - using single variable to track the final selected status
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
@@ -145,6 +146,8 @@ const AssignLeadModal = ({
         latestRemarks: modalRemarks,
         currentStatus: leadResponseStatus
       };
+
+      setLeadResponseStatusCurrent(leadResponseStatus)
 
       // Set flags based on the user's selections
       if (modalAnswered === 'Not Answered') {

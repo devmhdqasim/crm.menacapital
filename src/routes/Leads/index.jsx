@@ -10,6 +10,7 @@ const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
   const [userDetails, setUserDetails] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [leadResponseStatusCurrent, setLeadResponseStatusCurrent] = useState(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -309,12 +310,13 @@ const LeadManagement = () => {
         itemsPerPage={itemsPerPage}
         isLeadsSelectedId={isLeadsSelectedId}
         onOpenReminderModal={handleOpenReminderModal}
+        setLeadResponseStatusCurrent={setLeadResponseStatusCurrent}
       />
 
       <ReminderModal
         showReminderModal={showReminderModal}
         selectedLead={reminderLead}
-        currentStatus={leadResponseStatus}
+        currentStatus={leadResponseStatusCurrent}
         handleCloseReminderModal={handleCloseReminderModal}
       />
     </>

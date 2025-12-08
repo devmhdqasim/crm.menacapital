@@ -8,6 +8,7 @@ import { createAutoTask } from '../../../services/taskService.js'
 const TaskManagementModal = ({ 
   showReminderModal, 
   selectedLead, 
+  currentStatus,
   handleCloseReminderModal 
 }) => {
   const [isClosing, setIsClosing] = useState(false);
@@ -38,7 +39,7 @@ const TaskManagementModal = ({
         // Prepare task data for API
         const taskData = {
           leadId: selectedLead?.id,
-          leadStatus: selectedLead?.status || 'Lead',
+          leadStatus: currentStatus || selectedLead?.status || 'Lead',
           taskTitle: values.title,
           taskDescription: values.description
         };

@@ -34,7 +34,7 @@ const TaskManagementModal = ({
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        console.log('🔵 Creating task for lead:', selectedLead);
+        console.log('🔵 Creating task for lead:', selectedLead, 'currentStatus', currentStatus);
         
         // Prepare task data for API
         const taskData = {
