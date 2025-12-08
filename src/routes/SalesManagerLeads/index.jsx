@@ -602,6 +602,7 @@ const SalesManagerLeadManagement = () => {
       <ReminderModal
         showReminderModal={showTaskModal}
         selectedLead={taskLead}
+        currentStatus={leadResponseStatus}
         handleCloseReminderModal={handleCloseTaskModal}
       />
     </>

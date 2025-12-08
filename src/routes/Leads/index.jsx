@@ -314,6 +314,7 @@ const LeadManagement = () => {
       <ReminderModal
         showReminderModal={showReminderModal}
         selectedLead={reminderLead}
+        currentStatus={leadResponseStatus}
         handleCloseReminderModal={handleCloseReminderModal}
       />
     </>
