@@ -151,6 +151,123 @@ export const createTask = async (taskData) => {
   }
 };
 
+
+/**
+ * Create a new auto task (simplified version)
+ * @param {Object} taskData - Task data object
+ * @param {string} taskData.leadId - Lead's ID (_id)
+ * @param {string} taskData.leadStatus - Lead status
+ * @param {string} taskData.taskTitle - Task title
+ * @param {string} taskData.taskDescription - Task description
+ * @returns {Promise} - Returns created task info
+ */
+export const createAutoTask = async (taskData) => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Creating new auto task...');
+    console.log('📝 Task data:', taskData);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    // Prepare the payload
+    const payload = {
+      leadId: taskData.leadId,
+      leadStatus: taskData.leadStatus,
+      taskTitle: taskData.taskTitle,
+      taskDescription: taskData.taskDescription
+    };
+
+    console.log('📤 Sending payload to API:', payload);
+
+    const response = await axios.post(
+      `${API_BASE_URL}/task/auto/create/en`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Auto task created successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      console.log('✅ Auto task creation successful');
+      console.log('📨 Message:', data.message);
+
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Task created successfully',
+      };
+    } else {
+      console.error('❌ Auto task creation failed:', data.message);
+      return {
+        success: false,
+        message: data.message || 'Failed to create task',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Create auto task error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response?.status === 400) {
+      console.error('❌ Bad request (400), validation error');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Invalid task data. Please check all fields.',
+        error: error.response.data,
+      };
+    }
+
+    if (error.response?.status === 404) {
+      console.error('❌ Not found (404)');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Lead not found.',
+        error: error.response.data,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to create task',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
 /**
  * Update an existing task
  * @param {string} taskId - Task's ID (_id)

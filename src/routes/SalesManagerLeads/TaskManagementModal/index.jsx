@@ -3,8 +3,9 @@ import { X, Bell } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
+import { createAutoTask } from '../../../services/taskService.js'
 
-const ReminderModal = ({ 
+const TaskManagementModal = ({ 
   showReminderModal, 
   selectedLead, 
   handleCloseReminderModal 
@@ -32,19 +33,32 @@ const ReminderModal = ({
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        // TODO: Replace with actual API call
-        console.log('Task data:', {
+        console.log('🔵 Creating task for lead:', selectedLead);
+        
+        // Prepare task data for API
+        const taskData = {
           leadId: selectedLead?.id,
-          title: values.title,
-          description: values.description
-        });
+          leadStatus: selectedLead?.status || 'Lead',
+          taskTitle: values.title,
+          taskDescription: values.description
+        };
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('📤 Sending task data:', taskData);
 
-        toast.success('Task created successfully!');
-        handleClose();
-        formik.resetForm();
+        // Call the API
+        const result = await createAutoTask(taskData);
+
+        if (result.success) {
+          toast.success(result.message || 'Task created successfully!');
+          handleClose();
+          formik.resetForm();
+        } else {
+          if (result.requiresAuth) {
+            toast.error('Session expired. Please login again');
+          } else {
+            toast.error(result.message || 'Failed to create task');
+          }
+        }
       } catch (error) {
         console.error('Error creating task:', error);
         toast.error('Failed to create task. Please try again');
@@ -89,7 +103,7 @@ const ReminderModal = ({
               <Bell className="w-6 h-6 text-[#BBA473]" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">Set Task</h2>
+              <h2 className="text-2xl font-bold text-[#BBA473]">Set Reminder</h2>
               <p className="text-gray-400 text-sm mt-1">
                 {selectedLead.name} • {selectedLead.leadId || selectedLead.id.slice(-6)}
               </p>
@@ -109,7 +123,7 @@ const ReminderModal = ({
             {/* Title Input */}
             <div className="space-y-2">
               <label className="text-sm text-[#E8D5A3] font-medium block">
-                Task Title <span className="text-red-400">*</span>
+                Reminder Title <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -174,7 +188,7 @@ const ReminderModal = ({
                 </div>
                 <div>
                   <p className="text-sm text-gray-300">
-                    This task will be associated with <span className="font-semibold text-[#BBA473]">{selectedLead.name}</span> and can help you track follow-ups and important tasks.
+                    This reminder will be associated with <span className="font-semibold text-[#BBA473]">{selectedLead.name}</span> and can help you track follow-ups and important tasks.
                   </p>
                 </div>
               </div>
@@ -196,7 +210,7 @@ const ReminderModal = ({
                 disabled={formik.isSubmitting}
                 className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {formik.isSubmitting ? 'Creating...' : 'Create Task'}
+                {formik.isSubmitting ? 'Creating...' : 'Create Reminder'}
               </button>
             </div>
           </div>
@@ -216,4 +230,4 @@ const ReminderModal = ({
   );
 };
 
-export default ReminderModal;
+export default TaskManagementModal;
