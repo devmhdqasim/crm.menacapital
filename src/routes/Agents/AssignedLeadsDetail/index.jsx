@@ -20,7 +20,7 @@ const LeadManagement = ({ selectedAgentId }) => {
   const [endDate, setEndDate] = useState(null);
 
   // New hierarchical tab states
-  const [contactedSubTab, setContactedSubTab] = useState('Not Answered');
+  const [contactedSubTab, setContactedSubTab] = useState('');
   const [interestedSubTab, setInterestedSubTab] = useState('');
   const [hotLeadSubTab, setHotLeadSubTab] = useState('');
   const [realSubTab, setRealSubTab] = useState('');
@@ -219,7 +219,7 @@ const LeadManagement = ({ selectedAgentId }) => {
     setActiveTab(tab);
     // Reset sub-tabs when changing main tab
     if (tab !== 'Contacted') {
-      setContactedSubTab('Not Answered');
+      setContactedSubTab('subTask');
       setInterestedSubTab('');
       setHotLeadSubTab('');
       setRealSubTab('');
