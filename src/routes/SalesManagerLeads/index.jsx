@@ -311,8 +311,8 @@ const SalesManagerLeadManagement = () => {
         setModalInterested('Interested');
         
         if (!lead.hot) {
-          setModalLeadType('Warm Lead');
-          setLeadResponseStatus('Warm Lead');
+          setModalLeadType('Warm');
+          setLeadResponseStatus('Warm');
           setModalHotLeadType('');
           setModalDepositStatus('');
         } else if (lead.hot) {
@@ -516,8 +516,6 @@ const SalesManagerLeadManagement = () => {
     setShowTaskModal(false);
     setTaskLead(null);
   };
-
-  console.log(leadResponseStatus, 'leadResponseStatus')
 
   return (
     <>

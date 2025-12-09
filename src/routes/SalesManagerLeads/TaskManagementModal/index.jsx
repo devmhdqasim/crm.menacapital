@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ const TaskManagementModal = ({
   handleCloseReminderModal 
 }) => {
   const [isClosing, setIsClosing] = useState(false);
+  const [latestStatus, setLatestStatus] = useState('');
 
   // Formik validation schema
   const validationSchema = Yup.object({
@@ -34,12 +35,12 @@ const TaskManagementModal = ({
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        console.log('🔵 Creating task for lead:', selectedLead, 'currentStatus', currentStatus);
+        console.log('🔵 Creating task for lead:', selectedLead, 'latestStatus', latestStatus);
         
         // Prepare task data for API
         const taskData = {
           leadId: selectedLead?.id,
-          leadStatus: currentStatus || selectedLead?.status || 'Lead',
+          leadStatus: latestStatus || selectedLead?.status || 'Lead',
           taskTitle: values.title,
           taskDescription: values.description
         };
@@ -67,13 +68,14 @@ const TaskManagementModal = ({
     }
   });
 
-  // Reset closing state when modal opens
+  // Capture latest status when modal opens
   useEffect(() => {
-    if (showReminderModal) {
+    if (showReminderModal && currentStatus) {
+      setLatestStatus(currentStatus);
       setIsClosing(false);
       formik.resetForm();
     }
-  }, [showReminderModal]);
+  }, [showReminderModal, currentStatus]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -89,7 +91,6 @@ const TaskManagementModal = ({
       className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-opacity duration-300 ${
         isClosing ? 'opacity-0' : 'opacity-100'
       }`}
-      onClick={handleClose}
     >
       <div 
         className={`bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${
@@ -110,12 +111,6 @@ const TaskManagementModal = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300 text-gray-400 hover:text-white hover:rotate-90"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
 
         {/* Modal Content - Scrollable */}
@@ -199,13 +194,6 @@ const TaskManagementModal = ({
           {/* Action Buttons - Sticky */}
           <div className="sticky bottom-0 bg-[#2A2A2A] border-t border-[#BBA473]/30 p-6">
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-              >
-                Cancel
-              </button>
               <button
                 type="submit"
                 disabled={formik.isSubmitting}

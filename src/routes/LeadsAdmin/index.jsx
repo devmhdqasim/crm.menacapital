@@ -80,7 +80,7 @@ const LeadManagement = () => {
 
   const tabs = ['All', 'Real', 'Demo'];
 
-  const interestedSubTabs = ['Warm Lead ( Silent Leads )', 'Hot Leads'];
+  const interestedSubTabs = ['Warm ( Silent Leads )', 'Hot'];
   const hotLeadsSubTabs = ['Real', 'Demo'];
   const perPageOptions = [10, 20, 30, 50, 100];
   const filterOptions = ['Active Deposits', 'Not Active Deposits'];
@@ -789,7 +789,7 @@ const LeadManagement = () => {
         )}
 
             {/* Sub-tabs for Hot Leads and Filter Select */}
-        {interestedSubTab === 'Hot Leads' && (
+        {interestedSubTab === 'Hot' && (
           <div className="mb-6 animate-fadeIn">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               {/* Sub-tabs */}

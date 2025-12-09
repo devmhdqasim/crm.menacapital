@@ -330,8 +330,8 @@ const SalesManagerAssignLeadModal = ({
                           <input
                             type="radio"
                             name="leadType"
-                            value="Warm Lead"
-                            checked={modalLeadType === 'Warm Lead'}
+                            value="Warm"
+                            checked={modalLeadType === 'Warm'}
                             onChange={(e) => {
                               setModalLeadType(e.target.value);
                               setLeadResponseStatus(e.target.value);

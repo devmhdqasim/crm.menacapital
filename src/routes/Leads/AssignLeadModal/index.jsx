@@ -165,7 +165,7 @@ const AssignLeadModal = ({
         } else if (modalInterested === 'Interested') {
           payload.interested = true;
           
-          if (modalLeadType === 'Warm Lead') {
+          if (modalLeadType === 'Warm') {
             // Warm lead - interested but not hot
             payload.hot = false;
             payload.cold = false;
@@ -430,8 +430,8 @@ const AssignLeadModal = ({
                           <input
                             type="radio"
                             name="leadType"
-                            value="Warm Lead"
-                            checked={modalLeadType === 'Warm Lead'}
+                            value="Warm"
+                            checked={modalLeadType === 'Warm'}
                             onChange={(e) => {
                               setModalLeadType(e.target.value);
                               setLeadResponseStatus(e.target.value);
