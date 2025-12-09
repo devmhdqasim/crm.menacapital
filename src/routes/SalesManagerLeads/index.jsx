@@ -16,6 +16,7 @@ const SalesManagerLeadManagement = () => {
   const [activeSubSubTab, setActiveSubSubTab] = useState('');
   const [activeSubSubSubTab, setActiveSubSubSubTab] = useState('');
   const [activeSubSubSubSubTab, setActiveSubSubSubSubTab] = useState('');
+  const [taskCurrentLeadStatus, setTaskCurrentLeadStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -492,7 +493,7 @@ const SalesManagerLeadManagement = () => {
     setAssignToSelf(false);
     setOriginalAssignedAgent('');
     setActiveModalTab('assign');
-    setLeadResponseStatus('');
+    // setLeadResponseStatus('');
     setModalAnswered('');
     setModalInterested('');
     setModalLeadType('');
