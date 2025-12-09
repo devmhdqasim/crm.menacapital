@@ -26,22 +26,22 @@ const getRefreshToken = () => {
  * @param {number} limit - Number of items per page (default: 10)
  * @returns {Promise} - Returns list of users with pagination info
  */
-export const getAllUsers = async (page = 1, limit = 10, startDate = '', endDate = '') => {
+export const getAllUsers = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '') => {
   try {
     const authToken = localStorage.getItem('refreshToken');
-    
     console.log('🔵 Fetching users...');
     console.log('📄 Page:', page, 'Limit:', limit);
+    console.log('🔍 Keyword:', keyword);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
       throw new Error('No refresh token available. Please login first.');
     }
-
+    
     console.log('🔑 Using refresh token for API call');
-
+    
     const response = await axios.get(
-      `${API_BASE_URL}/user/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`,
+      `${API_BASE_URL}/user/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -50,11 +50,11 @@ export const getAllUsers = async (page = 1, limit = 10, startDate = '', endDate 
         timeout: 30000,
       }
     );
-
+    
     console.log('✅ Users fetched successfully:', response.data);
-
+    
     const data = response.data;
-
+    
     if (data.status === 'success' && data.payload?.allUsers?.[0]?.data) {
       const usersData = data.payload.allUsers[0].data;
       const metadata = data.payload.allUsers[0].metadata?.[0] || {};
@@ -62,7 +62,7 @@ export const getAllUsers = async (page = 1, limit = 10, startDate = '', endDate 
       console.log('📊 Retrieved', usersData.length, 'users');
       console.log('📊 Total users:', metadata.total);
       console.log('📊 Current page:', metadata.page);
-
+      
       return {
         success: true,
         data: usersData,

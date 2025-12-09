@@ -70,6 +70,7 @@ const agentValidationSchema = Yup.object({
 const AgentManagement = () => {
   const [agents, setAgents] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
@@ -90,6 +91,22 @@ const AgentManagement = () => {
   const [totalBranches, setTotalBranches] = useState(0);
 
   const departments = ['Sales'];
+
+  // Debouncing effect for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery]);
 
   // Fetch branches from API
   const fetchBranches = async (page = 1, limit = 100) => {
@@ -133,7 +150,7 @@ const AgentManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
-      const result = await getAllUsers(page, limit, startDateStr, endDateStr);
+      const result = await getAllUsers(page, limit, startDateStr, endDateStr, debouncedSearchQuery);
       
       if (result.success && result.data) {
         // Filter only Agent users
@@ -203,8 +220,11 @@ const AgentManagement = () => {
 
   useEffect(() => {
     setIsLoaded(true);
-    fetchAgents();
-  }, [startDate, endDate, currentPage, itemsPerPage]);
+  }, []);
+
+  useEffect(() => {
+    fetchAgents(currentPage, itemsPerPage);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery]);
 
   useEffect(() => {
     fetchBranches();
