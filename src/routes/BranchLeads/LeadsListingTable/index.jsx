@@ -685,9 +685,6 @@ const LeadsListingTable = ({
                     <p className="text-gray-400 text-sm">{formatPhoneDisplay(leadToDelete.phone)}</p>
                   </div>
                 )}
-                <p className="text-red-400 text-sm mt-3">
-                  This action cannot be undone.
-                </p>
               </div>
             </div>
             <div className="mt-6 flex gap-3 justify-end">
