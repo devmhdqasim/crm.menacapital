@@ -69,7 +69,8 @@ const LeadManagement = ({ selectedAgentId }) => {
         endDateStr, 
         debouncedSearchQuery, 
         statusParam,
-        selectedAgentId || '' // Pass the selected agent ID
+        selectedAgentId || '', // Pass the selected agent ID
+        isAgent = true,
       );
       
       if (result.success && result.data) {
