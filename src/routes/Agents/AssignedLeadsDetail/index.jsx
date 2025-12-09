@@ -61,6 +61,7 @@ const LeadManagement = ({ selectedAgentId }) => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const statusParam = getStatusParam();
+      const isAgent = true;
       
       const result = await getAllLeads(
         page, 
@@ -70,7 +71,7 @@ const LeadManagement = ({ selectedAgentId }) => {
         debouncedSearchQuery, 
         statusParam,
         selectedAgentId || '', // Pass the selected agent ID
-        isAgent = true,
+        isAgent,
       );
       
       if (result.success && result.data) {
