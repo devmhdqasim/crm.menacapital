@@ -105,7 +105,7 @@ const TaskManagementModal = ({
               <Bell className="w-6 h-6 text-[#BBA473]" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">Set Reminder</h2>
+              <h2 className="text-2xl font-bold text-[#BBA473]">Set Task</h2>
               <p className="text-gray-400 text-sm mt-1">
                 {selectedLead.name} • {selectedLead.leadId || selectedLead.id.slice(-6)}
               </p>
@@ -119,7 +119,7 @@ const TaskManagementModal = ({
             {/* Title Input */}
             <div className="space-y-2">
               <label className="text-sm text-[#E8D5A3] font-medium block">
-                Reminder Title <span className="text-red-400">*</span>
+                Task Title <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -184,7 +184,7 @@ const TaskManagementModal = ({
                 </div>
                 <div>
                   <p className="text-sm text-gray-300">
-                    This reminder will be associated with <span className="font-semibold text-[#BBA473]">{selectedLead.name}</span> and can help you track follow-ups and important tasks.
+                    Task will be auto created and scheduled according to the lead Status and Protocol for <span className="font-semibold text-[#BBA473]">{selectedLead.name}</span>
                   </p>
                 </div>
               </div>
@@ -199,7 +199,7 @@ const TaskManagementModal = ({
                 disabled={formik.isSubmitting}
                 className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {formik.isSubmitting ? 'Creating...' : 'Create Reminder'}
+                {formik.isSubmitting ? 'Creating...' : 'Create Task'}
               </button>
             </div>
           </div>
