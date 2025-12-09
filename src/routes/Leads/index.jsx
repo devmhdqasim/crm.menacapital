@@ -52,6 +52,8 @@ const LeadManagement = () => {
   const getStatusParam = () => {
     if (activeTab === 'All') {
       return '';
+    } else if (activeTab === 'Pending') {
+      return 'Pending';
     } else if (activeTab === 'Contacted') {
       if (contactedSubTab === 'Not Answered') {
         return 'Not-Answered';
