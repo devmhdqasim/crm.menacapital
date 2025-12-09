@@ -316,7 +316,7 @@ export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate 
     
     // Add agentId parameter if provided
     if (agentId) {
-      queryParams.append('agentId', agentId);
+      queryParams.append('agent', agentId);
     }
     
     // ✅ Decide which URL to hit based on role
