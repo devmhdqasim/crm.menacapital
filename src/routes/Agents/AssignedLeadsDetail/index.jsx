@@ -43,14 +43,46 @@ const LeadManagement = ({ selectedAgentId }) => {
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, activeTab]);
+  }, [debouncedSearchQuery, activeTab, contactedSubTab, interestedSubTab, hotLeadSubTab, realSubTab]);
 
   // Helper function to get status parameter based on active tabs
   const getStatusParam = () => {
     if (activeTab === 'All') {
       return '';
     }
-    return activeTab; // Returns the tab value like 'Assigned', 'Not Assigned', etc.
+    
+    if (activeTab === 'Pending') {
+      return 'Pending';
+    }
+    
+    if (activeTab === 'Contacted') {
+      // Check for deepest level first
+      if (contactedSubTab === 'Interested') {
+        if (interestedSubTab === 'Warm') {
+          return 'Warm';
+        } else if (interestedSubTab === 'Hot') {
+          if (hotLeadSubTab === 'Demo') {
+            return 'Demo';
+          } else if (hotLeadSubTab === 'Real') {
+            if (realSubTab === 'Deposit') {
+              return 'Deposit';
+            } else if (realSubTab === 'Not Deposit') {
+              return 'Not-Deposit';
+            }
+            return 'Real';
+          }
+          return 'Hot';
+        }
+        return 'Interested';
+      } else if (contactedSubTab === 'Not Interested') {
+        return 'Not-Interested';
+      } else if (contactedSubTab === 'Not Answered') {
+        return 'Not-Answered';
+      }
+      return 'Contacted';
+    }
+    
+    return activeTab;
   };
 
   // Fetch leads from API
@@ -151,12 +183,12 @@ const LeadManagement = ({ selectedAgentId }) => {
     setIsLoaded(true);
   }, []);
 
-  // Fetch leads when dependencies change
+  // Fetch leads when dependencies change - added sub-tab dependencies
   useEffect(() => {
     if (selectedAgentId) {
       fetchLeads(currentPage, itemsPerPage);
     }
-  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, selectedAgentId]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, contactedSubTab, interestedSubTab, hotLeadSubTab, realSubTab, selectedAgentId]);
 
   const getUserInfo = () => {
     const userInfo = localStorage.getItem('userInfo');
@@ -185,9 +217,47 @@ const LeadManagement = ({ selectedAgentId }) => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    // Reset sub-tabs when changing main tab
+    if (tab !== 'Contacted') {
+      setContactedSubTab('Not Answered');
+      setInterestedSubTab('');
+      setHotLeadSubTab('');
+      setRealSubTab('');
+    }
     // Clear search when switching tabs
     setSearchQuery('');
     setDebouncedSearchQuery('');
+  };
+
+  const handleContactedSubTabChange = (subTab) => {
+    setContactedSubTab(subTab);
+    // Reset deeper level tabs
+    if (subTab !== 'Interested') {
+      setInterestedSubTab('');
+      setHotLeadSubTab('');
+      setRealSubTab('');
+    }
+  };
+
+  const handleInterestedSubTabChange = (subTab) => {
+    setInterestedSubTab(subTab);
+    // Reset deeper level tabs
+    if (subTab !== 'Hot') {
+      setHotLeadSubTab('');
+      setRealSubTab('');
+    }
+  };
+
+  const handleHotLeadSubTabChange = (subTab) => {
+    setHotLeadSubTab(subTab);
+    // Reset deeper level tabs
+    if (subTab !== 'Real') {
+      setRealSubTab('');
+    }
+  };
+
+  const handleRealSubTabChange = (subTab) => {
+    setRealSubTab(subTab);
   };
 
   return (
@@ -201,13 +271,13 @@ const LeadManagement = ({ selectedAgentId }) => {
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         contactedSubTab={contactedSubTab}
-        setContactedSubTab={setContactedSubTab}
+        setContactedSubTab={handleContactedSubTabChange}
         interestedSubTab={interestedSubTab}
-        setInterestedSubTab={setInterestedSubTab}
+        setInterestedSubTab={handleInterestedSubTabChange}
         hotLeadSubTab={hotLeadSubTab}
-        setHotLeadSubTab={setHotLeadSubTab}
+        setHotLeadSubTab={handleHotLeadSubTabChange}
         realSubTab={realSubTab}
-        setRealSubTab={setRealSubTab}
+        setRealSubTab={handleRealSubTabChange}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         itemsPerPage={itemsPerPage}
