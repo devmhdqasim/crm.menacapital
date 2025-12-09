@@ -480,11 +480,12 @@ export const deleteTask = async (taskId) => {
  * @param {string} endDate - End date for filtering (optional)
  * @returns {Promise} - Returns list of tasks with pagination info
  */
-export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '') => {
+export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', assignedBy = '', priority = '') => {
   try {
     const authToken = getRefreshToken();
     console.log('🔵 Fetching tasks...');
     console.log('📄 Page:', page, 'Limit:', limit);
+    console.log('🔍 Filters:', { keyword, status, assignedBy, priority });
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
@@ -497,7 +498,9 @@ export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate 
       ? JSON.parse(localStorage.getItem('userInfo'))
       : null;
     
-    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}`;
+    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&assignedBy=${assignedBy}&priority=${priority}`;
+    
+    console.log('🌐 API URL:', refreshUrl);
     
     const response = await axios.get(
       refreshUrl,
@@ -511,6 +514,7 @@ export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate 
     );
     
     console.log('✅ Tasks fetched successfully:', response.data);
+    
     const data = response.data;
     
     if (data.status === 'success' && data.payload?.allTasks?.[0]?.data) {

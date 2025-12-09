@@ -36,6 +36,7 @@ const taskValidationSchema = Yup.object({
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [isLoaded, setIsLoaded] = useState(false);
   const [startDate, setStartDate] = useState(null);
@@ -129,14 +130,65 @@ const Tasks = () => {
     },
   });
 
+  // Debouncing effect for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Helper function to get status parameter based on active tab
+  const getStatusParam = () => {
+    if (activeTab === 'All') {
+      return '';
+    }
+    return activeTab; // 'Pending' or 'Completed'
+  };
+
+  // Helper function to get priority parameter
+  const getPriorityParam = () => {
+    if (priorityFilter === 'All') {
+      return '';
+    }
+    return priorityFilter; // 'High', 'Normal', or 'Low'
+  };
+
+  // Helper function to get assignedBy parameter
+  const getAssignedByParam = () => {
+    if (assignedToFilter === 'All') {
+      return '';
+    }
+    // Find the agent ID from the agents array based on the selected name
+    const selectedAgent = agents.find(agent => 
+      `${agent.firstName} ${agent.lastName}` === assignedToFilter
+    );
+    return selectedAgent ? selectedAgent.id : '';
+  };
+
   // Fetch tasks from API
   const fetchTasks = async (page = 1, limit = 30) => {
     setLoading(true);
     try {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const statusParam = getStatusParam();
+      const priorityParam = getPriorityParam();
+      const assignedByParam = getAssignedByParam();
 
-      const result = await getAllTasks(page, limit, startDateStr, endDateStr);
+      const result = await getAllTasks(
+        page, 
+        limit, 
+        startDateStr, 
+        endDateStr,
+        debouncedSearchQuery,
+        statusParam,
+        assignedByParam,
+        priorityParam
+      );
 
       console.log('📦 Result from API:', result);
 
@@ -207,6 +259,8 @@ const Tasks = () => {
           .filter(user => user.roleName === 'Agent' || user.role === 'Agent')
           .map(user => ({
             id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
             name: `${user.firstName} ${user.lastName}`,
             username: user.username,
           }));
@@ -247,31 +301,27 @@ const Tasks = () => {
   // Load tasks on component mount and when pagination changes
   useEffect(() => {
     setIsLoaded(true);
-    fetchTasks(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage]);
+  }, []);
 
   useEffect(() => {
     fetchDropdownData();
   }, []);
 
-  // Get unique assignees for filter dropdown
-  const uniqueAssignees = ['All', ...new Set(tasks.map(task => task.assignedTo).filter(Boolean))];
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, activeTab, priorityFilter, assignedToFilter]);
 
-  // Filter tasks based on search, active tab, and filters
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch =
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.assignedTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.leadName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.taskId.toLowerCase().includes(searchQuery.toLowerCase());
+  // Fetch tasks when page, filters, or dates change
+  useEffect(() => {
+    fetchTasks(currentPage, itemsPerPage);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, priorityFilter, assignedToFilter]);
 
-    const matchesTab = activeTab === 'All' || task.status === activeTab;
-    const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
-    const matchesAssignee = assignedToFilter === 'All' || task.assignedTo === assignedToFilter;
+  // Get unique assignees for filter dropdown (from agents list)
+  const uniqueAssignees = ['All', ...agents.map(agent => `${agent.firstName} ${agent.lastName}`)];
 
-    return matchesSearch && matchesTab && matchesPriority && matchesAssignee;
-  });
+  // No frontend filtering needed - all handled by API
+  const filteredTasks = tasks;
 
   // Get status badge styling
   const getStatusBadge = (status) => {
@@ -321,8 +371,8 @@ const Tasks = () => {
         const result = await deleteTask(taskId);
 
         if (result.success) {
-          setTasks(tasks.filter(t => t.id !== taskId));
           toast.success('Task deleted successfully!');
+          fetchTasks(currentPage, itemsPerPage);
         } else {
           toast.error(result.error.payload.message || 'Failed to delete task');
         }
@@ -331,6 +381,13 @@ const Tasks = () => {
         toast.error('Failed to delete task. Please try again.');
       }
     }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Clear search when switching tabs
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
   };
 
   const isUserAuthRefresh = (startDate) => {
@@ -364,6 +421,7 @@ const Tasks = () => {
     setPriorityFilter('All');
     setAssignedToFilter('All');
     setSearchQuery('');
+    setDebouncedSearchQuery('');
     setActiveTab('All');
     toast.success('Filters cleared');
   };
@@ -393,6 +451,11 @@ const Tasks = () => {
 
     return formatted.replace(",", "");
   }
+
+  // Pagination calculations based on API metadata
+  const totalPages = Math.ceil(totalTasks / itemsPerPage);
+  const showingFrom = totalTasks > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const showingTo = Math.min((currentPage - 1) * itemsPerPage + tasks.length, totalTasks);
 
   return (
     <>
@@ -506,14 +569,14 @@ const Tasks = () => {
         <div className="mb-6 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
             {tabs.map((tab) => {
-              const pendingCount = tab === 'Pending' 
+              const pendingCount = tab === 'Pending' && activeTab === 'All'
                 ? tasks.filter(task => task.status === 'Pending').length 
                 : 0;
               
               return (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabChange(tab)}
                   className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${activeTab === tab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
@@ -663,7 +726,8 @@ const Tasks = () => {
             {/* Pagination/Summary Bar */}
             <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
               <div className="text-gray-400 text-sm">
-                Showing <span className="text-white font-semibold">{filteredTasks.length}</span> of{' '}
+                Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
+                <span className="text-white font-semibold">{showingTo}</span> of{' '}
                 <span className="text-white font-semibold">{totalTasks}</span> tasks
               </div>
               <div className="flex items-center gap-2">
@@ -674,10 +738,12 @@ const Tasks = () => {
                 >
                   Previous
                 </button>
-                <span className="text-gray-400 px-4">Page {currentPage}</span>
+                <span className="text-gray-400 px-4">
+                  Page {currentPage} of {totalPages || 1}
+                </span>
                 <button
                   onClick={() => setCurrentPage(prev => prev + 1)}
-                  disabled={filteredTasks.length < itemsPerPage}
+                  disabled={currentPage >= totalPages}
                   className="px-4 py-2 bg-[#BBA473]/20 text-[#BBA473] rounded-lg hover:bg-[#BBA473]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
