@@ -3,10 +3,11 @@ import { getAllLeads } from '../../../services/leadService';
 import toast from 'react-hot-toast';
 import LeadsListing from '../../Leads/LeadsListing';
 
-const LeadManagement = () => {
+const LeadManagement = ({ selectedAgentId }) => {
   const [leads, setLeads] = useState([]);
   const [userDetails, setUserDetails] = useState('')
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
@@ -28,6 +29,30 @@ const LeadManagement = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [isLeadsSelectedId, setIsLeadsSelectedId] = useState(false);
 
+  // Debouncing effect for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, activeTab]);
+
+  // Helper function to get status parameter based on active tabs
+  const getStatusParam = () => {
+    if (activeTab === 'All') {
+      return '';
+    }
+    return activeTab; // Returns the tab value like 'Assigned', 'Not Assigned', etc.
+  };
+
   // Fetch leads from API
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
@@ -35,8 +60,17 @@ const LeadManagement = () => {
       // Convert dates to ISO string format for API
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const statusParam = getStatusParam();
       
-      const result = await getAllLeads(page, limit, startDateStr, endDateStr);
+      const result = await getAllLeads(
+        page, 
+        limit, 
+        startDateStr, 
+        endDateStr, 
+        debouncedSearchQuery, 
+        statusParam,
+        selectedAgentId || '' // Pass the selected agent ID
+      );
       
       if (result.success && result.data) {
         // Transform API data to match component structure
@@ -110,11 +144,17 @@ const LeadManagement = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load leads on component mount and when pagination changes
+  // Load leads on component mount
   useEffect(() => {
     setIsLoaded(true);
-    fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage]);
+  }, []);
+
+  // Fetch leads when dependencies change
+  useEffect(() => {
+    if (selectedAgentId) {
+      fetchLeads(currentPage, itemsPerPage);
+    }
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, selectedAgentId]);
 
   const getUserInfo = () => {
     const userInfo = localStorage.getItem('userInfo');
@@ -141,16 +181,23 @@ const LeadManagement = () => {
     setSelectedLead(null);
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Clear search when switching tabs
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
+  };
+
   return (
     <>
       <LeadsListing
         leads={leads}
-        title={'Agent Leads'}
-        description={'View and manage agent leads information'}
+        title={'Agent Assigned Leads'}
+        description={'View and manage agent assigned leads'}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         contactedSubTab={contactedSubTab}
         setContactedSubTab={setContactedSubTab}
         interestedSubTab={interestedSubTab}
@@ -175,7 +222,6 @@ const LeadManagement = () => {
         setDrawerOpen={setDrawerOpen}
         setEditingLead={setEditingLead}
       />
-
     </>
   );
 };

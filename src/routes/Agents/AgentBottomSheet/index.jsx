@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import AssignedLeadsDetail from '../AssignedLeadsDetail';
 import React, { useState, useEffect, useRef } from 'react';
 
-const AgentBottomSheet = ({ isOpen, onClose }) => {
+const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
@@ -149,6 +149,16 @@ const AgentBottomSheet = ({ isOpen, onClose }) => {
             {/* Header Content */}
             <div className="flex items-center justify-between px-6 py-2 border-b border-[#BBA473]/30">
               <div>
+                {selectedAgent && (
+                  <div>
+                    <h2 className="text-xl font-bold text-[#BBA473]">
+                      {selectedAgent.fullName}'s Assigned Leads
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                      @{selectedAgent.username} • {selectedAgent.email}
+                    </p>
+                  </div>
+                )}
               </div>
               <button
                 onClick={onClose}
@@ -162,7 +172,7 @@ const AgentBottomSheet = ({ isOpen, onClose }) => {
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6">
             <div className="max-w-full mx-auto space-y-6">
-              <AssignedLeadsDetail />
+              <AssignedLeadsDetail selectedAgentId={selectedAgent?.id} />
               <div className="h-20" /> {/* Bottom spacing */}
             </div>
           </div>

@@ -283,24 +283,23 @@ export const updateLeadTask = async (leadId, taskPayload) => {
  * @param {number} limit - Number of items per page (default: 10)
  * @returns {Promise} - Returns list of leads with pagination info
  */
-export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '') => {
+export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', agentId = '') => {
   try {
     const authToken = getRefreshToken();
-    
     console.log('🔵 Fetching leads...');
-    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status);
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status, 'AgentId:', agentId);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
       throw new Error('No refresh token available. Please login first.');
     }
-
+    
     console.log('🔑 Using refresh token for API call');
-
+    
     const userInfo = localStorage.getItem('userInfo')
       ? JSON.parse(localStorage.getItem('userInfo'))
       : null;
-
+    
     // ✅ Build query parameters
     const queryParams = new URLSearchParams({
       paramPage: page,
@@ -309,18 +308,25 @@ export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate 
       toDate: endDate || '',
       keyword: keyword || '',
     });
-
+    
     // Add status parameter if provided
     if (status) {
       queryParams.append('status', status);
     }
-
+    
+    // Add agentId parameter if provided
+    if (agentId) {
+      queryParams.append('agentId', agentId);
+    }
+    
     // ✅ Decide which URL to hit based on role
     const isBranchLogin = userInfo?.roleName === 'Agent' || userInfo?.role === 'Agent';
     const refreshUrl = isBranchLogin
       ? `${API_BASE_URL}/lead/agents/en?${queryParams.toString()}`
       : `${API_BASE_URL}/lead/getAll/en?${queryParams.toString()}`;
-
+    
+    console.log('🌐 API URL:', refreshUrl);
+    
     const response = await axios.get(
       refreshUrl,
       {
@@ -331,11 +337,11 @@ export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate 
         timeout: 30000,
       }
     );
-
+    
     console.log('✅ Leads fetched successfully:', response.data);
-
+    
     const data = response.data;
-
+    
     if (data.status === 'success' && data.payload?.allLeads?.[0]?.data) {
       const leadsData = data.payload.allLeads[0].data;
       const metadata = data.payload.allLeads[0].metadata?.[0] || {};
@@ -343,7 +349,7 @@ export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate 
       console.log('📊 Retrieved', leadsData.length, 'leads');
       console.log('📊 Total leads:', metadata.total);
       console.log('📊 Current page:', metadata.page);
-
+      
       return {
         success: true,
         data: leadsData,

@@ -85,6 +85,7 @@ const AgentManagement = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState(null);
 
   // States for branches
   const [branches, setBranches] = useState([]);
@@ -343,6 +344,7 @@ const AgentManagement = () => {
   };
 
   const handleRowClick = (agent) => {
+    setSelectedAgent(agent);
     setBottomSheetOpen(true);
   };
 
@@ -351,6 +353,11 @@ const AgentManagement = () => {
     setEditingAgent(null);
     formik.resetForm();
     setImagePreview(null);
+  };
+
+  const handleCloseBottomSheet = () => {
+    setBottomSheetOpen(false);
+    setSelectedAgent(null);
   };
 
   const generatePassword = () => {
@@ -475,7 +482,8 @@ const AgentManagement = () => {
         {/* Agent Bottom Sheet Component - Inside content area */}
         <AgentBottomSheet
           isOpen={bottomSheetOpen}
-          onClose={() => setBottomSheetOpen(false)}
+          onClose={handleCloseBottomSheet}
+          selectedAgent={selectedAgent}
         />
       </div>
 
