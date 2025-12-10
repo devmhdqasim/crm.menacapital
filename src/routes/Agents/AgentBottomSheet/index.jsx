@@ -8,6 +8,7 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
   const [dragStartY, setDragStartY] = useState(0);
   const [dragCurrentY, setDragCurrentY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [agentLeadsCount, setAgentLeadsCount] = useState({})
   const sheetRef = useRef(null);
 
   useEffect(() => {
@@ -108,6 +109,8 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
 
   const dragOffset = isDragging ? Math.max(0, dragCurrentY - dragStartY) : 0;
 
+  const leadsAgentCount =  JSON.parse(localStorage.getItem('leadsAgentCount'))
+
   return (
     <>
       {/* Backdrop - Smooth fade */}
@@ -172,7 +175,7 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6">
             <div className="max-w-full mx-auto space-y-6">
-              <AssignedLeadsDetail selectedAgentId={selectedAgent?.id} />
+              <AssignedLeadsDetail selectedAgentId={selectedAgent?.id} agentLeadsCount={leadsAgentCount?.find(lead => lead?.username == selectedAgent.username)} />
               <div className="h-20" /> {/* Bottom spacing */}
             </div>
           </div>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getAllLeads } from '../../../services/leadService';
 import toast from 'react-hot-toast';
-import LeadsListing from '../../Leads/LeadsListing';
+import LeadsListing from '../LeadsListing'
 
-const LeadManagement = ({ selectedAgentId }) => {
+const LeadManagement = ({ selectedAgentId, agentLeadsCount }) => {
   const [leads, setLeads] = useState([]);
   const [userDetails, setUserDetails] = useState('')
   const [searchQuery, setSearchQuery] = useState('');
@@ -265,6 +265,7 @@ const LeadManagement = ({ selectedAgentId }) => {
       <LeadsListing
         leads={leads}
         title={'Agent Assigned Leads'}
+        agentLeadsCount={agentLeadsCount?.crmCategorySummary}
         description={'View and manage agent assigned leads'}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}

@@ -62,6 +62,7 @@ const Dashboard = () => {
         if (result.data.crmCategorySummary) {
           setCrmCategorySummary(result.data.crmCategorySummary);
           localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
+          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
         }
         
         console.log('✅ Dashboard data loaded:', result.data);
