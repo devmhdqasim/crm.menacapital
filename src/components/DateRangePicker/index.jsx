@@ -6,7 +6,7 @@ import { Calendar } from 'lucide-react';
 /**
  * DateRangePicker Component
  * 
- * A reusable date range picker with dark theme styling and validation
+ * A reusable date range picker with dark theme styling and Dubai timezone support
  * 
  * @param {Object} props
  * @param {Date|string} props.startDate - Start date value
@@ -40,6 +40,36 @@ const DateRangePicker = ({
 }) => {
   const [localError, setLocalError] = useState('');
 
+  // Dubai timezone offset (GMT+4)
+  const DUBAI_OFFSET = 4 * 60; // 4 hours in minutes
+
+  // Convert any date to Dubai timezone
+  const toDubaiTime = (date) => {
+    if (!date) return null;
+    
+    const utcDate = new Date(date);
+    // Get the current timezone offset
+    const localOffset = utcDate.getTimezoneOffset();
+    // Calculate the difference between Dubai and local timezone
+    const offsetDiff = localOffset + DUBAI_OFFSET;
+    
+    // Adjust the date to Dubai timezone
+    const dubaiDate = new Date(utcDate.getTime() + offsetDiff * 60 * 1000);
+    return dubaiDate;
+  };
+
+  // Convert Dubai time back to UTC for storage/API calls
+  const fromDubaiTime = (date) => {
+    if (!date) return null;
+    
+    const localOffset = date.getTimezoneOffset();
+    const offsetDiff = localOffset + DUBAI_OFFSET;
+    
+    // Convert back from Dubai timezone
+    const utcDate = new Date(date.getTime() - offsetDiff * 60 * 1000);
+    return utcDate;
+  };
+
   // Convert string dates to Date objects if needed
   const parseDate = (date) => {
     if (!date) return null;
@@ -49,9 +79,13 @@ const DateRangePicker = ({
   const startDateObj = parseDate(startDate);
   const endDateObj = parseDate(endDate);
 
+  // Display dates in Dubai timezone
+  const displayStartDate = toDubaiTime(startDateObj);
+  const displayEndDate = toDubaiTime(endDateObj);
+
   const normalizeDate = (date) => {
     if (!date) return null;
-    // Prevent timezone shifting by setting fixed noon time
+    // Set to noon in Dubai timezone to prevent date shifting
     const normalized = new Date(date);
     normalized.setHours(12, 0, 0, 0);
     return normalized;
@@ -68,18 +102,38 @@ const DateRangePicker = ({
   };
 
   const handleStartDateChange = (date) => {
+    if (!date) {
+      onStartDateChange(null);
+      setLocalError('');
+      return;
+    }
+    
     const fixedDate = normalizeDate(date);
-    validateDateRange(fixedDate, endDateObj);
-    onStartDateChange(fixedDate);
+    // Convert from Dubai time back to UTC/local time for storage
+    const convertedDate = fromDubaiTime(fixedDate);
+    validateDateRange(convertedDate, endDateObj);
+    onStartDateChange(convertedDate);
   };
   
   const handleEndDateChange = (date) => {
+    if (!date) {
+      onEndDateChange(null);
+      setLocalError('');
+      return;
+    }
+    
     const fixedDate = normalizeDate(date);
-    validateDateRange(startDateObj, fixedDate);
-    onEndDateChange(fixedDate);
+    // Convert from Dubai time back to UTC/local time for storage
+    const convertedDate = fromDubaiTime(fixedDate);
+    validateDateRange(startDateObj, convertedDate);
+    onEndDateChange(convertedDate);
   };
 
   const displayError = showError || localError;
+
+  // Convert min/max dates to Dubai timezone for display
+  const displayMinDate = minDate ? toDubaiTime(minDate) : null;
+  const displayMaxDate = maxDate ? toDubaiTime(maxDate) : toDubaiTime(new Date());
 
   return (
     <div className={`date-range-picker-container ${className}`}>
@@ -91,13 +145,13 @@ const DateRangePicker = ({
           </label>
           <div className="relative flex-1">
             <DatePicker
-              selected={startDateObj}
+              selected={displayStartDate}
               onChange={handleStartDateChange}
               selectsStart
-              startDate={startDateObj}
-              endDate={endDateObj}
-              minDate={minDate}
-              maxDate={maxDate}
+              startDate={displayStartDate}
+              endDate={displayEndDate}
+              minDate={displayMinDate}
+              maxDate={displayMaxDate}
               dateFormat={dateFormat}
               isClearable={isClearable}
               placeholderText="Select start date"
@@ -119,13 +173,13 @@ const DateRangePicker = ({
           </label>
           <div className="relative flex-1">
             <DatePicker
-              selected={endDateObj}
+              selected={displayEndDate}
               onChange={handleEndDateChange}
               selectsEnd
-              startDate={startDateObj}
-              endDate={endDateObj}
-              minDate={startDateObj || minDate}
-              maxDate={maxDate}
+              startDate={displayStartDate}
+              endDate={displayEndDate}
+              minDate={displayStartDate || displayMinDate}
+              maxDate={displayMaxDate}
               dateFormat={dateFormat}
               isClearable={isClearable}
               placeholderText="Select end date"
@@ -136,6 +190,11 @@ const DateRangePicker = ({
             <Calendar className="absolute right-7 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
           </div>
         </div>
+      </div>
+
+      {/* Timezone Indicator */}
+      <div className="mt-1 text-xs text-[#BBA473]/70 text-right">
+        Dubai Time (GMT+4)
       </div>
 
       {/* Error Message */}
