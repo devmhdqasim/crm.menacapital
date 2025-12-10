@@ -373,6 +373,8 @@ const LeadsListingTable = ({
     return String.fromCodePoint(...codePoints);
   };
 
+  const leadsCount =  JSON.parse(localStorage.getItem('leadsCount'))
+
   return (
     <>
       {/* Tabs */}

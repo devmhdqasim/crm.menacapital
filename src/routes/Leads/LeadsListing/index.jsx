@@ -118,6 +118,8 @@ const LeadsListing = ({
     return formatted.replace(",", "");
   }
 
+  const leadsCount =  JSON.parse(localStorage.getItem('leadsCount'))
+
   return (
     <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
       {/* Header */}
@@ -157,9 +159,9 @@ const LeadsListing = ({
               }`}
             >
               <span>{tab}</span>
-              {tab === 'Pending' && activeTab === 'All' && pendingLeadsCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white">
-                  {pendingLeadsCount}
+              {leadsCount?.[tab?.replace(/\s+/g, '')] && (
+                <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                  {leadsCount?.[tab?.replace(/\s+/g, '')]}
                 </span>
               )}
             </button>
@@ -175,13 +177,18 @@ const LeadsListing = ({
               <button
                 key={subTab}
                 onClick={() => setContactedSubTab(subTab)}
-                className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                   contactedSubTab === subTab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
                 {subTab}
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                    {leadsCount?.[subTab?.replace(/\s+/g, '')]}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -196,13 +203,18 @@ const LeadsListing = ({
               <button
                 key={subTab}
                 onClick={() => setInterestedSubTab(subTab)}
-                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                   interestedSubTab === subTab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
                 {subTab}
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                    {leadsCount?.[subTab?.replace(/\s+/g, '')]}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -217,13 +229,18 @@ const LeadsListing = ({
               <button
                 key={subTab}
                 onClick={() => setHotLeadSubTab(subTab)}
-                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                   hotLeadSubTab === subTab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
                 {subTab}
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                    {leadsCount?.[subTab?.replace(/\s+/g, '')]}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -238,13 +255,18 @@ const LeadsListing = ({
               <button
                 key={subTab}
                 onClick={() => setRealSubTab(subTab)}
-                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                   realSubTab === subTab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
                 {subTab}
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                    {leadsCount?.[subTab?.replace(/\s+/g, '')]}
+                  </span>
+                )}
               </button>
             ))}
           </div>

@@ -25,6 +25,7 @@ import {
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import toast, { Toaster } from 'react-hot-toast';
 import DateRangePicker from '../../components/DateRangePicker';
+import { useCRM } from '../../context/CRMContext';
 
 const Dashboard = () => {
   const [startDate, setStartDate] = useState('');
@@ -41,6 +42,9 @@ const Dashboard = () => {
     activityPermissions: { canAdd: false, canEdit: false, canDelete: false, canView: false },
   });
 
+  // Get CRM context
+  const { setCrmCategorySummary } = useCRM();
+
   // Fetch dashboard data
   const fetchDashboardData = async (filter) => {
     setLoading(true);
@@ -53,6 +57,13 @@ const Dashboard = () => {
       if (result.success && result.data) {
         setDashboardData(result.data);
         setPermissions(result.data.permissions || permissions);
+        
+        // Save crmCategorySummary to context
+        if (result.data.crmCategorySummary) {
+          setCrmCategorySummary(result.data.crmCategorySummary);
+          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
+        }
+        
         console.log('✅ Dashboard data loaded:', result.data);
       } else {
         console.error('Failed to fetch dashboard data:', result.message);

@@ -3,6 +3,7 @@ import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus,
 import DateRangePicker from '../../../components/DateRangePicker';
 import { deleteLead } from '../../../services/leadService';
 import toast from 'react-hot-toast';
+import { useCRM } from '../../../context/CRMContext';
 
 const SalesManagerLeadsListing = ({
   leads,
@@ -37,6 +38,7 @@ const SalesManagerLeadsListing = ({
   selectedAgentFilter,
   setSelectedAgentFilter,
 }) => {
+  const { crmCategorySummary } = useCRM();
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showAssignedLeadModal, setShowAssignedLeadModal] = useState(false);
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
@@ -211,6 +213,8 @@ const SalesManagerLeadsListing = ({
     return formatted.replace(",", "");
   }
 
+  const leadsCount =  JSON.parse(localStorage.getItem('leadsCount'))
+
   return (
     <>
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -288,9 +292,9 @@ const SalesManagerLeadsListing = ({
                   }`}
                 >
                   <span>{tab}</span>
-                  {tab === 'Not Assigned' && activeTab === 'All' && unassignedCount > 0 && (
+                  {leadsCount?.[tab?.replace(/\s+/g, '')] && (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {unassignedCount}
+                      {leadsCount?.[tab?.replace(/\s+/g, '')]}
                     </span>
                   )}
                 </button>
@@ -307,13 +311,18 @@ const SalesManagerLeadsListing = ({
                 <button
                   key={subTab}
                   onClick={() => handleSubTabChange(subTab)}
-                  className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                  className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                     activeSubTab === subTab
                       ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                       : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                   }`}
                 >
                   {subTab}
+                  {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                      {leadsCount?.[subTab?.replace(/\s+/g, '')]}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -328,13 +337,18 @@ const SalesManagerLeadsListing = ({
                 <button
                   key={subSubTab}
                   onClick={() => handleSubSubTabChange(subSubTab)}
-                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                     activeSubSubTab === subSubTab
                       ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                       : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                   }`}
                 >
                   {subSubTab}
+                  {leadsCount?.[subSubTab?.replace(/\s+/g, '')] && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                      {leadsCount?.[subSubTab?.replace(/\s+/g, '')]}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -349,13 +363,18 @@ const SalesManagerLeadsListing = ({
                 <button
                   key={subSubSubTab}
                   onClick={() => handleSubSubSubTabChange(subSubSubTab)}
-                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                     activeSubSubSubTab === subSubSubTab
                       ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                       : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                   }`}
                 >
                   {subSubSubTab}
+                  {leadsCount?.[subSubSubTab?.replace(/\s+/g, '')] && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                      {leadsCount?.[subSubSubTab?.replace(/\s+/g, '')]}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -370,13 +389,18 @@ const SalesManagerLeadsListing = ({
                 <button
                   key={subSubSubSubTab}
                   onClick={() => handleSubSubSubSubTabChange(subSubSubSubTab)}
-                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm ${
+                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
                     activeSubSubSubSubTab === subSubSubSubTab
                       ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                       : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                   }`}
                 >
                   {subSubSubSubTab}
+                  {leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')] && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                      {leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')]}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
