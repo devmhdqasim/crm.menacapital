@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, AlertTriangle, X } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import { deleteLead } from '../../../services/leadService';
@@ -39,6 +39,7 @@ const SalesManagerLeadsListing = ({
   setSelectedAgentFilter,
 }) => {
   const { crmCategorySummary } = useCRM();
+  const [leadsCount, setLeadsCount] = useState({})
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showAssignedLeadModal, setShowAssignedLeadModal] = useState(false);
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
@@ -213,7 +214,10 @@ const SalesManagerLeadsListing = ({
     return formatted.replace(",", "");
   }
 
-  const leadsCount =  JSON.parse(localStorage.getItem('leadsCount'))
+  useEffect(() => {
+    const leads =  JSON.parse(localStorage.getItem('leadsCount'))
+    setLeadsCount(leads)
+  }, [leads, startDate, endDate, activeTab, localStorage.getItem('leadsCount')])
 
   return (
     <>
@@ -292,11 +296,11 @@ const SalesManagerLeadsListing = ({
                   }`}
                 >
                   <span>{tab}</span>
-                  {leadsCount?.[tab?.replace(/\s+/g, '')] && (
+                  {leadsCount?.[tab?.replace(/\s+/g, '')] ? (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                       {leadsCount?.[tab?.replace(/\s+/g, '')]}
                     </span>
-                  )}
+                  ) : ''}
                 </button>
               );
             })}
@@ -318,11 +322,11 @@ const SalesManagerLeadsListing = ({
                   }`}
                 >
                   {subTab}
-                  {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                  {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                       {leadsCount?.[subTab?.replace(/\s+/g, '')]}
                     </span>
-                  )}
+                  ) : ''}
                 </button>
               ))}
             </div>
@@ -344,11 +348,11 @@ const SalesManagerLeadsListing = ({
                   }`}
                 >
                   {subSubTab}
-                  {leadsCount?.[subSubTab?.replace(/\s+/g, '')] && (
+                  {leadsCount?.[subSubTab?.replace(/\s+/g, '')] ? (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                       {leadsCount?.[subSubTab?.replace(/\s+/g, '')]}
                     </span>
-                  )}
+                  ) : ''}
                 </button>
               ))}
             </div>
@@ -370,11 +374,11 @@ const SalesManagerLeadsListing = ({
                   }`}
                 >
                   {subSubSubTab}
-                  {leadsCount?.[subSubSubTab?.replace(/\s+/g, '')] && (
+                  {leadsCount?.[subSubSubTab?.replace(/\s+/g, '')] ? (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                       {leadsCount?.[subSubSubTab?.replace(/\s+/g, '')]}
                     </span>
-                  )}
+                  ) : ''}
                 </button>
               ))}
             </div>
@@ -396,11 +400,11 @@ const SalesManagerLeadsListing = ({
                   }`}
                 >
                   {subSubSubSubTab}
-                  {leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')] && (
+                  {leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')] ? (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                       {leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')]}
                     </span>
-                  )}
+                  ) : ''}
                 </button>
               ))}
             </div>

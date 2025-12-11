@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 
@@ -34,6 +34,7 @@ const LeadsListing = ({
   setDrawerOpen,
   setEditingLead
 }) => {
+  const [leadsCount, setLeadsCount] = useState({})
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
 
   const tabs = ['All', 'Pending', 'Contacted'];
@@ -118,7 +119,10 @@ const LeadsListing = ({
     return formatted.replace(",", "");
   }
 
-  const leadsCount =  JSON.parse(localStorage.getItem('leadsCount'))
+  useEffect(() => {
+    const leads =  JSON.parse(localStorage.getItem('leadsCount'))
+    setLeadsCount(leads)
+  }, [leads, startDate, endDate, activeTab, localStorage.getItem('leadsCount')])
 
   return (
     <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -159,11 +163,11 @@ const LeadsListing = ({
               }`}
             >
               <span>{tab}</span>
-              {leadsCount?.[tab?.replace(/\s+/g, '')] && (
+              {leadsCount?.[tab?.replace(/\s+/g, '')] ? (
                 <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                   {leadsCount?.[tab?.replace(/\s+/g, '')]}
                 </span>
-              )}
+                  ) : ''}
             </button>
           ))}
         </div>
@@ -184,11 +188,11 @@ const LeadsListing = ({
                 }`}
               >
                 {subTab}
-                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
                   <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                     {leadsCount?.[subTab?.replace(/\s+/g, '')]}
                   </span>
-                )}
+                  ) : ''}
               </button>
             ))}
           </div>
@@ -210,11 +214,11 @@ const LeadsListing = ({
                 }`}
               >
                 {subTab}
-                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
                   <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                     {leadsCount?.[subTab?.replace(/\s+/g, '')]}
                   </span>
-                )}
+                  ) : ''}
               </button>
             ))}
           </div>
@@ -236,11 +240,11 @@ const LeadsListing = ({
                 }`}
               >
                 {subTab}
-                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
                   <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                     {leadsCount?.[subTab?.replace(/\s+/g, '')]}
                   </span>
-                )}
+                ) : ''}
               </button>
             ))}
           </div>
@@ -262,11 +266,11 @@ const LeadsListing = ({
                 }`}
               >
                 {subTab}
-                {leadsCount?.[subTab?.replace(/\s+/g, '')] && (
+                {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
                   <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                     {leadsCount?.[subTab?.replace(/\s+/g, '')]}
                   </span>
-                )}
+                  ) : ''}
               </button>
             ))}
           </div>

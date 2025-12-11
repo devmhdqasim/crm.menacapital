@@ -5,6 +5,7 @@ import LeadsListing from './LeadsListing';
 import LeadFormDrawer from './LeadFormDrawer';
 import AssignLeadModal from './AssignLeadModal';
 import ReminderModal from './TaskManagementModal';
+import { getDashboardStatsByFilter } from '../../services/dashboardService';
 
 const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
@@ -82,6 +83,39 @@ const LeadManagement = () => {
     return '';
   };
 
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+    const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+    
+    try {
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr);
+      
+      if (result.success && result.data) {
+        // Save crmCategorySummary to context
+        if (result.data.crmCategorySummary) {
+          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
+          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
+        }
+        
+        console.log('✅ Dashboard data loaded:', result.data);
+      } else {
+        console.error('Failed to fetch dashboard data:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error.payload.message || 'Failed to fetch dashboard data');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch leads from API
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
@@ -134,6 +168,7 @@ const LeadManagement = () => {
         
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
+        fetchDashboardData()
       } else {
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {

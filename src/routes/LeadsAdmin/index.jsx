@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
+import { getDashboardStatsByFilter } from '../../services/dashboardService';
 
 // Validation Schema - Updated to match reference
 const leadValidationSchema = Yup.object({
@@ -52,6 +53,7 @@ const leadValidationSchema = Yup.object({
 
 const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
+  const [leadsCount, setLeadsCount] = useState({})
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -165,6 +167,39 @@ const LeadManagement = () => {
     }
   };
 
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+    const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+    
+    try {
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr);
+      
+      if (result.success && result.data) {
+        // Save crmCategorySummary to context
+        if (result.data.crmCategorySummary) {
+          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
+          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
+        }
+        
+        console.log('✅ Dashboard data loaded:', result.data);
+      } else {
+        console.error('Failed to fetch dashboard data:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error.payload.message || 'Failed to fetch dashboard data');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch leads from API
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
@@ -206,6 +241,7 @@ const LeadManagement = () => {
         
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
+        fetchDashboardData()
       } else {
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
@@ -697,6 +733,11 @@ const LeadManagement = () => {
     return String.fromCodePoint(...codePoints);
   };
 
+  useEffect(() => {
+    const leads =  JSON.parse(localStorage.getItem('leadsCount'))
+    setLeadsCount(leads)
+  }, [leads, startDate, endDate, activeTab, localStorage.getItem('leadsCount')])
+
   return (
     <>
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -752,13 +793,18 @@ const LeadManagement = () => {
                   setSearchQuery('');
                   setDebouncedSearchQuery('');
                 }}
-                className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
+                className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${
                   activeTab === tab
                     ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
                 {tab}
+                {leadsCount?.[tab?.replace(/\s+/g, '')] ? (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                    {leadsCount?.[tab?.replace(/\s+/g, '')]}
+                  </span>
+                ): ''}
               </button>
             ))}
           </div>
@@ -774,13 +820,18 @@ const LeadManagement = () => {
                   <button
                     key={subTab}
                     onClick={() => setInterestedSubTab(subTab)}
-                    className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 ${
+                    className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 flex items-center gap-2 ${
                       interestedSubTab === subTab
                         ? 'bg-[#BBA473] text-black'
                         : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#BBA473]/30'
                     }`}
                   >
                     {subTab}
+                    {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                        {leadsCount?.[subTab?.replace(/\s+/g, '')]}
+                      </span>
+                    ): ''}
                   </button>
                 ))}
               </div>
@@ -798,13 +849,18 @@ const LeadManagement = () => {
                   <button
                     key={subTab}
                     onClick={() => setHotLeadsSubTab(subTab)}
-                    className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 ${
+                    className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 flex items-center gap-2 ${
                       hotLeadsSubTab === subTab
                         ? 'bg-[#BBA473] text-black'
                         : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#BBA473]/30'
                     }`}
                   >
                     {subTab}
+                    {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                        {leadsCount?.[subTab?.replace(/\s+/g, '')]}
+                      </span>
+                    ): ''}
                   </button>
                 ))}
               </div>

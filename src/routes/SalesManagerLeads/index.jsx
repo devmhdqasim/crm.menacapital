@@ -6,6 +6,7 @@ import SalesManagerLeadsListing from './SalesManagerLeadsListing';
 import SalesManagerLeadFormDrawer from './SalesManagerLeadFormDrawer';
 import SalesManagerAssignLeadModal from './SalesManagerAssignLeadModal';
 import ReminderModal from './TaskManagementModal';
+import { getDashboardStatsByFilter } from '../../services/dashboardService';
 
 const SalesManagerLeadManagement = () => {
   const [leads, setLeads] = useState([]);
@@ -97,6 +98,39 @@ const SalesManagerLeadManagement = () => {
     return ''; // All tab - no status filter
   };
 
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+    const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+    
+    try {
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr);
+      
+      if (result.success && result.data) {
+        // Save crmCategorySummary to context
+        if (result.data.crmCategorySummary) {
+          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
+          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
+        }
+        
+        console.log('✅ Dashboard data loaded:', result.data);
+      } else {
+        console.error('Failed to fetch dashboard data:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error.payload.message || 'Failed to fetch dashboard data');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
@@ -151,6 +185,7 @@ const SalesManagerLeadManagement = () => {
         
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
+        fetchDashboardData()
       } else {
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
