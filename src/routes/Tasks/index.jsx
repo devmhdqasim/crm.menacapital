@@ -62,6 +62,11 @@ const Tasks = () => {
   const [leads, setLeads] = useState([]);
   const [salesManagers, setSalesManagers] = useState([]);
 
+  // TODO: Replace this with your actual role detection logic
+  // Example: const userRole = localStorage.getItem('userRole') || 'Sales Manager';
+  // Example: const userRole = useSelector(state => state.auth.role);
+  const [userRole, setUserRole] = useState('Sales Manager'); // Change this based on your auth implementation
+
   const tabs = ['All', 'Pending', 'Completed'];
   const priorities = ['All', 'High', 'Normal', 'Low'];
   const statusOptions = ['Open', 'Pending', 'Completed'];
@@ -298,6 +303,16 @@ const Tasks = () => {
     }
   };
 
+  const getUserInfo = () => {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? JSON.parse(userInfo) : null;
+  };
+
+  useEffect(() => {
+    const userInfo = getUserInfo();
+    setUserRole(userInfo?.roleName);
+  }, []);
+
   // Load tasks on component mount and when pagination changes
   useEffect(() => {
     setIsLoaded(true);
@@ -319,6 +334,9 @@ const Tasks = () => {
 
   // Get unique assignees for filter dropdown (from agents list)
   const uniqueAssignees = ['All', ...agents.map(agent => `${agent.firstName} ${agent.lastName}`)];
+
+  // Get unique sales managers for filter dropdown
+  const uniqueSalesManagers = ['All', ...salesManagers.map(sm => sm.name)];
 
   // No frontend filtering needed - all handled by API
   const filteredTasks = tasks;
@@ -452,6 +470,21 @@ const Tasks = () => {
     return formatted.replace(",", "");
   }
 
+  function formatScheduledDate(dateString) {
+    const date = new Date(dateString);
+
+    if (isNaN(date)) return 'Invalid Date';
+
+    const options = {
+      timeZone: "Asia/Dubai",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    };
+
+    return new Intl.DateTimeFormat("en-GB", options).format(date);
+  }
+
   // Pagination calculations based on API metadata
   const totalPages = Math.ceil(totalTasks / itemsPerPage);
   const showingFrom = totalTasks > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
@@ -514,7 +547,7 @@ const Tasks = () => {
         {showFilters && (
           <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#BBA473]/20 animate-fadeIn">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Priority Filter */}
+              {/* Priority Filter - Only for Sales Manager */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Priority</label>
                 <div className="relative">
@@ -533,24 +566,47 @@ const Tasks = () => {
                 </div>
               </div>
 
-              {/* Assigned To Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Assigned By</label>
-                <div className="relative">
-                  <select
-                    value={assignedToFilter}
-                    onChange={(e) => setAssignedToFilter(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
-                  >
-                    {uniqueAssignees.map((assignee) => (
-                      <option key={assignee} value={assignee}>
-                        {assignee}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+              {/* Assigned To Filter - For Sales Manager, show "Assigned To" (agents) */}
+              {userRole === 'Sales Manager' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Assigned To</label>
+                  <div className="relative">
+                    <select
+                      value={assignedToFilter}
+                      onChange={(e) => setAssignedToFilter(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+                    >
+                      {uniqueAssignees.map((assignee) => (
+                        <option key={assignee} value={assignee}>
+                          {assignee}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Assigned By Filter - For Agent, show "Assigned By" (sales managers) */}
+              {userRole === 'Agent' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Assigned By</label>
+                  <div className="relative">
+                    <select
+                      value={assignedToFilter}
+                      onChange={(e) => setAssignedToFilter(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+                    >
+                      {uniqueSalesManagers.map((sm) => (
+                        <option key={sm} value={sm}>
+                          {sm}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                  </div>
+                </div>
+              )}
 
               {/* Clear Filters Button */}
               <div className="flex items-end">
@@ -629,7 +685,12 @@ const Tasks = () => {
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Info</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Status</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Priority</th>
+                    {/* Conditional column: Priority for Sales Manager, Scheduled Date for Agent */}
+                    {userRole === 'Sales Manager' ? (
+                      <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Priority</th>
+                    ) : (
+                      <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Scheduled Date</th>
+                    )}
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Assigned To</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Assigned By</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
@@ -677,11 +738,20 @@ const Tasks = () => {
                             {task.leadStatus}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getPriorityBadge(task.priority)}`}>
-                            {task.priority}
-                          </span>
-                        </td>
+                        {/* Conditional cell: Priority for Sales Manager, Scheduled Date for Agent */}
+                        {userRole === 'Sales Manager' ? (
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getPriorityBadge(task.priority)}`}>
+                              {task.priority}
+                            </span>
+                          </td>
+                        ) : (
+                          <td className="px-6 py-4">
+                            <div className="text-gray-300 text-sm font-medium">
+                              {task.taskScheduledDate ? formatScheduledDate(task.taskScheduledDate) : 'Not Set'}
+                            </div>
+                          </td>
+                        )}
                         {!clearFilter && (
                           <td className="px-6 py-4">
                             <div className="text-gray-300">{task.assignedTo}</div>
