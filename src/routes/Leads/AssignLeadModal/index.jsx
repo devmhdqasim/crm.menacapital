@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Calendar, Clock } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { updateLeadTask } from '../../../services/leadService';
+import { createAutoTask } from '../../../services/taskService';
 import toast from 'react-hot-toast';
 
 const AssignLeadModal = ({ 
@@ -11,13 +14,14 @@ const AssignLeadModal = ({
   currentPage, 
   itemsPerPage,
   isLeadsSelectedId,
-  onOpenReminderModal,
   setLeadResponseStatusCurrent,
 }) => {
   // Modal form state - using single variable to track the final selected status
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
   const [modalRemarks, setModalRemarks] = useState('');
   const [modalErrors, setModalErrors] = useState({});
+  const [taskTitle, setTaskTitle] = useState('');
+  const [reminderDateTime, setReminderDateTime] = useState(null);
   
   // Helper states to track the hierarchical selections for UI rendering
   const [modalAnswered, setModalAnswered] = useState('');
@@ -33,6 +37,8 @@ const AssignLeadModal = ({
   useEffect(() => {
     if (selectedLead) {
       setModalRemarks(selectedLead.latestRemarks || '');
+      setTaskTitle('');
+      setReminderDateTime(null);
       
       // Determine the current status based on boolean flags
       if (!selectedLead.contacted) {
@@ -116,6 +122,26 @@ const AssignLeadModal = ({
       errors.answered = 'Please complete the status selection';
     }
     
+    // If "Answered" is selected, must select Interested/Not Interested
+    if (modalAnswered === 'Answered' && !modalInterested) {
+      errors.interested = 'Please select Interested or Not Interested';
+    }
+    
+    // If "Interested" is selected, must select Warm/Hot
+    if (modalInterested === 'Interested' && !modalLeadType) {
+      errors.leadType = 'Please select Warm Lead or Hot Lead';
+    }
+    
+    // If "Hot" is selected, must select Demo/Real
+    if (modalLeadType === 'Hot' && !modalHotLeadType) {
+      errors.hotLeadType = 'Please select Demo or Real';
+    }
+    
+    // If "Real" is selected, must select Deposit/Not Deposit
+    if (modalHotLeadType === 'Real' && !modalDepositStatus) {
+      errors.depositStatus = 'Please select Deposit or Not Deposit';
+    }
+    
     // Validate remarks length (max 500 characters)
     if (modalRemarks && modalRemarks.length > 500) {
       errors.remarks = 'Remarks must not exceed 500 characters';
@@ -197,13 +223,29 @@ const AssignLeadModal = ({
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
         
+        // After successful lead update, create auto task
+        try {
+          const taskData = {
+            leadId: selectedLead?.id,
+            leadStatus: leadResponseStatus || selectedLead?.status || 'Lead',
+            taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
+            taskDescription: modalRemarks.trim() || 'No additional remarks'
+          };
+
+          const taskResult = await createAutoTask(taskData);
+
+          if (taskResult.success) {
+            toast.success(taskResult.message || 'Task created successfully!');
+          } else {
+            // Don't show error for task creation failure, just log it
+            console.error('Failed to create task:', taskResult.message);
+          }
+        } catch (taskError) {
+          console.error('Error creating task:', taskError);
+        }
+        
         // Close this modal with animation
         handleClose();
-        
-        // Open reminder modal after a short delay
-        setTimeout(() => {
-          onOpenReminderModal(selectedLead);
-        }, 300);
         
         // Refresh leads
         fetchLeads(currentPage, itemsPerPage);
@@ -241,6 +283,57 @@ const AssignLeadModal = ({
       'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+  };
+
+  // Check if the form is valid for submission
+  const isFormValid = () => {
+    // Must have a base selection
+    if (!modalAnswered) return false;
+    
+    // If "Answered" is selected, must complete the rest of the hierarchy
+    if (modalAnswered === 'Answered') {
+      if (!modalInterested) return false;
+      
+      if (modalInterested === 'Interested') {
+        if (!modalLeadType) return false;
+        
+        if (modalLeadType === 'Hot') {
+          if (!modalHotLeadType) return false;
+          
+          if (modalHotLeadType === 'Real') {
+            if (!modalDepositStatus) return false;
+          }
+        }
+      }
+    }
+    
+    return true;
+  };
+
+  // Helper function to check if a status option should be disabled
+  // Status hierarchy: Not Answered < Not Interested < Warm < Hot < Demo < Real < Not Deposit < Deposit
+  const isStatusDisabled = (statusToCheck) => {
+    if (!selectedLead) return false;
+    
+    const statusHierarchy = [
+      'Not Answered',
+      'Not Interested', 
+      'Warm',
+      'Hot',
+      'Demo',
+      'Real',
+      'Not Deposit',
+      'Deposit'
+    ];
+    
+    const currentStatusIndex = statusHierarchy.indexOf(selectedLead.status);
+    const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
+    
+    // If current status not found or checking status not found, don't disable
+    if (currentStatusIndex === -1 || checkStatusIndex === -1) return false;
+    
+    // Disable if the status to check is before or equal to current status
+    return checkStatusIndex <= currentStatusIndex;
   };
 
   if (!showDetailsModal || !selectedLead) return null;
@@ -323,7 +416,29 @@ const AssignLeadModal = ({
 
             {/* Status Options */}
             <div className="border-t border-[#BBA473]/30 pt-6">
-              <h3 className="text-lg font-semibold text-[#E8D5A3] mb-4">Update Status</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Status</h3>
+                
+                {/* Date Time Picker */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex">
+                    <DatePicker
+                      selected={reminderDateTime}
+                      onChange={(date) => setReminderDateTime(date)}
+                      showTimeSelect
+                      timeFormat="HH:mm"
+                      timeIntervals={15}
+                      dateFormat="MMM d, yyyy h:mm aa"
+                      placeholderText="Select date & time"
+                      minDate={new Date()}
+                      className="px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 border-[#BBA473]/30 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] cursor-pointer"
+                      calendarClassName="custom-datepicker"
+                      wrapperClassName="w-full"
+                    />
+                    {/* <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" /> */}
+                  </div>
+                </div>
+              </div>
               
               {/* Level 1: Answered / Not Answered */}
               <div className="space-y-4">
@@ -336,7 +451,7 @@ const AssignLeadModal = ({
                       checked={modalAnswered === 'Answered'}
                       onChange={(e) => {
                         setModalAnswered(e.target.value);
-                        setLeadResponseStatus(e.target.value);
+                        setLeadResponseStatus('');
                         setModalInterested('');
                         setModalLeadType('');
                         setModalHotLeadType('');
@@ -348,12 +463,17 @@ const AssignLeadModal = ({
                     <span className="text-white font-medium">Answered</span>
                   </label>
                   
-                  <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                  <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    isStatusDisabled('Not Answered')
+                      ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  }`}>
                     <input
                       type="radio"
                       name="answered"
                       value="Not Answered"
                       checked={modalAnswered === 'Not Answered'}
+                      disabled={isStatusDisabled('Not Answered')}
                       onChange={(e) => {
                         setModalAnswered(e.target.value);
                         setLeadResponseStatus(e.target.value);
@@ -363,7 +483,7 @@ const AssignLeadModal = ({
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Not Answered</span>
                   </label>
@@ -384,7 +504,7 @@ const AssignLeadModal = ({
                           checked={modalInterested === 'Interested'}
                           onChange={(e) => {
                             setModalInterested(e.target.value);
-                            setLeadResponseStatus(e.target.value);
+                            setLeadResponseStatus('');
                             setModalLeadType('');
                             setModalHotLeadType('');
                             setModalDepositStatus('');
@@ -395,12 +515,17 @@ const AssignLeadModal = ({
                         <span className="text-white font-medium">Interested</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                        isStatusDisabled('Not Interested')
+                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="interested"
                           value="Not Interested"
                           checked={modalInterested === 'Not Interested'}
+                          disabled={isStatusDisabled('Not Interested')}
                           onChange={(e) => {
                             setModalInterested(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -409,7 +534,7 @@ const AssignLeadModal = ({
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Not Interested</span>
                       </label>
@@ -426,12 +551,17 @@ const AssignLeadModal = ({
                     <div className="grid grid-cols-2 gap-3">
                     {!isLeadsSelectedId && (
                       <>
-                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                        <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                          isStatusDisabled('Warm')
+                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                           <input
                             type="radio"
                             name="leadType"
                             value="Warm"
                             checked={modalLeadType === 'Warm'}
+                            disabled={isStatusDisabled('Warm')}
                             onChange={(e) => {
                               setModalLeadType(e.target.value);
                               setLeadResponseStatus(e.target.value);
@@ -439,27 +569,32 @@ const AssignLeadModal = ({
                               setModalDepositStatus('');
                               setModalErrors({});
                             }}
-                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <span className="text-white font-medium">Warm Lead</span>
                         </label>
                       </>
                     )}
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                        isStatusDisabled('Hot')
+                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="leadType"
                           value="Hot"
                           checked={modalLeadType === 'Hot'}
+                          disabled={isStatusDisabled('Hot')}
                           onChange={(e) => {
                             setModalLeadType(e.target.value);
-                            setLeadResponseStatus(e.target.value);
+                            setLeadResponseStatus('');
                             setModalHotLeadType('');
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Hot Lead</span>
                       </label>
@@ -474,36 +609,46 @@ const AssignLeadModal = ({
                 {modalLeadType === 'Hot' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                        isStatusDisabled('Demo')
+                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
                           value="Demo"
                           checked={modalHotLeadType === 'Demo'}
+                          disabled={isStatusDisabled('Demo')}
                           onChange={(e) => {
                             setModalHotLeadType(e.target.value);
                             setLeadResponseStatus(e.target.value);
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Demo</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                        isStatusDisabled('Real')
+                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
                           value="Real"
                           checked={modalHotLeadType === 'Real'}
+                          disabled={isStatusDisabled('Real')}
                           onChange={(e) => {
                             setModalHotLeadType(e.target.value);
-                            setLeadResponseStatus(e.target.value);
+                            setLeadResponseStatus('');
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Real</span>
                       </label>
@@ -518,34 +663,44 @@ const AssignLeadModal = ({
                 {modalHotLeadType === 'Real' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                        isStatusDisabled('Deposit')
+                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="depositStatus"
                           value="Deposit"
                           checked={modalDepositStatus === 'Deposit'}
+                          disabled={isStatusDisabled('Deposit')}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Deposit</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                        isStatusDisabled('Not Deposit')
+                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="depositStatus"
                           value="Not Deposit"
                           checked={modalDepositStatus === 'Not Deposit'}
+                          disabled={isStatusDisabled('Not Deposit')}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Not Deposit</span>
                       </label>
@@ -589,6 +744,30 @@ const AssignLeadModal = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Task Title */}
+                <div className="space-y-2 pt-4 border-t border-[#BBA473]/20">
+                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                    Task Title <span className="text-xs text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="taskTitle"
+                    placeholder={`Default: Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
+                    value={taskTitle}
+                    onChange={(e) => setTaskTitle(e.target.value)}
+                    maxLength={100}
+                    className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]"
+                  />
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-gray-400">
+                      Default: Follow Up with lead ( {leadResponseStatus || selectedLead?.status} - lead )
+                    </p>
+                    <div className="text-xs text-gray-500">
+                      {taskTitle.length}/100
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -606,7 +785,12 @@ const AssignLeadModal = ({
             {!isLeadsSelectedId && (
               <button
                 onClick={handleModalSubmit}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                disabled={!isFormValid()}
+                className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg transform ${
+                  isFormValid()
+                    ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
+                    : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                }`}
               >
                 Save Changes
               </button>
@@ -622,6 +806,93 @@ const AssignLeadModal = ({
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Custom DatePicker Styling */
+        .custom-datepicker {
+          background-color: #2A2A2A !important;
+          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border-radius: 12px !important;
+          font-family: inherit !important;
+        }
+
+        .react-datepicker {
+          background-color: #2A2A2A !important;
+          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border-radius: 12px !important;
+        }
+
+        .react-datepicker__header {
+          background-color: #1A1A1A !important;
+          border-bottom: 1px solid rgba(187, 164, 115, 0.3) !important;
+          border-top-left-radius: 12px !important;
+          border-top-right-radius: 12px !important;
+        }
+
+        .react-datepicker__current-month,
+        .react-datepicker-time__header,
+        .react-datepicker__day-name {
+          color: #E8D5A3 !important;
+          font-weight: 600 !important;
+        }
+
+        .react-datepicker__day {
+          color: #ffffff !important;
+          border-radius: 8px !important;
+          transition: all 0.2s !important;
+        }
+
+        .react-datepicker__day:hover {
+          background-color: rgba(187, 164, 115, 0.2) !important;
+          color: #BBA473 !important;
+        }
+
+        .react-datepicker__day--selected,
+        .react-datepicker__day--keyboard-selected {
+          background-color: #BBA473 !important;
+          color: #000000 !important;
+          font-weight: 600 !important;
+        }
+
+        .react-datepicker__day--disabled {
+          color: #666666 !important;
+          opacity: 0.5 !important;
+        }
+
+        .react-datepicker__time-container {
+          position: absolute;
+          right: 100%;
+          border: 2px solid #e8d5a33d;
+          border-radius: 12px;
+          border-left: 1px solid rgba(187, 164, 115, 0.3) !important;
+        }
+
+        .react-datepicker__time-list-item {
+          color: #ffffff !important;
+          transition: all 0.2s !important;
+        }
+
+        .react-datepicker__time-list-item:hover {
+          background-color: rgba(187, 164, 115, 0.2) !important;
+          color: #BBA473 !important;
+        }
+
+        .react-datepicker__time-list-item--selected {
+          background-color: #BBA473 !important;
+          color: #000000 !important;
+          font-weight: 600 !important;
+        }
+
+        .react-datepicker__navigation-icon::before {
+          border-color: #BBA473 !important;
+        }
+
+        .react-datepicker__navigation:hover *::before {
+          border-color: #E8D5A3 !important;
+        }
+
+        .react-datepicker__triangle {
+          display: none !important;
         }
       `}</style>
     </div>

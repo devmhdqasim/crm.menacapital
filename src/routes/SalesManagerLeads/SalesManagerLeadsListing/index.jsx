@@ -51,7 +51,7 @@ const SalesManagerLeadsListing = ({
 
   const getSubTabs = () => {
     if (activeTab === 'Contacted') {
-      return ['Interested', 'Not Interested', 'Not Answered'];
+      return ['Interested', 'Not Interested', 'Not Answered', 'Answered'];
     }
     return [];
   };
@@ -250,7 +250,7 @@ const SalesManagerLeadsListing = ({
               {/* Agent Filter */}
               <div className="flex items-center gap-4 ml-auto">
               <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
-                Filter by Kiosk Member:
+                Filter by Agent:
               </label>
               <div className="relative w-full max-w-xs min-w-64">
                 <select

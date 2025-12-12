@@ -38,7 +38,7 @@ const LeadsListing = ({
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
 
   const tabs = ['All', 'Pending', 'Contacted'];
-  const contactedSubTabs = ['Interested', 'Not Interested', 'Not Answered'];
+  const contactedSubTabs = ['Interested', 'Not Interested', 'Not Answered', 'Answered'];
   const interestedSubTabs = ['Warm', 'Hot'];
   const hotLeadSubTabs = ['Demo', 'Real'];
   const realSubTabs = ['Deposit', 'Not Deposit'];

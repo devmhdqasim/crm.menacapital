@@ -92,6 +92,8 @@ const SalesManagerLeadManagement = () => {
         return 'Not-Interested';
       } else if (activeSubTab === 'Not Answered') {
         return 'Not-Answered';
+      }  else if (activeSubTab === 'Answered') {
+        return 'Answered';
       }
       return 'Contacted';
     }
@@ -498,6 +500,7 @@ const SalesManagerLeadManagement = () => {
         // Close this modal and refresh leads
         handleCloseModal();
         fetchLeads(currentPage, itemsPerPage);
+
         
         // Open task modal after a short delay
         setTimeout(() => {
