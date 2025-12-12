@@ -494,18 +494,9 @@ const SalesManagerLeadManagement = () => {
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
         
-        // Store the lead for task modal
-        const leadForTask = { ...selectedLead };
-        
-        // Close this modal and refresh leads
+        // Close modal and refresh leads - no task modal opening
         handleCloseModal();
         fetchLeads(currentPage, itemsPerPage);
-
-        
-        // Open task modal after a short delay
-        setTimeout(() => {
-          handleOpenTaskModal(leadForTask);
-        }, 300);
       } else {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');

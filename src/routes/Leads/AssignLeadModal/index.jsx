@@ -227,7 +227,7 @@ const AssignLeadModal = ({
         try {
           const taskData = {
             leadId: selectedLead?.id,
-            leadStatus: leadResponseStatus || selectedLead?.status || 'Lead',
+            leadStatus: leadResponseStatus?.replace(/\s+/g, '') || selectedLead?.status?.replace(/\s+/g, '') || 'Lead',
             taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
             taskDescription: modalRemarks.trim() || 'No additional remarks'
           };
