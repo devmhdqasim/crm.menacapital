@@ -227,8 +227,8 @@ const SalesManagerAssignLeadModal = ({
     // If current status not found or checking status not found, don't disable
     if (currentStatusIndex === -1 || checkStatusIndex === -1) return false;
     
-    // Disable if the status to check is before the current status (prevent downgrade)
-    return checkStatusIndex < currentStatusIndex;
+    // Disable if the status to check is before or equal to current status
+    return checkStatusIndex <= currentStatusIndex;
   };
 
   const handleStatusUpdateWithValidation = async () => {
@@ -248,7 +248,7 @@ const SalesManagerAssignLeadModal = ({
       try {
         const taskData = {
           leadId: selectedLead?.id,
-          leadStatus: leadResponseStatus?.replace(/\s+/g, '') || selectedLead?.status?.replace(/\s+/g, '') || 'Lead',
+          leadStatus: leadResponseStatus || selectedLead?.status || 'Lead',
           taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
           taskDescription: modalRemarks.trim() || 'No additional remarks'
         };
@@ -348,6 +348,10 @@ const SalesManagerAssignLeadModal = ({
               <div className="space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Nationality</label>
                 <p className="text-white">{selectedLead.nationality || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-[#E8D5A3] font-medium">Residency</label>
+                <p className="text-white">{selectedLead.residency || 'N/A'}</p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Preferred Language</label>
