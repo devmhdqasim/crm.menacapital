@@ -847,6 +847,14 @@ const AssignLeadModal = ({
           color: #BBA473 !important;
         }
 
+        .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list {
+          background-color: #2a2a2a;
+        }
+
+        .react-datepicker__navigation--next--with-time:not(.react-datepicker__navigation--next--with-today-button) {
+          width: 100%;
+        }
+
         .react-datepicker__day--selected,
         .react-datepicker__day--keyboard-selected {
           background-color: #BBA473 !important;
