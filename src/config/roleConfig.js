@@ -21,6 +21,7 @@ export const ROUTES = {
   ADMINLEADS: '/ad-leads',
   SALESMANAGERLEADS: '/sm-leads',
   BRANCHES: '/branches',
+  EXHIBITION: '/exhibition',
   KIOSKMEMBER: '/kiosk-members',
   ROLE_MANAGEMENT: '/role-management',
   SETTINGS: '/settings',
@@ -61,6 +62,7 @@ export const ROLE_PERMISSIONS = {
       ROUTES.KIOSKMEMBER,
       ROUTES.ADMINLEADS,
       ROUTES.BRANCHES,
+      ROUTES.EXHIBITION,
       ROUTES.ROLE_MANAGEMENT,
       ROUTES.UPDATE_PASSWORD,
       ROUTES.NOTIFICATIONS,
@@ -172,6 +174,11 @@ export const SIDEBAR_MENU_CONFIG = [
     label: 'Branches',
     route: ROUTES.BRANCHES,
     icon: 'GitBranch',
+  },
+  {
+    label: 'Exhibition',
+    route: ROUTES.EXHIBITION,
+    icon: 'Calendar1',
   },
   {
     label: 'Role Management',

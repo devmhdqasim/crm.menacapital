@@ -10,6 +10,7 @@ import {
   LogOut,
   GitBranch,
   CheckSquare,
+  Calendar1,
   ChevronRight,
   X,
   Menu,
@@ -40,6 +41,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
     ShieldCheck,
     Settings,
     CheckSquare,
+    Calendar1,
   };
 
   // Helper function to check if a link is active

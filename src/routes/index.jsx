@@ -23,6 +23,7 @@ const KioskMembersPage = lazy(() => import('@/routes/KioskMembers'));
 const LeadsPage = lazy(() => import('@/routes/Leads'));
 const AdminLeadsPage = lazy(() => import('@/routes/LeadsAdmin'));
 const BranchesPage = lazy(() => import('@/routes/Branches'));
+const ExhibitionPage = lazy(() => import('@/routes/Exhibitions'));
 const BranchLeadsPage = lazy(() => import('@/routes/BranchLeads'));
 const SalesManagerLeadsPage = lazy(() => import('@/routes/SalesManagerLeads'));
 const RoleManagementPage = lazy(() => import('@/routes/RoleManagement'));
@@ -135,6 +136,16 @@ export function AppRoutes() {
         <Suspense fallback={<RouteLoadingFallback />}>
           <ProtectedRoute requiredRoute={ROUTES.BRANCHES}>
             <BranchesPage />
+          </ProtectedRoute>
+        </Suspense>
+      ),
+    },
+    {
+      path: '/exhibition',
+      element: (
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <ProtectedRoute requiredRoute={ROUTES.EXHIBITION}>
+            <ExhibitionPage />
           </ProtectedRoute>
         </Suspense>
       ),
