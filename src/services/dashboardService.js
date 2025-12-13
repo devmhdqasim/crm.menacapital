@@ -22,7 +22,7 @@ const getRefreshToken = () => {
  * @param {string} toDate - End date for filtering (optional, format: YYYY-MM-DD)
  * @returns {Promise} - Returns dashboard statistics
  */
-export const getDashboardStats = async (fromDate = '', toDate = '') => {
+export const getDashboardStats = async (fromDate = '', toDate = '', keyword = '', agentId = '') => {
   try {
     const authToken = getRefreshToken();
     
@@ -44,8 +44,8 @@ export const getDashboardStats = async (fromDate = '', toDate = '') => {
     // ✅ Decide which URL to hit based on role
     const isBranchLogin = userInfo?.roleName === 'Kiosk Member' || userInfo?.role === 'Kiosk Member';
     const refreshUrl = isBranchLogin
-      ? `${API_BASE_URL}/dashboard/kiosk/en?fromDate=${fromDate}&toDate=${toDate}`
-      : `${API_BASE_URL}/dashboard/admin/en?fromDate=${fromDate}&toDate=${toDate}`;
+      ? `${API_BASE_URL}/dashboard/kiosk/en?fromDate=${fromDate}&toDate=${toDate}&keyword=${keyword}&agentId=${agentId}`
+      : `${API_BASE_URL}/dashboard/admin/en?fromDate=${fromDate}&toDate=${toDate}&keyword=${keyword}&agentId=${agentId}`;
 
     const response = await axios.get(
       refreshUrl,
@@ -212,7 +212,7 @@ export const getBranchDashboardStats = async (fromDate = '', toDate = '') => {
  * @param {string} filterType - Filter type ('Last 3 Days', 'Last Week', 'Last Month', 'Last Year')
  * @returns {Promise} - Returns dashboard statistics
  */
-export const getDashboardStatsByFilter = async (fromDate, toDate) => {
+export const getDashboardStatsByFilter = async (fromDate, toDate, keyword, agentId) => {
   const today = new Date();
   // let fromDate = '';
   // let toDate = today.toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
@@ -249,9 +249,9 @@ export const getDashboardStatsByFilter = async (fromDate, toDate) => {
   // }
 
   // console.log('🔵 Applying filter:', filterType);
-  console.log('📅 Calculated date range:', { fromDate, toDate });
+  console.log('📅 Calculated date range:', { fromDate, toDate, keyword, agentId });
 
-  return await getDashboardStats(fromDate, toDate);
+  return await getDashboardStats(fromDate, toDate, keyword, agentId);
 };
 
 /**

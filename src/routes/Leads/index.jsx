@@ -90,7 +90,7 @@ const LeadManagement = () => {
     const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
     
     try {
-      const result = await getDashboardStatsByFilter(startDateStr, endDateStr);
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery);
       
       if (result.success && result.data) {
         // Save crmCategorySummary to context

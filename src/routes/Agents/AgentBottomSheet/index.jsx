@@ -158,7 +158,7 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
                       {selectedAgent.fullName}'s Assigned Leads
                     </h2>
                     <p className="text-sm text-gray-400 mt-1">
-                      @{selectedAgent.username} • {selectedAgent.email}
+                      @{selectedAgent?.username} • {selectedAgent?.email}
                     </p>
                   </div>
                 )}
@@ -175,7 +175,7 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6">
             <div className="max-w-full mx-auto space-y-6">
-              <AssignedLeadsDetail selectedAgentId={selectedAgent?.id} agentLeadsCount={leadsAgentCount?.find(lead => lead?.username == selectedAgent.username)} />
+              <AssignedLeadsDetail selectedAgentId={selectedAgent?.id} agentLeadsCount={leadsAgentCount?.find(lead => lead?.username == selectedAgent?.username)} />
               <div className="h-20" /> {/* Bottom spacing */}
             </div>
           </div>

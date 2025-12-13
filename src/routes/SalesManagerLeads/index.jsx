@@ -105,9 +105,10 @@ const SalesManagerLeadManagement = () => {
     setLoading(true);
     const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
     const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+    const agentId = selectedAgentFilter || '';
     
     try {
-      const result = await getDashboardStatsByFilter(startDateStr, endDateStr);
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery, agentId);
       
       if (result.success && result.data) {
         // Save crmCategorySummary to context
