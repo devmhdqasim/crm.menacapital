@@ -10,6 +10,7 @@ import { getDashboardStatsByFilter } from '../../services/dashboardService';
 
 const SalesManagerLeadManagement = () => {
   const [leads, setLeads] = useState([]);
+  const [crmCategorySummary, setCrmCategorySummary] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -113,6 +114,7 @@ const SalesManagerLeadManagement = () => {
       if (result.success && result.data) {
         // Save crmCategorySummary to context
         if (result.data.crmCategorySummary) {
+          setCrmCategorySummary(result.data.crmCategorySummary)
           localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
           localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
         }
@@ -580,6 +582,7 @@ const SalesManagerLeadManagement = () => {
         setEditingLead={setEditingLead}
         drawerOpen={drawerOpen}
         agents={agents}
+        leadsCount={crmCategorySummary}
         selectedAgentFilter={selectedAgentFilter}
         setSelectedAgentFilter={setSelectedAgentFilter}
       />

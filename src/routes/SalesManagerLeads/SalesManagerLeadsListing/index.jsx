@@ -37,9 +37,9 @@ const SalesManagerLeadsListing = ({
   agents,
   selectedAgentFilter,
   setSelectedAgentFilter,
+  leadsCount,
 }) => {
   const { crmCategorySummary } = useCRM();
-  const [leadsCount, setLeadsCount] = useState({})
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showAssignedLeadModal, setShowAssignedLeadModal] = useState(false);
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
@@ -213,11 +213,6 @@ const SalesManagerLeadsListing = ({
   
     return formatted.replace(",", "");
   }
-
-  useEffect(() => {
-    const leads =  JSON.parse(localStorage.getItem('leadsCount'))
-    setLeadsCount(leads)
-  }, [leads, startDate, endDate, activeTab, localStorage.getItem('leadsCount')])
 
   return (
     <>
