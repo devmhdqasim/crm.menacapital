@@ -94,7 +94,7 @@ const LeadManagement = ({ selectedAgentId, selectedAgentUsername }) => {
     const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
     
     try {
-      const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery);
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery, selectedAgentId);
       
       if (result.success && result.data) {
         // Save crmCategorySummary to context
