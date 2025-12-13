@@ -686,11 +686,12 @@ const Tasks = () => {
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Status</th>
                     {/* Conditional column: Priority for Sales Manager, Scheduled Date for Agent */}
-                    {userRole === 'Sales Manager' ? (
+                    {/* {userRole === 'Sales Manager' ? (
                       <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Priority</th>
                     ) : (
-                      <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Scheduled Date</th>
-                    )}
+                      <></>
+                    )} */}
+                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Scheduled Date</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Assigned To</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Assigned By</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
@@ -739,19 +740,20 @@ const Tasks = () => {
                           </span>
                         </td>
                         {/* Conditional cell: Priority for Sales Manager, Scheduled Date for Agent */}
-                        {userRole === 'Sales Manager' ? (
+                        {/* {userRole === 'Sales Manager' ? (
                           <td className="px-6 py-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getPriorityBadge(task.priority)}`}>
                               {task.priority}
                             </span>
                           </td>
                         ) : (
-                          <td className="px-6 py-4">
-                            <div className="text-gray-300 text-sm font-medium">
-                              {task.taskScheduledDate ? formatScheduledDate(task.taskScheduledDate) : 'Not Set'}
-                            </div>
-                          </td>
-                        )}
+                          <></>
+                        )} */}
+                        <td className="px-6 py-4">
+                          <div className="text-gray-300 text-sm font-medium">
+                            {task.taskScheduledDate ? formatScheduledDate(task.taskScheduledDate) : 'Not Set'}
+                          </div>
+                        </td>
                         {!clearFilter && (
                           <td className="px-6 py-4">
                             <div className="text-gray-300">{task.assignedTo}</div>
