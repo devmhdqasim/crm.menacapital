@@ -116,7 +116,7 @@ const LeadsListing = ({
   
     const formatted = new Intl.DateTimeFormat("en-GB", options).format(date);
   
-    return formatted.replace(",", "");
+    return formatted.replace(",", "");  
   }
 
   return (
