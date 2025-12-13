@@ -33,7 +33,7 @@ const LeadsListing = ({
   handleRowClick,
   setDrawerOpen,
   setEditingLead,
-  agentLeadsCount
+  agentLeadsCount,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
 

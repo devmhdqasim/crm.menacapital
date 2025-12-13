@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { getAllLeads } from '../../../services/leadService';
 import toast from 'react-hot-toast';
 import LeadsListing from '../LeadsListing'
+import { getDashboardStatsByFilter } from '../../../services/dashboardService';
 
-const LeadManagement = ({ selectedAgentId, agentLeadsCount }) => {
+const LeadManagement = ({ selectedAgentId, selectedAgentUsername }) => {
   const [leads, setLeads] = useState([]);
+  const [crmCategorySummary, setCrmCategorySummary] = useState([]);
   const [userDetails, setUserDetails] = useState('')
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -85,6 +87,40 @@ const LeadManagement = ({ selectedAgentId, agentLeadsCount }) => {
     return activeTab;
   };
 
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+    const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+    
+    try {
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery);
+      
+      if (result.success && result.data) {
+        // Save crmCategorySummary to context
+        if (result.data.crmCategorySummary) {
+          setCrmCategorySummary(result.data.crmAgentCategorySummary)
+          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
+          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
+        }
+        
+        console.log('✅ Dashboard data loaded:', result.data);
+      } else {
+        console.error('Failed to fetch dashboard data:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error.payload.message || 'Failed to fetch dashboard data');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch leads from API
   const fetchLeads = async (page = 1, limit = 10) => {
     setLoading(true);
@@ -139,6 +175,7 @@ const LeadManagement = ({ selectedAgentId, agentLeadsCount }) => {
         
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
+        fetchDashboardData()
       } else {
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
@@ -265,7 +302,7 @@ const LeadManagement = ({ selectedAgentId, agentLeadsCount }) => {
       <LeadsListing
         leads={leads}
         title={'Agent Assigned Leads'}
-        agentLeadsCount={agentLeadsCount?.crmCategorySummary}
+        agentLeadsCount={crmCategorySummary?.find(lead => lead?.username == selectedAgentUsername)?.crmCategorySummary }
         description={'View and manage agent assigned leads'}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
