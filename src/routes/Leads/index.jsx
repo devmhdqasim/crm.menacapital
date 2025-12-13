@@ -11,6 +11,7 @@ const LeadManagement = () => {
   const [leads, setLeads] = useState([]);
   const [userDetails, setUserDetails] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [crmCategorySummary, setCrmCategorySummary] = useState({});
   const [leadResponseStatusCurrent, setLeadResponseStatusCurrent] = useState(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -95,6 +96,7 @@ const LeadManagement = () => {
       if (result.success && result.data) {
         // Save crmCategorySummary to context
         if (result.data.crmCategorySummary) {
+          setCrmCategorySummary(result.data.crmCategorySummary)
           localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
           localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
         }
@@ -322,6 +324,7 @@ const LeadManagement = () => {
         setStartDate={setStartDate}
         endDate={endDate}
         setEndDate={setEndDate}
+        leadsCount={crmCategorySummary}
         isLeadsSelectedId={isLeadsSelectedId}
         handleRowClick={handleRowClick}
         setDrawerOpen={setDrawerOpen}

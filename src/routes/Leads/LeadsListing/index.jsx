@@ -32,9 +32,9 @@ const LeadsListing = ({
   isLeadsSelectedId,
   handleRowClick,
   setDrawerOpen,
-  setEditingLead
+  setEditingLead,
+  leadsCount,
 }) => {
-  const [leadsCount, setLeadsCount] = useState({})
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
 
   const tabs = ['All', 'Pending', 'Contacted'];
@@ -118,11 +118,6 @@ const LeadsListing = ({
   
     return formatted.replace(",", "");
   }
-
-  useEffect(() => {
-    const leads =  JSON.parse(localStorage.getItem('leadsCount'))
-    setLeadsCount(leads)
-  }, [leads, startDate, endDate, activeTab, localStorage.getItem('leadsCount')])
 
   return (
     <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
