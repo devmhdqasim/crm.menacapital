@@ -51,7 +51,7 @@ const SalesManagerLeadsListing = ({
 
   const getSubTabs = () => {
     if (activeTab === 'Contacted') {
-      return ['Interested', 'Not Interested', 'Not Answered', 'Answered'];
+      return ['Interested', 'Not Interested', 'Not Answered'];
     }
     return [];
   };
