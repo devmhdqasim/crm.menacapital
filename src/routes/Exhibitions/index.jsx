@@ -25,7 +25,7 @@ const branchValidationSchema = Yup.object({
     .max(100, 'Event name must not exceed 100 characters'),
   branchLocation: Yup.string()
     .required('Event location is required'),
-    // .oneOf(['head_office', 'sharjah_branch'], 'Invalid branch location'),
+    // .oneOf(['head_office', 'sharjah_branch'], 'Invalid event location'),
   branchPhoneNumber: Yup.string()
     .required('Phone number is required')
     .test('valid-phone', 'Invalid phone number', function(value) {
@@ -160,18 +160,18 @@ const BranchManagement = () => {
       
       if (result.success && result.data) {
         // Transform API data to match component structure
-        const transformedBranches = result.data.map((branch) => ({
-          id: branch._id,
-          branchId: branch.branchId,
-          branchName: branch.branchName,
-          branchUsername: branch.branchUsername,
-          branchLocation: branch.branchLocation,
-          branchPhoneNumber: branch.branchPhoneNumber,
-          branchEmail: branch.branchEmail,
-          branchManager: branch.branchManager, // Keep original manager object
-          branchManagerDisplay: `${branch.branchManager?.firstName ? `${branch.branchManager.firstName} ${branch.branchManager.lastName}`: "-"}`,
-          branchCoordinates: branch.branchCoordinates || [0, 0],
-          createdAt: branch.createdAt || new Date().toISOString(),
+        const transformedBranches = result.data.map((event) => ({
+          id: event._id,
+          branchId: event.branchId,
+          branchName: event.branchName,
+          branchUsername: event.branchUsername,
+          branchLocation: event.branchLocation,
+          branchPhoneNumber: event.branchPhoneNumber,
+          branchEmail: event.branchEmail,
+          branchManager: event.branchManager, // Keep original manager object
+          branchManagerDisplay: `${event.branchManager?.firstName ? `${event.branchManager.firstName} ${event.branchManager.lastName}`: "-"}`,
+          branchCoordinates: event.branchCoordinates || [0, 0],
+          createdAt: event.createdAt || new Date().toISOString(),
         }));
         
         console.log('📊 Transformed branches:', transformedBranches);
@@ -232,12 +232,12 @@ const BranchManagement = () => {
     fetchSalesManagers();
   }, [currentPage, itemsPerPage]);
 
-  const filteredBranches = branches.filter(branch => {
+  const filteredBranches = branches.filter(event => {
     const matchesSearch = 
-      branch.branchName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      branch.branchLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.branchManagerDisplay.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.branchEmail.toLowerCase().includes(searchQuery.toLowerCase());
+      event.branchName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      event.branchLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.branchManagerDisplay.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.branchEmail.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
@@ -275,20 +275,20 @@ const BranchManagement = () => {
     return pages;
   };
 
-  const handleEdit = (branch) => {
-    console.log('📝 Editing branch:', branch);
+  const handleEdit = (event) => {
+    console.log('📝 Editing event:', event);
     
     console.log('👥 Extracted branchMembers IDs:', branchMemberIds);
     
     // Extract sales manager ID
-    const salesManagerId = typeof branch.branchManager === 'string' 
-      ? branch.branchManager 
-      : branch.branchManager?._id || branch.branchManager?.id || '';
+    const salesManagerId = typeof event.branchManager === 'string' 
+      ? event.branchManager 
+      : event.branchManager?._id || event.branchManager?.id || '';
     
     console.log('👔 Sales Manager ID:', salesManagerId);
     
     setEditingBranch({
-      ...branch,
+      ...event,
       branchMembers: branchMemberIds,
       salesManager: salesManagerId,
     });
@@ -296,7 +296,7 @@ const BranchManagement = () => {
   };
 
   const handleDelete = async (branchId) => {
-    if (window.confirm('Are you sure you want to delete this branch?')) {
+    if (window.confirm('Are you sure you want to delete this event?')) {
       try {
         const result = await deleteBranch(branchId);
         
@@ -314,18 +314,18 @@ const BranchManagement = () => {
             },
           });
           
-          // Refresh the branch list
+          // Refresh the event list
           fetchBranches(currentPage, itemsPerPage);
         } else {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.error.payload.message || 'Failed to delete branch');
+            toast.error(result.error.payload.message || 'Failed to delete event');
           }
         }
       } catch (error) {
-        console.error('Error deleting branch:', error);
-        toast.error('Failed to delete branch. Please try again.');
+        console.error('Error deleting event:', error);
+        toast.error('Failed to delete event. Please try again.');
       }
     }
   };
@@ -399,7 +399,7 @@ const BranchManagement = () => {
           return;
         }
         
-        // Prepare branch data for API matching new structure
+        // Prepare event data for API matching new structure
         const branchData = {
           branchName: values.branchName,
           branchLocation: selectedLocation ? selectedLocation.label : values.branchLocation,
@@ -415,16 +415,16 @@ const BranchManagement = () => {
           branchData.branchPassword = values.branchPassword;
         }
 
-        console.log('Sending branch data to API:', branchData);
+        console.log('Sending event data to API:', branchData);
 
         let result;
         
         if(!isBranchMembersVisible) {
           if (editingBranch) {
-            // Update existing branch
+            // Update existing event
             result = await updateBranch(editingBranch.id, branchData);
           } else {
-            // Create new branch
+            // Create new event
             result = await createBranch(branchData);
           }
         }
@@ -444,18 +444,18 @@ const BranchManagement = () => {
           });
           resetForm();
           handleCloseDrawer();
-          // Refresh the branch list
+          // Refresh the event list
           fetchBranches(currentPage, itemsPerPage);
         } else {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.error.payload.message || `Failed to ${editingBranch ? 'update' : 'create'} branch`);
+            toast.error(result.error.payload.message || `Failed to ${editingBranch ? 'update' : 'create'} event`);
           }
         }
       } catch (error) {
-        console.error(`Error ${editingBranch ? 'updating' : 'creating'} branch:`, error);
-        toast.error(`Failed to ${editingBranch ? 'update' : 'create'} branch. Please try again.`);
+        console.error(`Error ${editingBranch ? 'updating' : 'creating'} event:`, error);
+        toast.error(`Failed to ${editingBranch ? 'update' : 'create'} event. Please try again.`);
       } finally {
         setSubmitting(false);
       }
@@ -465,7 +465,7 @@ const BranchManagement = () => {
   // Get selected location label for display
   const getSelectedLocationLabel = () => {
     const location = BRANCH_LOCATIONS.find(loc => loc.value === formik.values.branchLocation);
-    return location ? location.label : 'Select branch location';
+    return location ? location.label : 'Select event location';
   };
 
   // Generate secure password
@@ -691,13 +691,13 @@ const BranchManagement = () => {
                     </td>
                   </tr>
                 ) : (
-                  currentBranches.map((branch) => (
+                  currentBranches.map((event) => (
                     <tr
-                      key={branch.id}
+                      key={event.id}
                       className="hover:bg-[#3A3A3A] transition-all duration-300 group"
                     >
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">
-                        {branch.branchUsername}
+                        {event.branchUsername}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -705,30 +705,30 @@ const BranchManagement = () => {
                             <Building2 className="w-5 h-5 text-black" />
                           </div>
                           <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
-                            {branch.branchName}
+                            {event.branchName}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-2 max-w-xs">
                           <MapPin className="w-4 h-4 text-[#BBA473] mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-300 text-sm">{branch.branchLocation}</span>
+                          <span className="text-gray-300 text-sm">{event.branchLocation}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-300">{branch.branchManagerDisplay}</td>
-                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">{branch.branchPhoneNumber}</td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{branch.branchEmail}</td>
+                      <td className="px-6 py-4 text-gray-300">{event.branchManagerDisplay}</td>
+                      <td className="px-6 py-4 text-gray-300 font-mono text-sm">{event.branchPhoneNumber}</td>
+                      <td className="px-6 py-4 text-gray-300 text-sm">{event.branchEmail}</td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button
-                            onClick={() => handleEdit(branch)}
+                            onClick={() => handleEdit(event)}
                             className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(branch.id)}
+                            onClick={() => handleDelete(event.id)}
                             className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-110"
                             title="Delete"
                           >
@@ -850,7 +850,7 @@ const BranchManagement = () => {
                 {editingBranch ? 'Edit Event' : 'Add New Event'}
               </h2>
               <p className="text-gray-400 text-sm mt-1">
-                {editingBranch ? 'Update branch information' : 'Fill in the details to create a new branch'}
+                {editingBranch ? 'Update event information' : 'Fill in the details to create a new event'}
               </p>
             </div>
             <button
@@ -879,7 +879,7 @@ const BranchManagement = () => {
                     <input
                       type="text"
                       name="branchName"
-                      placeholder="Enter branch name (e.g., Downtown Gold Hub)"
+                      placeholder="Enter event name (e.g., Downtown Gold Hub)"
                       value={formik.values.branchName}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
@@ -903,7 +903,7 @@ const BranchManagement = () => {
                   <input
                     type="text"
                     name="branchLocation"
-                    placeholder="Enter branch location"
+                    placeholder="Enter event location"
                     value={formik.values.branchLocation}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -1050,7 +1050,7 @@ const BranchManagement = () => {
               </div>
 
               <p className="text-sm text-gray-400">
-                Enter the GPS coordinates for the branch location.
+                Enter the GPS coordinates for the event location.
               </p>
 
               <div className="grid grid-cols-2 gap-4">
