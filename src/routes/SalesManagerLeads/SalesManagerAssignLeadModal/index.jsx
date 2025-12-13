@@ -350,10 +350,6 @@ const SalesManagerAssignLeadModal = ({
                 <p className="text-white">{selectedLead.nationality || 'N/A'}</p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Residency</label>
-                <p className="text-white">{selectedLead.residency || 'N/A'}</p>
-              </div>
-              <div className="space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Preferred Language</label>
                 <p className="text-white">{selectedLead.language || 'N/A'}</p>
               </div>
