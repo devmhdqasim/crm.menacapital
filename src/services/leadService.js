@@ -176,16 +176,9 @@ export const updateLeadTask = async (leadId, taskPayload) => {
       real: taskPayload.real,
       demo: taskPayload.demo,
       deposited: taskPayload.deposited,
-
-
-      // contacted: true,
-      // answered: true,
-      // interested: true,
-      // hot: false,
-      // cold: false,
-      // real: false,
-      // demo: false,
-      // deposited: false,
+      applicationInstalled: taskPayload.applicationInstalled,
+      educationalVideosSent: taskPayload.educationalVideosSent,
+      socialMediaLinksSent: taskPayload.socialMediaLinksSent,
 
       lastUpdatedAt: "2025-11-14T10:25:00.000Z",
       latestRemarks: taskPayload.latestRemarks || '',

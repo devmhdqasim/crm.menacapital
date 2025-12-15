@@ -180,6 +180,13 @@ const AssignLeadModal = ({
 
       setLeadResponseStatusCurrent(leadResponseStatus)
 
+      // Add demo checkboxes data if Demo is selected
+      if (modalHotLeadType === 'Demo') {
+        payload.applicationInstalled = demoInstallApp;
+        payload.educationalVideosSent = demoEducationVideo;
+        payload.socialMediaLinksSent = demoAnalyzeChannel;
+      }
+
       // Set flags based on the user's selections
       if (modalAnswered === 'Not Answered') {
         // Only contacted is true, everything else stays false

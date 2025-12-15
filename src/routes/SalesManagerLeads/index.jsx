@@ -478,9 +478,9 @@ const SalesManagerLeadManagement = () => {
 
       // Add demo checkboxes data if Demo is selected
       if (modalHotLeadType === 'Demo') {
-        payload.demoInstallApp = demoInstallApp;
-        payload.demoEducationVideo = demoEducationVideo;
-        payload.demoAnalyzeChannel = demoAnalyzeChannel;
+        payload.applicationInstalled = demoInstallApp;
+        payload.educationalVideosSent = demoEducationVideo;
+        payload.socialMediaLinksSent = demoAnalyzeChannel;
       }
 
       if (modalAnswered === 'Not Answered') {
