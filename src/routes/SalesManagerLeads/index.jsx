@@ -50,6 +50,11 @@ const SalesManagerLeadManagement = () => {
   const [modalHotLeadType, setModalHotLeadType] = useState('');
   const [modalDepositStatus, setModalDepositStatus] = useState('');
 
+  // Demo checkboxes state - NEW
+  const [demoInstallApp, setDemoInstallApp] = useState(false);
+  const [demoEducationVideo, setDemoEducationVideo] = useState(false);
+  const [demoAnalyzeChannel, setDemoAnalyzeChannel] = useState(false);
+
   // Task modal state
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [taskLead, setTaskLead] = useState(null);
@@ -321,6 +326,11 @@ const SalesManagerLeadManagement = () => {
     setSelectedAgentForLead(lead.agentId || '');
     setAssignToSelf(lead.agentId === currentUserId);
     
+    // Reset demo checkboxes
+    setDemoInstallApp(false);
+    setDemoEducationVideo(false);
+    setDemoAnalyzeChannel(false);
+    
     if (lead.agentId === currentUserId) {
       setActiveModalTab('status');
       
@@ -365,6 +375,7 @@ const SalesManagerLeadManagement = () => {
             setModalDepositStatus('');
           } else if (lead.real) {
             setModalHotLeadType('Real');
+            setLeadResponseStatus('Real');
             
             if (lead.deposited) {
               setModalDepositStatus('Deposit');
@@ -430,6 +441,13 @@ const SalesManagerLeadManagement = () => {
       errors.answered = 'Please complete the status selection';
     }
     
+    // Validate demo checkboxes when Demo is selected
+    if (modalHotLeadType === 'Demo') {
+      if (!demoInstallApp || !demoEducationVideo) {
+        errors.demoCheckboxes = 'Please complete the first two required demo steps';
+      }
+    }
+    
     if (modalRemarks && modalRemarks.length > 500) {
       errors.remarks = 'Remarks must not exceed 500 characters';
     }
@@ -457,6 +475,13 @@ const SalesManagerLeadManagement = () => {
         latestRemarks: modalRemarks,
         currentStatus: leadResponseStatus
       };
+
+      // Add demo checkboxes data if Demo is selected
+      if (modalHotLeadType === 'Demo') {
+        payload.demoInstallApp = demoInstallApp;
+        payload.demoEducationVideo = demoEducationVideo;
+        payload.demoAnalyzeChannel = demoAnalyzeChannel;
+      }
 
       if (modalAnswered === 'Not Answered') {
         payload.contacted = true;
@@ -533,6 +558,10 @@ const SalesManagerLeadManagement = () => {
     setModalDepositStatus('');
     setModalRemarks('');
     setModalErrors({});
+    // Reset demo checkboxes
+    setDemoInstallApp(false);
+    setDemoEducationVideo(false);
+    setDemoAnalyzeChannel(false);
   };
 
   const handleCloseDrawer = () => {
@@ -631,6 +660,12 @@ const SalesManagerLeadManagement = () => {
         setModalDepositStatus={setModalDepositStatus}
         handleStatusUpdate={handleStatusUpdate}
         onOpenTaskModal={handleOpenTaskModal}
+        demoInstallApp={demoInstallApp}
+        setDemoInstallApp={setDemoInstallApp}
+        demoEducationVideo={demoEducationVideo}
+        setDemoEducationVideo={setDemoEducationVideo}
+        demoAnalyzeChannel={demoAnalyzeChannel}
+        setDemoAnalyzeChannel={setDemoAnalyzeChannel}
       />
 
       <ReminderModal

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, UserPlus } from 'lucide-react';
 import { createAutoTask } from '../../../services/taskService';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
 
 const SalesManagerAssignLeadModal = ({
@@ -35,10 +37,17 @@ const SalesManagerAssignLeadModal = ({
   modalDepositStatus,
   setModalDepositStatus,
   handleStatusUpdate,
-  onOpenTaskModal
+  onOpenTaskModal,
+  demoInstallApp,
+  setDemoInstallApp,
+  demoEducationVideo,
+  setDemoEducationVideo,
+  demoAnalyzeChannel,
+  setDemoAnalyzeChannel,
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
+  const [reminderDateTime, setReminderDateTime] = useState(null);
 
   // Reset closing state when modal opens
   useEffect(() => {
@@ -101,6 +110,7 @@ const SalesManagerAssignLeadModal = ({
           } else if (selectedLead.real) {
             // Real account
             setModalHotLeadType('Real');
+            setLeadResponseStatus('Real');
             
             if (selectedLead.deposited) {
               setModalDepositStatus('Deposit');
@@ -194,6 +204,11 @@ const SalesManagerAssignLeadModal = ({
         
         if (modalLeadType === 'Hot') {
           if (!modalHotLeadType) return false;
+          
+          // If Demo is selected, first two checkboxes must be checked
+          if (modalHotLeadType === 'Demo') {
+            if (!demoInstallApp || !demoEducationVideo) return false;
+          }
           
           if (modalHotLeadType === 'Real') {
             if (!modalDepositStatus) return false;
@@ -418,8 +433,30 @@ const SalesManagerAssignLeadModal = ({
 
             {activeModalTab === 'status' && (
               <div className="border-t border-[#BBA473]/30 pt-6 animate-fadeIn">
-                <h3 className="text-lg font-semibold text-[#E8D5A3] mb-4">Update Status</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Status</h3>
                 
+                {/* Date Time Picker */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex">
+                    <DatePicker
+                      selected={reminderDateTime}
+                      onChange={(date) => setReminderDateTime(date)}
+                      showTimeSelect
+                      timeFormat="HH:mm"
+                      timeIntervals={15}
+                      dateFormat="MMM d, yyyy h:mm aa"
+                      placeholderText="Select date & time"
+                      minDate={new Date()}
+                      className="px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 border-[#BBA473]/30 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] cursor-pointer"
+                      calendarClassName="custom-datepicker"
+                      wrapperClassName="w-full"
+                    />
+                    {/* <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" /> */}
+                  </div>
+                </div>
+              </div>
+
                 {/* Level 1: Answered / Not Answered */}
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
@@ -635,6 +672,74 @@ const SalesManagerAssignLeadModal = ({
                     </div>
                   )}
                   
+                  {/* Demo Checkboxes - Show only when Demo is selected */}
+                  {modalHotLeadType === 'Demo' && (
+                    <div className="mt-4 p-4 bg-[#1A1A1A] rounded-lg border-2 border-[#BBA473]/30 animate-fadeIn">
+                      <h4 className="text-[#BBA473] font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-sm">Demo Steps</span>
+                        <span className="text-xs text-gray-400">(First 2 are required)</span>
+                      </h4>
+                      
+                      <div className="space-y-3">
+                        {/* Install App - Required */}
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={demoInstallApp}
+                            onChange={(e) => {
+                              setDemoInstallApp(e.target.checked);
+                              setModalErrors({});
+                            }}
+                            className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                          />
+                          <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                            <span className="font-medium">1. Install the App</span>
+                            <span className="text-red-400 text-xs">*Required</span>
+                          </span>
+                        </label>
+
+                        {/* Education Video - Required */}
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={demoEducationVideo}
+                            onChange={(e) => {
+                              setDemoEducationVideo(e.target.checked);
+                              setModalErrors({});
+                            }}
+                            className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                          />
+                          <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                            <span className="font-medium">2. Education Video</span>
+                            <span className="text-red-400 text-xs">*Required</span>
+                          </span>
+                        </label>
+
+                        {/* Analyze Channel - Optional */}
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={demoAnalyzeChannel}
+                            onChange={(e) => setDemoAnalyzeChannel(e.target.checked)}
+                            className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                          />
+                          <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                            <span className="font-medium">3. Analyze Channel</span>
+                            <span className="text-gray-400 text-xs">Optional</span>
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* Error message for demo checkboxes */}
+                      {modalErrors.demoCheckboxes && (
+                        <p className="text-red-400 text-sm mt-3 flex items-center gap-2 animate-pulse">
+                          <span className="inline-block w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                          {modalErrors.demoCheckboxes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
                   {/* Level 5: Deposited / Not Deposited */}
                   {modalHotLeadType === 'Real' && (
                     <div className="space-y-3 animate-fadeIn">
@@ -724,22 +829,19 @@ const SalesManagerAssignLeadModal = ({
                   {/* Task Title */}
                   <div className="space-y-2 pt-4 border-t border-[#BBA473]/20">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Task Title <span className="text-xs text-gray-400">(Optional)</span>
+                      Task Title
                     </label>
                     <input
                       type="text"
                       name="taskTitle"
-                      placeholder={`Default: Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
-                      value={taskTitle}
+                      placeholder={`Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
+                      value={`Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
                       onChange={(e) => setTaskTitle(e.target.value)}
                       maxLength={100}
                       className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]"
                     />
                     <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-400">
-                        Default: Follow Up with lead ( {leadResponseStatus || selectedLead?.status} - lead )
-                      </p>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 ml-auto">
                         {taskTitle.length}/100
                       </div>
                     </div>
@@ -786,6 +888,111 @@ const SalesManagerAssignLeadModal = ({
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Custom DatePicker Styling */
+        .custom-datepicker {
+          background-color: #2A2A2A !important;
+          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border-radius: 12px !important;
+          font-family: inherit !important;
+        }
+
+        .react-datepicker {
+          background-color: #2A2A2A !important;
+          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border-radius: 12px !important;
+        }
+
+        .react-datepicker__header {
+          background-color: #1A1A1A !important;
+          border-bottom: 1px solid rgba(187, 164, 115, 0.3) !important;
+          border-top-left-radius: 12px !important;
+          border-top-right-radius: 12px !important;
+        }
+
+        .react-datepicker__current-month,
+        .react-datepicker-time__header,
+        .react-datepicker__day-name {
+          color: #E8D5A3 !important;
+          font-weight: 600 !important;
+        }
+
+        .react-datepicker__day {
+          color: #ffffff !important;
+          border-radius: 8px !important;
+          transition: all 0.2s !important;
+        }
+
+        .react-datepicker__day:hover {
+          background-color: rgba(187, 164, 115, 0.2) !important;
+          color: #BBA473 !important;
+        }
+
+        .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list {
+          background-color: #2a2a2a;
+        }
+
+        .react-datepicker__navigation--next--with-time:not(.react-datepicker__navigation--next--with-today-button) {
+          width: 100%;
+        }
+
+        .react-datepicker__day--selected,
+        .react-datepicker__day--keyboard-selected {
+          background-color: #BBA473 !important;
+          color: #000000 !important;
+          font-weight: 600 !important;
+        }
+
+        .react-datepicker__day--disabled {
+          color: #666666 !important;
+          opacity: 0.5 !important;
+        }
+
+        .react-datepicker__time-container {
+          position: absolute;
+          right: 100%;
+          border: 2px solid #e8d5a33d;
+          border-radius: 12px;
+          border-left: 1px solid rgba(187, 164, 115, 0.3) !important;
+        }
+
+        .react-datepicker__time-list-item {
+          color: #ffffff !important;
+          transition: all 0.2s !important;
+        }
+
+        .react-datepicker__time-list-item:hover {
+          background-color: rgba(187, 164, 115, 0.2) !important;
+          color: #BBA473 !important;
+        }
+
+        .react-datepicker__time-list-item--selected {
+          background-color: #BBA473 !important;
+          color: #000000 !important;
+          font-weight: 600 !important;
+        }
+
+        .react-datepicker__navigation-icon::before {
+          border-color: #BBA473 !important;
+        }
+
+        .react-datepicker__navigation:hover *::before {
+          border-color: #E8D5A3 !important;
+        }
+
+        .react-datepicker__triangle {
+          display: none !important;
+        }
+      `}</style>
 
       <style>{`
         @keyframes fadeIn {
