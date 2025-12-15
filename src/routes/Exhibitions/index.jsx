@@ -386,13 +386,6 @@ const BranchManagement = () => {
         // Ensure branchMembers is an array (it should be from react-select)
         const branchMemberArray = Array.isArray(values.branchMembers) ? values.branchMembers : [];
         
-        // Validate required fields
-        if (branchMemberArray.length === 0) {
-          toast.error('Please select at least one kiosk member');
-          setSubmitting(false);
-          return;
-        }
-        
         if (!values.salesManager) {
           toast.error('Please select a sales manager');
           setSubmitting(false);
