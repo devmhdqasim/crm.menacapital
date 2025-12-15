@@ -300,7 +300,7 @@ const LeadManagement = ({ selectedAgentId, selectedAgentUsername }) => {
   return (
     <>
       <LeadsListing
-        leads={leads}
+        leads={leads} 
         title={'Agent Assigned Leads'}
         agentLeadsCount={crmCategorySummary?.find(lead => lead?.username == selectedAgentUsername)?.crmCategorySummary }
         description={'View and manage agent assigned leads'}
