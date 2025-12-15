@@ -30,6 +30,11 @@ const AssignLeadModal = ({
   const [modalHotLeadType, setModalHotLeadType] = useState('');
   const [modalDepositStatus, setModalDepositStatus] = useState('');
 
+  // Demo checkbox states
+  const [demoInstallApp, setDemoInstallApp] = useState(false);
+  const [demoEducationVideo, setDemoEducationVideo] = useState(false);
+  const [demoAnalyzeChannel, setDemoAnalyzeChannel] = useState(false);
+
   // Animation state
   const [isClosing, setIsClosing] = useState(false);
 
@@ -299,6 +304,11 @@ const AssignLeadModal = ({
         
         if (modalLeadType === 'Hot') {
           if (!modalHotLeadType) return false;
+          
+          // If Demo is selected, first two checkboxes must be checked
+          if (modalHotLeadType === 'Demo') {
+            if (!demoInstallApp || !demoEducationVideo) return false;
+          }
           
           if (modalHotLeadType === 'Real') {
             if (!modalDepositStatus) return false;
@@ -659,6 +669,74 @@ const AssignLeadModal = ({
                   </div>
                 )}
                 
+                {/* Demo Checkboxes - Show only when Demo is selected */}
+                {modalHotLeadType === 'Demo' && (
+                  <div className="mt-4 p-4 bg-[#1A1A1A] rounded-lg border-2 border-[#BBA473]/30 animate-fadeIn">
+                    <h4 className="text-[#BBA473] font-semibold mb-3 flex items-center gap-2">
+                      <span className="text-sm">Demo Steps</span>
+                      <span className="text-xs text-gray-400">(First 2 are required)</span>
+                    </h4>
+                    
+                    <div className="space-y-3">
+                      {/* Install App - Required */}
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={demoInstallApp}
+                          onChange={(e) => {
+                            setDemoInstallApp(e.target.checked);
+                            setModalErrors({});
+                          }}
+                          className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                        />
+                        <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                          <span className="font-medium">1. Install the App</span>
+                          <span className="text-red-400 text-xs">*Required</span>
+                        </span>
+                      </label>
+
+                      {/* Education Video - Required */}
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={demoEducationVideo}
+                          onChange={(e) => {
+                            setDemoEducationVideo(e.target.checked);
+                            setModalErrors({});
+                          }}
+                          className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                        />
+                        <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                          <span className="font-medium">2. Education Video</span>
+                          <span className="text-red-400 text-xs">*Required</span>
+                        </span>
+                      </label>
+
+                      {/* Analyze Channel - Optional */}
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={demoAnalyzeChannel}
+                          onChange={(e) => setDemoAnalyzeChannel(e.target.checked)}
+                          className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                        />
+                        <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                          <span className="font-medium">3. Analyze Channel</span>
+                          <span className="text-gray-400 text-xs">Optional</span>
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Error message for demo checkboxes */}
+                    {modalErrors.demoCheckboxes && (
+                      <p className="text-red-400 text-sm mt-3 flex items-center gap-2 animate-pulse">
+                        <span className="inline-block w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                        {modalErrors.demoCheckboxes}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
                 {/* Level 5: Deposited / Not Deposited (shown if Real) */}
                 {modalHotLeadType === 'Real' && (
                   <div className="space-y-3 animate-fadeIn">
@@ -754,7 +832,7 @@ const AssignLeadModal = ({
                     type="text"
                     name="taskTitle"
                     placeholder={`Default: Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
-                    value={taskTitle}
+                    value={`Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
                     onChange={(e) => setTaskTitle(e.target.value)}
                     maxLength={100}
                     className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]"
