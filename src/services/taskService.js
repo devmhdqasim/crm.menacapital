@@ -19,6 +19,10 @@ const getRefreshToken = () => {
   return localStorage.getItem('refreshToken');
 };
 
+const getUserInfo = () => {
+  return localStorage.getItem('userInfo');
+};
+
 /**
  * Create a new task
  * @param {Object} taskData - Task data object
@@ -480,7 +484,7 @@ export const deleteTask = async (taskId) => {
  * @param {string} endDate - End date for filtering (optional)
  * @returns {Promise} - Returns list of tasks with pagination info
  */
-export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', assignedBy = '', priority = '') => {
+export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', assignedBy = '', assignedTo = '', priority = '') => {
   try {
     const authToken = getRefreshToken();
     console.log('🔵 Fetching tasks...');
@@ -497,8 +501,10 @@ export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate 
     const userInfo = localStorage.getItem('userInfo')
       ? JSON.parse(localStorage.getItem('userInfo'))
       : null;
+
+      const isAgent = userInfo.roleName;
     
-    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&assignedBy=${assignedBy}&priority=${priority}`;
+    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&${isAgent == 'Agent' ? 'assignedBy' : 'assignedTo'}=${assignedBy}&priority=${priority}&${isAgent == 'Agent' ? 'Yo' : 'Nigga'}`;
     
     console.log('🌐 API URL:', refreshUrl);
     

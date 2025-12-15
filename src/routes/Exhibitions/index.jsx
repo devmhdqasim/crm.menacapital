@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast, { Toaster } from 'react-hot-toast';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, MapPin, X, Building2, User, Eye, EyeOff, RefreshCw } from 'lucide-react';
-import { getAllBranches, createBranch, updateBranch, deleteBranch } from '../../services/branchService';
+import { getAllBranches, createBranch, updateBranch, deleteBranch } from '../../services/eventService';
 import { getAllUsers } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';

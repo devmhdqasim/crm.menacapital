@@ -160,9 +160,9 @@ const LeadsListing = ({
               <span>{tab}</span>
               {tab?.replace(/\s+/g, '') == 'Pending' ? (
                 <>
-                  {agentLeadsCount?.['NotAssigned'] ? (
+                  {agentLeadsCount?.['Assigned'] ? (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {agentLeadsCount?.['NotAssigned']}
+                      {agentLeadsCount?.['Assigned']}
                     </span>
                   ): ''}
                 </>
