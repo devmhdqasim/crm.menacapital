@@ -295,7 +295,7 @@ const LeadManagement = ({ selectedAgentId, selectedAgentUsername }) => {
 
   const handleRealSubTabChange = (subTab) => {
     setRealSubTab(subTab);
-  };
+  }; 
 
   return (
     <>
