@@ -167,12 +167,26 @@ const Tasks = () => {
     if (assignedToFilter === 'All') {
       return '';
     }
-    // Find the agent ID from the agents array based on the selected name
-    const selectedAgent = agents.find(agent => 
-      `${agent.firstName} ${agent.lastName}` === assignedToFilter
-    );
-    return selectedAgent ? selectedAgent.id : '';
+    
+    // For Sales Manager: find agent ID
+    if (userRole === 'Sales Manager') {
+      const selectedAgent = agents.find(agent => 
+        `${agent.firstName} ${agent.lastName}` === assignedToFilter
+      );
+      return selectedAgent ? selectedAgent.id : '';
+    }
+    
+    // For Agent: find sales manager ID
+    if (userRole === 'Agent') {
+      const selectedManager = salesManagers.find(manager => 
+        manager.name === assignedToFilter
+      );
+      return selectedManager ? selectedManager.id : '';
+    }
+    
+    return '';
   };
+  
 
   // Fetch tasks from API
   const fetchTasks = async (page = 1, limit = 30) => {

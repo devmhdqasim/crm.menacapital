@@ -484,7 +484,7 @@ export const deleteTask = async (taskId) => {
  * @param {string} endDate - End date for filtering (optional)
  * @returns {Promise} - Returns list of tasks with pagination info
  */
-export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', assignedBy = '', assignedTo = '', priority = '') => {
+export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', assignedBy = '', priority = '') => {
   try {
     const authToken = getRefreshToken();
     console.log('🔵 Fetching tasks...');
@@ -502,11 +502,16 @@ export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate 
       ? JSON.parse(localStorage.getItem('userInfo'))
       : null;
 
-      const isAgent = userInfo.roleName;
+    const userRole = userInfo?.roleName;
     
-    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&${isAgent == 'Agent' ? 'assignedBy' : 'assignedTo'}=${assignedBy}&priority=${priority}&${isAgent == 'Agent' ? 'Yo' : 'Nigga'}`;
+    // Build the correct API URL based on user role
+    const roleParam = userRole === 'Agent' ? 'assignedBy' : 'assignedTo';
+    
+    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&${roleParam}=${assignedBy}&priority=${priority}`;
     
     console.log('🌐 API URL:', refreshUrl);
+    console.log('👤 User Role:', userRole);
+    console.log('🔑 Using parameter:', roleParam);
     
     const response = await axios.get(
       refreshUrl,
