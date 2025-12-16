@@ -162,15 +162,20 @@ const BranchManagement = () => {
         // Transform API data to match component structure
         const transformedBranches = result.data.map((event) => ({
           id: event._id,
-          branchId: event.branchId,
-          branchName: event.branchName,
-          branchUsername: event.branchUsername,
-          branchLocation: event.branchLocation,
-          branchPhoneNumber: event.branchPhoneNumber,
-          branchEmail: event.branchEmail,
-          branchManager: event.branchManager, // Keep original manager object
-          branchManagerDisplay: `${event.branchManager?.firstName ? `${event.branchManager.firstName} ${event.branchManager.lastName}`: "-"}`,
-          branchCoordinates: event.branchCoordinates || [0, 0],
+          branchId: event.branchId || event.eventId,
+          branchName: event.eventName || event.branchName,
+          branchUsername: event.eventUsername || event.branchUsername,
+          branchLocation: event.eventLocation || event.branchLocation,
+          branchPhoneNumber: event.eventPhoneNumber || event.branchPhoneNumber,
+          branchEmail: event.eventEmail || event.branchEmail,
+          branchManager: event.eventManager || event.branchManager, // Keep original manager object
+          branchManagerDisplay: event.eventManager?.firstName 
+            ? `${event.eventManager.firstName} ${event.eventManager.lastName}`
+            : event.branchManager?.firstName 
+              ? `${event.branchManager.firstName} ${event.branchManager.lastName}`
+              : "-",
+          branchMembers: event.eventMembers || event.branchMembers || [], // Keep original members array
+          branchCoordinates: event.eventCoordinates || event.branchCoordinates || [0, 0],
           createdAt: event.createdAt || new Date().toISOString(),
         }));
         
@@ -278,6 +283,18 @@ const BranchManagement = () => {
   const handleEdit = (event) => {
     console.log('📝 Editing event:', event);
     
+    // Extract event member IDs - handle both object array and string array
+    const branchMemberIds = Array.isArray(event.branchMembers) 
+      ? event.branchMembers.map(member => {
+          if (typeof member === 'string') {
+            return member;
+          } else if (member && (member._id || member.id)) {
+            return member._id || member.id;
+          }
+          return null;
+        }).filter(id => id !== null)
+      : [];
+    
     console.log('👥 Extracted branchMembers IDs:', branchMemberIds);
     
     // Extract sales manager ID
@@ -320,7 +337,7 @@ const BranchManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.error.payload.message || 'Failed to delete event');
+            toast.error(result.error?.payload?.message || result.message || 'Failed to delete event');
           }
         }
       } catch (error) {
@@ -395,12 +412,13 @@ const BranchManagement = () => {
         // Prepare event data for API matching new structure
         const branchData = {
           branchName: values.branchName,
-          branchLocation: selectedLocation ? selectedLocation.label : values.branchLocation,
+          branchLocation: values.branchLocation,
           branchPhoneNumber: values.branchPhoneNumber,
           branchEmail: values.branchEmail,
           branchMembers: branchMemberArray, // Array of kiosk member IDs
           branchManager: values.salesManager, // Sales Manager ID
           branchCoordinates: [parseFloat(values.latitude), parseFloat(values.longitude)],
+          isAvailable: true, // Default to available
         };
 
         // Only include password if it's provided (for edit, it's optional)
@@ -443,7 +461,7 @@ const BranchManagement = () => {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');
           } else {
-            toast.error(result.error.payload.message || `Failed to ${editingBranch ? 'update' : 'create'} event`);
+            toast.error(result.error?.payload?.message || result.message || `Failed to ${editingBranch ? 'update' : 'create'} event`);
           }
         }
       } catch (error) {
