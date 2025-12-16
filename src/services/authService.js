@@ -213,6 +213,105 @@ export const loginBranch = async (login, password, loginBy = 'email') => {
   }
 };
 
+export const loginEvent = async (login, password, loginBy = 'email') => {
+  try {
+    console.log('🔵 Attempting login...');
+    console.log('📝 Login with:', { login, loginBy });
+    
+    const response = await axios.post(
+      `${API_BASE_URL}/auth/event/login/en`,
+      {
+        login,
+        password,
+        loginBy, // "email" or "username"
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Login response received:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success' && data.payload?.userInfo) {
+      const { accessToken, ...userInfo } = data.payload.userInfo;
+      
+      console.log('📝 AccessToken from login:', accessToken ? 'Present' : 'Missing');
+      console.log('👤 User Info:', {
+        id: userInfo.id,
+        email: userInfo.email,
+        role: userInfo.roleName,
+        department: userInfo.department,
+      });
+      
+      if (accessToken) {
+        // Store the initial access token
+        localStorage.setItem('accessToken', accessToken);
+        const updatedUserInfo = {...userInfo, role: 'Event Member', roleName: 'Event Member'}
+
+        // Store complete user info including role
+        localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+        // Store loginBy for future reference
+        localStorage.setItem('loginBy', loginBy);
+        
+        console.log('✅ Access token stored in localStorage');
+        console.log('✅ User info stored with role:', userInfo.roleName);
+        console.log('✅ Login type stored:', loginBy);
+        console.log('📦 localStorage.accessToken:', localStorage.getItem('accessToken')?.substring(0, 50) + '...');
+        
+        // Immediately refresh the token after login to get refreshToken
+        console.log('🔄 Calling refresh token API...');
+        const refreshResult = await refreshToken(accessToken);
+        
+        if (refreshResult.success) {
+          console.log('✅ Refresh token API successful');
+        } else {
+          console.warn('⚠️ Token refresh failed after login:', refreshResult.message);
+        }
+      } else {
+        console.error('❌ No accessToken in login response!');
+      }
+
+      return {
+        success: true,
+        data: data.payload,
+        message: data.payload.message || data.message,
+      };
+    } else {
+      console.error('❌ Login response missing payload or userInfo');
+      return {
+        success: false,
+        message: data.message || 'Login failed',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Invalid credentials. Please try again.',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
 /**
  * Refresh the access token
  * @param {string} token - Current access token (optional, will use stored token if not provided)
@@ -232,11 +331,12 @@ export const refreshToken = async (token = null) => {
       throw new Error('No access token available');
     }
 
-    // ✅ Decide which URL to hit based on role
-    const isBranchLogin = userInfo?.roleName === 'Kiosk Member' || userInfo?.role === 'Kiosk Member';
-    const refreshUrl = isBranchLogin
-      ? `${API_BASE_URL}/auth/branch/refreshToken/en`
-      : `${API_BASE_URL}/auth/refreshToken/en`;
+    // One-liner selection for refresh URL based on role
+    const refreshUrl = (userInfo?.roleName === 'Event Member' || userInfo?.role === 'Event Member') 
+      ? `${API_BASE_URL}/auth/event/refreshToken/en`
+      : (userInfo?.roleName === 'Kiosk Member' || userInfo?.role === 'Kiosk Member')
+        ? `${API_BASE_URL}/auth/branch/refreshToken/en`
+        : `${API_BASE_URL}/auth/refreshToken/en`;
 
     console.log(`🔗 Using refresh URL: ${refreshUrl}`);
 
@@ -595,7 +695,9 @@ export const setupAxiosInterceptor = () => {
     (config) => {
       // Use refreshToken for all API calls except login and refresh
       if (config.url && 
-          !config.url.includes('/auth/login') && !config.url.includes('/auth/branch/login') && 
+          !config.url.includes('/auth/login') && 
+          !config.url.includes('/auth/branch/login') && 
+          !config.url.includes('/auth/event/login') && 
           !config.url.includes('/auth/refreshToken')) {
         const refreshToken = getRefreshToken();
         if (refreshToken) {

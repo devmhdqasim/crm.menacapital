@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Eye, EyeOff, Edit2, Loader2 } from 'lucide-react';
-import { loginUser, loginBranch } from '../../services/authService'; // Update path as needed
+import { loginUser, loginBranch, loginEvent } from '../../services/authService'; // Update path as needed
 import toast from 'react-hot-toast';
 
 const LoginSchema = Yup.object().shape({
@@ -18,6 +18,7 @@ export default function EnterPassword({
   setCurrentStep, 
   onLoginSuccess,
   isBranchLogin,
+  isEventLogin,
   onBack,
   onForgotPassword 
 }) {
@@ -47,28 +48,14 @@ export default function EnterPassword({
           login: values.login, 
           loginBy: loginBy,
           passwordLength: values.password.length,
-          isBranchLogin
+          isBranchLogin,
+          isEventLogin
         });
     
-        let result;
-    
-        if (isBranchLogin) {
-          console.log('🏢 Branch Member Login API triggered');
-          // Example: replace with actual branch login API
-          result = await loginBranch(
-            values.login,
-            values.password,
-            loginBy,
-          );
-        } else {
-          console.log('👤 Normal User Login API triggered');
-          result = await loginUser(
-            values.login,
-            values.password,
-            loginBy
-          );
-        }
-
+        // One-liner selection for login type
+        const result = isEventLogin ? await loginEvent(values.login, values.password, loginBy) 
+                      : isBranchLogin ? await loginBranch(values.login, values.password, loginBy)
+                      : await loginUser(values.login, values.password, loginBy);
 
         if (result?.success) {
           console.log('✅ Login successful:', result.data);
@@ -81,7 +68,6 @@ export default function EnterPassword({
           }
         } else {
           const errorMsg = result?.error?.payload?.message || 'Login failed. Please try again.';
-          // setErrorMessage(errorMsg);
           toast.error(errorMsg);
           console.error('❌ Login failed:', result?.message);
         }

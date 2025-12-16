@@ -11,6 +11,7 @@ const Login = () => {
   const [login, setLogin] = useState(''); // Can be email or username
   const [loginBy, setLoginBy] = useState(''); // 'email' or 'username'
   const [isBranchLogin, setIsBranchLogin] = useState(false);
+  const [isEventLogin, setIsEventLogin] = useState(false);
   const [currentStep, setCurrentStep] = useState('login'); // login, password, otp, forgotPassword
   const [userData, setUserData] = useState(null);
 
@@ -38,10 +39,8 @@ const Login = () => {
   // Handle successful OTP verification
   const handleOTPVerifySuccess = (data) => {
     console.log('OTP verified successfully:', data);
-    
     // Navigate to dashboard after successful OTP verification
     navigate('/dashboard');
-    
     // Or show a success message
     // alert('Verification successful! Welcome back.');
   };
@@ -71,10 +70,10 @@ const Login = () => {
             setLogin={setLogin}
             setLoginBy={setLoginBy}
             setIsBranchLogin={setIsBranchLogin}
+            setIsEventLogin={setIsEventLogin}
             onNext={() => handleNext('password')}
           />
         );
-      
       case 'password':
         return (
           <EnterPassword
@@ -83,12 +82,12 @@ const Login = () => {
             setCurrentStep={setCurrentStep}
             onNext={handleLoginSuccess}
             isBranchLogin={isBranchLogin}
+            isEventLogin={isEventLogin}
             onLoginSuccess={handleLoginSuccess}
             onBack={() => handleBack('login')}
             onForgotPassword={() => handleNext('forgotPassword')}
           />
         );
-      
       case 'otp':
         return (
           <EnterOTP
@@ -99,7 +98,6 @@ const Login = () => {
             onBack={() => handleBack('password')}
           />
         );
-      
       case 'forgotPassword':
         return (
           <ForgetPassword
@@ -110,7 +108,6 @@ const Login = () => {
             onBack={() => handleBack('password')}
           />
         );
-      
       default:
         return (
           <EnterEmailOrUsername 
