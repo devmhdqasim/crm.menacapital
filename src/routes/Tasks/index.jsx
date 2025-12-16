@@ -7,6 +7,7 @@ import { getAllTasks, deleteTask, createTask, updateTask } from '../../services/
 import { getAllUsers } from '../../services/teamService';
 import { getAllLeads } from '../../services/leadService';
 import DateRangePicker from '../../components/DateRangePicker';
+import { getDashboardStatsByFilter } from '../../services/dashboardService';
 
 // Validation Schema for Task Form
 const taskValidationSchema = Yup.object({
@@ -41,6 +42,8 @@ const Tasks = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [crmAgentTaskSummary, setCrmAgentTaskSummary] = useState([]);
+  const [crmManagerTaskSummary, setCrmManagerTaskSummary] = useState({});
 
   const [loading, setLoading] = useState(false);
   const [totalTasks, setTotalTasks] = useState(0);
@@ -65,6 +68,7 @@ const Tasks = () => {
   // TODO: Replace this with your actual role detection logic
   // Example: const userRole = localStorage.getItem('userRole') || 'Sales Manager';
   // Example: const userRole = useSelector(state => state.auth.role);
+  const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState('Sales Manager'); // Change this based on your auth implementation
 
   const tabs = ['All', 'Pending', 'Completed'];
@@ -167,26 +171,60 @@ const Tasks = () => {
     if (assignedToFilter === 'All') {
       return '';
     }
-    
+
     // For Sales Manager: find agent ID
     if (userRole === 'Sales Manager') {
-      const selectedAgent = agents.find(agent => 
+      const selectedAgent = agents.find(agent =>
         `${agent.firstName} ${agent.lastName}` === assignedToFilter
       );
       return selectedAgent ? selectedAgent.id : '';
     }
-    
+
     // For Agent: find sales manager ID
     if (userRole === 'Agent') {
-      const selectedManager = salesManagers.find(manager => 
+      const selectedManager = salesManagers.find(manager =>
         manager.name === assignedToFilter
       );
       return selectedManager ? selectedManager.id : '';
     }
-    
+
     return '';
   };
-  
+
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+    const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+
+    try {
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery);
+
+      if (result.success && result.data) {
+        if (result.data.agentTaskCounters) {
+          setCrmAgentTaskSummary(result.data.agentTaskCounters?.[0])
+        }
+
+        if (result.data.salesManagerTaskCounters) {
+          setCrmManagerTaskSummary(result.data.salesManagerTaskCounters)
+        }
+
+        console.log('✅ Dashboard data loaded:', result.data);
+      } else {
+        console.error('Failed to fetch dashboard data:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error.payload.message || 'Failed to fetch dashboard data');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch tasks from API
   const fetchTasks = async (page = 1, limit = 30) => {
@@ -199,9 +237,9 @@ const Tasks = () => {
       const assignedByParam = getAssignedByParam();
 
       const result = await getAllTasks(
-        page, 
-        limit, 
-        startDateStr, 
+        page,
+        limit,
+        startDateStr,
         endDateStr,
         debouncedSearchQuery,
         statusParam,
@@ -252,6 +290,7 @@ const Tasks = () => {
         console.log('✅ Transformed tasks:', transformedTasks);
         setTasks(!clearFilter && transformedTasks);
         setTotalTasks(result.metadata?.total || transformedTasks.length);
+        fetchDashboardData()
       } else {
         console.error('❌ Failed to fetch tasks:', result.message);
         toast.error(result.error.payload.message || 'Failed to fetch tasks');
@@ -325,6 +364,7 @@ const Tasks = () => {
   useEffect(() => {
     const userInfo = getUserInfo();
     setUserRole(userInfo?.roleName);
+    setUserName(userInfo?.username);
   }, []);
 
   // Load tasks on component mount and when pagination changes
@@ -443,7 +483,7 @@ const Tasks = () => {
 
     callRefreshAuthAgain();
 
-    
+
     const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
 
     return () => clearInterval(interval);
@@ -640,9 +680,9 @@ const Tasks = () => {
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
             {tabs.map((tab) => {
               const pendingCount = tab === 'Pending' && activeTab === 'All'
-                ? tasks.filter(task => task.status === 'Pending').length 
+                ? tasks.filter(task => task.status === 'Pending').length
                 : 0;
-              
+
               return (
                 <button
                   key={tab}
@@ -653,10 +693,22 @@ const Tasks = () => {
                     }`}
                 >
                   <span>{!clearFilter && tab}</span>
-                  {tab === 'Pending' && pendingCount > 0 && (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {pendingCount}
-                    </span>
+                  {userRole == 'Agent' ? (
+                    <>
+                      {tab === 'Pending' && crmAgentTaskSummary?.Pending > 0 ? (
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                          {crmAgentTaskSummary?.Pending}
+                        </span>
+                      ) : ''}
+                    </>
+                  ) : (
+                    <>
+                      {tab === 'Pending' && crmManagerTaskSummary?.Pending > 0 ? (
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                          {crmManagerTaskSummary?.Pending}
+                        </span>
+                      ) : ''}
+                    </>
                   )}
                 </button>
               );
