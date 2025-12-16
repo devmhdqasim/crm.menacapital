@@ -440,6 +440,94 @@ export const createUser = async (userData) => {
 };
 
 /**
+ * Get all event members
+ * @returns {Promise} - Returns list of event members
+ */
+export const getAllUsersEventMembers = async () => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Fetching event members...');
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    // Assuming the API endpoint follows similar pattern to kiosk members
+    // Adjust the endpoint if different
+    const response = await axios.get(
+      `${API_BASE_URL}/user/getAll/en`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Event members fetched successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success' && data.payload?.allUsers) {
+      // Filter for Event Members only
+      const eventMembers = data.payload.allUsers.filter(user => 
+        user.roleName === 'Event Member'
+      );
+      
+      console.log('📊 Retrieved', eventMembers.length, 'event members');
+
+      return {
+        success: true,
+        data: eventMembers,
+        message: data.message,
+      };
+    } else {
+      console.error('❌ Unexpected response structure');
+      return {
+        success: false,
+        message: data.message || 'Failed to fetch event members',
+        data: [],
+      };
+    }
+  } catch (error) {
+    console.error('❌ Get event members error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to fetch event members',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+/**
  * Update an existing user (PATCH METHOD)
  * @param {string} userId - User's ID
  * @param {Object} userData - User data to update

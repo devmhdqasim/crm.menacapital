@@ -392,6 +392,285 @@ export const getAllLeads = async (page = 1, limit = 10, startDate = '', endDate 
   }
 };
 
+/**
+ * Delete an event lead (PATCH METHOD)
+ * @param {string} leadId - Lead's ID to delete
+ * @returns {Promise} - Returns deletion result
+ */
+export const deleteEventLead = async (leadId) => {
+  try {
+    const authToken = localStorage.getItem('refreshToken');
+    
+    console.log('🔵 Deleting event lead...');
+    console.log('🆔 Lead ID:', leadId);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/lead/event/delete/en`, 
+      { _id: leadId },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Event lead deleted successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Event lead deleted successfully',
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || 'Failed to delete event lead',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Delete event lead error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to delete event lead',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+/**
+ * Create a new event lead
+ * @param {Object} leadData - Lead data object
+ * @returns {Promise} - Returns created lead info
+ */
+export const createEventLead = async (leadData) => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Creating new event lead...');
+    console.log('📝 Lead data:', leadData);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    // Prepare the payload
+    const payload = {
+      leadName: leadData.leadName,
+      leadEmail: leadData.leadEmail,
+      leadPhoneNumber: leadData.leadPhoneNumber,
+      leadResidency: leadData.leadResidency,
+      leadPreferredLanguage: leadData.leadPreferredLanguage || 'English',
+      leadDateOfBirth: leadData.leadDateOfBirth,
+      leadNationality: leadData.leadNationality,
+      leadDescription: leadData.leadDescription || '',
+      leadSource: leadData.leadSource,
+      leadSourceId: leadData.leadSourceId,
+      eventLeadStatus: leadData.eventLeadStatus || 'Lead',
+      depositStatus: leadData.depositStatus || '',
+    };
+
+    console.log('📤 Sending payload to API');
+
+    const response = await axios.post(
+      `${API_BASE_URL}/lead/event/create/en`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Event lead created successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      console.log('✅ Event lead creation successful');
+      console.log('📨 Message:', data.payload?.message);
+
+      return {
+        success: true,
+        data: data.payload,
+        message: data.payload?.message || data.message || 'Event lead created successfully',
+      };
+    } else {
+      console.error('❌ Event lead creation failed:', data.message);
+      return {
+        success: false,
+        message: data.message || 'Failed to create event lead',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Create event lead error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response?.status === 400) {
+      console.error('❌ Bad request (400), validation error');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Invalid lead data. Please check all fields.',
+        error: error.response.data,
+      };
+    }
+
+    if (error.response?.status === 409) {
+      console.error('❌ Conflict (409), lead may already exist');
+      return {
+        success: false,
+        message: error.response.data?.message || 'Lead with this email or phone already exists.',
+        error: error.response.data,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to create event lead',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+/**
+ * Update an existing event lead
+ * @param {string} leadId - Lead's ID
+ * @param {Object} leadData - Lead data to update
+ * @returns {Promise} - Returns updated lead info
+ */
+export const updateEventLead = async (leadId, leadData) => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Updating event lead...');
+    console.log('🆔 Lead ID:', leadId);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/lead/event/update/en`,
+      {...leadData, _id: leadId},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Event lead updated successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Event lead updated successfully',
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || 'Failed to update event lead',
+      };
+    }
+  } catch (error) {
+    console.error('❌ Update event lead error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to update event lead',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
 export const getAllBranchLeads = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', agentId = '') => {
   try {
     const authToken = getRefreshToken();

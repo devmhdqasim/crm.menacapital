@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus } from 'lucide-react';
-import { getAllEventLeads, deleteBranch } from '../../services/leadService';
-import { getAllUsersKioskMembers } from '../../services/teamService';
+import { getAllEventLeads, deleteEventLead } from '../../services/leadService';
+import { getAllUsersEventMembers } from '../../services/teamService';
 import DateRangePicker from '../../components/DateRangePicker';
 import toast from 'react-hot-toast';
 import LeadFormDrawer from './LeadFormDrawer';
 import LeadsListingTable from './LeadsListingTable';
 
-const BranchLeadsManagement = () => {
+const EventLeadsManagement = () => {
   const [leads, setLeads] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -19,13 +19,13 @@ const BranchLeadsManagement = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [loading, setLoading] = useState(false);
   const [totalLeads, setTotalLeads] = useState(0);
-  const [kioskMembers, setKioskMembers] = useState([]);
-  const [selectedKioskMemberFilter, setSelectedKioskMemberFilter] = useState('');
+  const [eventMembers, setEventMembers] = useState([]);
+  const [selectedEventMemberFilter, setSelectedEventMemberFilter] = useState('');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  const tabs = ['All', 'Kiosk Members'];
+  const tabs = ['All', 'Event Members'];
 
   // Debouncing effect for search query
   useEffect(() => {
@@ -38,23 +38,23 @@ const BranchLeadsManagement = () => {
     };
   }, [searchQuery]);
 
-  // Fetch kiosk members from API
-  const fetchKioskMembers = async () => {
+  // Fetch event members from API
+  const fetchEventMembers = async () => {
     try {
-      const result = await getAllUsersKioskMembers();
+      const result = await getAllUsersEventMembers();
       if (result.success && result.data) {
-        const kioskMembersData = result.data.filter(user => 
-          user.roleName === 'Kiosk Member'
+        const eventMembersData = result.data.filter(user => 
+          user.roleName === 'Event Member'
         );
-        const transformedKioskMembers = kioskMembersData.map((user) => ({
+        const transformedEventMembers = eventMembersData.map((user) => ({
           id: user._id,
           name: `${user.firstName} ${user.lastName}`,
           email: user.email,
         }));
-        setKioskMembers(transformedKioskMembers);
+        setEventMembers(transformedEventMembers);
       }
     } catch (error) {
-      console.error('Error fetching kiosk members:', error);
+      console.error('Error fetching event members:', error);
     }
   };
 
@@ -65,8 +65,8 @@ const BranchLeadsManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
-      // Only pass agentId if on Kiosk Members tab and a filter is selected
-      const agentId = (activeTab === 'Kiosk Members' && selectedKioskMemberFilter) ? selectedKioskMemberFilter : '';
+      // Only pass eventMemberId if on Event Members tab and a filter is selected
+      const eventMemberId = (activeTab === 'Event Members' && selectedEventMemberFilter) ? selectedEventMemberFilter : '';
       
       const result = await getAllEventLeads(
         page, 
@@ -75,7 +75,7 @@ const BranchLeadsManagement = () => {
         endDateStr, 
         debouncedSearchQuery,
         statusFilter,
-        agentId
+        eventMemberId
       );
       
       if (result.success && result.data) {
@@ -92,10 +92,10 @@ const BranchLeadsManagement = () => {
           remarks: lead.leadDescription || '',
           status: lead.leadStatus ?? '',
           depositStatus: lead.depositStatus || '',
-          kioskName: lead.kioskName || 'N/A',
+          eventName: lead.eventName || 'N/A',
           leadAgentId: lead.leadAgentId,
           createdAt: lead.createdAt,
-          kioskLeadStatus: lead.kioskLeadStatus ?? '',
+          eventLeadStatus: lead.eventLeadStatus ?? '',
           leadAgentData: lead?.leadAgentData?.[0],
         }));
         
@@ -119,7 +119,7 @@ const BranchLeadsManagement = () => {
 
   const handleDelete = async (leadId) => {
     try {
-      const result = await deleteBranch(leadId);
+      const result = await deleteEventLead(leadId);
       
       if (result) {
         toast.success(result.message || 'Lead deleted successfully!');
@@ -156,15 +156,15 @@ const BranchLeadsManagement = () => {
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, statusFilter, selectedKioskMemberFilter, activeTab]);
+  }, [debouncedSearchQuery, statusFilter, selectedEventMemberFilter, activeTab]);
 
   useEffect(() => {
     fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, selectedKioskMemberFilter, activeTab]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, selectedEventMemberFilter, activeTab]);
 
   useEffect(() => {
     setIsLoaded(true);
-    fetchKioskMembers();
+    fetchEventMembers();
   }, []);
 
   return (
@@ -175,9 +175,9 @@ const BranchLeadsManagement = () => {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
-                Lead Management
+                Event Lead Management
               </h1>
-              <p className="text-gray-400 mt-2">Manage and track your Save In Gold mobile application leads</p>
+              <p className="text-gray-400 mt-2">Manage and track your Save In Gold event leads</p>
             </div>
             <div className="flex flex-col gap-3">
               <button
@@ -216,9 +216,9 @@ const BranchLeadsManagement = () => {
           tabs={tabs}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
-          kioskMembers={kioskMembers}
-          selectedKioskMemberFilter={selectedKioskMemberFilter}
-          setSelectedKioskMemberFilter={setSelectedKioskMemberFilter}
+          eventMembers={eventMembers}
+          selectedEventMemberFilter={selectedEventMemberFilter}
+          setSelectedEventMemberFilter={setSelectedEventMemberFilter}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           itemsPerPage={itemsPerPage}
@@ -226,6 +226,7 @@ const BranchLeadsManagement = () => {
           totalLeads={totalLeads}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          isEventLeads={true}
         />
       </div>
       
@@ -234,9 +235,10 @@ const BranchLeadsManagement = () => {
       <LeadFormDrawer
         drawerOpen={drawerOpen}
         editingLead={editingLead}
-        kioskMembers={kioskMembers}
+        eventMembers={eventMembers}
         onClose={handleCloseDrawer}
         onSuccess={handleFormSuccess}
+        isEventLead={true}
       />
 
       <style>{`
@@ -252,4 +254,4 @@ const BranchLeadsManagement = () => {
   );
 };
 
-export default BranchLeadsManagement;
+export default EventLeadsManagement;

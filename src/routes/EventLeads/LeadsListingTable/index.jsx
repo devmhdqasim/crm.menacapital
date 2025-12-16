@@ -11,9 +11,12 @@ const LeadsListingTable = ({
   tabs,
   statusFilter,
   setStatusFilter,
-  kioskMembers,
+  kioskMembers,        // For branch leads
+  eventMembers,        // For event leads
   selectedKioskMemberFilter,
+  selectedEventMemberFilter,  // For event leads
   setSelectedKioskMemberFilter,
+  setSelectedEventMemberFilter,  // For event leads
   currentPage,
   setCurrentPage,
   itemsPerPage,
@@ -21,6 +24,7 @@ const LeadsListingTable = ({
   totalLeads,
   onEdit,
   onDelete,
+  isEventLeads = false,  // Flag to determine if showing event leads
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showAssignedLeadModal, setShowAssignedLeadModal] = useState(false);
@@ -30,6 +34,13 @@ const LeadsListingTable = ({
   const [leadToDelete, setLeadToDelete] = useState(null);
 
   const perPageOptions = [10, 20, 30, 50, 100];
+
+  // Determine which members to show based on lead type
+  const members = isEventLeads ? eventMembers : kioskMembers;
+  const selectedMemberFilter = isEventLeads ? selectedEventMemberFilter : selectedKioskMemberFilter;
+  const setSelectedMemberFilter = isEventLeads ? setSelectedEventMemberFilter : setSelectedKioskMemberFilter;
+  const memberLabel = isEventLeads ? 'Event Member' : 'Kiosk Member';
+  const membersLabel = isEventLeads ? 'Event Members' : 'Kiosk Members';
 
   // Check if lead is assigned to an agent
   const isLeadAssigned = (lead) => {
@@ -147,7 +158,8 @@ const LeadsListingTable = ({
       'Demo': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       'Real': 'bg-green-500/20 text-green-400 border-green-500/30',
       'Deposit': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'No Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
@@ -373,7 +385,14 @@ const LeadsListingTable = ({
     return String.fromCodePoint(...codePoints);
   };
 
-  const leadsCount =  JSON.parse(localStorage.getItem('leadsCount'))
+  // Get the appropriate lead status based on lead type
+  const getLeadStatus = (lead) => {
+    if (isEventLeads) {
+      return lead.eventLeadStatus;
+    } else {
+      return lead.kioskLeadStatus;
+    }
+  };
 
   return (
     <>
@@ -399,22 +418,22 @@ const LeadsListingTable = ({
         </div>
       </div>
 
-      {/* Kiosk Member Filter */}
-      {activeTab === 'Kiosk Members' && (
+      {/* Member Filter */}
+      {activeTab === membersLabel && (
         <div className="mb-6 animate-fadeIn">
           <div className="flex items-center gap-4">
             <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
-              Filter by Kiosk Member:
+              Filter by {memberLabel}:
             </label>
             <div className="relative w-full max-w-xs">
             {!isBranchUsernameEmail && (
               <select
-                value={selectedKioskMemberFilter}
-                onChange={(e) => setSelectedKioskMemberFilter(e.target.value)}
+                value={selectedMemberFilter}
+                onChange={(e) => setSelectedMemberFilter(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
               >
-                <option value="">All Kiosk Members</option>
-                {kioskMembers.map((member) => (
+                <option value="">All {membersLabel}</option>
+                {members && members.map((member) => (
                   <option key={member.id} value={member.id}>{member.name}</option>
                 ))}
               </select>
@@ -502,8 +521,8 @@ const LeadsListingTable = ({
                     </td>
                     <td className="px-6 py-4 text-gray-300 text-sm">{lead?.leadSourceName}</td>
                     <td className="flex items-center gap-1.5 px-6 py-4">
-                      {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                        {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
+                      {getLeadStatus(lead) ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(getLeadStatus(lead))}`}>
+                        {getLeadStatus(lead)} {lead.depositStatus && `- ${lead.depositStatus}`}
                       </span> : ''}
                       {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                         {lead.status}
