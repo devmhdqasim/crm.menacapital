@@ -20,6 +20,7 @@ export const ROUTES = {
   BRANCHLEADS: '/br-leads',
   ADMINLEADS: '/ad-leads',
   SALESMANAGERLEADS: '/sm-leads',
+  EVENTLEADS: '/ev-leads',
   BRANCHES: '/branches',
   EXHIBITION: '/exhibition',
   KIOSKMEMBER: '/kiosk-members',
@@ -40,6 +41,7 @@ export const ROLES = {
   SALES_MANAGER: 'Sales Manager',
   AGENT: 'Agent',
   KIOSK_MEMBER: 'Kiosk Member',
+  EVENT_MEMBER: 'Event Member',
 };
 
 /**
@@ -107,6 +109,17 @@ export const ROLE_PERMISSIONS = {
     label: 'Kiosk Member',
     description: 'Access to dashboard and leads only',
   },
+  
+  [ROLES.EVENT_MEMBER]: {
+    allowedRoutes: [
+      ROUTES.DASHBOARD,
+      ROUTES.EVENTLEADS,
+      ROUTES.UPDATE_PASSWORD,
+      ROUTES.NOTIFICATIONS,
+    ],
+    label: 'Event Member',
+    description: 'Access to dashboard and event leads',
+  },
 };
 
 /**
@@ -163,6 +176,11 @@ export const SIDEBAR_MENU_CONFIG = [
   {
     label: 'Leads',
     route: ROUTES.SALESMANAGERLEADS,
+    icon: 'TrendingUp',
+  },
+  {
+    label: 'Leads',
+    route: ROUTES.EVENTLEADS,
     icon: 'TrendingUp',
   },
   {

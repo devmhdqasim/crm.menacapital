@@ -42,9 +42,9 @@ export const getDashboardStats = async (fromDate = '', toDate = '', keyword = ''
     : null;
  
     // ✅ Decide which URL to hit based on role
-    const isBranchLogin = userInfo?.roleName === 'Kiosk Member' || userInfo?.role === 'Kiosk Member';
+    const isBranchLogin = userInfo?.roleName === 'Event Member' || userInfo?.role === 'Event Member';
     const refreshUrl = isBranchLogin
-      ? `${API_BASE_URL}/dashboard/kiosk/en?fromDate=${fromDate}&toDate=${toDate}&keyword=${keyword}&agentId=${agentId}`
+      ? `${API_BASE_URL}/dashboard/event/en?fromDate=${fromDate}&toDate=${toDate}&keyword=${keyword}&agentId=${agentId}`
       : `${API_BASE_URL}/dashboard/admin/en?fromDate=${fromDate}&toDate=${toDate}&keyword=${keyword}&agentId=${agentId}`;
 
     const response = await axios.get(

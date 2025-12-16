@@ -25,6 +25,7 @@ const AdminLeadsPage = lazy(() => import('@/routes/LeadsAdmin'));
 const BranchesPage = lazy(() => import('@/routes/Branches'));
 const ExhibitionPage = lazy(() => import('@/routes/Exhibitions'));
 const BranchLeadsPage = lazy(() => import('@/routes/BranchLeads'));
+const EventLeadsPage = lazy(() => import('@/routes/EventLeads'));
 const SalesManagerLeadsPage = lazy(() => import('@/routes/SalesManagerLeads'));
 const RoleManagementPage = lazy(() => import('@/routes/RoleManagement'));
 const TasksPage = lazy(() => import('@/routes/Tasks'));  // NEW: Tasks page
@@ -130,6 +131,17 @@ export function AppRoutes() {
         </Suspense>
       ),
     },
+    {
+      path: '/ev-leads',
+      element: (
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <ProtectedRoute requiredRoute={ROUTES.EVENTLEADS}>
+            <EventLeadsPage />
+          </ProtectedRoute>
+        </Suspense>
+      ),
+    },
+    
     {
       path: '/branches',
       element: (
