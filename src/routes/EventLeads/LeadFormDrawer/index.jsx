@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { X, ChevronDown, Search } from 'lucide-react';
-import { createBranchLead, updateLead } from '../../../services/leadService'
+import { createEventLead, updateEventLead } from '../../../services/leadService'
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
@@ -113,7 +113,7 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
           depositStatus: values.depositStatus,
         };
 
-        const result = editingLead ? await updateLead(editingLead.id, leadData): await createBranchLead(leadData);
+        const result = editingLead ? await updateEventLead(editingLead.id, leadData): await createEventLead(leadData);
 
         if (result.success) {
           toast.success(result.message || (editingLead ? 'Lead updated successfully!' : 'Lead created successfully!'));
