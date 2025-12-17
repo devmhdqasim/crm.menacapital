@@ -692,13 +692,13 @@ const BranchManagement = () => {
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
-                      Loading branches...
+                      Loading events...
                     </td>
                   </tr>
                 ) : currentBranches.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
-                      No branches found
+                      No event found
                     </td>
                   </tr>
                 ) : (
