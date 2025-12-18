@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllSalesManagerLeads, assignLeadToAgent, updateLeadTask } from '../../services/leadService';
+import { getAllSalesManagerLeads, getSalesEventLeads, assignLeadToAgent, updateLeadTask } from '../../services/leadService';
 import { getAllUsers } from '../../services/teamService';
 import toast from 'react-hot-toast';
 import SalesManagerLeadsListing from './SalesManagerLeadsListing';
@@ -209,6 +209,15 @@ const SalesManagerLeadManagement = () => {
       toast.error('Failed to fetch leads. Please try again');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Function to refresh current tab data
+  const refreshCurrentTab = () => {
+    if (activeTab === 'Event Leads') {
+      getSalesEventLeads();
+    } else {
+      fetchLeads(currentPage, itemsPerPage);
     }
   };
 
@@ -422,7 +431,9 @@ const SalesManagerLeadManagement = () => {
         setSelectedAgentForLead('');
         setAssignToSelf(false);
         setOriginalAssignedAgent('');
-        await fetchLeads(currentPage, itemsPerPage);
+        
+        // Refresh data based on active tab
+        refreshCurrentTab();
       } else {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
@@ -526,9 +537,11 @@ const SalesManagerLeadManagement = () => {
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
         
-        // Close modal and refresh leads - no task modal opening
+        // Close modal and refresh leads
         handleCloseModal();
-        fetchLeads(currentPage, itemsPerPage);
+        
+        // Refresh data based on active tab
+        refreshCurrentTab();
       } else {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
@@ -674,6 +687,7 @@ const SalesManagerLeadManagement = () => {
         setDemoEducationVideo={setDemoEducationVideo}
         demoAnalyzeChannel={demoAnalyzeChannel}
         setDemoAnalyzeChannel={setDemoAnalyzeChannel}
+        activeTab={activeTab}
       />
 
       <ReminderModal
