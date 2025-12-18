@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, AlertTriangle, X } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import { deleteLead } from '../../../services/leadService';
+import { getSalesEventLeads } from '../../../services/leadService';
 import toast from 'react-hot-toast';
 import { useCRM } from '../../../context/CRMContext';
 
@@ -38,6 +39,10 @@ const SalesManagerLeadsListing = ({
   selectedAgentFilter,
   setSelectedAgentFilter,
   leadsCount,
+  setLeads,
+  setTotalLeads,
+  setLoading,
+  debouncedSearchQuery,
 }) => {
   const { crmCategorySummary } = useCRM();
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
@@ -45,9 +50,86 @@ const SalesManagerLeadsListing = ({
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
+  const [eventLeadsCount, setEventLeadsCount] = useState(0);
 
-  const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted'];
+  const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
   const perPageOptions = [10, 20, 30, 50, 100];
+
+  // Fetch Event Leads when Event Leads tab is active
+  useEffect(() => {
+    if (activeTab === 'Event Leads') {
+      fetchEventLeads();
+    }
+  }, [activeTab, currentPage, itemsPerPage, startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
+
+  const fetchEventLeads = async () => {
+    setLoading(true);
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const agentId = selectedAgentFilter || '';
+      
+      const result = await getSalesEventLeads(
+        currentPage,
+        itemsPerPage,
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        '', // status - empty for now
+        agentId
+      );
+      
+      if (result.success && result.data) {
+        const transformedLeads = result.data.map((lead) => ({
+          id: lead._id,
+          leadId: lead.leadId,
+          name: lead.leadName,
+          email: lead.leadEmail || '-',
+          phone: lead.leadPhoneNumber,
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+            : 'Not Assigned',
+          agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
+          dateOfBirth: lead.leadDateOfBirth || '-',
+          nationality: lead.leadNationality ?? '-',
+          residency: lead.leadResidency || '-',
+          language: lead.leadPreferredLanguage || '-',
+          source: lead.leadSource,
+          remarks: lead.leadDescription || '',
+          depositStatus: lead.depositStatus || '',
+          status: lead.leadStatus,
+          createdAt: lead.createdAt,
+          leadSourceId: lead?.leadSourceId?.[0],
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+          contacted: lead.contacted || false,
+          answered: lead.answered || false,
+          interested: lead.interested || false,
+          hot: lead.hot || false,
+          cold: lead.cold || false,
+          real: lead.real || false,
+          demo: lead.demo || false,
+          deposited: lead.deposited || false,
+          latestRemarks: lead.latestRemarks || '',
+        }));
+        
+        setLeads(transformedLeads);
+        setTotalLeads(result.metadata?.total || 0);
+        setEventLeadsCount(result.metadata?.total || 0);
+      } else {
+        console.error('Failed to fetch event leads:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.error?.payload?.message || 'Failed to fetch event leads');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching event leads:', error);
+      toast.error('Failed to fetch event leads. Please try again');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getSubTabs = () => {
     if (activeTab === 'Contacted') {
@@ -280,6 +362,14 @@ const SalesManagerLeadsListing = ({
         <div className="mb-4 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
             {tabs.map((tab) => {
+              // Determine which count to show
+              let tabCount = null;
+              if (tab === 'Event Leads') {
+                tabCount = eventLeadsCount;
+              } else {
+                tabCount = leadsCount?.[tab?.replace(/\s+/g, '')];
+              }
+
               return (
                 <button
                   key={tab}
@@ -291,9 +381,9 @@ const SalesManagerLeadsListing = ({
                   }`}
                 >
                   <span>{tab}</span>
-                  {leadsCount?.[tab?.replace(/\s+/g, '')] ? (
+                  {tabCount ? (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {leadsCount?.[tab?.replace(/\s+/g, '')]}
+                      {tabCount}
                     </span>
                   ) : ''}
                 </button>
@@ -302,8 +392,8 @@ const SalesManagerLeadsListing = ({
           </div>
         </div>
 
-        {/* Sub Tabs (Level 2) */}
-        {getSubTabs().length > 0 && (
+        {/* Sub Tabs (Level 2) - Hide for Event Leads */}
+        {activeTab !== 'Event Leads' && getSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-4">
               {getSubTabs().map((subTab) => (
@@ -328,8 +418,8 @@ const SalesManagerLeadsListing = ({
           </div>
         )}
 
-        {/* Sub Sub Tabs (Level 3) */}
-        {getSubSubTabs().length > 0 && (
+        {/* Sub Sub Tabs (Level 3) - Hide for Event Leads */}
+        {activeTab !== 'Event Leads' && getSubSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-8">
               {getSubSubTabs().map((subSubTab) => (
@@ -354,8 +444,8 @@ const SalesManagerLeadsListing = ({
           </div>
         )}
 
-        {/* Sub Sub Sub Tabs (Level 4) */}
-        {getSubSubSubTabs().length > 0 && (
+        {/* Sub Sub Sub Tabs (Level 4) - Hide for Event Leads */}
+        {activeTab !== 'Event Leads' && getSubSubSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-12">
               {getSubSubSubTabs().map((subSubSubTab) => (
@@ -380,8 +470,8 @@ const SalesManagerLeadsListing = ({
           </div>
         )}
 
-        {/* Sub Sub Sub Sub Tabs (Level 5) */}
-        {getSubSubSubSubTabs().length > 0 && (
+        {/* Sub Sub Sub Sub Tabs (Level 5) - Hide for Event Leads */}
+        {activeTab !== 'Event Leads' && getSubSubSubSubTabs().length > 0 && (
           <div className="mb-6 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-16">
               {getSubSubSubSubTabs().map((subSubSubSubTab) => (
@@ -434,7 +524,9 @@ const SalesManagerLeadsListing = ({
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  {activeTab === 'Event Leads' ? '' : (
+                    <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#BBA473]/10">
@@ -481,6 +573,7 @@ const SalesManagerLeadsListing = ({
                         </span>: ''}
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
+                  {activeTab === 'Event Leads' ? '' : (
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button
@@ -499,6 +592,7 @@ const SalesManagerLeadsListing = ({
                           </button>
                         </div>
                       </td>
+                  )}
                     </tr>
                   ))
                 )}

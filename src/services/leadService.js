@@ -271,6 +271,123 @@ export const updateLeadTask = async (leadId, taskPayload) => {
 };
 
 /**
+ * Get sales event leads with pagination and filters
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Number of items per page (default: 10)
+ * @param {string} fromDate - Start date filter (YYYY-MM-DD)
+ * @param {string} toDate - End date filter (YYYY-MM-DD)
+ * @param {string} keyword - Search keyword
+ * @param {string} status - Status filter
+ * @param {string} agentId - Agent ID filter
+ * @returns {Promise} - Returns list of event leads with pagination info
+ */
+export const getSalesEventLeads = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '', agentId = '') => {
+  try {
+    const authToken = getRefreshToken();
+    console.log('🔵 Fetching sales event leads...');
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status, 'AgentId:', agentId);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    // Build query parameters
+    const queryParams = new URLSearchParams({
+      paramPage: page,
+      paramLimit: limit,
+      fromDate: fromDate || '',
+      toDate: toDate || '',
+      keyword: keyword || '',
+    });
+
+    // Add status parameter if provided
+    if (status) {
+      queryParams.append('status', status);
+    }
+
+    // Add agentId parameter if provided
+    if (agentId) {
+      queryParams.append('agent', agentId);
+    }
+
+    const apiUrl = `${API_BASE_URL}/lead/event/sales/en?${queryParams.toString()}`;
+    console.log('🌐 API URL:', apiUrl);
+
+    const response = await axios.get(
+      apiUrl,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Sales event leads fetched successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success' && data.payload?.allBranchLeads?.[0]?.data) {
+      const leadsData = data.payload.allBranchLeads[0].data;
+      const metadata = data.payload.allBranchLeads[0].metadata?.[0] || {};
+      
+      console.log('📊 Retrieved', leadsData.length, 'event leads');
+      console.log('📊 Total leads:', metadata.total);
+      console.log('📊 Current page:', metadata.page);
+
+      return {
+        success: true,
+        data: leadsData,
+        metadata: metadata,
+        message: data.message,
+      };
+    } else {
+      console.error('❌ Unexpected response structure');
+      return {
+        success: false,
+        message: data.message || 'Failed to fetch sales event leads',
+        data: [],
+        metadata: {},
+      };
+    }
+  } catch (error) {
+    console.error('❌ Get sales event leads error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to fetch sales event leads',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+/**
  * Get all leads with pagination
  * @param {number} page - Page number (default: 1)
  * @param {number} limit - Number of items per page (default: 10)

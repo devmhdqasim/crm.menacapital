@@ -280,6 +280,10 @@ const SalesManagerLeadManagement = () => {
 
   // Fetch leads when page, filters, or dates change
   useEffect(() => {
+    if (activeTab === 'Event Leads') {
+      // Skip normal fetch for Event Leads tab - it has its own fetch logic
+      return;
+    }
     fetchLeads(currentPage, itemsPerPage);
   }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab, selectedAgentFilter]);
 
@@ -614,6 +618,10 @@ const SalesManagerLeadManagement = () => {
         leadsCount={crmCategorySummary}
         selectedAgentFilter={selectedAgentFilter}
         setSelectedAgentFilter={setSelectedAgentFilter}
+        setLeads={setLeads}
+        setTotalLeads={setTotalLeads}
+        setLoading={setLoading}
+        debouncedSearchQuery={debouncedSearchQuery}
       />
 
       <SalesManagerLeadFormDrawer
