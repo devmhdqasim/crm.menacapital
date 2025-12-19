@@ -43,6 +43,8 @@ const SalesManagerLeadsListing = ({
   setTotalLeads,
   setLoading,
   debouncedSearchQuery,
+  eventLeadsCount,
+  setEventLeadsCount,
 }) => {
   const { crmCategorySummary } = useCRM();
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
@@ -50,7 +52,6 @@ const SalesManagerLeadsListing = ({
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
-  const [eventLeadsCount, setEventLeadsCount] = useState(0);
 
   const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -75,7 +76,7 @@ const SalesManagerLeadsListing = ({
         startDateStr,
         endDateStr,
         debouncedSearchQuery,
-        '', // status - empty for now
+        '',
         agentId
       );
       
@@ -159,13 +160,10 @@ const SalesManagerLeadsListing = ({
     return [];
   };
 
-  // No frontend filtering needed - all handled by API
   const filteredLeads = leads;
 
-  // Get unassigned count for the badge (from current filtered leads)
   const unassignedCount = leads.filter(lead => lead.agentId === null || lead.agent === 'Not Assigned').length;
 
-  // Pagination calculations based on API metadata
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
   const currentLeads = filteredLeads;
   const showingFrom = totalLeads > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
@@ -203,12 +201,10 @@ const SalesManagerLeadsListing = ({
     setDrawerOpen(true);
   };
 
-  // Check if lead is assigned to an agent
   const isLeadAssigned = (lead) => {
     return lead.agentId && lead.agentId !== null && lead.agentId !== undefined && lead.agentId !== '';
   };
 
-  // Get agent name from lead
   const getAgentName = (lead) => {
     if (lead.agent && lead.agent !== 'Not Assigned') {
       return lead.agent;
@@ -217,7 +213,8 @@ const SalesManagerLeadsListing = ({
   };
 
   const handleDelete = (lead) => {
-    if (isLeadAssigned(lead)) {
+    // FIXED: Allow delete for Event Leads even if assigned
+    if (activeTab !== 'Event Leads' && isLeadAssigned(lead)) {
       const agentName = getAgentName(lead);
       setAssignedLeadMessage(`This lead is currently assigned to ${agentName} and cannot be deleted.`);
       setShowAssignedLeadModal(true);
@@ -237,7 +234,13 @@ const SalesManagerLeadsListing = ({
         toast.success(result.message || 'Lead deleted successfully!');
         setShowDeleteConfirmModal(false);
         setLeadToDelete(null);
-        window.location.reload();
+        
+        // FIXED: Refresh event leads if on that tab
+        if (activeTab === 'Event Leads') {
+          fetchEventLeads();
+        } else {
+          window.location.reload();
+        }
       } else {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
@@ -362,7 +365,6 @@ const SalesManagerLeadsListing = ({
         <div className="mb-4 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
             {tabs.map((tab) => {
-              // Determine which count to show
               let tabCount = null;
               if (tab === 'Event Leads') {
                 tabCount = eventLeadsCount;
@@ -524,9 +526,8 @@ const SalesManagerLeadsListing = ({
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  {activeTab === 'Event Leads' ? '' : (
-                    <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
-                  )}
+                  {/* FIXED: Show actions column for Event Leads */}
+                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#BBA473]/10">
@@ -573,7 +574,7 @@ const SalesManagerLeadsListing = ({
                         </span>: ''}
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
-                  {activeTab === 'Event Leads' ? '' : (
+                      {/* FIXED: Show actions for Event Leads */}
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button
@@ -592,7 +593,6 @@ const SalesManagerLeadsListing = ({
                           </button>
                         </div>
                       </td>
-                  )}
                     </tr>
                   ))
                 )}
@@ -600,7 +600,7 @@ const SalesManagerLeadsListing = ({
             </table>
           </div>
 
-          {/* Pagination - Updated to show proper counts */}
+          {/* Pagination */}
           <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="text-gray-400 text-sm">
