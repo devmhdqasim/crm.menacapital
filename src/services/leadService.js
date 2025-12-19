@@ -10,7 +10,7 @@ import axios from 'axios';
  * - Delete Lead
  */
 
-const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
 
 /**
  * Get refresh token from localStorage
@@ -27,7 +27,7 @@ const getRefreshToken = () => {
  * @returns {Promise} - Returns assignment result
  */
 export const assignLeadToAgent = async (leadId, agentId) => {
-  try {
+  try { 
     const authToken = getRefreshToken();
     
     console.log('🔵 Assigning lead to agent...');
