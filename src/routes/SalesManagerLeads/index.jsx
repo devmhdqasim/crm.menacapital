@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllSalesManagerLeads, assignLeadToAgent, updateLeadTask } from '../../services/leadService';
+import { getAllSalesManagerLeads, getSalesEventLeads, assignLeadToAgent, updateLeadTask } from '../../services/leadService';
 import { getAllUsers } from '../../services/teamService';
 import toast from 'react-hot-toast';
 import SalesManagerLeadsListing from './SalesManagerLeadsListing';
@@ -39,6 +39,7 @@ const SalesManagerLeadManagement = () => {
   const [kioskMembers, setKioskMembers] = useState([]);
   const [activeModalTab, setActiveModalTab] = useState('assign');
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
+  const [eventLeadsCount, setEventLeadsCount] = useState(0); // NEW: Track event leads count
   
   // Status update states
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
@@ -50,7 +51,7 @@ const SalesManagerLeadManagement = () => {
   const [modalHotLeadType, setModalHotLeadType] = useState('');
   const [modalDepositStatus, setModalDepositStatus] = useState('');
 
-  // Demo checkboxes state - NEW
+  // Demo checkboxes state
   const [demoInstallApp, setDemoInstallApp] = useState(false);
   const [demoEducationVideo, setDemoEducationVideo] = useState(false);
   const [demoAnalyzeChannel, setDemoAnalyzeChannel] = useState(false);
@@ -63,7 +64,7 @@ const SalesManagerLeadManagement = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 500); // 500ms delay
+    }, 500);
 
     return () => {
       clearTimeout(timer);
@@ -103,7 +104,32 @@ const SalesManagerLeadManagement = () => {
       }
       return 'Contacted';
     }
-    return ''; // All tab - no status filter
+    return '';
+  };
+
+  // FIXED: Fetch event leads count on initial load
+  const fetchEventLeadsCount = async () => {
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const agentId = selectedAgentFilter || '';
+      
+      const result = await getSalesEventLeads(
+        1,
+        1, // Just fetch 1 item to get the count
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        '',
+        agentId
+      );
+      
+      if (result.success && result.metadata) {
+        setEventLeadsCount(result.metadata.total || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching event leads count:', error);
+    }
   };
 
   // Fetch dashboard data
@@ -117,7 +143,6 @@ const SalesManagerLeadManagement = () => {
       const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery, agentId);
       
       if (result.success && result.data) {
-        // Save crmCategorySummary to context
         if (result.data.crmCategorySummary) {
           setCrmCategorySummary(result.data.crmCategorySummary)
           localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
@@ -212,6 +237,17 @@ const SalesManagerLeadManagement = () => {
     }
   };
 
+  // FIXED: Function to refresh current tab data including Event Leads
+  const refreshCurrentTab = () => {
+    if (activeTab === 'Event Leads') {
+      // Fetch event leads and update count
+      fetchLeads(currentPage, itemsPerPage);
+      fetchEventLeadsCount();
+    } else {
+      fetchLeads(currentPage, itemsPerPage);
+    }
+  };
+
   const fetchAgents = async () => {
     try {
       const result = await getAllUsers(1, 100);
@@ -273,6 +309,11 @@ const SalesManagerLeadManagement = () => {
     setIsLoaded(true);
   }, []);
 
+  // FIXED: Fetch event leads count on initial load and when filters change
+  useEffect(() => {
+    fetchEventLeadsCount();
+  }, [startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
+
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -280,6 +321,10 @@ const SalesManagerLeadManagement = () => {
 
   // Fetch leads when page, filters, or dates change
   useEffect(() => {
+    if (activeTab === 'Event Leads') {
+      // Event Leads tab uses its own fetch in the listing component
+      return;
+    }
     fetchLeads(currentPage, itemsPerPage);
   }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab, selectedAgentFilter]);
 
@@ -289,7 +334,6 @@ const SalesManagerLeadManagement = () => {
     setActiveSubSubTab('');
     setActiveSubSubSubTab('');
     setActiveSubSubSubSubTab('');
-    // Clear search when switching tabs
     setSearchQuery('');
     setDebouncedSearchQuery('');
   };
@@ -326,7 +370,6 @@ const SalesManagerLeadManagement = () => {
     setSelectedAgentForLead(lead.agentId || '');
     setAssignToSelf(lead.agentId === currentUserId);
     
-    // Reset demo checkboxes
     setDemoInstallApp(false);
     setDemoEducationVideo(false);
     setDemoAnalyzeChannel(false);
@@ -418,7 +461,8 @@ const SalesManagerLeadManagement = () => {
         setSelectedAgentForLead('');
         setAssignToSelf(false);
         setOriginalAssignedAgent('');
-        await fetchLeads(currentPage, itemsPerPage);
+        
+        refreshCurrentTab();
       } else {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
@@ -441,7 +485,6 @@ const SalesManagerLeadManagement = () => {
       errors.answered = 'Please complete the status selection';
     }
     
-    // Validate demo checkboxes when Demo is selected
     if (modalHotLeadType === 'Demo') {
       if (!demoInstallApp || !demoEducationVideo) {
         errors.demoCheckboxes = 'Please complete the first two required demo steps';
@@ -476,7 +519,6 @@ const SalesManagerLeadManagement = () => {
         currentStatus: leadResponseStatus
       };
 
-      // Add demo checkboxes data if Demo is selected
       if (modalHotLeadType === 'Demo') {
         payload.applicationInstalled = demoInstallApp;
         payload.educationalVideosSent = demoEducationVideo;
@@ -522,9 +564,10 @@ const SalesManagerLeadManagement = () => {
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
         
-        // Close modal and refresh leads - no task modal opening
         handleCloseModal();
-        fetchLeads(currentPage, itemsPerPage);
+        
+        // FIXED: Refresh current tab including Event Leads
+        refreshCurrentTab();
       } else {
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
@@ -550,7 +593,6 @@ const SalesManagerLeadManagement = () => {
     setAssignToSelf(false);
     setOriginalAssignedAgent('');
     setActiveModalTab('assign');
-    // setLeadResponseStatus('');
     setModalAnswered('');
     setModalInterested('');
     setModalLeadType('');
@@ -558,7 +600,6 @@ const SalesManagerLeadManagement = () => {
     setModalDepositStatus('');
     setModalRemarks('');
     setModalErrors({});
-    // Reset demo checkboxes
     setDemoInstallApp(false);
     setDemoEducationVideo(false);
     setDemoAnalyzeChannel(false);
@@ -614,6 +655,12 @@ const SalesManagerLeadManagement = () => {
         leadsCount={crmCategorySummary}
         selectedAgentFilter={selectedAgentFilter}
         setSelectedAgentFilter={setSelectedAgentFilter}
+        setLeads={setLeads}
+        setTotalLeads={setTotalLeads}
+        setLoading={setLoading}
+        debouncedSearchQuery={debouncedSearchQuery}
+        eventLeadsCount={eventLeadsCount}
+        setEventLeadsCount={setEventLeadsCount}
       />
 
       <SalesManagerLeadFormDrawer
@@ -666,6 +713,7 @@ const SalesManagerLeadManagement = () => {
         setDemoEducationVideo={setDemoEducationVideo}
         demoAnalyzeChannel={demoAnalyzeChannel}
         setDemoAnalyzeChannel={setDemoAnalyzeChannel}
+        activeTab={activeTab}
       />
 
       <ReminderModal
