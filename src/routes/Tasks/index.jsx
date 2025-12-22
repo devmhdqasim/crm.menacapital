@@ -71,7 +71,7 @@ const Tasks = () => {
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState('Sales Manager'); // Change this based on your auth implementation
 
-  const tabs = ['All', 'Pending', 'Completed'];
+  const tabs = ['All', 'Pending', 'Completed', 'Today Pending', 'Future Pending', 'Not-Completed'];
   const priorities = ['All', 'High', 'Normal', 'Low'];
   const statusOptions = ['Open', 'Pending', 'Completed'];
   const priorityOptions = ['High', 'Normal', 'Low'];
@@ -152,10 +152,16 @@ const Tasks = () => {
 
   // Helper function to get status parameter based on active tab
   const getStatusParam = () => {
-    if (activeTab === 'All') {
-      return '';
-    }
-    return activeTab; // 'Pending' or 'Completed'
+    const tabStatusMap = {
+      'All': '',
+      'Pending': 'Pending',
+      'Completed': 'Completed',
+      'Today Pending': 'Today',
+      'Future Pending': 'Future',
+      'Not-Completed': 'Pending'
+    };
+    
+    return tabStatusMap[activeTab] || '';
   };
 
   // Helper function to get priority parameter
@@ -539,6 +545,21 @@ const Tasks = () => {
     return new Intl.DateTimeFormat("en-GB", options).format(date);
   }
 
+  // Helper function to get counter for each tab
+  const getTabCounter = (tab) => {
+    if (tab === 'All') return null; // No counter for All tab
+    
+    const counterMap = {
+      'Pending': userRole === 'Agent' ? crmAgentTaskSummary?.Pending : crmManagerTaskSummary?.Pending,
+      'Completed': userRole === 'Agent' ? crmAgentTaskSummary?.Completed : crmManagerTaskSummary?.Completed,
+      'Today Pending': userRole === 'Agent' ? crmAgentTaskSummary?.Today : crmManagerTaskSummary?.Today,
+      'Future Pending': userRole === 'Agent' ? crmAgentTaskSummary?.Future : crmManagerTaskSummary?.Future,
+      'Not-Completed': userRole === 'Agent' ? crmAgentTaskSummary?.Pending : crmManagerTaskSummary?.Pending
+    };
+    
+    return counterMap[tab] || 0;
+  };
+
   // Pagination calculations based on API metadata
   const totalPages = Math.ceil(totalTasks / itemsPerPage);
   const showingFrom = totalTasks > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
@@ -679,9 +700,7 @@ const Tasks = () => {
         <div className="mb-6 overflow-x-auto animate-fadeIn">
           <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
             {tabs.map((tab) => {
-              const pendingCount = tab === 'Pending' && activeTab === 'All'
-                ? tasks.filter(task => task.status === 'Pending').length
-                : 0;
+              const counter = getTabCounter(tab);
 
               return (
                 <button
@@ -693,22 +712,10 @@ const Tasks = () => {
                     }`}
                 >
                   <span>{!clearFilter && tab}</span>
-                  {userRole == 'Agent' ? (
-                    <>
-                      {tab === 'Pending' && crmAgentTaskSummary?.Pending > 0 ? (
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                          {crmAgentTaskSummary?.Pending}
-                        </span>
-                      ) : ''}
-                    </>
-                  ) : (
-                    <>
-                      {tab === 'Pending' && crmManagerTaskSummary?.Pending > 0 ? (
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                          {crmManagerTaskSummary?.Pending}
-                        </span>
-                      ) : ''}
-                    </>
+                  {counter > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                      {counter}
+                    </span>
                   )}
                 </button>
               );
