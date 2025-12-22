@@ -93,7 +93,7 @@ const LeadFormDrawer = ({
           leadNationality: values.nationality,
           leadDescription: values.remarks,
           leadSource: values.source,
-          leadStatus: "New", // Default status for new leads
+          leadStatus: "Not Assigned", // Default status for new leads
         };
 
         const result = await createLead(leadData);

@@ -317,7 +317,7 @@ const LeadManagement = () => {
           leadNationality: values.nationality,
           leadDescription: values.remarks,
           leadSource: values.source,
-          leadStatus: "New",
+          leadStatus: "Not Assigned",
           kioskLeadStatus: values.status,
           leadSourceId: values.kioskMember,
           depositStatus: values.depositStatus,
