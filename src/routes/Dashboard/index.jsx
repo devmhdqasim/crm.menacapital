@@ -9,6 +9,7 @@ import {
   Gift,
   TrendingUp,
   ChevronDown,
+  UserCircle,
 } from 'lucide-react';
 import {
   PieChart,
@@ -35,6 +36,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [hasLeadsPermission, setHasLeadsPermission] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
+  const [selectedKioskMember, setSelectedKioskMember] = useState('all');
   const [permissions, setPermissions] = useState({
     userPermissions: { canAdd: false, canEdit: false, canDelete: false, canView: false },
     leadPermissions: { canAdd: false, canEdit: false, canDelete: false, canView: false },
@@ -91,6 +93,27 @@ const Dashboard = () => {
   const handleFilterChange = (filter) => {
     setSelectedFilter(filter);
     setFilterOpen(false);
+  };
+
+  // Get kiosk member options
+  const kioskMemberOptions = dashboardData?.realCountByKiosk || [];
+
+  // Get selected kiosk member's total leads
+  const getKioskMemberLeads = () => {
+    if (selectedKioskMember === 'all') {
+      return kioskMemberOptions.reduce((sum, member) => sum + (member.totalLeads || 0), 0);
+    }
+    const member = kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember);
+    return member?.totalLeads || 0;
+  };
+
+  // Get selected kiosk member's name
+  const getKioskMemberName = () => {
+    if (selectedKioskMember === 'all') {
+      return 'All Kiosk Members';
+    }
+    const member = kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember);
+    return member ? `${member.firstName} ${member.lastName}` : 'Unknown';
   };
 
   // Dynamic stats cards data
@@ -311,8 +334,9 @@ const Dashboard = () => {
               </p>
             </div>
 
-            {/* Date Range Filter with Enhanced Styling */}
-            <div className="mt-4 md:mt-0 md:ml-6 relative z-50">
+            {/* Filters Container */}
+            <div className="mt-4 md:mt-0 md:ml-6 flex flex-col gap-3 relative z-50">
+              {/* Date Range Filter */}
               <DateRangePicker
                 startDate={startDate}
                 endDate={endDate}
@@ -321,6 +345,42 @@ const Dashboard = () => {
                 maxDate={new Date()}
                 isClearable={true}
               />
+
+              {/* Kiosk Member Filter */}
+              {kioskMemberOptions.length > 0 && (
+                <div className='flex items-center gap-3'>
+                  <label htmlFor="" className='text-[#E8D5A3] font-medium text-sm whitespace-nowrap'>
+                    Filter by Agent:
+                  </label>
+                <div className="relative">
+                  <select
+                    value={selectedKioskMember}
+                    onChange={(e) => setSelectedKioskMember(e.target.value)}
+                    className="w-full md:w-64 px-4 py-2.5 pl-10 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[#BBA473]/40 rounded-lg text-white text-sm font-medium appearance-none cursor-pointer hover:border-[#BBA473] focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all duration-300 shadow-lg"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23BBA473' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.75rem center',
+                      paddingRight: '2.5rem'
+                    }}
+                  >
+                    <option value="all" className="bg-[#1A1A1A] text-white">
+                      All Kiosk Members
+                    </option>
+                    {kioskMemberOptions.map((member) => (
+                      <option
+                        key={member.kioskMemberId}
+                        value={member.kioskMemberId}
+                        className="bg-[#1A1A1A] text-white"
+                      >
+                        {member.firstName} {member.lastName} ({member.totalLeads} leads)
+                      </option>
+                    ))}
+                  </select>
+                  <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+                </div>
+              </div>
+              )}
             </div>
           </div>
 
@@ -348,6 +408,45 @@ const Dashboard = () => {
           {/* Stats Grid with Enhanced Cards */}
           {!loading && dashboardData && (
             <div className="animate-fade-in">
+              {/* Kiosk Member Total Leads Card */}
+              {kioskMemberOptions.length > 0 && (
+                <div className="mb-6">
+                  <div
+                    className="group relative w-full border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                    style={{ animation: 'slideInUp 0.5s ease-out' }}
+                  >
+                    {/* Gradient Overlay on Hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {/* Animated Corner Accent */}
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
+                    
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
+                          {getKioskMemberName()} - Total Real Leads
+                        </p>
+                        <p className="text-3xl font-bold text-white mt-1 group-hover:text-[#BBA473] transition-colors duration-300">
+                          {getKioskMemberLeads()}
+                        </p>
+                      </div>
+                      <div
+                        className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
+                        style={{ backgroundColor: 'rgba(75, 192, 192, 0.125)' }}
+                      >
+                        <UserCircle 
+                          style={{ color: 'rgb(75, 192, 192)' }} 
+                          className="w-8 h-8 group-hover:animate-pulse"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bottom Accent Line */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                  </div>
+                </div>
+              )}
+
               <div 
                 className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 ${
                   stats.length === 1 ? 'sm:justify-items-center' : ''
@@ -601,6 +700,15 @@ const Dashboard = () => {
         
         svg:focus {
           outline: none !important;
+        }
+
+        /* Custom select dropdown styling */
+        select option {
+          padding: 10px;
+        }
+
+        select option:hover {
+          background-color: #BBA473 !important;
         }
       `}</style>
     </>
