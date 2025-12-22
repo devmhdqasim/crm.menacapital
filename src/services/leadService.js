@@ -1206,7 +1206,7 @@ export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '
  * @param {string} leadData.leadDescription - Description or notes about the lead
  * @param {string} leadData.leadSource - Source of the lead (e.g., "Facebook Ads", "Website")
  * @param {string} leadData.leadSourceId - Source of the lead (e.g., "Facebook Ads", "Website")
- * @param {string} leadData.kioskLeadStatus - Status of the lead (e.g., "New", "Contacted", "Qualified")
+ * @param {string} leadData.kioskLeadStatus - Status of the lead (e.g., "Not Assigned", "Contacted", "Qualified")
  * @returns {Promise} - Returns created lead info
  */
 export const createBranchLead = async (leadData) => {
@@ -1241,7 +1241,7 @@ export const createBranchLead = async (leadData) => {
       leadDescription: leadData.leadDescription || '',
       leadSource: leadData.leadSource,
       leadSourceId: leadData.leadSourceId,
-      kioskLeadStatus: leadData.kioskLeadStatus || 'New',
+      kioskLeadStatus: leadData.kioskLeadStatus || 'Not Assigned',
       depositStatus: leadData.depositStatus || '',
     };
 
@@ -1354,7 +1354,7 @@ export const createBranchLead = async (leadData) => {
  * @param {string} leadData.leadDescription - Description or notes about the lead
  * @param {string} leadData.leadSource - Source of the lead (e.g., "Facebook Ads", "Website")
  * @param {string} leadData.leadSourceId - Source of the lead (e.g., "Facebook Ads", "Website")
- * @param {string} leadData.leadStatus - Status of the lead (e.g., "New", "Contacted", "Qualified")
+ * @param {string} leadData.leadStatus - Status of the lead (e.g., "Not Assigned", "Contacted", "Qualified")
  * @returns {Promise} - Returns created lead info
  */
 export const createLead = async (leadData) => {
@@ -1389,7 +1389,7 @@ export const createLead = async (leadData) => {
       leadDescription: leadData.leadDescription || '',
       leadSource: leadData.leadSource,
       leadSourceId: leadData.leadSourceId,
-      leadStatus: leadData.leadStatus || 'New',
+      leadStatus: leadData.leadStatus || 'Not Assigned',
       depositStatus: leadData.depositStatus || '',
     };
 
@@ -1797,7 +1797,7 @@ export const getLeadStats = async () => {
 /**
  * Update lead status
  * @param {string} leadId - Lead's ID
- * @param {string} newStatus - New status (e.g., "New", "Contacted", "Qualified", "Converted", "Lost")
+ * @param {string} newStatus - New status (e.g., "Not Assigned", "Contacted", "Qualified", "Converted", "Lost")
  * @returns {Promise} - Returns update result
  */
 export const updateLeadStatus = async (leadId, newStatus) => {

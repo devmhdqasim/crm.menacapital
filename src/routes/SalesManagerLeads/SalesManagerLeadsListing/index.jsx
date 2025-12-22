@@ -269,6 +269,7 @@ const SalesManagerLeadsListing = ({
       'Lead': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       'Demo': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       'Real': 'bg-green-500/20 text-green-400 border-green-500/30',
+      'Not Assigned': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       'New': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       'Contacted': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       'Qualified': 'bg-green-500/20 text-green-400 border-green-500/30',

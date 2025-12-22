@@ -7,7 +7,7 @@ const CreateLeadDrawer = ({ isOpen, onClose, onLeadCreated }) => {
     email: '',
     phone: '',
     company: '',
-    status: 'New',
+    status: 'Not Assigned',
     source: '',
     notes: '',
     kioskMember: ''
@@ -49,7 +49,7 @@ const CreateLeadDrawer = ({ isOpen, onClose, onLeadCreated }) => {
           email: '',
           phone: '',
           company: '',
-          status: 'New',
+          status: 'Not Assigned',
           source: '',
           notes: '',
           kioskMember: ''
@@ -75,7 +75,7 @@ const CreateLeadDrawer = ({ isOpen, onClose, onLeadCreated }) => {
       email: '',
       phone: '',
       company: '',
-      status: 'New',
+      status: 'Not Assigned',
       source: '',
       notes: '',
       kioskMember: ''
@@ -214,7 +214,7 @@ const CreateLeadDrawer = ({ isOpen, onClose, onLeadCreated }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 disabled={isLoading}
               >
-                <option value="New">New</option>
+                <option value="Not Assigned">New</option>
                 <option value="Contacted">Contacted</option>
                 <option value="Qualified">Qualified</option>
                 <option value="Lost">Lost</option>
