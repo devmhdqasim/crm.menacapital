@@ -417,14 +417,27 @@ const AssignLeadModal = ({
                 <label className="text-sm text-[#E8D5A3] font-medium">Source</label>
                 <p className="text-white">{selectedLead.source}</p>
               </div>
-              {!isLeadsSelectedId && (
+              {/* {!isLeadsSelectedId && (
                 <div className="flex items-center gap-3 space-y-2">
                   <label className="text-sm text-[#E8D5A3] font-medium mb-0">Status</label>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
                     {selectedLead.status}
                   </span>
                 </div>
-              )}
+              )}             */}
+              {/* All Status Fields */}
+              <div className="space-y-2">
+                <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
+                <p className="text-white">{selectedLead.status || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
+                <p className="text-white">{selectedLead.kioskLeadStatus || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-[#E8D5A3] font-medium">Deposit Status</label>
+                <p className="text-white">{selectedLead.depositStatus || 'N/A'}</p>
+              </div>
               {selectedLead.remarks ? (<div className="space-y-2 col-span-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Remarks</label>
                 <p className="text-white">{selectedLead.remarks}</p>

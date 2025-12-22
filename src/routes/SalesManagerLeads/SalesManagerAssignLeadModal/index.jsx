@@ -148,7 +148,14 @@ const SalesManagerAssignLeadModal = ({
       'Demo': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       'Real': 'bg-green-500/20 text-green-400 border-green-500/30',
       'Deposit': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'Warm': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+      'Hot': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'Not Answered': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      'Not Interested': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      'Assigned': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+      'New': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      'Not Assigned': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
@@ -372,12 +379,24 @@ const SalesManagerAssignLeadModal = ({
                 <label className="text-sm text-[#E8D5A3] font-medium">Assigned Agent</label>
                 <p className="text-white">{selectedLead.agent || 'Not Assigned'}</p>
               </div>
-              <div className="flex items-center gap-3 space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium mb-0">Status</label>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
-                  {selectedLead.status}
-                </span>
+              
+              {/* All Status Fields */}
+              <div className="space-y-2">
+                <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
+                <p className="text-white">{selectedLead.status || 'N/A'}</p>
+                {/* <span className={`inline-block px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
+                  {selectedLead.status || 'N/A'}
+                </span> */}
               </div>
+              <div className="space-y-2">
+                <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
+                <p className="text-white">{selectedLead.kioskLeadStatus || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-[#E8D5A3] font-medium">Deposit Status</label>
+                <p className="text-white">{selectedLead.depositStatus || 'N/A'}</p>
+              </div>
+              
               <div className="space-y-2 col-span-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Remarks</label>
                 <p className="text-white">{selectedLead.remarks || 'No remarks'}</p>
