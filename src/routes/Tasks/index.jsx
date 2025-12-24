@@ -154,7 +154,7 @@ const Tasks = () => {
   const getStatusParam = () => {
     const tabStatusMap = {
       'All': '',
-      'Pending': 'Pending',
+      'Pending': 'Not-Completed',
       'Completed': 'Completed',
       'Today Pending': 'Today',
       'Future Pending': 'Future',
