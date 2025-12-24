@@ -158,7 +158,7 @@ const Tasks = () => {
       'Completed': 'Completed',
       'Today Pending': 'Today',
       'Future Pending': 'Future',
-      'Not-Completed': 'Pending'
+      'Not-Completed': 'Not-Completed'
     };
     
     return tabStatusMap[activeTab] || '';
