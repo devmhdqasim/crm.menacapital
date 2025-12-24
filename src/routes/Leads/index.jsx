@@ -150,6 +150,7 @@ const LeadManagement = () => {
           residency: lead.leadResidency,
           language: lead.leadPreferredLanguage,
           source: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}`: "-"}`,
+          leadSource: lead.leadSource,
           remarks: lead.leadDescription || '',
           status: lead.leadStatus ?? '-',
           createdAt: lead.createdAt,
