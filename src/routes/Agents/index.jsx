@@ -156,7 +156,7 @@ const AgentManagement = () => {
       if (result.success && result.data) {
         // Filter only Agent users
         const agentsData = result.data.filter(user => 
-          user.roleName === 'Agent' || user.role === 'Agent'
+          user.roleName === 'Agent' || user.role === 'Agent' || user.roleName === 'Sales Manager' || user.role === 'Sales Manager'
         );
         
         const transformedAgents = agentsData.map((user) => ({

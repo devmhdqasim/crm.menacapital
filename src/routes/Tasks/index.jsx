@@ -207,8 +207,10 @@ const Tasks = () => {
       const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery);
 
       if (result.success && result.data) {
-        if (result.data.agentTaskCounters) {
-          setCrmAgentTaskSummary(result.data.agentTaskCounters?.[0])
+
+        // Store the entire array of agent task summaries
+        if (result.data.crmAgentTaskSummary) {
+          setCrmAgentTaskSummary(result.data.crmAgentTaskSummary)
         }
 
         if (result.data.salesManagerTaskCounters) {
@@ -549,12 +551,65 @@ const Tasks = () => {
   const getTabCounter = (tab) => {
     if (tab === 'All') return null; // No counter for All tab
     
+    // If Sales Manager has selected a specific agent filter
+    if (userRole === 'Sales Manager' && assignedToFilter !== 'All') {
+      // Find the selected agent's username
+      const selectedAgent = agents.find(agent =>
+        `${agent.firstName} ${agent.lastName}` === assignedToFilter
+      );
+      
+      if (selectedAgent) {
+        // Find the agent's task summary from dashboard data
+        const agentTaskData = crmAgentTaskSummary?.find(
+          agentData => agentData.username === selectedAgent.username
+        );
+        
+        if (agentTaskData?.crmTaskSummary) {
+          const counterMap = {
+            'Pending': agentTaskData.crmTaskSummary.Pending,
+            'Completed': agentTaskData.crmTaskSummary.Completed,
+            'Today Pending': agentTaskData.crmTaskSummary.Today,
+            'Future Pending': agentTaskData.crmTaskSummary.Future,
+            'Not-Completed': agentTaskData.crmTaskSummary.NotCompleted
+          };
+          return counterMap[tab] || 0;
+        }
+      }
+    }
+
+    // If Sales Manager has selected a specific agent filter
+    if (userRole === 'Agent' && assignedToFilter !== 'All') {
+      // Find the selected agent's username
+      const selectedAgent = agents.find(agent =>
+        `${agent.firstName} ${agent.lastName}` === assignedToFilter
+      );
+      
+      if (selectedAgent) {
+        // Find the agent's task summary from dashboard data
+        const agentTaskData = crmAgentTaskSummary?.find(
+          agentData => agentData.username === selectedAgent.username
+        );
+        
+        if (agentTaskData?.crmTaskSummary) {
+          const counterMap = {
+            'Pending': agentTaskData.crmTaskSummary.Pending,
+            'Completed': agentTaskData.crmTaskSummary.Completed,
+            'Today Pending': agentTaskData.crmTaskSummary.Today,
+            'Future Pending': agentTaskData.crmTaskSummary.Future,
+            'Not-Completed': agentTaskData.crmTaskSummary.NotCompleted
+          };
+          return counterMap[tab] || 0;
+        }
+      }
+    }
+    
+    // Default behavior for Agent role or when no filter is selected
     const counterMap = {
       'Pending': userRole === 'Agent' ? crmAgentTaskSummary?.Pending : crmManagerTaskSummary?.Pending,
       'Completed': userRole === 'Agent' ? crmAgentTaskSummary?.Completed : crmManagerTaskSummary?.Completed,
       'Today Pending': userRole === 'Agent' ? crmAgentTaskSummary?.Today : crmManagerTaskSummary?.Today,
       'Future Pending': userRole === 'Agent' ? crmAgentTaskSummary?.Future : crmManagerTaskSummary?.Future,
-      'Not-Completed': userRole === 'Agent' ? crmAgentTaskSummary?.Pending : crmManagerTaskSummary?.Pending
+      'Not-Completed': userRole === 'Agent' ? crmAgentTaskSummary?.NotCompleted : crmManagerTaskSummary?.NotCompleted
     };
     
     return counterMap[tab] || 0;
@@ -612,6 +667,7 @@ const Tasks = () => {
                 onEndDateChange={setEndDate}
                 maxDate={new Date()}
                 isClearable={true}
+                enableFutureDate={true}
               />
             </div>
 

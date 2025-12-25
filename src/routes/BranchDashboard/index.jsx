@@ -421,7 +421,7 @@ const Dashboard = () => {
                       <div className="flex justify-between gap-6">
                         {/* Total Leads */}
                         <div className="flex flex-col items-center justify-center transition-all duration-300">
-                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Total Leads</p>
+                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Leads</p>
                           <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#BBA473] transition-colors duration-300">
                             {selectedKioskMember === 'all'
                               ? kioskMemberOptions.reduce((sum, member) => sum + (member.leadCount || 0), 0)

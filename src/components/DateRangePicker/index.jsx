@@ -21,6 +21,7 @@ import { Calendar } from 'lucide-react';
  * @param {Date} props.maxDate - Maximum selectable date
  * @param {string} props.dateFormat - Date format (default: "MMM dd, yyyy")
  * @param {boolean} props.isClearable - Show clear button (default: true)
+ * @param {boolean} props.enableFutureDate - Allow future dates (default: false)
  * @param {string} props.className - Additional CSS classes
  */
 const DateRangePicker = ({
@@ -36,6 +37,7 @@ const DateRangePicker = ({
   maxDate = new Date(),
   dateFormat = "MMM dd, yyyy",
   isClearable = true,
+  enableFutureDate = false,
   className = "",
 }) => {
   const [localError, setLocalError] = useState('');
@@ -133,7 +135,8 @@ const DateRangePicker = ({
 
   // Convert min/max dates to Dubai timezone for display
   const displayMinDate = minDate ? toDubaiTime(minDate) : null;
-  const displayMaxDate = maxDate ? toDubaiTime(maxDate) : toDubaiTime(new Date());
+  // Use maxDate if enableFutureDate is true, otherwise use current date or provided maxDate
+  const displayMaxDate = enableFutureDate ? null : (maxDate ? toDubaiTime(maxDate) : toDubaiTime(new Date()));
 
   return (
     <div className={`date-range-picker-container ${className}`}>
