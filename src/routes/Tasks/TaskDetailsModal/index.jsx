@@ -3,7 +3,7 @@ import { X, Calendar, Clock, User, Phone, Mail } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
-import { updateTask } from '../../../services/taskService';
+import { updateTask, createTask, createAutoTask } from '../../../services/taskService';
 
 const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   // Modal form state
@@ -33,7 +33,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   useEffect(() => {
     if (task) {
       setModalRemarks(task.leadRemarks || '');
-      setTaskStatus(task.status || 'Open');
+      setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
       setLeadResponseStatus(task.leadResponseStatus || '');
       setReminderDateTime(null);
       
@@ -171,8 +171,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     setIsSubmitting(true);
 
     try {
-      // Prepare the task data payload
-      const taskData = {
+      // First, update the existing task
+      const updateTaskData = {
         agentId: task.agentIdRaw,
         leadId: task.leadIdRaw,
         salesManagerId: task.salesManagerIdRaw || undefined,
@@ -185,23 +185,66 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         leadResponseStatus: leadResponseStatus || '',
       };
 
-      // Call the API to update the task
-      const result = await updateTask(task.id, taskData);
+      const updateResult = await updateTask(task.id, updateTaskData);
 
-      if (result.success) {
-        toast.success(result.message || 'Task updated successfully!');
-        handleClose();
-        
-        // Call the callback to refresh the task list if provided
-        if (onTaskUpdated) {
-          onTaskUpdated();
-        }
-      } else {
-        if (result.requiresAuth) {
+      if (!updateResult.success) {
+        if (updateResult.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.error?.payload?.message || 'Failed to update task');
+          toast.error(updateResult.error?.payload?.message || 'Failed to update task');
         }
+        setIsSubmitting(false);
+        return;
+      }
+
+      // After successful update, check if we need to create a new task based on reminder date
+      // Only create new task if lead response status is between Warm and Deposit
+      const shouldCreateNewTask = ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
+      
+      if (shouldCreateNewTask) {
+        let createResult;
+        
+        if (reminderDateTime) {
+          // If reminder date is set, use createTask API
+          const newTaskData = {
+            agentId: task.agentIdRaw,
+            leadId: task.leadIdRaw,
+            salesManagerId: task.salesManagerIdRaw || undefined,
+            taskTitle: task.title,
+            taskDescription: task.description,
+            taskPriority: task.priority,
+            taskScheduledDate: reminderDateTime.toISOString().split('T')[0],
+            taskStatus: 'Open',
+            leadRemarks: modalRemarks || '',
+            leadResponseStatus: leadResponseStatus || '',
+            leadStatus: leadResponseStatus || '', // Point 1: Add leadStatus
+          };
+          
+          createResult = await createTask(newTaskData);
+        } else {
+          // If no reminder date, use createAutoTask API
+          const autoTaskData = {
+            leadId: task.leadIdRaw,
+            leadStatus: leadResponseStatus || '', // Point 1: Add leadStatus
+            taskTitle: task.title,
+            taskDescription: task.description,
+          };
+          
+          createResult = await createAutoTask(autoTaskData);
+        }
+        
+        if (!createResult.success) {
+          console.warn('Failed to create follow-up task:', createResult.message);
+          // Don't show error to user, just log it
+        }
+      }
+
+      toast.success('Task updated successfully!');
+      handleClose();
+      
+      // Call the callback to refresh the task list if provided
+      if (onTaskUpdated) {
+        onTaskUpdated();
       }
     } catch (error) {
       console.error('Error updating task:', error);
@@ -286,6 +329,32 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     };
 
     return new Intl.DateTimeFormat("en-GB", options).format(date);
+  };
+
+  // Point 3: Check if reminder date should be enabled (Warm to Deposit only)
+  const isReminderDateEnabled = () => {
+    return ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
+  };
+
+  // Point 5: Check if a lead response option should be disabled (previous statuses)
+  const getLeadResponseStatusOrder = (status) => {
+    const order = {
+      '': 0,
+      'Not Answered': 1,
+      'Not Interested': 2,
+      'Warm': 3,
+      'Hot': 4,
+      'Demo': 5,
+      'Not Deposit': 6,
+      'Deposit': 7
+    };
+    return order[status] || 0;
+  };
+
+  const isLeadResponseOptionDisabled = (optionStatus) => {
+    const currentOrder = getLeadResponseStatusOrder(task?.leadResponseStatus || '');
+    const optionOrder = getLeadResponseStatusOrder(optionStatus);
+    return optionOrder < currentOrder;
   };
 
   if (!isOpen || !task) return null;
@@ -403,7 +472,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Task</h3>
                 
-                {/* Date Time Picker */}
+                {/* Date Time Picker - Point 3: Only enabled for Warm to Deposit */}
                 <div className="flex items-center gap-2">
                   <div className="relative flex">
                     <DatePicker
@@ -415,40 +484,42 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       dateFormat="MMM d, yyyy h:mm aa"
                       placeholderText="Set reminder"
                       minDate={new Date()}
-                      className="px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 border-[#BBA473]/30 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] cursor-pointer"
+                      disabled={!isReminderDateEnabled()}
+                      className={`px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] ${
+                        isReminderDateEnabled() ? 'cursor-pointer border-[#BBA473]/30' : 'cursor-not-allowed border-gray-600 opacity-50'
+                      }`}
                       calendarClassName="custom-datepicker"
                       wrapperClassName="w-full"
                     />
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+                    <Clock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                      isReminderDateEnabled() ? 'text-[#BBA473]' : 'text-gray-600'
+                    }`} />
                   </div>
                 </div>
               </div>
 
-              {/* Task Status Selection */}
+              {/* Point 2: Task Status Selection - Remove "Open" & "Pending" */}
               <div className="space-y-4 mb-6">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {['Open', 'Pending', 'Completed'].map((status) => (
-                    <label 
-                      key={status}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50"
-                    >
-                      <input
-                        type="radio"
-                        name="taskStatus"
-                        value={status}
-                        checked={taskStatus === status}
-                        onChange={(e) => {
-                          setTaskStatus(e.target.value);
-                          setModalErrors({});
-                        }}
-                        className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
-                      />
-                      <span className="text-white font-medium">{status}</span>
-                    </label>
-                  ))}
+                <div className="grid grid-cols-1 gap-3">
+                  <label 
+                    className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50"
+                  >
+                    <input
+                      type="radio"
+                      name="taskStatus"
+                      value="Completed"
+                      checked={taskStatus === 'Completed'}
+                      onChange={(e) => {
+                        setTaskStatus(e.target.value);
+                        setModalErrors({});
+                      }}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                    />
+                    <span className="text-white font-medium">Completed</span>
+                  </label>
                 </div>
                 {modalErrors.taskStatus && (
                   <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
@@ -461,9 +532,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   Update Lead Response Status
                 </label>
 
-                {/* Level 1: Answered / Not Answered */}
+                {/* Level 1: Answered / Not Answered - Point 5: Disable previous statuses */}
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                    isLeadResponseOptionDisabled('Answered')
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  }`}>
                     <input
                       type="radio"
                       name="answered"
@@ -478,12 +553,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                      disabled={isLeadResponseOptionDisabled('Answered')}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
                   
-                  <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                    isLeadResponseOptionDisabled('Not Answered')
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  }`}>
                     <input
                       type="radio"
                       name="answered"
@@ -498,7 +578,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                      disabled={isLeadResponseOptionDisabled('Not Answered')}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Not Answered</span>
                   </label>
@@ -508,7 +589,11 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 {modalAnswered === 'Answered' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Interested')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="interested"
@@ -522,12 +607,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Interested')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Interested</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Not Interested')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="interested"
@@ -541,7 +631,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Not Interested')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Not Interested</span>
                       </label>
@@ -556,7 +647,11 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 {modalInterested === 'Interested' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Warm')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="leadType"
@@ -569,12 +664,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Warm')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Warm Lead</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Hot')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="leadType"
@@ -587,7 +687,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Hot')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Hot Lead</span>
                       </label>
@@ -602,7 +703,11 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 {modalLeadType === 'Hot' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Demo')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
@@ -614,12 +719,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Demo')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Demo</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Real')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
@@ -631,7 +741,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Real')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Real</span>
                       </label>
@@ -710,7 +821,11 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 {modalHotLeadType === 'Real' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Deposit')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="depositStatus"
@@ -721,12 +836,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Deposit')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Deposit</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isLeadResponseOptionDisabled('Not Deposit')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="depositStatus"
@@ -737,7 +857,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isLeadResponseOptionDisabled('Not Deposit')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Not Deposit</span>
                       </label>

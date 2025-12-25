@@ -177,18 +177,29 @@ const Tasks = () => {
     return priorityFilter; // 'High', 'Normal', or 'Low'
   };
 
-  // Helper function to get assignedBy parameter
-  const getAssignedByParam = () => {
+  // Helper function to get assignedTo/assignedBy parameter
+  const getAssignedToParam = () => {
     if (assignedToFilter === 'All') {
       return '';
     }
 
-    // For Sales Manager: find agent ID
+    // For Sales Manager: find the selected agent or sales manager ID
     if (userRole === 'Sales Manager') {
+      // First check if it's an agent
       const selectedAgent = agents.find(agent =>
         `${agent.firstName} ${agent.lastName}` === assignedToFilter
       );
-      return selectedAgent ? selectedAgent.id : '';
+      
+      if (selectedAgent) {
+        return selectedAgent.id;
+      }
+      
+      // If not found in agents, check sales managers
+      const selectedManager = salesManagers.find(manager =>
+        manager.name === assignedToFilter
+      );
+      
+      return selectedManager ? selectedManager.id : '';
     }
 
     // For Agent: find sales manager ID
@@ -247,7 +258,7 @@ const Tasks = () => {
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const statusParam = getStatusParam();
       const priorityParam = getPriorityParam();
-      const assignedByParam = getAssignedByParam();
+      const assignedToParam = getAssignedToParam();
 
       const result = await getAllTasks(
         page,
@@ -256,7 +267,7 @@ const Tasks = () => {
         endDateStr,
         debouncedSearchQuery,
         statusParam,
-        assignedByParam,
+        assignedToParam,
         priorityParam
       );
 
@@ -399,8 +410,10 @@ const Tasks = () => {
     fetchTasks(currentPage, itemsPerPage);
   }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, priorityFilter, assignedToFilter]);
 
-  // Get unique assignees for filter dropdown (from agents list)
-  const uniqueAssignees = ['All', ...agents.map(agent => `${agent.firstName} ${agent.lastName}`)];
+  // Get unique assignees for filter dropdown - For Sales Manager, include both agents and sales managers
+  const uniqueAssignees = userRole === 'Sales Manager' 
+    ? ['All', ...agents.map(agent => `${agent.firstName} ${agent.lastName}`), ...salesManagers.map(sm => sm.name)]
+    : ['All', ...agents.map(agent => `${agent.firstName} ${agent.lastName}`)];
 
   // Get unique sales managers for filter dropdown
   const uniqueSalesManagers = ['All', ...salesManagers.map(sm => sm.name)];
@@ -568,7 +581,7 @@ const Tasks = () => {
     
     // If Sales Manager has selected a specific agent filter
     if (userRole === 'Sales Manager' && assignedToFilter !== 'All') {
-      // Find the selected agent's username
+      // First check if it's an agent
       const selectedAgent = agents.find(agent =>
         `${agent.firstName} ${agent.lastName}` === assignedToFilter
       );
@@ -590,28 +603,50 @@ const Tasks = () => {
           return counterMap[tab] || 0;
         }
       }
-    }
-
-    // If Sales Manager has selected a specific agent filter
-    if (userRole === 'Agent' && assignedToFilter !== 'All') {
-      // Find the selected agent's username
-      const selectedAgent = agents.find(agent =>
-        `${agent.firstName} ${agent.lastName}` === assignedToFilter
+      
+      // If it's a sales manager filter
+      const selectedManager = salesManagers.find(manager =>
+        manager.name === assignedToFilter
       );
       
-      if (selectedAgent) {
-        // Find the agent's task summary from dashboard data
-        const agentTaskData = crmAgentTaskSummary?.find(
-          agentData => agentData.username === selectedAgent.username
+      if (selectedManager) {
+        // Find the sales manager's task summary from dashboard data
+        const managerTaskData = crmAgentTaskSummary?.find(
+          agentData => agentData.username === selectedManager.username
         );
         
-        if (agentTaskData?.crmTaskSummary) {
+        if (managerTaskData?.crmTaskSummary) {
           const counterMap = {
-            'Pending': agentTaskData.crmTaskSummary.Pending,
-            'Completed': agentTaskData.crmTaskSummary.Completed,
-            'Today Pending': agentTaskData.crmTaskSummary.Today,
-            'Future Pending': agentTaskData.crmTaskSummary.Future,
-            'Not-Completed': agentTaskData.crmTaskSummary.NotCompleted
+            'Pending': managerTaskData.crmTaskSummary.Pending,
+            'Completed': managerTaskData.crmTaskSummary.Completed,
+            'Today Pending': managerTaskData.crmTaskSummary.Today,
+            'Future Pending': managerTaskData.crmTaskSummary.Future,
+            'Not-Completed': managerTaskData.crmTaskSummary.NotCompleted
+          };
+          return counterMap[tab] || 0;
+        }
+      }
+    }
+
+    // If Agent has selected a specific sales manager filter
+    if (userRole === 'Agent' && assignedToFilter !== 'All') {
+      const selectedManager = salesManagers.find(manager =>
+        manager.name === assignedToFilter
+      );
+      
+      if (selectedManager) {
+        // Find the sales manager's task summary from dashboard data
+        const managerTaskData = crmAgentTaskSummary?.find(
+          agentData => agentData.username === selectedManager.username
+        );
+        
+        if (managerTaskData?.crmTaskSummary) {
+          const counterMap = {
+            'Pending': managerTaskData.crmTaskSummary.Pending,
+            'Completed': managerTaskData.crmTaskSummary.Completed,
+            'Today Pending': managerTaskData.crmTaskSummary.Today,
+            'Future Pending': managerTaskData.crmTaskSummary.Future,
+            'Not-Completed': managerTaskData.crmTaskSummary.NotCompleted
           };
           return counterMap[tab] || 0;
         }
@@ -712,60 +747,25 @@ const Tasks = () => {
                 </div>
               </div>
 
-              {/* Assigned To Filter - For Sales Manager, show "Assigned To" (agents) */}
+              {/* Assigned To Filter - For Sales Manager, show "Assigned To" (agents + sales managers) */}
               {userRole === 'Sales Manager' && (
                 <div>
-  <label className="block text-sm font-medium text-gray-400 mb-2">
-    Assign To <span className="text-red-500">*</span>
-  </label>
-  <div className="relative">
-    <select
-      name="agentId"
-      value={formik.values.agentId}
-      onChange={formik.handleChange}
-      onBlur={formik.handleBlur}
-      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
-        formik.touched.agentId && formik.errors.agentId
-          ? 'border-red-500'
-          : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
-      }`}
-    >
-      <option value="">Select agent or sales manager...</option>
-      
-      {/* Agents Section */}
-      {agents.length > 0 && (
-        <optgroup label="━━━━━ Agents ━━━━━">
-          {agents.map(agent => (
-            <option key={agent.id} value={agent.id}>
-              {agent.name} (@{agent.username})
-            </option>
-          ))}
-        </optgroup>
-      )}
-      
-      {/* Sales Managers Section */}
-      {salesManagers.length > 0 && (
-        <optgroup label="━━━━━ Sales Managers ━━━━━">
-          {salesManagers.map(manager => (
-            <option key={manager.id} value={manager.id}>
-              {manager.name} (@{manager.username})
-            </option>
-          ))}
-        </optgroup>
-      )}
-      
-      {agents.length === 0 && salesManagers.length === 0 && (
-        <option disabled>Loading...</option>
-      )}
-    </select>
-    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-  </div>
-  {formik.touched.agentId && formik.errors.agentId && (
-    <p className="text-red-500 text-xs mt-1">{formik.errors.agentId}</p>
-  )}
-</div>
-
-
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Assigned To</label>
+                  <div className="relative">
+                    <select
+                      value={assignedToFilter}
+                      onChange={(e) => setAssignedToFilter(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+                    >
+                      {uniqueAssignees.map((assignee) => (
+                        <option key={assignee} value={assignee}>
+                          {assignee}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                  </div>
+                </div>
               )}
 
               {/* Assigned By Filter - For Agent, show "Assigned By" (sales managers) */}

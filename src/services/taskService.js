@@ -36,6 +36,7 @@ const getUserInfo = () => {
  * @param {string} taskData.taskStatus - Task status (Open, In Progress, Completed, Pending)
  * @param {string} taskData.leadRemarks - Lead remarks (optional)
  * @param {string} taskData.leadResponseStatus - Lead response status (optional)
+ * @param {string} taskData.leadStatus - Lead status (optional)
  * @returns {Promise} - Returns created task info
  */
 export const createTask = async (taskData) => {
@@ -63,6 +64,7 @@ export const createTask = async (taskData) => {
       taskStatus: taskData.taskStatus,
       leadRemarks: taskData.leadRemarks || '',
       leadResponseStatus: taskData.leadResponseStatus || '',
+      leadStatus: taskData.leadStatus || '', // Add leadStatus field
     };
 
     // Add salesManagerId only if provided
