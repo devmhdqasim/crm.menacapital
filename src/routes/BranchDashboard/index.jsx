@@ -46,16 +46,16 @@ const Dashboard = () => {
 
   // Get CRM context
   const { setCrmCategorySummary } = useCRM();
-  
+
   // Fetch dashboard data
   const fetchDashboardData = async (filter) => {
     setLoading(true);
     const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
     const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
-    
+
     try {
       const result = await getBranchDashboardStats(startDateStr, endDateStr);
-      
+
       if (result.success && result.data) {
         setDashboardData(result.data);
         setPermissions(result.data.permissions || permissions);
@@ -65,7 +65,7 @@ const Dashboard = () => {
           setCrmCategorySummary(result.data.crmCategorySummary);
           localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
         }
-                
+
         console.log('✅ Dashboard data loaded:', result.data);
       } else {
         console.error('Failed to fetch dashboard data:', result.message);
@@ -118,55 +118,55 @@ const Dashboard = () => {
   // Dynamic stats cards data
   const stats = dashboardData
     ? Object.entries(dashboardData)
-        .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
-        .map(([key, value]) => {
-          // Format key into a readable title
-          const label = key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, (str) => str.toUpperCase())
-            .trim();
+      .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
+      .map(([key, value]) => {
+        // Format key into a readable title
+        const label = key
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, (str) => str.toUpperCase())
+          .trim();
 
-          // Optional: map icons/colors based on key
-          const iconMap = {
-            totalSalesManagers: ShoppingCart,
-            totalAgents: Users,
-            totalBranches: Coins,
-            totalKioskMembers: TrendingUp,
-            totalBranchLeads: Activity,
-            leads: Activity,
-          };
-          const colorMap = {
-            totalSalesManagers: 'rgb(255, 99, 132)',
-            totalAgents: 'rgb(54, 162, 235)',
-            totalBranches: 'rgb(156, 163, 175)',
-            totalKioskMembers: 'rgb(255, 187, 40)',
-            totalBranchLeads: 'rgb(75, 192, 192)',
-            leads: 'rgb(75, 192, 192)',
-          };
-          const bgColorMap = {
-            totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
-            totalAgents: 'rgba(54, 162, 235, 0.125)',
-            totalBranches: 'rgba(156, 163, 175, 0.125)',
-            totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
-            totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
-            leads: 'rgba(75, 192, 192, 0.125)',
-          };
+        // Optional: map icons/colors based on key
+        const iconMap = {
+          totalSalesManagers: ShoppingCart,
+          totalAgents: Users,
+          totalBranches: Coins,
+          totalKioskMembers: TrendingUp,
+          totalBranchLeads: Activity,
+          leads: Activity,
+        };
+        const colorMap = {
+          totalSalesManagers: 'rgb(255, 99, 132)',
+          totalAgents: 'rgb(54, 162, 235)',
+          totalBranches: 'rgb(156, 163, 175)',
+          totalKioskMembers: 'rgb(255, 187, 40)',
+          totalBranchLeads: 'rgb(75, 192, 192)',
+          leads: 'rgb(75, 192, 192)',
+        };
+        const bgColorMap = {
+          totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
+          totalAgents: 'rgba(54, 162, 235, 0.125)',
+          totalBranches: 'rgba(156, 163, 175, 0.125)',
+          totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
+          totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
+          leads: 'rgba(75, 192, 192, 0.125)',
+        };
 
-          return {
-            label,
-            value,
-            icon: iconMap[key] || Users, // fallback icon
-            color: colorMap[key] || 'rgb(255,255,255)',
-            bgColor: bgColorMap[key] || 'rgba(255,255,255,0.1)',
-          };
-        })
+        return {
+          label,
+          value,
+          icon: iconMap[key] || Users, // fallback icon
+          color: colorMap[key] || 'rgb(255,255,255)',
+          bgColor: bgColorMap[key] || 'rgba(255,255,255,0.1)',
+        };
+      })
     : [];
 
   // Pie chart data - Updated to match API response structure
   const pieData = dashboardData?.leadsCountPerStatus ? (() => {
     const statusData = dashboardData.leadsCountPerStatus;
     const data = [];
-    
+
     // Map API status fields to pie chart data
     if (statusData.Lead > 0) {
       data.push({ name: 'Lead', value: statusData.Lead, color: '#FF6384' });
@@ -177,42 +177,42 @@ const Dashboard = () => {
     if (statusData.Real > 0) {
       data.push({ name: 'Real', value: statusData.Real, color: '#FFCE56' });
     }
-    
+
     return data;
   })() : [];
 
   // Bar chart data - Updated to match API response structure with month names
-  const barData = dashboardData?.leadsCountPerMonth?.length > 0 
+  const barData = dashboardData?.leadsCountPerMonth?.length > 0
     ? dashboardData.leadsCountPerMonth.map((item) => {
-        // Convert month number to month name
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const monthName = monthNames[item.month - 1] || `Month ${item.month}`;
-        
-        // Color mapping based on month
-        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', 
-                       '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'];
-        
-        return {
-          name: monthName,
-          value: item.totalLeads || 0,
-          color: colors[(item.month - 1) % 12],
-        };
-      })
+      // Convert month number to month name
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthName = monthNames[item.month - 1] || `Month ${item.month}`;
+
+      // Color mapping based on month
+      const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+        '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'];
+
+      return {
+        name: monthName,
+        value: item.totalLeads || 0,
+        color: colors[(item.month - 1) % 12],
+      };
+    })
     : [
-        { name: 'Jan', value: 0, color: '#FF6384' },
-        { name: 'Feb', value: 0, color: '#36A2EB' },
-        { name: 'Mar', value: 0, color: '#FFCE56' },
-        { name: 'Apr', value: 0, color: '#4BC0C0' },
-        { name: 'May', value: 0, color: '#9966FF' },
-        { name: 'Jun', value: 0, color: '#FF9F40' },
-        { name: 'Jul', value: 0, color: '#C9CBCF' },
-        { name: 'Aug', value: 0, color: '#36A2EB' },
-        { name: 'Sep', value: 0, color: '#FF6384' },
-        { name: 'Oct', value: 0, color: '#4BC0C0' },
-        { name: 'Nov', value: 0, color: '#FFCE56' },
-        { name: 'Dec', value: 0, color: '#9966FF' }
-      ];
+      { name: 'Jan', value: 0, color: '#FF6384' },
+      { name: 'Feb', value: 0, color: '#36A2EB' },
+      { name: 'Mar', value: 0, color: '#FFCE56' },
+      { name: 'Apr', value: 0, color: '#4BC0C0' },
+      { name: 'May', value: 0, color: '#9966FF' },
+      { name: 'Jun', value: 0, color: '#FF9F40' },
+      { name: 'Jul', value: 0, color: '#C9CBCF' },
+      { name: 'Aug', value: 0, color: '#36A2EB' },
+      { name: 'Sep', value: 0, color: '#FF6384' },
+      { name: 'Oct', value: 0, color: '#4BC0C0' },
+      { name: 'Nov', value: 0, color: '#FFCE56' },
+      { name: 'Dec', value: 0, color: '#9966FF' }
+    ];
 
   // Custom label for pie chart
   const renderCustomLabel = ({
@@ -326,36 +326,36 @@ const Dashboard = () => {
               {/* Kiosk Member Filter */}
               {kioskMemberOptions.length > 0 && (
                 <div className='flex items-center gap-3'>
-                <label htmlFor="" className='text-[#E8D5A3] font-medium text-sm whitespace-nowrap'>
-                  Filter by Agent:
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedKioskMember}
-                    onChange={(e) => setSelectedKioskMember(e.target.value)}
-                    className="w-full md:w-64 px-4 py-2.5 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[#BBA473]/40 rounded-lg text-white text-sm font-medium appearance-none cursor-pointer hover:border-[#BBA473] focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all pl-10 duration-300 shadow-lg"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23BBA473' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 0.75rem center',
-                      paddingRight: '2.5rem'
-                    }}
-                  >
-                    <option value="all" className="bg-[#1A1A1A] text-white">
-                      All Kiosk Members
-                    </option>
-                    {kioskMemberOptions.map((member) => (
-                      <option
-                        key={member.kioskMemberId}
-                        value={member.kioskMemberId}
-                        className="bg-[#1A1A1A] text-white"
-                      >
-                        {member.firstName} {member.lastName} ({member.totalLeads} leads)
+                  <label htmlFor="" className='text-[#E8D5A3] font-medium text-sm whitespace-nowrap'>
+                    Filter by Agent:
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedKioskMember}
+                      onChange={(e) => setSelectedKioskMember(e.target.value)}
+                      className="w-full md:w-64 px-4 py-2.5 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[#BBA473]/40 rounded-lg text-white text-sm font-medium appearance-none cursor-pointer hover:border-[#BBA473] focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all pl-10 duration-300 shadow-lg"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23BBA473' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0.75rem center',
+                        paddingRight: '2.5rem'
+                      }}
+                    >
+                      <option value="all" className="bg-[#1A1A1A] text-white">
+                        All Kiosk Members
                       </option>
-                    ))}
-                  </select>
-                  <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
-                </div>
+                      {kioskMemberOptions.map((member) => (
+                        <option
+                          key={member.kioskMemberId}
+                          value={member.kioskMemberId}
+                          className="bg-[#1A1A1A] text-white"
+                        >
+                          {member.firstName} {member.lastName} ({member.totalLeads} leads)
+                        </option>
+                      ))}
+                    </select>
+                    <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+                  </div>
                 </div>
               )}
             </div>
@@ -394,27 +394,89 @@ const Dashboard = () => {
                   >
                     {/* Gradient Overlay on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    
+
                     {/* Animated Corner Accent */}
                     <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
-                    
-                    <div className="relative flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
-                          {getKioskMemberName()} - Total Real Leads
-                        </p>
-                        <p className="text-3xl font-bold text-white mt-1 group-hover:text-[#BBA473] transition-colors duration-300">
-                          {getKioskMemberLeads()}
-                        </p>
+
+                    <div className="relative">
+                      {/* Header with Icon */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex-1">
+                          <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
+                            {getKioskMemberName()} - Lead Statistics
+                          </p>
+                        </div>
+                        <div
+                          className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
+                          style={{ backgroundColor: 'rgba(75, 192, 192, 0.125)' }}
+                        >
+                          <UserCircle
+                            style={{ color: 'rgb(75, 192, 192)' }}
+                            className="w-8 h-8 group-hover:animate-pulse"
+                          />
+                        </div>
                       </div>
-                      <div
-                        className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
-                        style={{ backgroundColor: 'rgba(75, 192, 192, 0.125)' }}
-                      >
-                        <UserCircle 
-                          style={{ color: 'rgb(75, 192, 192)' }} 
-                          className="w-8 h-8 group-hover:animate-pulse"
-                        />
+
+                      {/* Stats Grid */}
+                      <div className="flex justify-between gap-6">
+                        {/* Total Leads */}
+                        <div className="flex flex-col items-center justify-center transition-all duration-300">
+                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Total Leads</p>
+                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                            {selectedKioskMember === 'all'
+                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.leadCount || 0), 0)
+                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.leadCount || 0
+                            }
+                          </p>
+                        </div>
+
+                        {/* Vertical Divider - Hidden on mobile */}
+                        <div className="hidden md:flex items-center justify-center">
+                          <div className="h-full w-px bg-gradient-to-b from-transparent via-[#BBA473]/30 to-transparent"></div>
+                        </div>
+
+                        {/* Demo Count */}
+                        <div className="flex flex-col items-center justify-center transition-all duration-300">
+                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Demo</p>
+                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#36A2EB] transition-colors duration-300">
+                            {selectedKioskMember === 'all'
+                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.demoCount || 0), 0)
+                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.demoCount || 0
+                            }
+                          </p>
+                        </div>
+
+                        {/* Vertical Divider - Hidden on mobile */}
+                        <div className="hidden md:flex items-center justify-center">
+                          <div className="h-full w-px bg-gradient-to-b from-transparent via-[#BBA473]/30 to-transparent"></div>
+                        </div>
+
+                        {/* Real Deposit Count */}
+                        <div className="flex flex-col items-center justify-center transition-all duration-300">
+                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Real (Deposit)</p>
+                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#4BC0C0] transition-colors duration-300">
+                            {selectedKioskMember === 'all'
+                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.realDepositCount || 0), 0)
+                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.realDepositCount || 0
+                            }
+                          </p>
+                        </div>
+
+                        {/* Vertical Divider - Hidden on mobile */}
+                        <div className="hidden md:flex items-center justify-center">
+                          <div className="h-full w-px bg-gradient-to-b from-transparent via-[#BBA473]/30 to-transparent"></div>
+                        </div>
+
+                        {/* Real Not Deposit Count */}
+                        <div className="flex flex-col items-center justify-center transition-all duration-300">
+                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Real (No Deposit)</p>
+                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#FF6384] transition-colors duration-300">
+                            {selectedKioskMember === 'all'
+                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.realNotDepositCount || 0), 0)
+                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.realNotDepositCount || 0
+                            }
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -424,10 +486,9 @@ const Dashboard = () => {
                 </div>
               )}
 
-              <div 
-                className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 ${
-                  stats.length === 1 ? 'sm:justify-items-center' : ''
-                }`}
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 ${stats.length === 1 ? 'sm:justify-items-center' : ''
+                  }`}
               >
                 {stats.map((stat, index) => {
                   const Icon = stat.icon;
@@ -441,10 +502,10 @@ const Dashboard = () => {
                     >
                       {/* Gradient Overlay on Hover */}
                       <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      
+
                       {/* Animated Corner Accent */}
                       <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform pl-10 duration-500"></div>
-                      
+
                       <div className="relative flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
@@ -458,8 +519,8 @@ const Dashboard = () => {
                           className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
                           style={{ backgroundColor: stat.bgColor }}
                         >
-                          <Icon 
-                            style={{ color: stat.color }} 
+                          <Icon
+                            style={{ color: stat.color }}
                             className="w-8 h-8 group-hover:animate-pulse"
                           />
                         </div>
@@ -475,7 +536,7 @@ const Dashboard = () => {
               {/* Charts Grid with Enhanced Design */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 {/* Pie Chart with Enhanced Styling */}
-                <div 
+                <div
                   className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
                   style={{ animation: 'slideInLeft 0.6s ease-out' }}
                 >
@@ -486,7 +547,7 @@ const Dashboard = () => {
                     </h3>
                     <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
                   </div>
-                  
+
                   {pieData.length > 0 ? (
                     <div className="space-y-4">
                       <ResponsiveContainer width="100%" height={400}>
@@ -506,8 +567,8 @@ const Dashboard = () => {
                             animationDuration={1000}
                           >
                             {pieData.map((entry, index) => (
-                              <Cell 
-                                key={`cell-${index}`} 
+                              <Cell
+                                key={`cell-${index}`}
                                 fill={entry.color}
                                 className="hover:opacity-80 transition-opacity duration-300 cursor-pointer"
                               />
@@ -538,7 +599,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Bar Chart with Enhanced Styling */}
-                <div 
+                <div
                   className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
                   style={{ animation: 'slideInRight 0.6s ease-out' }}
                 >
@@ -549,13 +610,13 @@ const Dashboard = () => {
                     </h3>
                     <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
                   </div>
-                  
+
                   <ResponsiveContainer width="100%" height={450}>
                     <BarChart data={barData}>
                       <defs>
                         <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#BBA473" stopOpacity={0.8}/>
-                          <stop offset="100%" stopColor="#BBA473" stopOpacity={0.3}/>
+                          <stop offset="0%" stopColor="#BBA473" stopOpacity={0.8} />
+                          <stop offset="100%" stopColor="#BBA473" stopOpacity={0.3} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
@@ -568,20 +629,20 @@ const Dashboard = () => {
                         stroke="#9CA3AF"
                         tick={{ fill: '#9CA3AF' }}
                       />
-                      <YAxis 
+                      <YAxis
                         stroke="#9CA3AF"
                         tick={{ fill: '#9CA3AF' }}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar 
-                        dataKey="value" 
+                      <Bar
+                        dataKey="value"
                         radius={[8, 8, 0, 0]}
                         animationBegin={0}
                         animationDuration={1000}
                       >
                         {barData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
+                          <Cell
+                            key={`cell-${index}`}
                             fill={entry.color}
                             className="hover:opacity-80 transition-opacity duration-300 cursor-pointer"
                           />
