@@ -385,104 +385,162 @@ const Dashboard = () => {
           {/* Stats Grid with Enhanced Cards */}
           {!loading && dashboardData && (
             <div className="animate-fade-in">
-              {/* Kiosk Member Total Leads Card */}
+              {/* Kiosk Member Total Leads Cards */}
               {kioskMemberOptions.length > 0 && (
                 <div className="mb-6">
-                  <div
-                    className="group relative w-full border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
-                    style={{ animation: 'slideInUp 0.5s ease-out' }}
-                  >
-                    {/* Gradient Overlay on Hover */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                    {/* Animated Corner Accent */}
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
-
-                    <div className="relative">
-                      {/* Header with Icon */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex-1">
-                          <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
-                            {getKioskMemberName()} - Lead Statistics
-                          </p>
-                        </div>
+                  {selectedKioskMember === 'all' ? (
+                    // Show all cards when "all" is selected
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {kioskMemberOptions.map((member, index) => (
                         <div
-                          className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
-                          style={{ backgroundColor: 'rgba(75, 192, 192, 0.125)' }}
+                          key={member.kioskMemberId}
+                          className="group relative w-full border border-[#BBA473]/40 rounded-lg p-4 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-105 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                          style={{ animation: `slideInUp 0.5s ease-out ${index * 0.1}s both` }}
                         >
-                          <UserCircle
-                            style={{ color: 'rgb(75, 192, 192)' }}
-                            className="w-8 h-8 group-hover:animate-pulse"
-                          />
-                        </div>
-                      </div>
+                          {/* Gradient Overlay on Hover */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                      {/* Stats Grid */}
-                      <div className="flex justify-between gap-6">
-                        {/* Total Leads */}
-                        <div className="flex flex-col items-center justify-center transition-all duration-300">
-                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Leads</p>
-                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#BBA473] transition-colors duration-300">
-                            {selectedKioskMember === 'all'
-                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.leadCount || 0), 0)
-                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.leadCount || 0
-                            }
-                          </p>
-                        </div>
+                          {/* Animated Corner Accent */}
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
 
-                        {/* Vertical Divider - Hidden on mobile */}
-                        <div className="hidden md:flex items-center justify-center">
-                          <div className="h-full w-px bg-gradient-to-b from-transparent via-[#BBA473]/30 to-transparent"></div>
-                        </div>
+                          <div className="relative">
+                            {/* Header with Icon */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex-1">
+                                <p className="text-gray-400 text-xs font-bold mb-1 group-hover:text-gray-300 transition-colors duration-300 truncate">
+                                  {member.firstName} {member.lastName}
+                                </p>
+                              </div>
+                              <div
+                                className="p-2 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
+                                style={{ backgroundColor: 'rgba(75, 192, 192, 0.125)' }}
+                              >
+                                <UserCircle
+                                  style={{ color: 'rgb(75, 192, 192)' }}
+                                  className="w-5 h-5 group-hover:animate-pulse"
+                                />
+                              </div>
+                            </div>
 
-                        {/* Demo Count */}
-                        <div className="flex flex-col items-center justify-center transition-all duration-300">
-                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Demo</p>
-                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#36A2EB] transition-colors duration-300">
-                            {selectedKioskMember === 'all'
-                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.demoCount || 0), 0)
-                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.demoCount || 0
-                            }
-                          </p>
-                        </div>
+                            {/* Stats Grid */}
+                            <div className="space-y-2">
+                              {/* Leads */}
+                              <div className="flex items-center justify-between">
+                                <p className="text-gray-400 text-xs font-medium">Leads</p>
+                                <p className="text-lg font-bold text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                                  {member.leadCount || 0}
+                                </p>
+                              </div>
 
-                        {/* Vertical Divider - Hidden on mobile */}
-                        <div className="hidden md:flex items-center justify-center">
-                          <div className="h-full w-px bg-gradient-to-b from-transparent via-[#BBA473]/30 to-transparent"></div>
-                        </div>
+                              {/* Demo */}
+                              <div className="flex items-center justify-between">
+                                <p className="text-gray-400 text-xs font-medium">Demo</p>
+                                <p className="text-lg font-bold text-white group-hover:text-[#36A2EB] transition-colors duration-300">
+                                  {member.demoCount || 0}
+                                </p>
+                              </div>
 
-                        {/* Real Deposit Count */}
-                        <div className="flex flex-col items-center justify-center transition-all duration-300">
-                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Real (Deposit)</p>
-                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#4BC0C0] transition-colors duration-300">
-                            {selectedKioskMember === 'all'
-                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.realDepositCount || 0), 0)
-                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.realDepositCount || 0
-                            }
-                          </p>
-                        </div>
+                              {/* Real Deposit */}
+                              <div className="flex items-center justify-between">
+                                <p className="text-gray-400 text-xs font-medium">Real (Deposit)</p>
+                                <p className="text-lg font-bold text-white group-hover:text-[#4BC0C0] transition-colors duration-300">
+                                  {member.realDepositCount || 0}
+                                </p>
+                              </div>
 
-                        {/* Vertical Divider - Hidden on mobile */}
-                        <div className="hidden md:flex items-center justify-center">
-                          <div className="h-full w-px bg-gradient-to-b from-transparent via-[#BBA473]/30 to-transparent"></div>
-                        </div>
+                              {/* Real Not Deposit */}
+                              <div className="flex items-center justify-between">
+                                <p className="text-gray-400 text-xs font-medium">Real (No Deposit)</p>
+                                <p className="text-lg font-bold text-white group-hover:text-[#FF6384] transition-colors duration-300">
+                                  {member.realNotDepositCount || 0}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
 
-                        {/* Real Not Deposit Count */}
-                        <div className="flex flex-col items-center justify-center transition-all duration-300">
-                          <p className="text-gray-400 text-xs font-medium mb-2 text-center">Real (No Deposit)</p>
-                          <p className="text-2xl md:text-3xl font-bold text-white group-hover:text-[#FF6384] transition-colors duration-300">
-                            {selectedKioskMember === 'all'
-                              ? kioskMemberOptions.reduce((sum, member) => sum + (member.realNotDepositCount || 0), 0)
-                              : kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember)?.realNotDepositCount || 0
-                            }
-                          </p>
+                          {/* Bottom Accent Line */}
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                         </div>
-                      </div>
+                      ))}
                     </div>
+                  ) : (
+                    // Show single card when specific agent is selected
+                    (() => {
+                      const member = kioskMemberOptions.find(m => m.kioskMemberId === selectedKioskMember);
+                      return member ? (
+                        <div className="max-w-full mx-auto">
+                          <div
+                            className="group relative w-full border border-[#BBA473]/40 rounded-lg p-4 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                            style={{ animation: 'slideInUp 0.5s ease-out' }}
+                          >
+                            {/* Gradient Overlay on Hover */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                    {/* Bottom Accent Line */}
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-                  </div>
+                            {/* Animated Corner Accent */}
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
+
+                            <div className="relative">
+                              {/* Header with Icon */}
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex-1">
+                                  <p className="text-gray-400 text-xs font-bold mb-1 group-hover:text-gray-300 transition-colors duration-300">
+                                    {member.firstName} {member.lastName}
+                                  </p>
+                                </div>
+                                <div
+                                  className="p-2 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
+                                  style={{ backgroundColor: 'rgba(75, 192, 192, 0.125)' }}
+                                >
+                                  <UserCircle
+                                    style={{ color: 'rgb(75, 192, 192)' }}
+                                    className="w-5 h-5 group-hover:animate-pulse"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Stats Grid */}
+                              <div className="space-y-2">
+                                {/* Leads */}
+                                <div className="flex items-center justify-between">
+                                  <p className="text-gray-400 text-xs font-medium">Leads</p>
+                                  <p className="text-lg font-bold text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                                    {member.leadCount || 0}
+                                  </p>
+                                </div>
+
+                                {/* Demo */}
+                                <div className="flex items-center justify-between">
+                                  <p className="text-gray-400 text-xs font-medium">Demo</p>
+                                  <p className="text-lg font-bold text-white group-hover:text-[#36A2EB] transition-colors duration-300">
+                                    {member.demoCount || 0}
+                                  </p>
+                                </div>
+
+                                {/* Real Deposit */}
+                                <div className="flex items-center justify-between">
+                                  <p className="text-gray-400 text-xs font-medium">Real (Deposit)</p>
+                                  <p className="text-lg font-bold text-white group-hover:text-[#4BC0C0] transition-colors duration-300">
+                                    {member.realDepositCount || 0}
+                                  </p>
+                                </div>
+
+                                {/* Real Not Deposit */}
+                                <div className="flex items-center justify-between">
+                                  <p className="text-gray-400 text-xs font-medium">Real (No Deposit)</p>
+                                  <p className="text-lg font-bold text-white group-hover:text-[#FF6384] transition-colors duration-300">
+                                    {member.realNotDepositCount || 0}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Bottom Accent Line */}
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()
+                  )}
                 </div>
               )}
 

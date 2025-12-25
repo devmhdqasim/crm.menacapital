@@ -8,6 +8,7 @@ import { getAllUsers } from '../../services/teamService';
 import { getAllLeads } from '../../services/leadService';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
+import TaskDetailsModal from './TaskDetailsModal';
 
 // Validation Schema for Task Form
 const taskValidationSchema = Yup.object({
@@ -60,6 +61,10 @@ const Tasks = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
 
+  // Modal states
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Dropdown data
   const [agents, setAgents] = useState([]);
   const [leads, setLeads] = useState([]);
@@ -71,7 +76,7 @@ const Tasks = () => {
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState('Sales Manager'); // Change this based on your auth implementation
 
-  const tabs = ['All', 'Pending', 'Completed', 'Today Pending', 'Future Pending', 'Not-Completed'];
+  const tabs = ['All', 'Today Pending', 'Future Pending', 'Completed', 'Not-Completed'];
   const priorities = ['All', 'High', 'Normal', 'Low'];
   const statusOptions = ['Open', 'Pending', 'Completed'];
   const priorityOptions = ['High', 'Normal', 'Low'];
@@ -512,6 +517,16 @@ const Tasks = () => {
     formik.resetForm();
   };
 
+  const handleRowClick = (task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTask(null);
+  };
+
   function convertToDubaiTime(utcDateString) {
     const date = new Date(utcDateString);
 
@@ -838,7 +853,8 @@ const Tasks = () => {
                     filteredTasks.map((task) => (
                       <tr
                         key={task.id}
-                        className="hover:bg-[#3A3A3A] transition-all duration-300 group"
+                        onClick={() => handleRowClick(task)}
+                        className="hover:bg-[#3A3A3A] transition-all duration-300 group cursor-pointer"
                       >
                         <td className="px-6 py-4 text-gray-300 font-mono text-sm">
                           {task.taskId}
@@ -902,14 +918,20 @@ const Tasks = () => {
                         <td className="px-6 py-4">
                           <div className="flex justify-center gap-2">
                             <button
-                              onClick={() => handleEdit(task)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(task);
+                              }}
                               className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
                               title="Edit"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDelete(task.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(task.id);
+                              }}
                               className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-110"
                               title="Delete"
                             >
@@ -1290,6 +1312,13 @@ const Tasks = () => {
           </form>
         </div>
       </div>
+
+      {/* Task Details Modal */}
+      <TaskDetailsModal 
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        task={selectedTask}
+      />
 
       <style>{`
         @keyframes fadeIn {
