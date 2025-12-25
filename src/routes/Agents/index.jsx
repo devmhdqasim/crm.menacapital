@@ -381,7 +381,7 @@ const AgentManagement = () => {
     formik.setFieldValue('password', password);
   }; 
 
-  const handleImageChange = (e) => {
+  const handleImageChange = (e) => { 
     const file = e.target.files?.[0];
     if (file) {
       formik.setFieldValue('image', file);
