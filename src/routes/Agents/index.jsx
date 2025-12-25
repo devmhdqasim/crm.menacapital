@@ -379,7 +379,7 @@ const AgentManagement = () => {
     }
     password = password.split('').sort(() => Math.random() - 0.5).join('');
     formik.setFieldValue('password', password);
-  }; 
+  };  
 
   const handleImageChange = (e) => {  
     const file = e.target.files?.[0]; 
