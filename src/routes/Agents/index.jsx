@@ -382,7 +382,7 @@ const AgentManagement = () => {
   }; 
 
   const handleImageChange = (e) => { 
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]; 
     if (file) {
       formik.setFieldValue('image', file);
       const reader = new FileReader();
