@@ -12,7 +12,7 @@ import TaskDetailsModal from './TaskDetailsModal';
 
 // Validation Schema for Task Form
 const taskValidationSchema = Yup.object({
-  agentId: Yup.string().required('Agent is required'),
+  agentId: Yup.string(),
   leadId: Yup.string().required('Lead is required'),
   taskTitle: Yup.string()
     .required('Task title is required')
@@ -715,22 +715,57 @@ const Tasks = () => {
               {/* Assigned To Filter - For Sales Manager, show "Assigned To" (agents) */}
               {userRole === 'Sales Manager' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Assigned To</label>
-                  <div className="relative">
-                    <select
-                      value={assignedToFilter}
-                      onChange={(e) => setAssignedToFilter(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
-                    >
-                      {uniqueAssignees.map((assignee) => (
-                        <option key={assignee} value={assignee}>
-                          {assignee}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                  </div>
-                </div>
+  <label className="block text-sm font-medium text-gray-400 mb-2">
+    Assign To <span className="text-red-500">*</span>
+  </label>
+  <div className="relative">
+    <select
+      name="agentId"
+      value={formik.values.agentId}
+      onChange={formik.handleChange}
+      onBlur={formik.handleBlur}
+      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
+        formik.touched.agentId && formik.errors.agentId
+          ? 'border-red-500'
+          : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+      }`}
+    >
+      <option value="">Select agent or sales manager...</option>
+      
+      {/* Agents Section */}
+      {agents.length > 0 && (
+        <optgroup label="━━━━━ Agents ━━━━━">
+          {agents.map(agent => (
+            <option key={agent.id} value={agent.id}>
+              {agent.name} (@{agent.username})
+            </option>
+          ))}
+        </optgroup>
+      )}
+      
+      {/* Sales Managers Section */}
+      {salesManagers.length > 0 && (
+        <optgroup label="━━━━━ Sales Managers ━━━━━">
+          {salesManagers.map(manager => (
+            <option key={manager.id} value={manager.id}>
+              {manager.name} (@{manager.username})
+            </option>
+          ))}
+        </optgroup>
+      )}
+      
+      {agents.length === 0 && salesManagers.length === 0 && (
+        <option disabled>Loading...</option>
+      )}
+    </select>
+    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+  </div>
+  {formik.touched.agentId && formik.errors.agentId && (
+    <p className="text-red-500 text-xs mt-1">{formik.errors.agentId}</p>
+  )}
+</div>
+
+
               )}
 
               {/* Assigned By Filter - For Agent, show "Assigned By" (sales managers) */}
