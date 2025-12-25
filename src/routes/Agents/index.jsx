@@ -365,7 +365,7 @@ const AgentManagement = () => {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&';
     let password = '';
     const categories = {
-      lowercase: 'abcdefghijklmnopqrstuvwxyz',
+      lowercase: 'abcdefghijklmnopqrstuvwxyz', 
       uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
       numbers: '0123456789',
       special: '@$!%*?&'
