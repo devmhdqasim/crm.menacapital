@@ -3,14 +3,16 @@ import { X, Calendar, Clock, User, Phone, Mail } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
+import { updateTask } from '../../../services/taskService';
 
-const TaskDetailsModal = ({ isOpen, onClose, task }) => {
+const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   // Modal form state
   const [taskStatus, setTaskStatus] = useState('');
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
   const [modalRemarks, setModalRemarks] = useState('');
   const [modalErrors, setModalErrors] = useState({});
   const [reminderDateTime, setReminderDateTime] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Helper states for hierarchical selections
   const [modalAnswered, setModalAnswered] = useState('');
@@ -166,23 +168,46 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
       return;
     }
 
-    try {
-      // TODO: Implement your API call here
-      // const result = await updateTask(task.id, {
-      //   taskStatus,
-      //   leadResponseStatus,
-      //   leadRemarks: modalRemarks,
-      //   // Add other fields as needed
-      // });
+    setIsSubmitting(true);
 
-      toast.success('Task updated successfully!');
-      handleClose();
-      
-      // TODO: Refresh the task list
-      // fetchTasks(currentPage, itemsPerPage);
+    try {
+      // Prepare the task data payload
+      const taskData = {
+        agentId: task.agentIdRaw,
+        leadId: task.leadIdRaw,
+        salesManagerId: task.salesManagerIdRaw || undefined,
+        taskTitle: task.title,
+        taskDescription: task.description,
+        taskPriority: task.priority,
+        taskScheduledDate: task.taskScheduledDate,
+        taskStatus: taskStatus,
+        leadRemarks: modalRemarks || '',
+        leadResponseStatus: leadResponseStatus || '',
+      };
+
+      // Call the API to update the task
+      const result = await updateTask(task.id, taskData);
+
+      if (result.success) {
+        toast.success(result.message || 'Task updated successfully!');
+        handleClose();
+        
+        // Call the callback to refresh the task list if provided
+        if (onTaskUpdated) {
+          onTaskUpdated();
+        }
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error?.payload?.message || 'Failed to update task');
+        }
+      }
     } catch (error) {
       console.error('Error updating task:', error);
       toast.error('Failed to update task. Please try again');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -766,20 +791,21 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Close
             </button>
             <button
               onClick={handleModalSubmit}
-              disabled={!isFormValid()}
+              disabled={!isFormValid() || isSubmitting}
               className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg transform ${
-                isFormValid()
+                isFormValid() && !isSubmitting
                   ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
                   : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
               }`}
             >
-              Save Changes
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>

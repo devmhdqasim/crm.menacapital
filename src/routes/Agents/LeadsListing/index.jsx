@@ -352,7 +352,7 @@ const LeadsListing = ({
                     <td className="px-6 py-4 text-gray-300" onClick={() => handleRowClick(lead)}>{lead.nationality}</td>
                     {!isLeadsSelectedId && (
                       <>
-                        <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{lead.source}</td>
+                        <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{lead.source} {lead.leadSource ? ` - ${lead.leadSource}` : ''}</td>
                         <td className="flex items-center gap-1.5 px-6 py-4" onClick={() => handleRowClick(lead)}> 
                           {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
                             {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}

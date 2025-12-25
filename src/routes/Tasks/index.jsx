@@ -1318,6 +1318,7 @@ const Tasks = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         task={selectedTask}
+        onTaskUpdated={() => fetchTasks(currentPage, itemsPerPage)}
       />
 
       <style>{`
