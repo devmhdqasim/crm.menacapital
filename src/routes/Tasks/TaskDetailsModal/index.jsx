@@ -471,7 +471,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       checked={modalAnswered === 'Answered'}
                       onChange={(e) => {
                         setModalAnswered(e.target.value);
-                        setLeadResponseStatus('');
+                        setLeadResponseStatus(leadResponseStatus === 'Not Interested' || leadResponseStatus === 'Warm' || leadResponseStatus === 'Hot' || leadResponseStatus === 'Demo' || leadResponseStatus === 'Deposit' || leadResponseStatus === 'Not Deposit' ? leadResponseStatus : '');
                         setModalInterested('');
                         setModalLeadType('');
                         setModalHotLeadType('');
@@ -488,7 +488,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       type="radio"
                       name="answered"
                       value="Not Answered"
-                      checked={modalAnswered === 'Not Answered'}
+                      checked={modalAnswered === 'Not Answered' && leadResponseStatus === 'Not Answered'}
                       onChange={(e) => {
                         setModalAnswered(e.target.value);
                         setLeadResponseStatus(e.target.value);
@@ -516,7 +516,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           checked={modalInterested === 'Interested'}
                           onChange={(e) => {
                             setModalInterested(e.target.value);
-                            setLeadResponseStatus('');
+                            setLeadResponseStatus(leadResponseStatus === 'Warm' || leadResponseStatus === 'Hot' || leadResponseStatus === 'Demo' || leadResponseStatus === 'Deposit' || leadResponseStatus === 'Not Deposit' ? leadResponseStatus : '');
                             setModalLeadType('');
                             setModalHotLeadType('');
                             setModalDepositStatus('');
@@ -532,7 +532,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           type="radio"
                           name="interested"
                           value="Not Interested"
-                          checked={modalInterested === 'Not Interested'}
+                          checked={modalInterested === 'Not Interested' && leadResponseStatus === 'Not Interested'}
                           onChange={(e) => {
                             setModalInterested(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -561,7 +561,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           type="radio"
                           name="leadType"
                           value="Warm"
-                          checked={modalLeadType === 'Warm'}
+                          checked={modalLeadType === 'Warm' && leadResponseStatus === 'Warm'}
                           onChange={(e) => {
                             setModalLeadType(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -582,7 +582,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           checked={modalLeadType === 'Hot'}
                           onChange={(e) => {
                             setModalLeadType(e.target.value);
-                            setLeadResponseStatus('');
+                            setLeadResponseStatus(leadResponseStatus === 'Hot' ? 'Hot' : '');
                             setModalHotLeadType('');
                             setModalDepositStatus('');
                             setModalErrors({});
@@ -607,7 +607,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           type="radio"
                           name="hotLeadType"
                           value="Demo"
-                          checked={modalHotLeadType === 'Demo'}
+                          checked={modalHotLeadType === 'Demo' && leadResponseStatus === 'Demo'}
                           onChange={(e) => {
                             setModalHotLeadType(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -627,7 +627,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           checked={modalHotLeadType === 'Real'}
                           onChange={(e) => {
                             setModalHotLeadType(e.target.value);
-                            setLeadResponseStatus('');
+                            setLeadResponseStatus(leadResponseStatus === 'Deposit' || leadResponseStatus === 'Not Deposit' ? leadResponseStatus : '');
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
@@ -715,7 +715,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           type="radio"
                           name="depositStatus"
                           value="Deposit"
-                          checked={modalDepositStatus === 'Deposit'}
+                          checked={modalDepositStatus === 'Deposit' && leadResponseStatus === 'Deposit'}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -731,7 +731,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           type="radio"
                           name="depositStatus"
                           value="Not Deposit"
-                          checked={modalDepositStatus === 'Not Deposit'}
+                          checked={modalDepositStatus === 'Not Deposit' && leadResponseStatus === 'Not Deposit'}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
