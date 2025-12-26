@@ -290,6 +290,9 @@ const Tasks = () => {
             assignedTo: task.agentId?.length > 0
               ? `${task.agentId[0].firstName} ${task.agentId[0].lastName}`
               : 'Unassigned',
+            assignedBy: task.assignedBy?.length > 0
+            ? `${task.assignedBy[0].firstName} ${task.assignedBy[0].lastName}`
+            : 'Protocol',
             assignedToUsername: task.agentId?.length > 0 ? task.agentId[0].username : '',
             salesManager: task.salesManagerId?.length > 0
               ? `${task.salesManagerId[0].firstName} ${task.salesManagerId[0].lastName}`
@@ -944,7 +947,7 @@ const Tasks = () => {
                         )}
                         <td className="px-6 py-4">
                           {!clearFilter && (
-                            <div className="text-gray-300">{task.salesManager || 'N/A'}</div>
+                            <div className="text-gray-300">{task.assignedBy || 'Protocol'}</div>
                           )}
                         </td>
                         <td className="px-6 py-4 text-gray-300 text-sm">
