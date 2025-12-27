@@ -962,7 +962,7 @@ const Tasks = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex justify-center gap-2">
-                            <button
+                            {/* <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEdit(task);
@@ -971,7 +971,7 @@ const Tasks = () => {
                               title="Edit"
                             >
                               <Edit className="w-4 h-4" />
-                            </button>
+                            </button> */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
