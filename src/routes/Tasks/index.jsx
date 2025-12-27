@@ -880,7 +880,7 @@ const Tasks = () => {
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Assigned By</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
                     <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
-                  </tr>
+                  </tr>  
                 </thead>
                 <tbody className="divide-y divide-[#BBA473]/10"> 
                   {filteredTasks.length === 0 ? (
