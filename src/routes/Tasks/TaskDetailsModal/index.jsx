@@ -37,7 +37,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       setReminderDateTime(null);
       
       // Parse the current lead response status to set UI state
-      const currentStatus = task.leadResponseStatus || '';
+      const currentStatus = task.taskCreationStatus || '';
       
       if (!currentStatus || currentStatus === '') {
         // No status set yet
@@ -336,24 +336,29 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   };
 
   // Point 5: Check if a lead response option should be disabled (previous statuses)
-  const getLeadResponseStatusOrder = (status) => {
-    const order = {
-      '': 0,
-      'Not Answered': 1,
-      'Not Interested': 2,
-      'Warm': 3,
-      'Hot': 4,
-      'Demo': 5,
-      'Not Deposit': 6,
-      'Deposit': 7
-    };
-    return order[status] || 0;
-  };
-
-  const isLeadResponseOptionDisabled = (optionStatus) => {
-    const currentOrder = getLeadResponseStatusOrder(task?.leadResponseStatus || '');
-    const optionOrder = getLeadResponseStatusOrder(optionStatus);
-    return optionOrder < currentOrder;
+  // Status hierarchy: Not Answered < Not Interested < Warm < Hot < Demo < Not Deposit < Deposit
+  const isStatusDisabled = (statusToCheck) => {
+    if (!task) return false;
+    
+    const statusHierarchy = [
+      '',
+      'Not Answered',
+      'Not Interested', 
+      'Warm',
+      'Hot',
+      'Demo',
+      'Not Deposit',
+      'Deposit'
+    ];
+    
+    const currentStatusIndex = statusHierarchy.indexOf(task.taskCreationStatus || '');
+    const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
+    
+    // If current status not found or checking status not found, don't disable
+    if (currentStatusIndex === -1 || checkStatusIndex === -1) return false;
+    
+    // Disable if the status to check is before or equal to current status
+    return checkStatusIndex <= currentStatusIndex;
   };
 
   if (!isOpen || !task) return null;
@@ -458,9 +463,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium">Lead Status</label>
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.leadStatus)}`}>
-                    {task.leadStatus}
+                  <label className="text-sm text-[#E8D5A3] font-medium">Lead Task Status</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.taskCreationStatus)}`}>
+                    {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
                   </span>
                 </div>
               </div>
@@ -534,7 +539,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 {/* Level 1: Answered / Not Answered - Point 5: Disable previous statuses */}
                 <div className="grid grid-cols-2 gap-3">
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isLeadResponseOptionDisabled('Answered')
+                    isStatusDisabled('Answered')
                       ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                       : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
@@ -552,14 +557,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      disabled={isLeadResponseOptionDisabled('Answered')}
+                      disabled={isStatusDisabled('Answered')}
                       className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
                   
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isLeadResponseOptionDisabled('Not Answered')
+                    isStatusDisabled('Not Answered')
                       ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                       : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
@@ -577,7 +582,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      disabled={isLeadResponseOptionDisabled('Not Answered')}
+                      disabled={isStatusDisabled('Not Answered')}
                       className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Not Answered</span>
@@ -589,7 +594,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Interested')
+                        isStatusDisabled('Interested')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -606,14 +611,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Interested')}
+                          disabled={isStatusDisabled('Interested')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Interested</span>
                       </label>
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Not Interested')
+                        isStatusDisabled('Not Interested')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -630,7 +635,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Not Interested')}
+                          disabled={isStatusDisabled('Not Interested')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Not Interested</span>
@@ -647,7 +652,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Warm')
+                        isStatusDisabled('Warm')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -663,14 +668,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Warm')}
+                          disabled={isStatusDisabled('Warm')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Warm Lead</span>
                       </label>
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Hot')
+                        isStatusDisabled('Hot')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -686,7 +691,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Hot')}
+                          disabled={isStatusDisabled('Hot')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Hot Lead</span>
@@ -703,7 +708,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Demo')
+                        isStatusDisabled('Demo')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -718,14 +723,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Demo')}
+                          disabled={isStatusDisabled('Demo')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Demo</span>
                       </label>
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Real')
+                        isStatusDisabled('Real')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -740,7 +745,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Real')}
+                          disabled={isStatusDisabled('Real')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Real</span>
@@ -821,7 +826,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Deposit')
+                        isStatusDisabled('Deposit')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -835,14 +840,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Deposit')}
+                          disabled={isStatusDisabled('Deposit')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Deposit</span>
                       </label>
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isLeadResponseOptionDisabled('Not Deposit')
+                        isStatusDisabled('Not Deposit')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
@@ -856,7 +861,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          disabled={isLeadResponseOptionDisabled('Not Deposit')}
+                          disabled={isStatusDisabled('Not Deposit')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Not Deposit</span>

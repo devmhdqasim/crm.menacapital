@@ -300,6 +300,7 @@ const Tasks = () => {
             leadName: task.leadId?.length > 0 ? task.leadId[0].leadName : 'No Lead',
             leadId: task.leadId?.length > 0 ? task.leadId[0].leadId : '',
             leadStatus: task?.leadId[0]?.leadStatus ? task.leadId[0]?.leadStatus : '-',
+            taskCreationStatus: task?.taskCreationStatus ? task.taskCreationStatus : '-',
             leadPhone: task.leadId?.length > 0 ? task.leadId[0].leadPhoneNumber : '',
             dueDate: task.taskDueDate || new Date().toISOString(),
             createdAt: task.createdAt,
@@ -866,7 +867,8 @@ const Tasks = () => {
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Task Title</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Info</th>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Status</th>
+                    {/* <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Status</th> */}
+                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Task Status</th>
                     {/* Conditional column: Priority for Sales Manager, Scheduled Date for Agent */}
                     {/* {userRole === 'Sales Manager' ? (
                       <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Priority</th>
@@ -917,9 +919,14 @@ const Tasks = () => {
                             {task.status}
                           </span> : ''}
                         </td>
-                        <td className="px-6 py-4">
+                        {/* <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusBadge(task.leadStatus)}`}>
                             {task.leadStatus}
+                          </span>
+                        </td> */}
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusBadge(task.taskCreationStatus)}`}>
+                            {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
                           </span>
                         </td>
                         {/* Conditional cell: Priority for Sales Manager, Scheduled Date for Agent */}
