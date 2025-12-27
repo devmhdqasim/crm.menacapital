@@ -62,6 +62,11 @@ const SalesManagerAssignLeadModal = ({
       setModalRemarks(selectedLead.latestRemarks || '');
       setTaskTitle('');
       
+      // Reset demo checkboxes first
+      setDemoInstallApp(false);
+      setDemoEducationVideo(false);
+      setDemoAnalyzeChannel(false);
+      
       // Determine the current status based on boolean flags
       if (!selectedLead.contacted) {
         // Lead hasn't been contacted yet - no selections
@@ -103,10 +108,15 @@ const SalesManagerAssignLeadModal = ({
           setModalLeadType('Hot');
           
           if (selectedLead.demo && !selectedLead.real) {
-            // Demo account
+            // Demo account - set demo checkboxes based on lead data
             setModalHotLeadType('Demo');
             setLeadResponseStatus('Demo');
             setModalDepositStatus('');
+            
+            // ✅ FIX: Set demo checkboxes from lead data
+            setDemoInstallApp(selectedLead.applicationInstalled || false);
+            setDemoEducationVideo(selectedLead.educationalVideosSent || false);
+            setDemoAnalyzeChannel(selectedLead.socialMediaLinksSent || false);
           } else if (selectedLead.real) {
             // Real account
             setModalHotLeadType('Real');
@@ -477,7 +487,7 @@ const SalesManagerAssignLeadModal = ({
                 </div>
               </div>
 
-              <div className="space-y-4 mb-6">
+              {/* <div className="space-y-4 mb-6">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
@@ -497,7 +507,7 @@ const SalesManagerAssignLeadModal = ({
                     <span className="text-white font-medium">Completed</span>
                   </label>
                 </div>
-              </div>
+              </div> */}
 
                 {/* Level 1: Answered / Not Answered */}
                 <div className="space-y-4">

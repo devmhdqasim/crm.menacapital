@@ -941,7 +941,7 @@ const Tasks = () => {
                         )} */}
                         <td className="px-6 py-4">
                           <div className="text-gray-300 text-sm font-medium">
-                            {task.taskScheduledDate ? formatScheduledDate(task.taskScheduledDate) : 'Not Set'}
+                            {task.taskScheduledDate ? convertToDubaiTime(task.taskScheduledDate) : 'Not Set'}
                           </div>
                         </td>
                         {!clearFilter && (

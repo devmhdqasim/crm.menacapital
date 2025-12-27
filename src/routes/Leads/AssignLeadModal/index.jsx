@@ -471,7 +471,7 @@ const AssignLeadModal = ({
                 </div>
               </div>
 
-              <div className="space-y-4 mb-6">
+              {/* <div className="space-y-4 mb-6">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
@@ -491,7 +491,7 @@ const AssignLeadModal = ({
                     <span className="text-white font-medium">Completed</span>
                   </label>
                 </div>
-              </div>
+              </div> */}
 
               {/* Level 1: Answered / Not Answered */}
               <div className="space-y-4">
