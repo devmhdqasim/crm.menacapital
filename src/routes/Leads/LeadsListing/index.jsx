@@ -346,7 +346,7 @@ const LeadsListing = ({
                             {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
                           </span> : ''}
                           {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                            {(task.status == 'Deposit' || task.status == 'Not Deposit') ? `Real - ${task.status}` : task.status}
+                            {(lead.status == 'Deposit' || lead.status == 'Not Deposit') ? `Real - ${lead.status}` : lead.status}
                           </span>: ''}
                         </td>
                       </>
