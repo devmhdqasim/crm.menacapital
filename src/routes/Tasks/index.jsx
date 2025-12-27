@@ -880,7 +880,7 @@ const Tasks = () => {
                     <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#BBA473]/10">
+                <tbody className="divide-y divide-[#BBA473]/10"> 
                   {filteredTasks.length === 0 ? (
                     <tr>
                       <td colSpan="10" className="px-6 py-12 text-center text-gray-400">
