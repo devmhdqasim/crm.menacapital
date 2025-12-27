@@ -870,7 +870,7 @@ const Tasks = () => {
                     {/* Conditional column: Priority for Sales Manager, Scheduled Date for Agent */}
                     {/* {userRole === 'Sales Manager' ? (
                       <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Priority</th>
-                    ) : (
+                    ) : ( 
                       <></>
                     )} */}
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Scheduled Date</th>
