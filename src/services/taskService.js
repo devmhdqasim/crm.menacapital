@@ -19,7 +19,7 @@ const getRefreshToken = () => {
   return localStorage.getItem('refreshToken');
 };
 
-const getUserInfo = () => {
+const getUserInfo = () => { 
   return localStorage.getItem('userInfo');
 };
 
