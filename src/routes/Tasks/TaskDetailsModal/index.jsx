@@ -34,7 +34,6 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     if (task) {
       setModalRemarks(task.leadRemarks || '');
       setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
-      setLeadResponseStatus(task.leadResponseStatus || '');
       setReminderDateTime(null);
       
       // Parse the current lead response status to set UI state
