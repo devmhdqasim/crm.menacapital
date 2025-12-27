@@ -272,7 +272,8 @@ const SalesManagerAssignLeadModal = ({
           leadId: selectedLead?.id,
           leadStatus: leadResponseStatus || selectedLead?.status || 'Lead',
           taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
-          taskDescription: modalRemarks.trim() || 'No additional remarks'
+          taskDescription: modalRemarks.trim() || 'No additional remarks',
+          taskStatus: 'Completed',
         };
 
         const taskResult = await createAutoTask(taskData);
@@ -476,8 +477,34 @@ const SalesManagerAssignLeadModal = ({
                 </div>
               </div>
 
+              <div className="space-y-4 mb-6">
+                <label className="text-sm text-[#E8D5A3] font-medium block">
+                  Task Status <span className="text-red-400">*</span>
+                </label>
+                <div className="grid grid-cols-1 gap-3">
+                  <label 
+                    className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50"
+                  >
+                    <input
+                      type="radio"
+                      name="taskStatus"
+                      value="Completed"
+                      checked={true}
+                      onChange={(e) => {
+                      }}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                    />
+                    <span className="text-white font-medium">Completed</span>
+                  </label>
+                </div>
+              </div>
+
                 {/* Level 1: Answered / Not Answered */}
                 <div className="space-y-4">
+                <label className="text-sm text-[#E8D5A3] font-medium block">
+                  Update Status
+                </label>
+
                   <div className="grid grid-cols-2 gap-3">
                     <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
                       <input

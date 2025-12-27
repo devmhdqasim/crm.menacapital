@@ -533,7 +533,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
               {/* Lead Response Status Update */}
               <div className="space-y-4">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
-                  Update Lead Response Status
+                  Update Status
                 </label>
 
                 {/* Level 1: Answered / Not Answered - Point 5: Disable previous statuses */}
