@@ -241,7 +241,7 @@ const Tasks = () => {
   };
 
   // Clear lead search
-  const clearLeadSearch = () => {
+  const clearLeadSearch = () => { 
     setLeadSearchQuery('');
     setDebouncedLeadSearchQuery('');
     setLeadSearchResults([]);
