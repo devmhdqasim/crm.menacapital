@@ -56,6 +56,7 @@ const Tasks = () => {
   const [leadSearchTotalResults, setLeadSearchTotalResults] = useState(0);
   const [leadSearchHasMore, setLeadSearchHasMore] = useState(false);
   const [leadSearchPriority, setLeadSearchPriority] = useState('All');
+  const [selectedLeadId, setSelectedLeadId] = useState(''); // Selected lead ID for filtering tasks
 
   const [loading, setLoading] = useState(false);
   const [totalTasks, setTotalTasks] = useState(0);
@@ -249,6 +250,13 @@ const Tasks = () => {
     setLeadSearchPage(1);
     setLeadSearchTotalResults(0);
     setLeadSearchPriority('All');
+    setSelectedLeadId(''); // Clear selected lead ID
+  };
+
+  // Handle lead click - filter tasks by lead ID
+  const handleLeadClick = (lead) => {
+    setSelectedLeadId(lead._id);
+    toast.success(`Filtering tasks for lead: ${lead.leadName} (${lead.leadId || 'No ID'})`);
   };
 
   // Helper function to get status parameter based on active tab
@@ -364,7 +372,8 @@ const Tasks = () => {
         debouncedSearchQuery,
         statusParam,
         assignedToParam,
-        priorityParam
+        priorityParam,
+        selectedLeadId // Pass selected lead ID
       );
 
       console.log('📦 Result from API:', result);
@@ -503,12 +512,12 @@ const Tasks = () => {
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, activeTab, priorityFilter, assignedToFilter]);
+  }, [debouncedSearchQuery, activeTab, priorityFilter, assignedToFilter, selectedLeadId]);
 
   // Fetch tasks when page, filters, or dates change
   useEffect(() => {
     fetchTasks(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, priorityFilter, assignedToFilter]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, priorityFilter, assignedToFilter, selectedLeadId]);
 
   // Get unique assignees for filter dropdown - For Sales Manager, include both agents and sales managers
   const uniqueAssignees = userRole === 'Sales Manager' 
@@ -628,6 +637,7 @@ const Tasks = () => {
     setSearchQuery('');
     setDebouncedSearchQuery('');
     setActiveTab('All');
+    setSelectedLeadId(''); // Clear selected lead ID
     toast.success('Filters cleared');
   };
 
@@ -959,7 +969,12 @@ const Tasks = () => {
                   {leadSearchResults.map((lead) => (
                     <div
                       key={lead._id}
-                      className="bg-[#1A1A1A] p-4 rounded-lg border border-[#BBA473]/20 hover:border-[#BBA473]/50 transition-all duration-300"
+                      onClick={() => handleLeadClick(lead)}
+                      className={`bg-[#1A1A1A] p-4 rounded-lg border transition-all duration-300 cursor-pointer ${
+                        selectedLeadId === lead._id 
+                          ? 'border-[#BBA473] bg-[#BBA473]/10' 
+                          : 'border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">

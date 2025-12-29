@@ -59,22 +59,31 @@ export const searchLeadById = async (keyword, page = 1, limit = 10) => {
     console.log('✅ Lead search successful:', response.data);
 
     const data = response.data;
+    
+    console.log('🔍 Checking response structure...');
+    console.log('📦 data.status:', data.status);
+    console.log('📦 data.payload:', data.payload);
+    console.log('📦 data.payload?.allSearchedLeads:', data.payload?.allSearchedLeads);
 
-    if (data.status === 'success' && data.payload?.allLeads?.[0]?.data) {
-      const leadsData = data.payload.allLeads[0].data;
-      const metadata = data.payload.allLeads[0].metadata?.[0] || {};
+    if (data.status === 'success' && data.payload?.allSearchedLeads) {
+      const leadsData = data.payload.allSearchedLeads;
       
       console.log('📊 Found', leadsData.length, 'leads');
-      console.log('📊 Total results:', metadata.total);
+      console.log('📊 First lead:', leadsData[0]);
       
       return {
         success: true,
         data: leadsData,
-        metadata: metadata,
+        metadata: {
+          total: leadsData.length,
+          page: page,
+          limit: limit
+        },
         message: data.message,
       };
     } else {
       console.error('❌ Unexpected response structure');
+      console.error('❌ Full response data:', JSON.stringify(data, null, 2));
       return {
         success: false,
         message: data.message || 'No leads found',
@@ -576,14 +585,19 @@ export const deleteTask = async (taskId) => {
  * @param {number} limit - Number of items per page (default: 10)
  * @param {string} startDate - Start date for filtering (optional)
  * @param {string} endDate - End date for filtering (optional)
+ * @param {string} keyword - Search keyword (optional)
+ * @param {string} status - Task status filter (optional)
+ * @param {string} assignedBy - Assigned by filter (optional)
+ * @param {string} priority - Priority filter (optional)
+ * @param {string} leadId - Lead ID filter (optional)
  * @returns {Promise} - Returns list of tasks with pagination info
  */
-export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', assignedBy = '', priority = '') => {
+export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate = '', keyword = '', status = '', assignedBy = '', priority = '', leadId = '') => {
   try {
     const authToken = getRefreshToken();
     console.log('🔵 Fetching tasks...');
     console.log('📄 Page:', page, 'Limit:', limit);
-    console.log('🔍 Filters:', { keyword, status, assignedBy, priority });
+    console.log('🔍 Filters:', { keyword, status, assignedBy, priority, leadId });
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
@@ -601,11 +615,12 @@ export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate 
     // Build the correct API URL based on user role
     const roleParam = userRole === 'Agent' ? 'assignedBy' : 'assignedTo';
     
-    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&${roleParam}=${assignedBy}&priority=${priority}`;
+    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&${roleParam}=${assignedBy}&priority=${priority}&id=${leadId}`;
     
     console.log('🌐 API URL:', refreshUrl);
     console.log('👤 User Role:', userRole);
     console.log('🔑 Using parameter:', roleParam);
+    console.log('🎯 Lead ID Filter:', leadId || 'None');
     
     const response = await axios.get(
       refreshUrl,
