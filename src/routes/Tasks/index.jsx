@@ -249,7 +249,7 @@ const Tasks = () => {
     setShowLeadSearchResults(false);
     setLeadSearchPage(1);
     setLeadSearchTotalResults(0);
-    setLeadSearchPriority('All');
+    setLeadSearchPriority('All'); 
     setSelectedLeadId(''); // Clear selected lead ID 
   };
 
