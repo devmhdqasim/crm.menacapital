@@ -24,6 +24,98 @@ const getUserInfo = () => {
 };
 
 /**
+ * Search leads by ID
+ * @param {string} keyword - Search keyword (Lead ID)
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Number of items per page (default: 10)
+ * @returns {Promise} - Returns list of matching leads
+ */
+export const searchLeadById = async (keyword, page = 1, limit = 10) => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Searching leads by ID...');
+    console.log('🔍 Keyword:', keyword);
+    console.log('📄 Page:', page, 'Limit:', limit);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    const response = await axios.get(
+      `${API_BASE_URL}/lead/searchById/en?keyword=${encodeURIComponent(keyword)}&paramPage=${page}&paramLimit=${limit}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Lead search successful:', response.data);
+
+    const data = response.data;
+
+    if (data.status === 'success' && data.payload?.allLeads?.[0]?.data) {
+      const leadsData = data.payload.allLeads[0].data;
+      const metadata = data.payload.allLeads[0].metadata?.[0] || {};
+      
+      console.log('📊 Found', leadsData.length, 'leads');
+      console.log('📊 Total results:', metadata.total);
+      
+      return {
+        success: true,
+        data: leadsData,
+        metadata: metadata,
+        message: data.message,
+      };
+    } else {
+      console.error('❌ Unexpected response structure');
+      return {
+        success: false,
+        message: data.message || 'No leads found',
+        data: [],
+        metadata: {},
+      };
+    }
+  } catch (error) {
+    console.error('❌ Search leads error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to search leads',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+/**
  * Create a new task 
  * @param {Object} taskData - Task data object
  * @param {string} taskData.agentId - Agent's ID (_id)

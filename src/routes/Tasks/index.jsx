@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { getAllTasks, deleteTask, createTask, updateTask } from '../../services/taskService';
 import { getAllUsers } from '../../services/teamService';
-import { getAllLeads } from '../../services/leadService';
+import { getAllLeads, searchLeadById } from '../../services/leadService';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import TaskDetailsModal from './TaskDetailsModal';
@@ -45,6 +45,17 @@ const Tasks = () => {
   const [endDate, setEndDate] = useState(null);
   const [crmAgentTaskSummary, setCrmAgentTaskSummary] = useState([]);
   const [crmManagerTaskSummary, setCrmManagerTaskSummary] = useState({});
+
+  // Lead search states
+  const [leadSearchQuery, setLeadSearchQuery] = useState('');
+  const [debouncedLeadSearchQuery, setDebouncedLeadSearchQuery] = useState('');
+  const [leadSearchResults, setLeadSearchResults] = useState([]);
+  const [leadSearchLoading, setLeadSearchLoading] = useState(false);
+  const [showLeadSearchResults, setShowLeadSearchResults] = useState(false);
+  const [leadSearchPage, setLeadSearchPage] = useState(1);
+  const [leadSearchTotalResults, setLeadSearchTotalResults] = useState(0);
+  const [leadSearchHasMore, setLeadSearchHasMore] = useState(false);
+  const [leadSearchPriority, setLeadSearchPriority] = useState('All');
 
   const [loading, setLoading] = useState(false);
   const [totalTasks, setTotalTasks] = useState(0);
@@ -159,6 +170,86 @@ const Tasks = () => {
       clearTimeout(timer);
     };
   }, [searchQuery]);
+
+  // Debouncing effect for lead search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedLeadSearchQuery(leadSearchQuery);
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [leadSearchQuery]);
+
+  // Lead search effect
+  useEffect(() => {
+    if (debouncedLeadSearchQuery.trim()) {
+      setLeadSearchPage(1);
+      searchLeads(1, true);
+    } else {
+      setLeadSearchResults([]);
+      setShowLeadSearchResults(false);
+      setLeadSearchTotalResults(0);
+    }
+  }, [debouncedLeadSearchQuery, leadSearchPriority]);
+
+  // Search leads by ID
+  const searchLeads = async (page = 1, reset = false) => {
+    if (!debouncedLeadSearchQuery.trim()) return;
+
+    setLeadSearchLoading(true);
+    try {
+      const result = await searchLeadById(debouncedLeadSearchQuery, page, 10);
+      
+      if (result.success && result.data) {
+        const filteredResults = leadSearchPriority === 'All' 
+          ? result.data 
+          : result.data.filter(lead => lead.leadPriority === leadSearchPriority);
+        
+        if (reset) {
+          setLeadSearchResults(filteredResults);
+        } else {
+          setLeadSearchResults(prev => [...prev, ...filteredResults]);
+        }
+        
+        setLeadSearchTotalResults(result.metadata?.total || filteredResults.length);
+        setLeadSearchHasMore(result.data.length === 10);
+        setShowLeadSearchResults(true);
+      } else {
+        if (reset) {
+          setLeadSearchResults([]);
+          setLeadSearchTotalResults(0);
+        }
+        setLeadSearchHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error searching leads:', error);
+      toast.error('Failed to search leads');
+    } finally {
+      setLeadSearchLoading(false);
+    }
+  };
+
+  // Load more leads
+  const loadMoreLeads = () => {
+    if (leadSearchHasMore && !leadSearchLoading) {
+      const nextPage = leadSearchPage + 1;
+      setLeadSearchPage(nextPage);
+      searchLeads(nextPage, false);
+    }
+  };
+
+  // Clear lead search
+  const clearLeadSearch = () => {
+    setLeadSearchQuery('');
+    setDebouncedLeadSearchQuery('');
+    setLeadSearchResults([]);
+    setShowLeadSearchResults(false);
+    setLeadSearchPage(1);
+    setLeadSearchTotalResults(0);
+    setLeadSearchPriority('All');
+  };
 
   // Helper function to get status parameter based on active tab
   const getStatusParam = () => {
@@ -814,6 +905,138 @@ const Tasks = () => {
                   Clear Filters
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Lead Search Section */}
+        <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#BBA473]/20 animate-fadeIn">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            {/* Lead Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search lead by ID..."
+                value={leadSearchQuery}
+                onChange={(e) => setLeadSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-20 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+              />
+              {leadSearchQuery && (
+                <button
+                  onClick={clearLeadSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-all duration-300 text-sm font-medium"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Lead Search Results Box */}
+        {showLeadSearchResults && (
+          <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#BBA473]/20 animate-fadeIn">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-[#BBA473]">Search Results</h3>
+              <p className="text-sm text-gray-400">
+                Total found: <span className="text-[#BBA473] font-semibold">{leadSearchTotalResults}</span>
+              </p>
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+              {leadSearchLoading && leadSearchResults.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#BBA473]"></div>
+                  <p className="text-gray-400 mt-2">Searching...</p>
+                </div>
+              ) : leadSearchResults.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-400">No leads found</p>
+                </div>
+              ) : (
+                <>
+                  {leadSearchResults.map((lead) => (
+                    <div
+                      key={lead._id}
+                      className="bg-[#1A1A1A] p-4 rounded-lg border border-[#BBA473]/20 hover:border-[#BBA473]/50 transition-all duration-300"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
+                            <h4 className="text-white font-semibold text-lg">{lead.leadName}</h4>
+                            {lead.leadPriority && (
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getPriorityBadge(lead.leadPriority)}`}>
+                                {lead.leadPriority}
+                              </span>
+                            )}
+                            {lead.isActive !== undefined && (
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${lead.isActive ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'}`}>
+                                {lead.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            )}
+                            {lead.leadStatus && (
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(lead.leadStatus)}`}>
+                                {lead.leadStatus}
+                              </span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-sm mt-3">
+                            {lead.leadId && (
+                              <p className="text-gray-400">
+                                <span className="text-[#BBA473] font-medium">Lead ID:</span> {lead.leadId}
+                              </p>
+                            )}
+                            <p className="text-gray-400">
+                              <span className="text-[#BBA473] font-medium">Phone:</span> {lead.leadPhoneNumber}
+                            </p>
+                            {lead.leadEmail && (
+                              <p className="text-gray-400">
+                                <span className="text-[#BBA473] font-medium">Email:</span> {lead.leadEmail}
+                              </p>
+                            )}
+                            {lead.leadPreferredLanguage && (
+                              <p className="text-gray-400">
+                                <span className="text-[#BBA473] font-medium">Language:</span> {lead.leadPreferredLanguage}
+                              </p>
+                            )}
+                            {lead.leadNationality && (
+                              <p className="text-gray-400">
+                                <span className="text-[#BBA473] font-medium">Nationality:</span> {lead.leadNationality}
+                              </p>
+                            )}
+                            {lead.leadSource && (
+                              <p className="text-gray-400">
+                                <span className="text-[#BBA473] font-medium">Source:</span> {lead.leadSource}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Load More Button */}
+                  {leadSearchHasMore && (
+                    <div className="text-center pt-3">
+                      <button
+                        onClick={loadMoreLeads}
+                        disabled={leadSearchLoading}
+                        className="px-6 py-2 bg-[#BBA473]/20 text-[#BBA473] rounded-lg hover:bg-[#BBA473]/30 transition-all duration-300 border border-[#BBA473]/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {leadSearchLoading ? (
+                          <span className="flex items-center gap-2">
+                            <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-[#BBA473]"></div>
+                            Loading...
+                          </span>
+                        ) : (
+                          'Load More'
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}
