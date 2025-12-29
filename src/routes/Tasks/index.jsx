@@ -26,8 +26,8 @@ const taskValidationSchema = Yup.object({
     .required('Priority is required')
     .oneOf(['High', 'Normal', 'Low'], 'Invalid priority'),
   taskScheduledDate: Yup.date()
-    .required('Scheduled date is required')
-    .min(new Date(new Date().setHours(0, 0, 0, 0)), 'Scheduled date cannot be in the past'),
+    .required('Scheduled date and time is required')
+    .min(new Date(), 'Scheduled date and time cannot be in the past'),
   taskStatus: Yup.string()
     .required('Status is required')
     .oneOf(['Open', 'In Progress', 'Completed', 'Pending'], 'Invalid status'),
@@ -99,6 +99,11 @@ const Tasks = () => {
     validationSchema: taskValidationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
+        // Convert the datetime-local value to ISO string with timezone
+        const scheduledDate = values.taskScheduledDate 
+          ? new Date(values.taskScheduledDate).toISOString() 
+          : '';
+
         const taskData = {
           agentId: values.agentId,
           leadId: values.leadId,
@@ -106,7 +111,7 @@ const Tasks = () => {
           taskTitle: values.taskTitle,
           taskDescription: values.taskDescription,
           taskPriority: values.taskPriority,
-          taskScheduledDate: values.taskScheduledDate,
+          taskScheduledDate: scheduledDate, // Now includes full datetime with timezone
           taskStatus: values.taskStatus,
           leadRemarks: values.leadRemarks || '',
           leadResponseStatus: values.leadResponseStatus || '',
@@ -450,6 +455,13 @@ const Tasks = () => {
   const handleEdit = (task) => {
     setEditingTask(task);
 
+    // Convert ISO date to datetime-local format (YYYY-MM-DDTHH:mm)
+    const formatDateTimeLocal = (isoString) => {
+      if (!isoString) return '';
+      const date = new Date(isoString);
+      return date.toISOString().slice(0, 16);
+    };
+
     // Populate form with task data
     formik.setValues({
       agentId: task.agentIdRaw || '',
@@ -458,7 +470,7 @@ const Tasks = () => {
       taskTitle: task.title || '',
       taskDescription: task.description || '',
       taskPriority: task.priority || 'Normal',
-      taskScheduledDate: task.taskScheduledDate || '',
+      taskScheduledDate: formatDateTimeLocal(task.taskScheduledDate),
       taskStatus: task.status || 'Open',
       leadRemarks: task.leadRemarks || '',
       leadResponseStatus: task.leadResponseStatus || '',
@@ -1258,19 +1270,19 @@ const Tasks = () => {
                   </div>
                 </div>
 
-                {/* Scheduled Date */}
+                {/* Scheduled Date & Time */}
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Scheduled Date <span className="text-red-500">*</span>
+                    Scheduled Date & Time <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
-                      type="date"
+                      type="datetime-local"
                       name="taskScheduledDate"
                       value={formik.values.taskScheduledDate}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={new Date().toISOString().slice(0, 16)}
                       className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 ${formik.touched.taskScheduledDate && formik.errors.taskScheduledDate
                         ? 'border-red-500'
                         : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
@@ -1376,12 +1388,12 @@ const Tasks = () => {
         }
 
         /* Dark themed date picker calendar */
-        input[type="date"] {
+        input[type="datetime-local"] {
           position: relative;
           color-scheme: dark;
         }
 
-        input[type="date"]::-webkit-calendar-picker-indicator {
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
           filter: invert(0.6) sepia(1) saturate(3) hue-rotate(5deg);
           cursor: pointer;
           opacity: 0;
@@ -1391,12 +1403,12 @@ const Tasks = () => {
           height: 100%;
         }
 
-        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
           opacity: 0;
         }
 
         /* Ensure the calendar icon is visible */
-        input[type="date"] + .lucide-calendar {
+        input[type="datetime-local"] + .lucide-calendar {
           pointer-events: none;
         }
       `}</style>
