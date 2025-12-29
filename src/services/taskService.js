@@ -615,7 +615,7 @@ export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate 
     // Build the correct API URL based on user role
     const roleParam = userRole === 'Agent' ? 'assignedBy' : 'assignedTo';
     
-    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&${roleParam}=${assignedBy}&priority=${priority}&id=${leadId}`;
+    const refreshUrl = `${API_BASE_URL}/task/getAll/en?paramPage=${page}&paramLimit=${limit}&fromDate=${startDate}&toDate=${endDate}&keyword=${keyword}&status=${status}&${roleParam}=${assignedBy}&priority=${priority}&leadId=${leadId}`;
     
     console.log('🌐 API URL:', refreshUrl);
     console.log('👤 User Role:', userRole);

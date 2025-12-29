@@ -170,6 +170,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     setIsSubmitting(true);
 
     try {
+      // Convert to ISO string for backend - this ensures proper timezone handling
+      const scheduledDateISO = reminderDateTime?.toISOString();
+
       // First, update the existing task
       const updateTaskData = {
         agentId: task.agentIdRaw,
@@ -178,7 +181,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         taskTitle: task.title,
         taskDescription: task.description,
         taskPriority: task.priority,
-        taskScheduledDate: task.taskScheduledDate,
+        taskScheduledDate: scheduledDateISO,
         taskStatus: taskStatus,
         leadRemarks: modalRemarks || '',
         leadResponseStatus: leadResponseStatus || '',
@@ -204,6 +207,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         let createResult;
         
         if (reminderDateTime) {
+          // Convert to ISO string for backend - this ensures proper timezone handling
+          const scheduledDateISO = reminderDateTime.toISOString();
+          
           // If reminder date is set, use createTask API
           const newTaskData = {
             agentId: task.agentIdRaw,
@@ -212,7 +218,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             taskTitle: task.title,
             taskDescription: task.description,
             taskPriority: task.priority,
-            taskScheduledDate: reminderDateTime.toISOString().split('T')[0],
+            taskScheduledDate: scheduledDateISO,
             taskStatus: 'Open',
             leadRemarks: modalRemarks || '',
             leadResponseStatus: leadResponseStatus || '',
@@ -483,7 +489,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       selected={reminderDateTime}
                       onChange={(date) => setReminderDateTime(date)}
                       showTimeSelect
-                      timeFormat="HH:mm"
+                      timeFormat="h:mm aa"
                       timeIntervals={15}
                       dateFormat="MMM d, yyyy h:mm aa"
                       placeholderText="Set reminder"
@@ -494,6 +500,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       }`}
                       calendarClassName="custom-datepicker"
                       wrapperClassName="w-full"
+                      timeCaption="Time"
                     />
                     <Clock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
                       isReminderDateEnabled() ? 'text-[#BBA473]' : 'text-gray-600'
