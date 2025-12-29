@@ -250,7 +250,7 @@ const Tasks = () => {
     setLeadSearchPage(1);
     setLeadSearchTotalResults(0);
     setLeadSearchPriority('All');
-    setSelectedLeadId(''); // Clear selected lead ID
+    setSelectedLeadId(''); // Clear selected lead ID 
   };
 
   // Handle lead click - filter tasks by lead ID
