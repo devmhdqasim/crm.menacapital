@@ -23,7 +23,7 @@ export const loginUser = async (login, password, loginBy = 'email') => {
     console.log('🔵 Attempting login...');
     console.log('📝 Login with:', { login, loginBy });
     
-    const response = await axios.post(
+    const response = await axios.post( 
       `${API_BASE_URL}/auth/login/en`,
       {
         login,
