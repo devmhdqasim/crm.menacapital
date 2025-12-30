@@ -1661,7 +1661,7 @@ const Tasks = () => {
         input[type="datetime-local"] + .lucide-calendar {
           pointer-events: none;
         } 
-      `}</style>
+      `}</style> 
     </>
   );
 };
