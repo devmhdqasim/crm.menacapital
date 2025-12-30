@@ -3,7 +3,7 @@ import { X, Calendar, Clock } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { updateLeadTask } from '../../../services/leadService';
-import { createAutoTask } from '../../../services/taskService';
+import { createAutoTask, createTask } from '../../../services/taskService';
 import toast from 'react-hot-toast';
 
 const AssignLeadModal = ({ 
@@ -235,26 +235,77 @@ const AssignLeadModal = ({
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
         
-        // After successful lead update, create auto task
-        try {
-          const taskData = {
-            leadId: selectedLead?.id,
-            leadStatus: leadResponseStatus?.replace(/\s+/g, '') || selectedLead?.status?.replace(/\s+/g, '') || 'Lead',
-            taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
-            taskDescription: modalRemarks.trim() || 'No additional remarks',
-            taskStatus: 'Completed',
-          };
+        // After successful lead update, create task based on reminder date and status
+        // Only create new task if lead response status is between Warm and Deposit
+        const shouldCreateNewTask = ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
+        
+        if (shouldCreateNewTask) {
+          try {
+            let taskResult;
+            
+            if (reminderDateTime) {
+              // Convert to ISO string for backend - this ensures proper timezone handling
+              const scheduledDateISO = reminderDateTime.toISOString();
+              
+              // If reminder date is set, use createTask API
+              const newTaskData = {
+                agentId: selectedLead.agentId,
+                leadId: selectedLead.id,
+                salesManagerId: selectedLead.salesManagerId || undefined,
+                taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
+                taskDescription: modalRemarks.trim() || 'No additional remarks',
+                taskPriority: 'Normal',
+                taskScheduledDate: scheduledDateISO,
+                taskStatus: 'Open',
+                leadRemarks: modalRemarks || '',
+                leadResponseStatus: leadResponseStatus || '',
+                leadStatus: leadResponseStatus || '',
+              };
+              
+              taskResult = await createTask(newTaskData);
+            } else {
+              // If no reminder date, use createAutoTask API
+              const autoTaskData = {
+                leadId: selectedLead.id,
+                leadStatus: leadResponseStatus || '',
+                taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
+                taskDescription: modalRemarks.trim() || 'No additional remarks',
+                taskStatus: 'Completed',
+              };
+              
+              taskResult = await createAutoTask(autoTaskData);
+            }
 
-          const taskResult = await createAutoTask(taskData);
-
-          if (taskResult.success) {
-            toast.success(taskResult.message || 'Task created successfully!');
-          } else {
-            // Don't show error for task creation failure, just log it
-            console.error('Failed to create task:', taskResult.message);
+            if (taskResult.success) {
+              toast.success(taskResult.message || 'Task created successfully!');
+            } else {
+              // Don't show error for task creation failure, just log it
+              console.error('Failed to create task:', taskResult.message);
+            }
+          } catch (taskError) {
+            console.error('Error creating task:', taskError);
           }
-        } catch (taskError) {
-          console.error('Error creating task:', taskError);
+        } else {
+          // For statuses below Warm, create completed auto task
+          try {
+            const taskData = {
+              leadId: selectedLead?.id,
+              leadStatus: leadResponseStatus?.replace(/\s+/g, '') || selectedLead?.status?.replace(/\s+/g, '') || 'Lead',
+              taskTitle: taskTitle.trim() || `Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`,
+              taskDescription: modalRemarks.trim() || 'No additional remarks',
+              taskStatus: 'Completed',
+            };
+
+            const taskResult = await createAutoTask(taskData);
+
+            if (taskResult.success) {
+              toast.success(taskResult.message || 'Task created successfully!');
+            } else {
+              console.error('Failed to create task:', taskResult.message);
+            }
+          } catch (taskError) {
+            console.error('Error creating task:', taskError);
+          }
         }
         
         // Close this modal with animation
@@ -354,6 +405,11 @@ const AssignLeadModal = ({
     return checkStatusIndex <= currentStatusIndex;
   };
 
+  // Check if reminder date should be enabled (Warm to Deposit only)
+  const isReminderDateEnabled = () => {
+    return ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
+  };
+
   if (!showDetailsModal || !selectedLead) return null;
 
   return (
@@ -418,14 +474,6 @@ const AssignLeadModal = ({
                 <label className="text-sm text-[#E8D5A3] font-medium">Source</label>
                 <p className="text-white">{selectedLead.source}</p>
               </div>
-              {/* {!isLeadsSelectedId && (
-                <div className="flex items-center gap-3 space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium mb-0">Status</label>
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs whitespace-nowrap font-semibold border ${getStatusColor(selectedLead.status)}`}>
-                    {selectedLead.status}
-                  </span>
-                </div>
-              )}             */}
               {/* All Status Fields */}
               <div className="space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
@@ -450,48 +498,32 @@ const AssignLeadModal = ({
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Status</h3>
                 
-                {/* Date Time Picker */}
+                {/* Date Time Picker - Only enabled for Warm to Deposit */}
                 <div className="flex items-center gap-2">
                   <div className="relative flex">
                     <DatePicker
                       selected={reminderDateTime}
                       onChange={(date) => setReminderDateTime(date)}
                       showTimeSelect
-                      timeFormat="HH:mm"
+                      timeFormat="h:mm aa"
                       timeIntervals={15}
                       dateFormat="MMM d, yyyy h:mm aa"
-                      placeholderText="Select date & time"
+                      placeholderText="Set reminder"
                       minDate={new Date()}
-                      className="px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 border-[#BBA473]/30 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] cursor-pointer"
+                      disabled={!isReminderDateEnabled()}
+                      className={`px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] ${
+                        isReminderDateEnabled() ? 'cursor-pointer border-[#BBA473]/30' : 'cursor-not-allowed border-gray-600 opacity-50'
+                      }`}
                       calendarClassName="custom-datepicker"
                       wrapperClassName="w-full"
+                      timeCaption="Time"
                     />
-                    {/* <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" /> */}
+                    <Clock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                      isReminderDateEnabled() ? 'text-[#BBA473]' : 'text-gray-600'
+                    }`} />
                   </div>
                 </div>
               </div>
-
-              {/* <div className="space-y-4 mb-6">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
-                  Task Status <span className="text-red-400">*</span>
-                </label>
-                <div className="grid grid-cols-1 gap-3">
-                  <label 
-                    className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50"
-                  >
-                    <input
-                      type="radio"
-                      name="taskStatus"
-                      value="Completed"
-                      checked={true}
-                      onChange={(e) => {
-                      }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
-                    />
-                    <span className="text-white font-medium">Completed</span>
-                  </label>
-                </div>
-              </div> */}
 
               {/* Level 1: Answered / Not Answered */}
               <div className="space-y-4">
