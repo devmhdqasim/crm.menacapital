@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'https://staging.crm.saveingold.app/api/v1';
+const baseURL = 'https://api.crm.saveingold.app/api/v1';
 
 const axiosInstance = axios.create({
   baseURL,
