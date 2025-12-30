@@ -1660,7 +1660,7 @@ const Tasks = () => {
         /* Ensure the calendar icon is visible */
         input[type="datetime-local"] + .lucide-calendar {
           pointer-events: none;
-        }
+        } 
       `}</style>
     </>
   );
