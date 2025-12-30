@@ -257,6 +257,14 @@ const Tasks = () => {
   const handleLeadClick = (lead) => {
     setSelectedLeadId(lead._id);
     toast.success(`Filtering tasks for lead: ${lead.leadName} (${lead.leadId || 'No ID'})`);
+    
+    // Scroll to table
+    setTimeout(() => {
+      const tableElement = document.getElementById('tasks-table');
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   // Helper function to get status parameter based on active tab
@@ -1072,7 +1080,8 @@ const Tasks = () => {
                     }`}
                 >
                   <span>{!clearFilter && tab}</span>
-                  {counter > 0 && (
+                  {/* Hide counter when a specific lead is selected */}
+                  {counter > 0 && !selectedLeadId && (
                     <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
                       {counter}
                     </span>
@@ -1107,7 +1116,10 @@ const Tasks = () => {
 
         {/* Table Container */}
         {!loading && (
-          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+          <div 
+            id="tasks-table"
+            className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn"
+          >
             {/* Table */}
             <div className="overflow-x-auto">
               <table className="w-full">
