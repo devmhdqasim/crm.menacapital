@@ -170,8 +170,18 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     setIsSubmitting(true);
 
     try {
-      // Convert to ISO string for backend - this ensures proper timezone handling
-      const scheduledDateISO = reminderDateTime?.toISOString();
+      // Convert selected time from Dubai timezone to UTC for backend
+      let scheduledDateISO = null;
+      if (reminderDateTime) {
+        // The user selects time thinking in Dubai timezone (UTC+4)
+        // We need to convert this to UTC for the API
+        const dubaiOffset = 4 * 60; // Dubai is UTC+4 (240 minutes)
+        const userTimezoneOffset = reminderDateTime.getTimezoneOffset(); // User's local timezone offset in minutes
+        
+        // Adjust the date to account for Dubai timezone
+        const adjustedDate = new Date(reminderDateTime.getTime() - (dubaiOffset + userTimezoneOffset) * 60000);
+        scheduledDateISO = adjustedDate.toISOString();
+      }
 
       // First, update the existing task
       const updateTaskData = {
@@ -181,7 +191,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         taskTitle: task.title,
         taskDescription: task.description,
         taskPriority: task.priority,
-        taskScheduledDate: scheduledDateISO,
+        // taskScheduledDate: scheduledDateISO,
         taskStatus: taskStatus,
         leadRemarks: modalRemarks || '',
         leadResponseStatus: leadResponseStatus || '',
@@ -207,8 +217,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         let createResult;
         
         if (reminderDateTime) {
-          // Convert to ISO string for backend - this ensures proper timezone handling
-          const scheduledDateISO = reminderDateTime.toISOString();
+          // Convert selected time from Dubai timezone to UTC for backend
+          const dubaiOffset = 4 * 60; // Dubai is UTC+4 (240 minutes)
+          const userTimezoneOffset = reminderDateTime.getTimezoneOffset(); // User's local timezone offset in minutes
+          
+          // Adjust the date to account for Dubai timezone
+          const adjustedDate = new Date(reminderDateTime.getTime() - (dubaiOffset + userTimezoneOffset) * 60000);
+          const scheduledDateISO = adjustedDate.toISOString();
           
           // If reminder date is set, use createTask API
           const newTaskData = {
