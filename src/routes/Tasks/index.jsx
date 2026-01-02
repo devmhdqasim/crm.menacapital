@@ -77,6 +77,10 @@ const Tasks = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Delete confirmation modal states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+
   // Dropdown data
   const [agents, setAgents] = useState([]);
   const [leads, setLeads] = useState([]);
@@ -587,22 +591,42 @@ const Tasks = () => {
     !clearFilter && setDrawerOpen(true);
   };
 
-  const handleDelete = async (taskId) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      try {
-        const result = await deleteTask(taskId);
-
-        if (result.success) {
-          toast.success('Task deleted successfully!');
-          fetchTasks(currentPage, itemsPerPage);
-        } else {
-          toast.error(result.error.payload.message || 'Failed to delete task');
-        }
-      } catch (error) {
-        console.error('Error deleting task:', error);
-        toast.error('Failed to delete task. Please try again.');
-      }
+  const handleDelete = (task) => {
+    // Check if task status is not Completed or Not-Completed
+    if (task.status !== 'Completed' && task.status !== 'Not Completed') {
+      toast.error('Pending tasks cannot be deleted. Please complete or mark the task as not-completed first.');
+      return;
     }
+
+    // Open confirmation modal
+    setTaskToDelete(task);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      const result = await deleteTask(taskToDelete.id);
+
+      if (result.success) {
+        toast.success('Task deleted successfully!');
+        fetchTasks(currentPage, itemsPerPage);
+      } else {
+        toast.error(result.error.payload.message || 'Failed to delete task');
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task. Please try again.');
+    } finally {
+      setDeleteConfirmOpen(false);
+      setTaskToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmOpen(false);
+    setTaskToDelete(null);
   };
 
   const handleTabChange = (tab) => {
@@ -1237,7 +1261,7 @@ const Tasks = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDelete(task.id);
+                                handleDelete(task);
                               }}
                               className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-110"
                               title="Delete"
@@ -1627,6 +1651,57 @@ const Tasks = () => {
         task={selectedTask}
         onTaskUpdated={() => fetchTasks(currentPage, itemsPerPage)}
       />
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-[#1A1A1A] rounded-2xl border-2 border-red-500/30 shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-red-500/20">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-500/20 rounded-full">
+                  <Trash2 className="w-6 h-6 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Delete Task</h3>
+                  <p className="text-sm text-gray-400 mt-1">This action cannot be undone</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <p className="text-gray-300 mb-4">
+                Are you sure you want to delete this task?
+              </p>
+              {taskToDelete && (
+                <div className="bg-[#2A2A2A] rounded-lg p-4 border border-red-500/20">
+                  <p className="text-sm text-gray-400 mb-1">Task Title:</p>
+                  <p className="text-white font-semibold mb-3">{taskToDelete.title}</p>
+                  <p className="text-sm text-gray-400 mb-1">Lead:</p>
+                  <p className="text-white">{taskToDelete.leadName}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-red-500/20 flex gap-3">
+              <button
+                onClick={cancelDelete}
+                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-500/40 transform hover:scale-105 active:scale-95"
+              >
+                Delete Task
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes fadeIn {
