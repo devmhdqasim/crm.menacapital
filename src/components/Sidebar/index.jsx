@@ -12,6 +12,7 @@ import {
   CheckSquare,
   Calendar1,
   ChevronRight,
+  MessageCircle,
   X,
   Menu,
   ArrowLeft,
@@ -42,6 +43,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
     Settings,
     CheckSquare,
     Calendar1,
+    MessageCircle,
   };
 
   // Helper function to check if a link is active

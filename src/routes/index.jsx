@@ -11,7 +11,6 @@ import { RouteLoadingFallback } from '@/components/LoadingSpinner';
 import { getUserRole } from '@/utils/authUtils';
 import { ROUTES, getAllowedRoutes } from '@/config/roleConfig';
 
-
 // ⭐ Lazy load route components for better performance
 const LoginPage = lazy(() => import('@/routes/Login'));
 const UpdatePasswordPage = lazy(() => import('@/routes/UpdatePassword'));
@@ -24,6 +23,7 @@ const LeadsPage = lazy(() => import('@/routes/Leads'));
 const AdminLeadsPage = lazy(() => import('@/routes/LeadsAdmin'));
 const BranchesPage = lazy(() => import('@/routes/Branches'));
 const ExhibitionPage = lazy(() => import('@/routes/Exhibitions'));
+const WatiInboxPage = lazy(() => import('@/routes/Inbox'));
 const BranchLeadsPage = lazy(() => import('@/routes/BranchLeads'));
 const EventLeadsPage = lazy(() => import('@/routes/EventLeads'));
 const SalesManagerLeadsPage = lazy(() => import('@/routes/SalesManagerLeads'));
@@ -158,6 +158,16 @@ export function AppRoutes() {
         <Suspense fallback={<RouteLoadingFallback />}>
           <ProtectedRoute requiredRoute={ROUTES.EXHIBITION}>
             <ExhibitionPage />
+          </ProtectedRoute>
+        </Suspense>
+      ),
+    },
+    {
+      path: '/inbox',
+      element: (
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <ProtectedRoute requiredRoute={ROUTES.INBOX}>
+            <WatiInboxPage />
           </ProtectedRoute>
         </Suspense>
       ),

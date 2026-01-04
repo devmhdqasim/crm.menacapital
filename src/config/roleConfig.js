@@ -23,6 +23,7 @@ export const ROUTES = {
   EVENTLEADS: '/ev-leads',
   BRANCHES: '/branches',
   EXHIBITION: '/exhibition',
+  INBOX: '/inbox',
   KIOSKMEMBER: '/kiosk-members',
   ROLE_MANAGEMENT: '/role-management',
   SETTINGS: '/settings',
@@ -81,6 +82,7 @@ export const ROLE_PERMISSIONS = {
       ROUTES.TASKS,           // Sales Manager can access Tasks
       ROUTES.UPDATE_PASSWORD,
       ROUTES.NOTIFICATIONS,
+      ROUTES.INBOX,
       // ROUTES.KIOSKMEMBER,
     ],
     label: 'Sales Manager',
@@ -94,6 +96,7 @@ export const ROLE_PERMISSIONS = {
       ROUTES.TASKS,           // Agents can access Tasks
       ROUTES.UPDATE_PASSWORD,
       ROUTES.NOTIFICATIONS,
+      ROUTES.INBOX,
     ],
     label: 'Agent',
     description: 'Access to dashboard, leads, and tasks',
@@ -202,6 +205,11 @@ export const SIDEBAR_MENU_CONFIG = [
     label: 'Role Management',
     route: ROUTES.ROLE_MANAGEMENT,
     icon: 'ShieldCheck',
+  },
+  {
+    label: 'Inbox',
+    route: ROUTES.INBOX,
+    icon: 'MessageCircle',
   },
 ];
 
