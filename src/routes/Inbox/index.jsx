@@ -1,444 +1,319 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, Phone, Video, MoreVertical, Search, Paperclip, Smile, Check, CheckCheck, Clock, X, ChevronLeft, User, Image as ImageIcon, FileText, Download } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import React, { useState, useEffect } from 'react';
+import { getAllLeads } from '../../services/leadService';
+import { getAllSalesManagerLeads } from '../../services/leadService';
+import { getDashboardStatsByFilter } from '../../services/dashboardService';
+import toast from 'react-hot-toast';
+import InboxListing from './InboxListing';
+import InboxChatDrawer from './InboxChatDrawer';
 
-const WhatsAppMessages = () => {
-  const [conversations, setConversations] = useState([]);
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [messageInput, setMessageInput] = useState('');
+const InboxPage = () => {
+  const [contacts, setContacts] = useState([]);
+  const [userRole, setUserRole] = useState('');
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('All');
+  const [activeSubTab, setActiveSubTab] = useState('');
+  const [activeSubSubTab, setActiveSubSubTab] = useState('');
+  const [activeSubSubSubTab, setActiveSubSubSubTab] = useState('');
+  const [activeSubSubSubSubTab, setActiveSubSubSubSubTab] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(30);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [showConversationList, setShowConversationList] = useState(true);
-  const messagesEndRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [totalContacts, setTotalContacts] = useState(0);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [contactsCount, setContactsCount] = useState({});
+  
+  // Chat drawer state
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
 
-  // Mock data - Replace with actual API calls
+  // Debouncing effect for search query
   useEffect(() => {
-    // Simulate loading conversations
-    setTimeout(() => {
-      setConversations([
-        {
-          id: 1,
-          name: 'Ahmed Hassan',
-          phone: '+971 50 123 4567',
-          lastMessage: 'Thanks for the information!',
-          timestamp: '10:30 AM',
-          unreadCount: 2,
-          avatar: null,
-          isOnline: true,
-        },
-        {
-          id: 2,
-          name: 'Sarah Al-Mansoori',
-          phone: '+971 52 987 6543',
-          lastMessage: 'Can we schedule a call?',
-          timestamp: 'Yesterday',
-          unreadCount: 0,
-          avatar: null,
-          isOnline: false,
-        },
-        {
-          id: 3,
-          name: 'Mohammed Ali',
-          phone: '+971 55 456 7890',
-          lastMessage: 'Great! I will check it out',
-          timestamp: '2 days ago',
-          unreadCount: 1,
-          avatar: null,
-          isOnline: true,
-        },
-      ]);
-      setIsLoaded(true);
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
     }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Get user info from localStorage
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const role = userInfo.roleName || userInfo.role || '';
+    const userId = userInfo._id || userInfo.id;
+    
+    setUserRole(role);
+    setCurrentUserId(userId);
   }, []);
 
-  // Mock messages - Replace with actual API calls
-  useEffect(() => {
-    if (selectedConversation) {
-      // Simulate loading messages
-      setMessages([
-        {
-          id: 1,
-          text: 'Hello! I would like to know more about your services.',
-          sender: 'contact',
-          timestamp: '10:15 AM',
-          status: 'read',
-        },
-        {
-          id: 2,
-          text: 'Hello Ahmed! Thank you for reaching out. I would be happy to help you with that.',
-          sender: 'user',
-          timestamp: '10:16 AM',
-          status: 'read',
-        },
-        {
-          id: 3,
-          text: 'We offer comprehensive CRM solutions tailored to your business needs.',
-          sender: 'user',
-          timestamp: '10:17 AM',
-          status: 'read',
-        },
-        {
-          id: 4,
-          text: 'That sounds interesting. Can you provide more details?',
-          sender: 'contact',
-          timestamp: '10:20 AM',
-          status: 'read',
-        },
-        {
-          id: 5,
-          text: 'Of course! Our CRM includes lead management, task tracking, team collaboration, and analytics.',
-          sender: 'user',
-          timestamp: '10:22 AM',
-          status: 'delivered',
-        },
-        {
-          id: 6,
-          text: 'Thanks for the information!',
-          sender: 'contact',
-          timestamp: '10:30 AM',
-          status: 'read',
-        },
-      ]);
+  // Helper function to build status parameter based on active tabs
+  const getStatusParam = () => {
+    if (activeTab === 'Assigned') {
+      return 'Assigned';
+    } else if (activeTab === 'Not Assigned') {
+      return 'Not-Assigned';
+    } else if (activeTab === 'Contacted') {
+      if (activeSubTab === 'Interested') {
+        if (activeSubSubTab === 'Warm') {
+          return 'Warm';
+        } else if (activeSubSubTab === 'Hot') {
+          if (activeSubSubSubTab === 'Demo') {
+            return 'Demo';
+          } else if (activeSubSubSubTab === 'Real') {
+            if (activeSubSubSubSubTab === 'Deposit') {
+              return 'Deposit';
+            } else if (activeSubSubSubSubTab === 'Not Deposit') {
+              return 'Not-Deposit';
+            }
+            return 'Real';
+          }
+          return 'Hot';
+        }
+        return 'Interested';
+      } else if (activeSubTab === 'Not Interested') {
+        return 'Not-Interested';
+      } else if (activeSubTab === 'Not Answered') {
+        return 'Not-Answered';
+      } else if (activeSubTab === 'Answered') {
+        return 'Answered';
+      }
+      return 'Contacted';
+    } else if (activeTab === 'Pending') {
+      return 'Pending';
     }
-  }, [selectedConversation]);
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    return '';
   };
 
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() || !selectedConversation) return;
-
-    setIsSending(true);
+  // Fetch dashboard data for counters
+  const fetchDashboardData = async () => {
+    const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+    const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
     
     try {
-      // TODO: Replace with actual API call to send WhatsApp message
-      const newMessage = {
-        id: messages.length + 1,
-        text: messageInput,
-        sender: 'user',
-        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent',
-      };
-
-      setMessages([...messages, newMessage]);
-      setMessageInput('');
+      const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery, '');
       
-      // Simulate message delivery
-      setTimeout(() => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
-        ));
-      }, 1000);
-
-      toast.success('Message sent successfully!');
+      if (result.success && result.data) {
+        if (result.data.crmCategorySummary) {
+          setContactsCount(result.data.crmCategorySummary);
+          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary));
+          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary));
+        }
+        
+        console.log('✅ Dashboard data loaded:', result.data);
+      } else {
+        console.error('Failed to fetch dashboard data:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error?.payload?.message || 'Failed to fetch dashboard data');
+        }
+      }
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again.');
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data. Please try again.');
+    }
+  };
+
+  // Fetch contacts based on user role
+  const fetchContacts = async (page = 1, limit = 30) => {
+    setLoading(true);
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const statusParam = getStatusParam();
+      
+      let result;
+      
+      if (userRole === 'Sales Manager') {
+        // Sales Manager sees all leads
+        result = await getAllSalesManagerLeads(
+          page,
+          limit,
+          startDateStr,
+          endDateStr,
+          debouncedSearchQuery,
+          statusParam,
+          '' // No agent filter
+        );
+      } else {
+        // Agent sees only their assigned leads
+        result = await getAllLeads(
+          page,
+          limit,
+          startDateStr,
+          endDateStr,
+          debouncedSearchQuery,
+          statusParam
+        );
+      }
+      
+      if (result.success && result.data) {
+        const transformedContacts = result.data.map((lead) => ({
+          id: lead._id,
+          leadId: lead.leadId,
+          name: lead.leadName,
+          email: lead.leadEmail,
+          phone: lead.leadPhoneNumber,
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+            : 'Not Assigned',
+          agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
+          dateOfBirth: lead.leadDateOfBirth,
+          nationality: lead.leadNationality ?? '-',
+          residency: lead.leadResidency,
+          language: lead.leadPreferredLanguage,
+          source: lead.leadSource,
+          remarks: lead.leadDescription || '',
+          depositStatus: lead.depositStatus || '',
+          status: lead.leadStatus,
+          createdAt: lead.createdAt,
+          leadSourceId: lead?.leadSourceId?.[0],
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+          contacted: lead.contacted || false,
+          answered: lead.answered || false,
+          interested: lead.interested || false,
+          hot: lead.hot || false,
+          cold: lead.cold || false,
+          real: lead.real || false,
+          demo: lead.demo || false,
+          deposited: lead.deposited || false,
+          latestRemarks: lead.latestRemarks || '',
+          // Add messaging-specific fields
+          lastMessage: lead.latestRemarks || 'No messages yet',
+          lastMessageTime: lead.updatedAt || lead.createdAt,
+          unreadCount: 0, // TODO: Implement unread count from backend
+          isOnline: false, // TODO: Implement online status from backend
+        }));
+        
+        setContacts(transformedContacts);
+        setTotalContacts(result.metadata?.total || 0);
+        
+        // Fetch dashboard data for counters
+        fetchDashboardData();
+      } else {
+        console.error('Failed to fetch contacts:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.error?.payload?.message || 'Failed to fetch contacts');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      toast.error('Failed to fetch contacts. Please try again');
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  // Load contacts on component mount and when filters change
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab]);
+
+  // Fetch contacts when page, filters, or dates change
+  useEffect(() => {
+    if (userRole) {
+      fetchContacts(currentPage, itemsPerPage);
     }
+  }, [userRole, startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setActiveSubTab('');
+    setActiveSubSubTab('');
+    setActiveSubSubSubTab('');
+    setActiveSubSubSubSubTab('');
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
   };
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.phone.includes(searchQuery)
-  );
-
-  const getMessageStatusIcon = (status) => {
-    switch (status) {
-      case 'sent':
-        return <Check className="w-4 h-4 text-gray-400" />;
-      case 'delivered':
-        return <CheckCheck className="w-4 h-4 text-gray-400" />;
-      case 'read':
-        return <CheckCheck className="w-4 h-4 text-[#BBA473]" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-400" />;
-    }
+  const handleSubTabChange = (subTab) => {
+    setActiveSubTab(subTab);
+    setActiveSubSubTab('');
+    setActiveSubSubSubTab('');
+    setActiveSubSubSubSubTab('');
   };
 
-  const formatPhoneDisplay = (phone) => {
-    return phone.replace(/(\+\d{1,4})(\d{2})(\d{3})(\d{4})/, '$1 $2 $3 $4');
+  const handleSubSubTabChange = (subSubTab) => {
+    setActiveSubSubTab(subSubTab);
+    setActiveSubSubSubTab('');
+    setActiveSubSubSubSubTab('');
+  };
+
+  const handleSubSubSubTabChange = (subSubSubTab) => {
+    setActiveSubSubSubTab(subSubSubTab);
+    setActiveSubSubSubSubTab('');
+  };
+
+  const handleSubSubSubSubTabChange = (subSubSubSubTab) => {
+    setActiveSubSubSubSubTab(subSubSubSubTab);
+  };
+
+  const handleContactClick = (contact) => {
+    setSelectedContact(contact);
+    setChatDrawerOpen(true);
+  };
+
+  const handleCloseChat = () => {
+    setChatDrawerOpen(false);
+    setSelectedContact(null);
+  };
+
+  const refreshContacts = () => {
+    fetchContacts(currentPage, itemsPerPage);
   };
 
   return (
     <>
-      <Toaster position="top-right" />
-      
-      <div className={`min-h-screen bg-[#1A1A1A] text-white transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="h-screen flex flex-col">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-[#BBA473]/10 to-transparent border-b border-[#BBA473]/20 p-6 animate-fadeIn">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
-                  WhatsApp Messages
-                </h1>
-                <p className="text-gray-400 mt-1">Manage your WhatsApp conversations</p>
-              </div>
-              <div className="flex gap-3">
-                <button className="p-3 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473]/30 transition-all duration-300 border border-[#BBA473]/30">
-                  <Phone className="w-5 h-5" />
-                </button>
-                <button className="p-3 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473]/30 transition-all duration-300 border border-[#BBA473]/30">
-                  <Video className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+      <InboxListing
+        contacts={contacts}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeTab={activeTab}
+        activeSubTab={activeSubTab}
+        activeSubSubTab={activeSubSubTab}
+        activeSubSubSubTab={activeSubSubSubTab}
+        activeSubSubSubSubTab={activeSubSubSubSubTab}
+        handleTabChange={handleTabChange}
+        handleSubTabChange={handleSubTabChange}
+        handleSubSubTabChange={handleSubSubTabChange}
+        handleSubSubSubTabChange={handleSubSubSubTabChange}
+        handleSubSubSubSubTabChange={handleSubSubSubSubTabChange}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
+        totalContacts={totalContacts}
+        loading={loading}
+        isLoaded={isLoaded}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        handleContactClick={handleContactClick}
+        userRole={userRole}
+        contactsCount={contactsCount}
+      />
 
-          {/* Main Content */}
-          <div className="flex-1 flex overflow-hidden">
-            {/* Conversations List */}
-            <div className={`${showConversationList ? 'w-full md:w-96' : 'hidden md:block md:w-96'} bg-[#2A2A2A] border-r border-[#BBA473]/20 flex flex-col transition-all duration-300`}>
-              {/* Search */}
-              <div className="p-4 border-b border-[#BBA473]/20">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
-                  />
-                </div>
-              </div>
-
-              {/* Conversation Items */}
-              <div className="flex-1 overflow-y-auto">
-                {filteredConversations.length === 0 ? (
-                  <div className="p-8 text-center text-gray-400">
-                    <p>No conversations found</p>
-                  </div>
-                ) : (
-                  filteredConversations.map((conv) => (
-                    <div
-                      key={conv.id}
-                      onClick={() => {
-                        setSelectedConversation(conv);
-                        setShowConversationList(false);
-                      }}
-                      className={`p-4 border-b border-[#BBA473]/10 cursor-pointer transition-all duration-300 hover:bg-[#3A3A3A] ${
-                        selectedConversation?.id === conv.id ? 'bg-[#3A3A3A] border-l-4 border-l-[#BBA473]' : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Avatar */}
-                        <div className="relative flex-shrink-0">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center">
-                            <User className="w-6 h-6 text-white" />
-                          </div>
-                          {conv.isOnline && (
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#2A2A2A]"></div>
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-white truncate">{conv.name}</h3>
-                            <span className="text-xs text-gray-400 flex-shrink-0 ml-2">{conv.timestamp}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-400 truncate">{conv.lastMessage}</p>
-                            {conv.unreadCount > 0 && (
-                              <span className="ml-2 px-2 py-0.5 bg-[#BBA473] text-black text-xs font-bold rounded-full flex-shrink-0">
-                                {conv.unreadCount}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">{formatPhoneDisplay(conv.phone)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Chat Area */}
-            <div className={`${showConversationList ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-[#1A1A1A]`}>
-              {selectedConversation ? (
-                <>
-                  {/* Chat Header */}
-                  <div className="bg-[#2A2A2A] border-b border-[#BBA473]/20 p-4 flex items-center justify-between animate-fadeIn">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setShowConversationList(true)}
-                        className="md:hidden p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center">
-                          <User className="w-5 h-5 text-white" />
-                        </div>
-                        {selectedConversation.isOnline && (
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#2A2A2A]"></div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white">{selectedConversation.name}</h3>
-                        <p className="text-xs text-gray-400">
-                          {selectedConversation.isOnline ? 'Online' : 'Offline'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                        <Phone className="w-5 h-5 text-[#BBA473]" />
-                      </button>
-                      <button className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                        <Video className="w-5 h-5 text-[#BBA473]" />
-                      </button>
-                      <button className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                        <MoreVertical className="w-5 h-5 text-[#BBA473]" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {messages.map((message, index) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slideIn`}
-                        style={{ animationDelay: `${index * 0.05}s` }}
-                      >
-                        <div
-                          className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                            message.sender === 'user'
-                              ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
-                              : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
-                          } transition-all duration-300 hover:scale-[1.02]`}
-                        >
-                          <p className="text-sm leading-relaxed">{message.text}</p>
-                          <div className="flex items-center justify-end gap-1 mt-1">
-                            <span className={`text-xs ${message.sender === 'user' ? 'text-black/70' : 'text-gray-400'}`}>
-                              {message.timestamp}
-                            </span>
-                            {message.sender === 'user' && (
-                              <span className="ml-1">{getMessageStatusIcon(message.status)}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-
-                  {/* Message Input */}
-                  <div className="bg-[#2A2A2A] border-t border-[#BBA473]/20 p-4">
-                    <div className="flex items-end gap-3">
-                      <button className="p-3 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300 flex-shrink-0">
-                        <Paperclip className="w-5 h-5 text-[#BBA473]" />
-                      </button>
-                      <div className="flex-1 relative">
-                        <textarea
-                          value={messageInput}
-                          onChange={(e) => setMessageInput(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Type a message..."
-                          rows="1"
-                          className="w-full px-4 py-3 pr-12 border-2 border-[#BBA473]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white resize-none transition-all duration-300"
-                          style={{ minHeight: '48px', maxHeight: '120px' }}
-                        />
-                        <button className="absolute right-3 bottom-3 p-1 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                          <Smile className="w-5 h-5 text-[#BBA473]" />
-                        </button>
-                      </div>
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={!messageInput.trim() || isSending}
-                        className={`p-3 rounded-lg flex-shrink-0 transition-all duration-300 ${
-                          messageInput.trim() && !isSending
-                            ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110'
-                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        <Send className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center animate-fadeIn">
-                    <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center">
-                      <Phone className="w-16 h-16 text-white" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-[#BBA473] mb-2">Select a Conversation</h3>
-                    <p className="text-gray-400">Choose a conversation from the list to start messaging</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
-        
-        .animate-slideIn {
-          animation: slideIn 0.3s ease-out;
-          animation-fill-mode: both;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-          background: #1A1A1A;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: #BBA473;
-          border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-          background: #d4bc89;
-        }
-
-        /* Auto-resize textarea */
-        textarea {
-          field-sizing: content;
-        }
-      `}</style>
+      <InboxChatDrawer
+        isOpen={chatDrawerOpen}
+        onClose={handleCloseChat}
+        contact={selectedContact}
+        refreshContacts={refreshContacts}
+      />
     </>
   );
 };
 
-export default WhatsAppMessages;
+export default InboxPage;
