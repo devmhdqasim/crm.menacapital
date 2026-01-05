@@ -5,7 +5,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
 
-const SalesManagerAssignLeadModal = ({
+const SalesManagerAssignLeadModal = ({ 
   showRowModal,
   selectedLead,
   handleCloseModal,
