@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Paperclip, Smile, Phone, Video, MoreVertical, Check, CheckCheck, Clock, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { sendWatiMessage, getWatiMessages, markWatiMessagesAsRead } from '../../../services/inboxService';
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const [messages, setMessages] = useState([]);
@@ -9,32 +10,68 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Mock messages - Replace with actual API call to fetch conversation history
+  // Fetch messages from Wati when contact is selected
   useEffect(() => {
     if (contact) {
-      setIsLoading(true);
-      // Simulate loading messages
-      setTimeout(() => {
-        setMessages([
-          {
-            id: 1,
-            text: contact.remarks || 'Hello! I would like to know more about your services.',
-            sender: 'contact',
-            timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            status: 'read',
-          },
-          {
-            id: 2,
-            text: contact.latestRemarks || 'Thank you for reaching out. How can I help you today?',
-            sender: 'user',
-            timestamp: new Date(contact.lastMessageTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            status: 'read',
-          },
-        ]);
-        setIsLoading(false);
-      }, 500);
+      fetchWatiMessages();
     }
   }, [contact]);
+
+  const fetchWatiMessages = async () => {
+    if (!contact || !contact.phone) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await getWatiMessages(contact.phone, 100, 0);
+      
+      if (result.success && result.messages) {
+        // Transform Wati messages to our format
+        const transformedMessages = result.messages.map((msg, index) => ({
+          id: msg.id || index,
+          text: msg.text || msg.type === 'image' ? '[Image]' : msg.type === 'document' ? '[Document]' : msg.type === 'audio' ? '[Audio]' : '[Media]',
+          sender: msg.owner ? 'user' : 'contact',
+          timestamp: new Date(msg.created * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          status: msg.statusString || 'sent',
+          type: msg.type || 'text',
+          mediaUrl: msg.data?.url || null,
+        }));
+        
+        // Sort messages by timestamp (oldest first)
+        transformedMessages.sort((a, b) => {
+          const timeA = new Date(`1970-01-01 ${a.timestamp}`);
+          const timeB = new Date(`1970-01-01 ${b.timestamp}`);
+          return timeA - timeB;
+        });
+        
+        setMessages(transformedMessages);
+        
+        // Mark messages as read
+        await markWatiMessagesAsRead(contact.phone);
+      } else {
+        console.error('Failed to fetch Wati messages:', result.message);
+        // Fallback to showing initial remarks if available
+        if (contact.remarks || contact.latestRemarks) {
+          setMessages([
+            {
+              id: 1,
+              text: contact.remarks || contact.latestRemarks,
+              sender: 'contact',
+              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              status: 'read',
+            },
+          ]);
+        } else {
+          setMessages([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Wati messages:', error);
+      toast.error('Failed to load conversation history');
+      setMessages([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -51,30 +88,43 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     setIsSending(true);
     
     try {
-      // TODO: Replace with actual API call to send message
-      const newMessage = {
-        id: messages.length + 1,
-        text: messageInput,
-        sender: 'user',
-        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent',
-      };
-
-      setMessages([...messages, newMessage]);
-      setMessageInput('');
+      // Send message via Wati API
+      const result = await sendWatiMessage(contact.phone, messageInput);
       
-      // Simulate message delivery
-      setTimeout(() => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
-        ));
-      }, 1000);
+      if (result.success) {
+        const newMessage = {
+          id: messages.length + 1,
+          text: messageInput,
+          sender: 'user',
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          status: 'sent',
+        };
 
-      toast.success('Message sent successfully!');
-      
-      // Refresh contacts list to update last message
-      if (refreshContacts) {
-        refreshContacts();
+        setMessages([...messages, newMessage]);
+        setMessageInput('');
+        
+        toast.success('Message sent successfully!');
+        
+        // Simulate status updates
+        setTimeout(() => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
+          ));
+        }, 1000);
+        
+        setTimeout(() => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
+          ));
+        }, 3000);
+        
+        // Refresh contacts list to update last message
+        if (refreshContacts) {
+          refreshContacts();
+        }
+      } else {
+        console.error('Failed to send message:', result.message);
+        toast.error(result.message || 'Failed to send message. Please try again.');
       }
     } catch (error) {
       console.error('Error sending message:', error);
