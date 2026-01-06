@@ -207,6 +207,7 @@ const SalesManagerLeadManagement = () => {
           createdAt: lead.createdAt,
           leadSourceId: lead?.leadSourceId?.[0],
           kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+          chatbotMessage: lead.chatbotMessage,
           contacted: lead.contacted || false,
           answered: lead.answered || false,
           interested: lead.interested || false,

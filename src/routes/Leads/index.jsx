@@ -155,6 +155,7 @@ const LeadManagement = () => {
           status: lead.leadStatus ?? '-',
           createdAt: lead.createdAt,
           kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+          chatbotMessage: lead.chatbotMessage,
           // Boolean flags for status tracking
           contacted: lead.contacted || false,
           answered: lead.answered || false,
