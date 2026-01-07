@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 // Wati API Configuration
-const WATI_API_URL = '';
-const WATI_API_TOKEN = '';
+const WATI_API_URL = 'https://live-mt-server.wati.io/206676/api/v1';
+const WATI_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsIm5hbWVpZCI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsImVtYWlsIjoiaW5mb0BzYXZlaW5nb2xkLmFlIiwiYXV0aF90aW1lIjoiMDEvMDUvMjAyNiAxMTo1NTowOCIsInRlbmFudF9pZCI6IjIwNjY3NiIsImRiX25hbWUiOiJtdC1wcm9kLVRlbmFudHMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBRE1JTklTVFJBVE9SIiwiZXhwIjoyNTM0MDIzMDA4MDAsImlzcyI6IkNsYXJlX0FJIiwiYXVkIjoiQ2xhcmVfQUkifQ.n_-Y-1caVpYdcLwRrIeIJK_uTAvkOnEfTKKZZfcel34';
 
 // Create axios instance with base config
 const watiApi = axios.create({
   baseURL: WATI_API_URL,
   headers: {
-    'Content-Type': 'application/json-patch+json',
+    'Content-Type': 'application/json',
     'Authorization': `Bearer ${WATI_API_TOKEN}`,
   },
 });
@@ -37,10 +37,56 @@ export const sendWatiMessage = async (phoneNumber, message) => {
   } catch (error) {
     console.error('Error sending Wati message:', error);
     console.error('Error response:', error.response?.data);
+    
+    // If contact not found, provide helpful message
+    if (error.response?.data?.info?.includes("Can't find Contact")) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: 'Contact not found in Wati. The contact needs to message your WhatsApp Business number first, or you need to add them manually in Wati.',
+        contactNotFound: true,
+      };
+    }
+    
     return {
       success: false,
       error: error.response?.data || error.message,
-      message: error.response?.data?.message || error.response?.data?.error || 'Failed to send message',
+      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to send message',
+    };
+  }
+};
+
+/**
+ * Create or add a contact in Wati
+ * @param {string} phoneNumber - Contact phone number with country code
+ * @param {string} name - Contact name
+ * @param {object} customParams - Additional custom parameters
+ * @returns {Promise} API response
+ */
+export const createWatiContact = async (phoneNumber, name = '', customParams = {}) => {
+  try {
+    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    
+    const payload = {
+      whatsappNumber: cleanPhone,
+      name: name || cleanPhone,
+      customParams: customParams,
+    };
+    
+    const response = await watiApi.post('/addContact', payload);
+
+    return {
+      success: true,
+      data: response.data,
+      message: 'Contact created successfully',
+    };
+  } catch (error) {
+    console.error('Error creating Wati contact:', error);
+    console.error('Error response:', error.response?.data);
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to create contact',
     };
   }
 };
@@ -56,9 +102,9 @@ export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 
   try {
     const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
     
-    const response = await watiApi.get('/getMessages', {
+    // Try to get messages for the contact
+    const response = await watiApi.get(`/getMessages/${cleanPhone}`, {
       params: {
-        whatsappNumber: cleanPhone,
         pageSize: pageSize,
         pageNumber: pageNumber,
       },
@@ -72,10 +118,21 @@ export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 
   } catch (error) {
     console.error('Error fetching Wati messages:', error);
     console.error('Error response:', error.response?.data);
+    
+    // If contact not found, return empty messages instead of error
+    if (error.response?.data?.info?.includes("Can't find Contact")) {
+      return {
+        success: true,
+        data: {},
+        messages: [],
+        info: 'Contact not found in Wati. No conversation history available.',
+      };
+    }
+    
     return {
       success: false,
       error: error.response?.data || error.message,
-      message: error.response?.data?.message || error.response?.data?.error || 'Failed to fetch messages',
+      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to fetch messages',
       messages: [],
     };
   }
@@ -162,11 +219,7 @@ export const getWatiContactInfo = async (phoneNumber) => {
   try {
     const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
     
-    const response = await watiApi.get('/getContact', {
-      params: {
-        whatsappNumber: cleanPhone,
-      },
-    });
+    const response = await watiApi.get(`/getContact/${cleanPhone}`);
 
     return {
       success: true,
@@ -192,9 +245,7 @@ export const markWatiMessagesAsRead = async (phoneNumber) => {
   try {
     const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
     
-    const response = await watiApi.post('/markAsRead', {
-      whatsappNumber: cleanPhone,
-    });
+    const response = await watiApi.post(`/markAsRead/${cleanPhone}`);
 
     return {
       success: true,
@@ -273,4 +324,5 @@ export default {
   markWatiMessagesAsRead,
   getWatiUnreadCount,
   setupWatiWebhook,
+  createWatiContact,
 };

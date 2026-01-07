@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Paperclip, Smile, Phone, Video, MoreVertical, Check, CheckCheck, Clock, User } from 'lucide-react';
+import { X, Send, Paperclip, Smile, Phone, Video, MoreVertical, Check, CheckCheck, Clock, User, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { sendWatiMessage, getWatiMessages, markWatiMessagesAsRead } from '../../../services/inboxService';
+import { sendWatiMessage, getWatiMessages, markWatiMessagesAsRead, createWatiContact } from '../../../services/inboxService';
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [contactNotFound, setContactNotFound] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Fetch messages from Wati when contact is selected
@@ -21,6 +22,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     if (!contact || !contact.phone) return;
     
     setIsLoading(true);
+    setContactNotFound(false);
     try {
       const result = await getWatiMessages(contact.phone, 100, 0);
       
@@ -47,6 +49,25 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         
         // Mark messages as read
         await markWatiMessagesAsRead(contact.phone);
+      } else if (result.info && result.info.includes('Contact not found')) {
+        // Contact not found in Wati
+        setContactNotFound(true);
+        console.log('Contact not found in Wati:', contact.phone);
+        
+        // Fallback to showing initial remarks if available
+        if (contact.remarks || contact.latestRemarks) {
+          setMessages([
+            {
+              id: 1,
+              text: contact.remarks || contact.latestRemarks,
+              sender: 'contact',
+              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              status: 'read',
+            },
+          ]);
+        } else {
+          setMessages([]);
+        }
       } else {
         console.error('Failed to fetch Wati messages:', result.message);
         // Fallback to showing initial remarks if available
@@ -82,6 +103,33 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleCreateContact = async () => {
+    if (!contact) return;
+    
+    setIsSending(true);
+    try {
+      const result = await createWatiContact(contact.phone, contact.name, {
+        email: contact.email,
+        nationality: contact.nationality,
+        source: contact.source,
+      });
+      
+      if (result.success) {
+        toast.success('Contact added to Wati successfully!');
+        setContactNotFound(false);
+        // Refresh messages
+        fetchWatiMessages();
+      } else {
+        toast.error(result.message || 'Failed to add contact to Wati');
+      }
+    } catch (error) {
+      console.error('Error creating Wati contact:', error);
+      toast.error('Failed to add contact to Wati');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !contact) return;
 
@@ -102,6 +150,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
         setMessages([...messages, newMessage]);
         setMessageInput('');
+        setContactNotFound(false);
         
         toast.success('Message sent successfully!');
         
@@ -124,7 +173,14 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }
       } else {
         console.error('Failed to send message:', result.message);
-        toast.error(result.message || 'Failed to send message. Please try again.');
+        
+        // Handle contact not found error
+        if (result.contactNotFound) {
+          setContactNotFound(true);
+          toast.error(result.message);
+        } else {
+          toast.error(result.message || 'Failed to send message. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -248,6 +304,29 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 )}
               </div>
             </div>
+
+            {/* Contact Not Found Warning */}
+            {contactNotFound && (
+              <div className="bg-yellow-500/10 border-y border-yellow-500/30 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-yellow-400 font-semibold mb-1">Contact Not Found in Wati</h4>
+                    <p className="text-xs text-gray-300 mb-3">
+                      This contact hasn't been added to your Wati WhatsApp Business account yet. 
+                      The contact needs to message your WhatsApp Business number first, or you can add them manually.
+                    </p>
+                    <button
+                      onClick={handleCreateContact}
+                      disabled={isSending}
+                      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSending ? 'Adding Contact...' : 'Add Contact to Wati'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#1A1A1A]">
