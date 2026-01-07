@@ -340,9 +340,14 @@ const Tasks = () => {
 
       if (result.success && result.data) {
 
-        // Store the entire array of agent task summaries
+        // Store the entire array of agent task summaries for Sales Manager
         if (result.data.crmAgentTaskSummary) {
           setCrmAgentTaskSummary(result.data.crmAgentTaskSummary)
+        }
+
+        // For Agent role: Extract the first element from agentTaskCounters array
+        if (result.data.agentTaskCounters && result.data.agentTaskCounters.length > 0) {
+          setCrmAgentTaskSummary(result.data.agentTaskCounters[0])
         }
 
         if (result.data.salesManagerTaskCounters) {
