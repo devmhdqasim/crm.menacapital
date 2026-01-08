@@ -6,16 +6,6 @@ const InboxListing = ({
   contacts,
   searchQuery,
   setSearchQuery,
-  activeTab,
-  activeSubTab,
-  activeSubSubTab,
-  activeSubSubSubTab,
-  activeSubSubSubSubTab,
-  handleTabChange,
-  handleSubTabChange,
-  handleSubSubTabChange,
-  handleSubSubSubTabChange,
-  handleSubSubSubSubTabChange,
   currentPage,
   setCurrentPage,
   itemsPerPage,
@@ -29,44 +19,13 @@ const InboxListing = ({
   setEndDate,
   handleContactClick,
   userRole,
-  contactsCount,
+  agents,
+  selectedAgentFilter,
+  setSelectedAgentFilter,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
 
-  // Define tabs based on user role
-  const tabs = userRole === 'Sales Manager' 
-    ? ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Pending']
-    : ['All', 'Pending', 'Contacted'];
-
   const perPageOptions = [10, 20, 30, 50, 100];
-
-  const getSubTabs = () => {
-    if (activeTab === 'Contacted') {
-      return ['Interested', 'Not Interested', 'Not Answered', 'Answered'];
-    }
-    return [];
-  };
-
-  const getSubSubTabs = () => {
-    if (activeTab === 'Contacted' && activeSubTab === 'Interested') {
-      return ['Warm', 'Hot'];
-    }
-    return [];
-  };
-
-  const getSubSubSubTabs = () => {
-    if (activeTab === 'Contacted' && activeSubTab === 'Interested' && activeSubSubTab === 'Hot') {
-      return ['Demo', 'Real'];
-    }
-    return [];
-  };
-
-  const getSubSubSubSubTabs = () => {
-    if (activeTab === 'Contacted' && activeSubTab === 'Interested' && activeSubSubTab === 'Hot' && activeSubSubSubTab === 'Real') {
-      return ['Deposit', 'Not Deposit'];
-    }
-    return [];
-  };
 
   const totalPages = Math.ceil(totalContacts / itemsPerPage);
   const showingFrom = totalContacts > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
@@ -121,25 +80,12 @@ const InboxListing = ({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  function convertToDubaiTime(utcDateString) {
-    const date = new Date(utcDateString);
-  
-    if (isNaN(date)) return false;
-  
-    const options = {
-      timeZone: "Asia/Dubai",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    };
-  
-    const formatted = new Intl.DateTimeFormat("en-GB", options).format(date);
-  
-    return formatted.replace(",", "");
-  }
+  const capitalizeWords = (str) => {
+    if (!str) return '';
+    return str.split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+  };
 
   return (
     <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -158,6 +104,30 @@ const InboxListing = ({
           </div>
 
           <div className="flex flex-col gap-3">
+            {/* Agent Filter - Only show for Sales Manager */}
+            {userRole === 'Sales Manager' && (
+              <div className="flex items-center gap-4 ml-auto">
+                <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+                  Filter by Agent:
+                </label>
+                <div className="relative w-full max-w-xs min-w-64">
+                  <select
+                    value={selectedAgentFilter}
+                    onChange={(e) => setSelectedAgentFilter(e.target.value)}
+                    className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                  >
+                    <option value="">All Agents</option>
+                    {agents.map((agent) => (
+                      <option key={agent.id} value={agent.id}>
+                        {agent.fullName}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+            )}
+
             {/* Date Range Filter */}
             <DateRangePicker
               startDate={startDate}
@@ -170,138 +140,6 @@ const InboxListing = ({
           </div>
         </div>
       </div>
-
-      {/* Main Tabs */}
-      <div className="mb-4 overflow-x-auto animate-fadeIn">
-        <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
-          {tabs.map((tab) => {
-            const tabCount = contactsCount?.[tab?.replace(/\s+/g, '')];
-
-            return (
-              <button
-                key={tab}
-                onClick={() => handleTabChange(tab)}
-                className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${
-                  activeTab === tab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                }`}
-              >
-                <span>{tab}</span>
-                {tabCount ? (
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                    {tabCount}
-                  </span>
-                ) : ''}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Sub Tabs (Level 2) */}
-      {getSubTabs().length > 0 && (
-        <div className="mb-4 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-4">
-            {getSubTabs().map((subTab) => (
-              <button
-                key={subTab}
-                onClick={() => handleSubTabChange(subTab)}
-                className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                  activeSubTab === subTab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                }`}
-              >
-                {subTab}
-                {contactsCount?.[subTab?.replace(/\s+/g, '')] ? (
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                    {contactsCount?.[subTab?.replace(/\s+/g, '')]}
-                  </span>
-                ) : ''}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sub Sub Tabs (Level 3) */}
-      {getSubSubTabs().length > 0 && (
-        <div className="mb-4 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-8">
-            {getSubSubTabs().map((subSubTab) => (
-              <button
-                key={subSubTab}
-                onClick={() => handleSubSubTabChange(subSubTab)}
-                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                  activeSubSubTab === subSubTab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                }`}
-              >
-                {subSubTab}
-                {contactsCount?.[subSubTab?.replace(/\s+/g, '')] ? (
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                    {contactsCount?.[subSubTab?.replace(/\s+/g, '')]}
-                  </span>
-                ) : ''}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sub Sub Sub Tabs (Level 4) */}
-      {getSubSubSubTabs().length > 0 && (
-        <div className="mb-4 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-12">
-            {getSubSubSubTabs().map((subSubSubTab) => (
-              <button
-                key={subSubSubTab}
-                onClick={() => handleSubSubSubTabChange(subSubSubTab)}
-                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                  activeSubSubSubTab === subSubSubTab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                }`}
-              >
-                {subSubSubTab}
-                {contactsCount?.[subSubSubTab?.replace(/\s+/g, '')] ? (
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                    {contactsCount?.[subSubSubTab?.replace(/\s+/g, '')]}
-                  </span>
-                ) : ''}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sub Sub Sub Sub Tabs (Level 5) */}
-      {getSubSubSubSubTabs().length > 0 && (
-        <div className="mb-6 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-16">
-            {getSubSubSubSubTabs().map((subSubSubSubTab) => (
-              <button
-                key={subSubSubSubTab}
-                onClick={() => handleSubSubSubSubTabChange(subSubSubSubTab)}
-                className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                  activeSubSubSubSubTab === subSubSubSubTab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                }`}
-              >
-                {subSubSubSubTab}
-                {contactsCount?.[subSubSubSubTab?.replace(/\s+/g, '')] ? (
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                    {contactsCount?.[subSubSubSubTab?.replace(/\s+/g, '')]}
-                  </span>
-                ) : ''}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Search */}
       <div className="mb-6 flex flex-col lg:flex-row gap-4 animate-fadeIn">
@@ -362,7 +200,7 @@ const InboxListing = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-semibold text-white truncate group-hover:text-[#BBA473] transition-colors duration-300">
-                        {contact.name}
+                        {capitalizeWords(contact.name)}
                       </h3>
                       <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0 ml-2">
                         <Clock className="w-3 h-3" />
@@ -378,7 +216,7 @@ const InboxListing = ({
                       {userRole === 'Sales Manager' && contact.agent !== 'Not Assigned' && (
                         <span className="flex items-center gap-1">
                           <span>👤</span>
-                          {contact.agent}
+                          {capitalizeWords(contact.agent)}
                         </span>
                       )}
                       {contact.nationality && (

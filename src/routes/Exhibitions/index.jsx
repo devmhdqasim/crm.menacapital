@@ -217,7 +217,7 @@ const BranchManagement = () => {
   };
     
   useEffect(() => {
-    const FEATURE_START_DATE = '2026-01-19';
+    const FEATURE_START_DATE = '2026-02-19';
     
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);

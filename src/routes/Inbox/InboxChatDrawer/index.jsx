@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Smile, MoreVertical, Check, CheckCheck, Clock, AlertCircle } from 'lucide-react';
+import { X, Send, Check, CheckCheck, Clock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { sendWatiMessage, getWatiMessages, markWatiMessagesAsRead, createWatiContact } from '../../../services/inboxService';
 
@@ -247,6 +247,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     return phone;
   };
 
+  const capitalizeWords = (str) => {
+    if (!str) return '';
+    return str.split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -277,16 +284,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-white truncate">{contact.name}</h3>
+                  <h3 className="font-semibold text-white truncate">{capitalizeWords(contact.name)}</h3>
                   <p className="text-xs text-gray-400 truncate">
                     {formatPhoneDisplay(contact.phone)}
                   </p>
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0">
-                <button className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                  <MoreVertical className="w-5 h-5 text-[#BBA473]" />
-                </button>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all duration-300"
@@ -314,7 +318,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 {contact.agent && contact.agent !== 'Not Assigned' && (
                   <span className="flex items-center gap-1">
                     <span>👤</span>
-                    Agent: {contact.agent}
+                    Agent: {capitalizeWords(contact.agent)}
                   </span>
                 )}
                 {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
@@ -362,9 +366,22 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   <span className="text-gray-400 mt-3">Loading messages...</span>
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <p>No messages yet</p>
-                  <p className="text-sm mt-2">Start the conversation!</p>
+                <div className="flex flex-col items-center justify-center h-full text-center animate-fadeIn">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#BBA473]/20 to-[#8E7D5A]/20 flex items-center justify-center mb-6 animate-pulse-slow">
+                      <svg className="w-12 h-12 text-[#BBA473]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No messages yet</h3>
+                  <p className="text-gray-400 text-sm max-w-xs mb-6">
+                    Start a conversation by sending a message below
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-ping"></div>
+                    <span>Ready to chat</span>
+                  </div>
                 </div>
               ) : (
                 messages.map((message, index) => (
@@ -398,21 +415,16 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
             {/* Message Input */}
             <div className="bg-[#2A2A2A] border-t border-[#BBA473]/20 p-4">
-              <div className="flex items-end gap-3">
-                <div className="flex-1 relative">
-                  <textarea
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type a message..."
-                    rows="1"
-                    className="w-full px-4 py-3 pr-12 border-2 border-[#BBA473]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white resize-none transition-all duration-300"
-                    style={{ minHeight: '48px', maxHeight: '120px' }}
-                  />
-                  <button className="absolute right-3 bottom-3 p-1 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                    <Smile className="w-5 h-5 text-[#BBA473]" />
-                  </button>
-                </div>
+              <div className="flex items-center gap-3">
+                <textarea
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type a message..."
+                  rows="1"
+                  className="flex-1 px-4 py-3 border-2 border-[#BBA473]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white resize-none transition-all duration-300"
+                  style={{ minHeight: '48px', maxHeight: '120px' }}
+                />
                 <button
                   onClick={handleSendMessage}
                   disabled={!messageInput.trim() || isSending}
@@ -439,6 +451,24 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         .animate-slideIn {
           animation: slideIn 0.3s ease-out;
           animation-fill-mode: both;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes pulse-slow {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.8; }
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 3s ease-in-out infinite;
         }
 
         /* Auto-resize textarea */
