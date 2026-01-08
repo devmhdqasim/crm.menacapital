@@ -4,6 +4,20 @@ import axios from 'axios';
 const WATI_API_URL = 'https://live-mt-server.wati.io/206676/api/v1';
 const WATI_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsIm5hbWVpZCI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsImVtYWlsIjoiaW5mb0BzYXZlaW5nb2xkLmFlIiwiYXV0aF90aW1lIjoiMDEvMDUvMjAyNiAxMTo1NTowOCIsInRlbmFudF9pZCI6IjIwNjY3NiIsImRiX25hbWUiOiJtdC1wcm9kLVRlbmFudHMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBRE1JTklTVFJBVE9SIiwiZXhwIjoyNTM0MDIzMDA4MDAsImlzcyI6IkNsYXJlX0FJIiwiYXVkIjoiQ2xhcmVfQUkifQ.n_-Y-1caVpYdcLwRrIeIJK_uTAvkOnEfTKKZZfcel34';
 
+// Phone number formatting utilities
+const formatPhoneForWati = (phoneNumber, defaultCountryCode = '971') => {
+  if (!phoneNumber) return '';
+  
+  let cleaned = phoneNumber.replace(/[\s\-\(\)\.]/g, '');
+  
+  if (cleaned.startsWith('+')) return cleaned;
+  if (cleaned.startsWith('00')) return '+' + cleaned.substring(2);
+  if (cleaned.startsWith('0')) return `+${defaultCountryCode}${cleaned.substring(1)}`;
+  if (!cleaned.startsWith(defaultCountryCode)) return `+${defaultCountryCode}${cleaned}`;
+  
+  return `+${cleaned}`;
+};
+
 // Create axios instance with base config
 const watiApi = axios.create({
   baseURL: WATI_API_URL,
@@ -13,45 +27,74 @@ const watiApi = axios.create({
   },
 });
 
-/**
- * Send a WhatsApp message via Wati
- * @param {string} phoneNumber - Recipient phone number with country code (e.g., +971501234567)
- * @param {string} message - Message text to send
- * @returns {Promise} API response
- */
-export const sendWatiMessage = async (phoneNumber, message) => {
-  try {
-    // Remove any spaces, dashes, or special characters from phone number
-    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
-    
-    const response = await watiApi.post('/sendSessionMessage', {
-      whatsappNumber: cleanPhone,
-      messageText: message,
+// Add request interceptor for logging
+watiApi.interceptors.request.use(
+  (config) => {
+    console.log('📤 Wati API Request:', {
+      method: config.method,
+      url: config.url,
+      data: config.data,
     });
+    return config;
+  },
+  (error) => {
+    console.error('❌ Request Error:', error);
+    return Promise.reject(error);
+  }
+);
 
+// Add response interceptor for logging
+watiApi.interceptors.response.use(
+  (response) => {
+    console.log('📥 Wati API Response:', {
+      status: response.status,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    console.error('❌ Response Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Check if contact exists in Wati
+ * @param {string} phoneNumber - Phone number to check
+ * @returns {Promise} Response with exists status
+ */
+export const checkWatiContactExists = async (phoneNumber) => {
+  try {
+    const cleanPhone = formatPhoneForWati(phoneNumber);
+    console.log('🔍 Checking if contact exists:', cleanPhone);
+    
+    const response = await watiApi.get(`/getContact/${cleanPhone}`);
+    
     return {
       success: true,
+      exists: true,
       data: response.data,
-      message: 'Message sent successfully',
     };
   } catch (error) {
-    console.error('Error sending Wati message:', error);
-    console.error('Error response:', error.response?.data);
-    
-    // If contact not found, provide helpful message
-    if (error.response?.data?.info?.includes("Can't find Contact")) {
+    // 404 or "Contact not found" means contact doesn't exist
+    if (error.response?.status === 404 || 
+        error.response?.data?.info?.includes("Can't find Contact") ||
+        error.response?.data?.info?.includes("Contact not found")) {
       return {
-        success: false,
-        error: error.response?.data || error.message,
-        message: 'Contact not found in Wati. The contact needs to message your WhatsApp Business number first, or you need to add them manually in Wati.',
-        contactNotFound: true,
+        success: true,
+        exists: false,
+        message: 'Contact not found in Wati',
       };
     }
     
     return {
       success: false,
+      exists: false,
       error: error.response?.data || error.message,
-      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to send message',
     };
   }
 };
@@ -65,12 +108,17 @@ export const sendWatiMessage = async (phoneNumber, message) => {
  */
 export const createWatiContact = async (phoneNumber, name = '', customParams = {}) => {
   try {
-    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    const cleanPhone = formatPhoneForWati(phoneNumber);
+    console.log('📝 Creating Wati contact:', cleanPhone, name);
     
     const payload = {
       whatsappNumber: cleanPhone,
       name: name || cleanPhone,
-      customParams: customParams,
+      customParams: [
+        { name: 'email', value: customParams.email || '' },
+        { name: 'nationality', value: customParams.nationality || '' },
+        { name: 'source', value: customParams.source || '' },
+      ].filter(param => param.value), // Only include non-empty values
     };
     
     const response = await watiApi.post('/addContact', payload);
@@ -81,12 +129,86 @@ export const createWatiContact = async (phoneNumber, name = '', customParams = {
       message: 'Contact created successfully',
     };
   } catch (error) {
-    console.error('Error creating Wati contact:', error);
-    console.error('Error response:', error.response?.data);
+    console.error('❌ Error creating Wati contact:', error.response?.data);
+    
+    // Check if contact already exists
+    if (error.response?.data?.info?.includes('already exists')) {
+      return {
+        success: true,
+        data: error.response.data,
+        message: 'Contact already exists in Wati',
+        alreadyExists: true,
+      };
+    }
+    
     return {
       success: false,
       error: error.response?.data || error.message,
       message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to create contact',
+    };
+  }
+};
+
+/**
+ * Send a WhatsApp message via Wati
+ * @param {string} phoneNumber - Recipient phone number with country code
+ * @param {string} message - Message text to send
+ * @returns {Promise} API response
+ */
+export const sendWatiMessage = async (phoneNumber, message) => {
+  try {
+    const cleanPhone = formatPhoneForWati(phoneNumber);
+    console.log('📨 Sending Wati message to:', cleanPhone);
+    
+    // First check if contact exists
+    const contactCheck = await checkWatiContactExists(cleanPhone);
+    
+    if (!contactCheck.exists) {
+      console.log('⚠️ Contact does not exist in Wati');
+      return {
+        success: false,
+        contactNotFound: true,
+        message: 'Contact not found in Wati. Please add the contact first or ask them to message your WhatsApp Business number.',
+      };
+    }
+    
+    // Contact exists, send the message
+    const response = await watiApi.post('/sendSessionMessage', {
+      whatsappNumber: cleanPhone,
+      messageText: message,
+    });
+
+    return {
+      success: true,
+      data: response.data,
+      message: 'Message sent successfully',
+    };
+  } catch (error) {
+    console.error('❌ Error sending Wati message:', error.response?.data);
+    
+    // Handle specific error cases
+    if (error.response?.data?.info?.includes("Can't find Contact")) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: 'Contact not found in Wati. The contact needs to message your WhatsApp Business number first, or you need to add them manually.',
+        contactNotFound: true,
+      };
+    }
+    
+    if (error.response?.data?.info?.includes('outside the 24 hour window')) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: '24-hour messaging window expired. You can only send template messages now.',
+        windowExpired: true,
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to send message',
     };
   }
 };
@@ -100,9 +222,9 @@ export const createWatiContact = async (phoneNumber, name = '', customParams = {
  */
 export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 0) => {
   try {
-    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    const cleanPhone = formatPhoneForWati(phoneNumber);
+    console.log('📬 Fetching Wati messages for:', cleanPhone);
     
-    // Try to get messages for the contact
     const response = await watiApi.get(`/getMessages/${cleanPhone}`, {
       params: {
         pageSize: pageSize,
@@ -116,8 +238,7 @@ export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 
       messages: response.data?.messages || response.data?.result?.messages || [],
     };
   } catch (error) {
-    console.error('Error fetching Wati messages:', error);
-    console.error('Error response:', error.response?.data);
+    console.error('❌ Error fetching Wati messages:', error.response?.data);
     
     // If contact not found, return empty messages instead of error
     if (error.response?.data?.info?.includes("Can't find Contact")) {
@@ -139,7 +260,7 @@ export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 
 };
 
 /**
- * Send a WhatsApp template message via Wati
+ * Send a WhatsApp template message via Wati (for outside 24-hour window)
  * @param {string} phoneNumber - Recipient phone number with country code
  * @param {string} templateName - Name of the approved template
  * @param {Array} parameters - Array of parameter values for the template
@@ -147,7 +268,8 @@ export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 
  */
 export const sendWatiTemplateMessage = async (phoneNumber, templateName, parameters = []) => {
   try {
-    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    const cleanPhone = formatPhoneForWati(phoneNumber);
+    console.log('📨 Sending Wati template message to:', cleanPhone);
     
     const response = await watiApi.post('/sendTemplateMessage', {
       whatsappNumber: cleanPhone,
@@ -162,8 +284,7 @@ export const sendWatiTemplateMessage = async (phoneNumber, templateName, paramet
       message: 'Template message sent successfully',
     };
   } catch (error) {
-    console.error('Error sending Wati template message:', error);
-    console.error('Error response:', error.response?.data);
+    console.error('❌ Error sending Wati template message:', error.response?.data);
     return {
       success: false,
       error: error.response?.data || error.message,
@@ -182,7 +303,7 @@ export const sendWatiTemplateMessage = async (phoneNumber, templateName, paramet
  */
 export const sendWatiMediaMessage = async (phoneNumber, mediaUrl, caption = '', filename = '') => {
   try {
-    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    const cleanPhone = formatPhoneForWati(phoneNumber);
     
     const payload = {
       whatsappNumber: cleanPhone,
@@ -200,8 +321,7 @@ export const sendWatiMediaMessage = async (phoneNumber, mediaUrl, caption = '', 
       message: 'Media message sent successfully',
     };
   } catch (error) {
-    console.error('Error sending Wati media message:', error);
-    console.error('Error response:', error.response?.data);
+    console.error('❌ Error sending Wati media message:', error.response?.data);
     return {
       success: false,
       error: error.response?.data || error.message,
@@ -217,7 +337,7 @@ export const sendWatiMediaMessage = async (phoneNumber, mediaUrl, caption = '', 
  */
 export const getWatiContactInfo = async (phoneNumber) => {
   try {
-    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    const cleanPhone = formatPhoneForWati(phoneNumber);
     
     const response = await watiApi.get(`/getContact/${cleanPhone}`);
 
@@ -226,8 +346,7 @@ export const getWatiContactInfo = async (phoneNumber) => {
       data: response.data,
     };
   } catch (error) {
-    console.error('Error fetching Wati contact info:', error);
-    console.error('Error response:', error.response?.data);
+    console.error('❌ Error fetching Wati contact info:', error.response?.data);
     return {
       success: false,
       error: error.response?.data || error.message,
@@ -243,7 +362,7 @@ export const getWatiContactInfo = async (phoneNumber) => {
  */
 export const markWatiMessagesAsRead = async (phoneNumber) => {
   try {
-    const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    const cleanPhone = formatPhoneForWati(phoneNumber);
     
     const response = await watiApi.post(`/markAsRead/${cleanPhone}`);
 
@@ -253,8 +372,8 @@ export const markWatiMessagesAsRead = async (phoneNumber) => {
       message: 'Messages marked as read',
     };
   } catch (error) {
-    console.error('Error marking Wati messages as read:', error);
-    console.error('Error response:', error.response?.data);
+    // Don't show error for marking as read failures
+    console.warn('⚠️ Could not mark messages as read:', error.response?.data);
     return {
       success: false,
       error: error.response?.data || error.message,
@@ -277,8 +396,7 @@ export const getWatiUnreadCount = async () => {
       count: response.data?.unreadCount || response.data?.result?.unreadCount || 0,
     };
   } catch (error) {
-    console.error('Error fetching Wati unread count:', error);
-    console.error('Error response:', error.response?.data);
+    console.error('❌ Error fetching Wati unread count:', error.response?.data);
     return {
       success: false,
       error: error.response?.data || error.message,
@@ -305,8 +423,7 @@ export const setupWatiWebhook = async (webhookUrl) => {
       message: 'Webhook setup successfully',
     };
   } catch (error) {
-    console.error('Error setting up Wati webhook:', error);
-    console.error('Error response:', error.response?.data);
+    console.error('❌ Error setting up Wati webhook:', error.response?.data);
     return {
       success: false,
       error: error.response?.data || error.message,
@@ -325,4 +442,5 @@ export default {
   getWatiUnreadCount,
   setupWatiWebhook,
   createWatiContact,
+  checkWatiContactExists,
 };
