@@ -109,6 +109,7 @@ export const checkWatiContactExists = async (phoneNumber) => {
 export const createWatiContact = async (phoneNumber, name = '', customParams = {}) => {
   try {
     const cleanPhone = formatPhoneForWati(phoneNumber);
+
     console.log('📝 Creating Wati contact:', cleanPhone, name);
     
     const payload = {
@@ -158,6 +159,7 @@ export const createWatiContact = async (phoneNumber, name = '', customParams = {
 export const sendWatiMessage = async (phoneNumber, message) => {
   try {
     const cleanPhone = formatPhoneForWati(phoneNumber);
+
     console.log('📨 Sending Wati message to:', cleanPhone);
     
     // First check if contact exists
@@ -223,6 +225,7 @@ export const sendWatiMessage = async (phoneNumber, message) => {
 export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 0) => {
   try {
     const cleanPhone = formatPhoneForWati(phoneNumber);
+
     console.log('📬 Fetching Wati messages for:', cleanPhone);
     
     const response = await watiApi.get(`/getMessages/${cleanPhone}`, {
@@ -269,6 +272,7 @@ export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 
 export const sendWatiTemplateMessage = async (phoneNumber, templateName, parameters = []) => {
   try {
     const cleanPhone = formatPhoneForWati(phoneNumber);
+
     console.log('📨 Sending Wati template message to:', cleanPhone);
     
     const response = await watiApi.post('/sendTemplateMessage', {

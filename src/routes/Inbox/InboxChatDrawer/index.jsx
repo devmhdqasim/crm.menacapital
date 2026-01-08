@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Paperclip, Smile, Phone, Video, MoreVertical, Check, CheckCheck, Clock, User, AlertCircle } from 'lucide-react';
+import { X, Send, Smile, MoreVertical, Check, CheckCheck, Clock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { sendWatiMessage, getWatiMessages, markWatiMessagesAsRead, createWatiContact } from '../../../services/inboxService';
 
@@ -26,25 +26,42 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     try {
       const result = await getWatiMessages(contact.phone, 100, 0);
       
-      if (result.success && result.messages) {
+      console.log('📥 Wati API Response:', result);
+      
+      if (result.success && result.data && result.data.messages && result.data.messages.items) {
+        const watiMessages = result.data.messages.items;
+        
         // Transform Wati messages to our format
-        const transformedMessages = result.messages.map((msg, index) => ({
-          id: msg.id || index,
-          text: msg.text || msg.type === 'image' ? '[Image]' : msg.type === 'document' ? '[Document]' : msg.type === 'audio' ? '[Audio]' : '[Media]',
-          sender: msg.owner ? 'user' : 'contact',
-          timestamp: new Date(msg.created * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          status: msg.statusString || 'sent',
-          type: msg.type || 'text',
-          mediaUrl: msg.data?.url || null,
-        }));
+        const transformedMessages = watiMessages
+          .filter(msg => msg.eventType === 'message') // Only process actual messages
+          .map((msg) => {
+            // Parse timestamp - Wati returns Unix timestamp in seconds
+            const timestamp = msg.timestamp ? parseInt(msg.timestamp) * 1000 : new Date(msg.created).getTime();
+            const date = new Date(timestamp);
+            
+            // Format time as HH:MM
+            const timeString = date.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: true 
+            });
+            
+            return {
+              id: msg.id,
+              text: msg.text || (msg.type === 'image' ? '[Image]' : msg.type === 'document' ? '[Document]' : msg.type === 'audio' ? '[Audio]' : '[Media]'),
+              sender: msg.owner ? 'user' : 'contact',
+              timestamp: timeString,
+              sortTimestamp: timestamp, // Use for sorting
+              status: msg.statusString ? msg.statusString.toLowerCase() : 'sent',
+              type: msg.type || 'text',
+              mediaUrl: msg.data?.url || null,
+            };
+          });
         
-        // Sort messages by timestamp (oldest first)
-        transformedMessages.sort((a, b) => {
-          const timeA = new Date(`1970-01-01 ${a.timestamp}`);
-          const timeB = new Date(`1970-01-01 ${b.timestamp}`);
-          return timeA - timeB;
-        });
+        // Sort messages by actual timestamp (oldest first)
+        transformedMessages.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
         
+        console.log('✅ Transformed messages:', transformedMessages);
         setMessages(transformedMessages);
         
         // Mark messages as read
@@ -52,7 +69,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       } else if (result.info && result.info.includes('Contact not found')) {
         // Contact not found in Wati
         setContactNotFound(true);
-        console.log('Contact not found in Wati:', contact.phone);
+        console.log('⚠️ Contact not found in Wati:', contact.phone);
         
         // Fallback to showing initial remarks if available
         if (contact.remarks || contact.latestRemarks) {
@@ -61,7 +78,12 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               id: 1,
               text: contact.remarks || contact.latestRemarks,
               sender: 'contact',
-              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+              }),
+              sortTimestamp: new Date(contact.createdAt).getTime(),
               status: 'read',
             },
           ]);
@@ -69,7 +91,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           setMessages([]);
         }
       } else {
-        console.error('Failed to fetch Wati messages:', result.message);
+        console.error('❌ Failed to fetch Wati messages:', result.message);
         // Fallback to showing initial remarks if available
         if (contact.remarks || contact.latestRemarks) {
           setMessages([
@@ -77,7 +99,12 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               id: 1,
               text: contact.remarks || contact.latestRemarks,
               sender: 'contact',
-              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+              }),
+              sortTimestamp: new Date(contact.createdAt).getTime(),
               status: 'read',
             },
           ]);
@@ -86,7 +113,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }
       }
     } catch (error) {
-      console.error('Error fetching Wati messages:', error);
+      console.error('❌ Error fetching Wati messages:', error);
       toast.error('Failed to load conversation history');
       setMessages([]);
     } finally {
@@ -123,7 +150,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         toast.error(result.message || 'Failed to add contact to Wati');
       }
     } catch (error) {
-      console.error('Error creating Wati contact:', error);
+      console.error('❌ Error creating Wati contact:', error);
       toast.error('Failed to add contact to Wati');
     } finally {
       setIsSending(false);
@@ -141,10 +168,15 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       
       if (result.success) {
         const newMessage = {
-          id: messages.length + 1,
+          id: Date.now(),
           text: messageInput,
           sender: 'user',
-          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date().toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+          }),
+          sortTimestamp: Date.now(),
           status: 'sent',
         };
 
@@ -172,7 +204,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           refreshContacts();
         }
       } else {
-        console.error('Failed to send message:', result.message);
+        console.error('❌ Failed to send message:', result.message);
         
         // Handle contact not found error
         if (result.contactNotFound) {
@@ -183,7 +215,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
@@ -252,12 +284,6 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0">
-                <button className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                  <Phone className="w-5 h-5 text-[#BBA473]" />
-                </button>
-                <button className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
-                  <Video className="w-5 h-5 text-[#BBA473]" />
-                </button>
                 <button className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300">
                   <MoreVertical className="w-5 h-5 text-[#BBA473]" />
                 </button>
@@ -373,9 +399,6 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
             {/* Message Input */}
             <div className="bg-[#2A2A2A] border-t border-[#BBA473]/20 p-4">
               <div className="flex items-end gap-3">
-                <button className="p-3 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300 flex-shrink-0">
-                  <Paperclip className="w-5 h-5 text-[#BBA473]" />
-                </button>
                 <div className="flex-1 relative">
                   <textarea
                     value={messageInput}
