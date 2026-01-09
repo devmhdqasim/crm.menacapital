@@ -178,7 +178,7 @@ export const sendWatiMessage = async (phoneNumber, message) => {
     const response = await watiApi.post('/sendSessionMessage', {
       whatsappNumber: cleanPhone,
       messageText: message,
-    });
+    }); 
 
     return {
       success: true,
