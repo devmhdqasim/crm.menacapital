@@ -162,19 +162,8 @@ export const sendWatiMessage = async (phoneNumber, message) => {
 
     console.log('📨 Sending Wati message to:', cleanPhone);
     
-    // First check if contact exists
-    const contactCheck = await checkWatiContactExists(cleanPhone);
-    
-    if (!contactCheck.exists) {
-      console.log('⚠️ Contact does not exist in Wati');
-      return {
-        success: false,
-        contactNotFound: true,
-        message: 'Contact not found in Wati. Please add the contact first or ask them to message your WhatsApp Business number.',
-      };
-    }
-    
-    // Contact exists, send the message
+    // Try sending the message directly without checking contact first
+    // Since getMessages works, the contact exists in some form
     const response = await watiApi.post('/sendSessionMessage', {
       whatsappNumber: cleanPhone,
       messageText: message,
@@ -188,29 +177,50 @@ export const sendWatiMessage = async (phoneNumber, message) => {
   } catch (error) {
     console.error('❌ Error sending Wati message:', error.response?.data);
     
-    // Handle specific error cases
-    if (error.response?.data?.info?.includes("Can't find Contact")) {
+    const errorInfo = error.response?.data?.info || error.response?.data?.message || '';
+    const errorStatus = error.response?.status;
+    
+    // Handle 404 - might mean contact needs to initiate conversation first
+    if (errorStatus === 404) {
       return {
         success: false,
         error: error.response?.data || error.message,
-        message: 'Contact not found in Wati. The contact needs to message your WhatsApp Business number first, or you need to add them manually.',
+        message: 'Unable to send message. The contact may need to message your WhatsApp Business number first to open a conversation window.',
         contactNotFound: true,
       };
     }
     
-    if (error.response?.data?.info?.includes('outside the 24 hour window')) {
+    // Handle specific error cases
+    if (errorInfo.includes("Can't find Contact") || errorInfo.includes("Contact not found")) {
       return {
         success: false,
         error: error.response?.data || error.message,
-        message: '24-hour messaging window expired. You can only send template messages now.',
+        message: 'Contact not found in Wati. The contact needs to message your WhatsApp Business number first.',
+        contactNotFound: true,
+      };
+    }
+    
+    if (errorInfo.includes('outside the 24 hour window') || errorInfo.includes('24 hour')) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: '24-hour messaging window expired. The contact needs to message you first to reopen the conversation window.',
         windowExpired: true,
+      };
+    }
+
+    if (errorInfo.includes('not a valid whatsapp number') || errorInfo.includes('invalid number')) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: 'Invalid WhatsApp number. Please verify the phone number is correct.',
       };
     }
     
     return {
       success: false,
       error: error.response?.data || error.message,
-      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to send message',
+      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to send message. Please ensure the contact has messaged your WhatsApp Business number first.',
     };
   }
 };
@@ -376,12 +386,16 @@ export const markWatiMessagesAsRead = async (phoneNumber) => {
       message: 'Messages marked as read',
     };
   } catch (error) {
-    // Don't show error for marking as read failures
+    // Don't show error for marking as read failures - this is not critical
+    // 404 might mean the endpoint doesn't exist or contact hasn't messaged yet
     console.warn('⚠️ Could not mark messages as read:', error.response?.data);
+    
+    // Still return success so it doesn't break the flow
     return {
-      success: false,
+      success: true, // Changed to true to not break the flow
       error: error.response?.data || error.message,
-      message: error.response?.data?.message || error.response?.data?.error || 'Failed to mark messages as read',
+      message: 'Could not mark messages as read',
+      warning: true,
     };
   }
 };

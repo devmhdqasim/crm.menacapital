@@ -206,11 +206,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       } else {
         console.error('❌ Failed to send message:', result.message);
         
-        // Handle contact not found error
-        if (result.contactNotFound) {
+        // Handle different error types
+        if (result.contactNotFound || result.windowExpired) {
+          // Show contact not found warning banner
           setContactNotFound(true);
-          toast.error(result.message);
+          toast.error('Cannot send message: 24-hour messaging window closed');
         } else {
+          // Show regular error for other issues
           toast.error(result.message || 'Failed to send message. Please try again.');
         }
       }
@@ -335,24 +337,54 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               </div>
             </div>
 
-            {/* Contact Not Found Warning */}
+            {/* 24-Hour Window Warning */}
             {contactNotFound && (
-              <div className="bg-yellow-500/10 border-y border-yellow-500/30 p-4">
+              <div className="bg-[#2A2A2A] border-b border-[#BBA473]/30 p-4">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                  </div>
                   <div className="flex-1">
-                    <h4 className="text-yellow-400 font-semibold mb-1">Contact Not Found in Wati</h4>
-                    <p className="text-xs text-gray-300 mb-3">
-                      This contact hasn't been added to your Wati WhatsApp Business account yet. 
-                      The contact needs to message your WhatsApp Business number first, or you can add them manually.
+                    <h4 className="text-[#BBA473] font-semibold mb-2">
+                      WhatsApp 24-Hour Messaging Window Closed
+                    </h4>
+                    <p className="text-sm text-gray-300 mb-3 leading-relaxed">
+                      WhatsApp Business only allows sending messages within 24 hours after the contact's last message. 
+                      The conversation window with this contact is currently closed.
                     </p>
-                    <button
-                      onClick={handleCreateContact}
-                      disabled={isSending}
-                      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSending ? 'Adding Contact...' : 'Add Contact to Wati'}
-                    </button>
+                    
+                    <div className="bg-[#1A1A1A] rounded-lg p-3 mb-3 border border-[#BBA473]/20">
+                      <p className="text-sm font-semibold text-[#BBA473] mb-2">How to start a conversation:</p>
+                      <ul className="text-sm text-gray-300 space-y-2">
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#BBA473] mt-0.5">•</span>
+                          <span><strong>Best Option:</strong> Ask the contact to send a message to your WhatsApp Business number (+971 XXX XXX XXX) to reopen the 24-hour window</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#BBA473] mt-0.5">•</span>
+                          <span><strong>Alternative:</strong> Call the contact directly and ask them to message you on WhatsApp</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#BBA473] mt-0.5">•</span>
+                          <span><strong>For Marketing:</strong> Use WhatsApp approved template messages (requires setup)</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => window.open(`tel:${contact.phone}`, '_blank')}
+                        className="px-4 py-2 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg text-sm font-medium transition-all duration-300 hover:from-[#d4bc89] hover:to-[#a69363] shadow-lg hover:shadow-xl"
+                      >
+                        📞 Call Contact
+                      </button>
+                      <button
+                        onClick={() => setContactNotFound(false)}
+                        className="px-4 py-2 bg-[#3A3A3A] text-white rounded-lg text-sm font-medium transition-all duration-300 hover:bg-[#4A4A4A]"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -415,7 +447,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
             {/* Message Input */}
             <div className="bg-[#2A2A2A] border-t border-[#BBA473]/20 p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-end gap-3">
                 <textarea
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
