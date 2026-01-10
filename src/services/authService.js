@@ -32,7 +32,7 @@ export const loginUser = async (login, password, loginBy = 'email') => {
       {
         headers: {
           'Content-Type': 'application/json',
-        },
+        }, 
         timeout: 30000,
       }
     );
