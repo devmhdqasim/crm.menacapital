@@ -33,6 +33,7 @@ watiApi.interceptors.request.use(
     console.log('📤 Wati API Request:', {
       method: config.method,
       url: config.url,
+      params: config.params,
       data: config.data,
     });
     return config;
@@ -162,13 +163,49 @@ export const sendWatiMessage = async (phoneNumber, message) => {
 
     console.log('📨 Sending Wati message to:', cleanPhone);
     
-    // Try sending the message directly without checking contact first
-    // Since getMessages works, the contact exists in some form
-    const response = await watiApi.post('/sendSessionMessage', {
-      whatsappNumber: cleanPhone,
-      messageText: message,
+    // Send message using query parameters as per Wati API docs
+    // URL format: /sendSessionMessage/{whatsappNumber}?messageText={text}
+    const response = await watiApi.post(`/sendSessionMessage/${cleanPhone}`, null, {
+      params: {
+        messageText: message,
+      },
     }); 
 
+    console.log('✅ Send message response:', response.data);
+
+    // Check if the response indicates success
+    // Wati returns { result: true/false, message: "...", ticketStatus: "..." }
+    if (response.data && response.data.result === true) {
+      return {
+        success: true,
+        data: response.data,
+        message: response.data.message || 'Message sent successfully',
+      };
+    } else if (response.data && response.data.result === false) {
+      // API returned result: false, treat as error
+      const errorMessage = response.data.message || 'Failed to send message';
+      const ticketStatus = response.data.ticketStatus;
+      
+      // Check for specific error conditions
+      if (errorMessage.includes('Ticket has been expired') || errorMessage.includes('expired')) {
+        return {
+          success: false,
+          error: response.data,
+          message: '24-hour messaging window expired. The contact needs to message you first to reopen the conversation.',
+          windowExpired: true,
+          ticketStatus: ticketStatus,
+        };
+      }
+
+      return {
+        success: false,
+        error: response.data,
+        message: errorMessage,
+        ticketStatus: ticketStatus,
+      };
+    }
+
+    // Fallback - if result field doesn't exist, assume success
     return {
       success: true,
       data: response.data,
@@ -177,14 +214,15 @@ export const sendWatiMessage = async (phoneNumber, message) => {
   } catch (error) {
     console.error('❌ Error sending Wati message:', error.response?.data);
     
-    const errorInfo = error.response?.data?.info || error.response?.data?.message || '';
+    const errorData = error.response?.data || {};
+    const errorInfo = errorData.info || errorData.message || '';
     const errorStatus = error.response?.status;
     
     // Handle 404 - might mean contact needs to initiate conversation first
     if (errorStatus === 404) {
       return {
         success: false,
-        error: error.response?.data || error.message,
+        error: errorData || error.message,
         message: 'Unable to send message. The contact may need to message your WhatsApp Business number first to open a conversation window.',
         contactNotFound: true,
       };
@@ -194,17 +232,17 @@ export const sendWatiMessage = async (phoneNumber, message) => {
     if (errorInfo.includes("Can't find Contact") || errorInfo.includes("Contact not found")) {
       return {
         success: false,
-        error: error.response?.data || error.message,
+        error: errorData || error.message,
         message: 'Contact not found in Wati. The contact needs to message your WhatsApp Business number first.',
         contactNotFound: true,
       };
     }
     
-    if (errorInfo.includes('outside the 24 hour window') || errorInfo.includes('24 hour')) {
+    if (errorInfo.includes('outside the 24 hour window') || errorInfo.includes('24 hour') || errorInfo.includes('Ticket has been expired') || errorInfo.includes('expired')) {
       return {
         success: false,
-        error: error.response?.data || error.message,
-        message: '24-hour messaging window expired. The contact needs to message you first to reopen the conversation window.',
+        error: errorData || error.message,
+        message: '24-hour messaging window expired. The contact needs to message you first to reopen the conversation.',
         windowExpired: true,
       };
     }
@@ -212,15 +250,15 @@ export const sendWatiMessage = async (phoneNumber, message) => {
     if (errorInfo.includes('not a valid whatsapp number') || errorInfo.includes('invalid number')) {
       return {
         success: false,
-        error: error.response?.data || error.message,
+        error: errorData || error.message,
         message: 'Invalid WhatsApp number. Please verify the phone number is correct.',
       };
     }
     
     return {
       success: false,
-      error: error.response?.data || error.message,
-      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to send message. Please ensure the contact has messaged your WhatsApp Business number first.',
+      error: errorData || error.message,
+      message: errorData.message || errorInfo || 'Failed to send message. Please ensure the contact has messaged your WhatsApp Business number first.',
     };
   }
 };
@@ -370,37 +408,6 @@ export const getWatiContactInfo = async (phoneNumber) => {
 };
 
 /**
- * Mark messages as read
- * @param {string} phoneNumber - Contact phone number with country code
- * @returns {Promise} API response
- */
-export const markWatiMessagesAsRead = async (phoneNumber) => {
-  try {
-    const cleanPhone = formatPhoneForWati(phoneNumber);
-    
-    const response = await watiApi.post(`/markAsRead/${cleanPhone}`);
-
-    return {
-      success: true,
-      data: response.data,
-      message: 'Messages marked as read',
-    };
-  } catch (error) {
-    // Don't show error for marking as read failures - this is not critical
-    // 404 might mean the endpoint doesn't exist or contact hasn't messaged yet
-    console.warn('⚠️ Could not mark messages as read:', error.response?.data);
-    
-    // Still return success so it doesn't break the flow
-    return {
-      success: true, // Changed to true to not break the flow
-      error: error.response?.data || error.message,
-      message: 'Could not mark messages as read',
-      warning: true,
-    };
-  }
-};
-
-/**
  * Get unread message count
  * @returns {Promise} API response with unread count
  */
@@ -456,7 +463,6 @@ export default {
   sendWatiTemplateMessage,
   sendWatiMediaMessage,
   getWatiContactInfo,
-  markWatiMessagesAsRead,
   getWatiUnreadCount,
   setupWatiWebhook,
   createWatiContact,
