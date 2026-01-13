@@ -242,7 +242,7 @@ const SalesManagerLeadsListing = ({
           window.location.reload();
         }
       } else {
-        if (result.requiresAuth) {
+        if (result.requiresAuth) { 
           toast.error('Session expired. Please login again');
         } else {
           toast.error(result.error?.payload?.message || 'Failed to delete lead');
