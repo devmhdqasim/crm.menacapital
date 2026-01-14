@@ -23,7 +23,7 @@ export const sanitizeTopic = (email) => {
 /**
  * Get user info from localStorage
  */
-const getUserInfo = () => {
+const getUserInfo = () => { 
   try {
     const userInfo = localStorage.getItem('userInfo');
     return userInfo ? JSON.parse(userInfo) : null;
