@@ -105,298 +105,312 @@
    FADE IN ANIMATION
    Smooth fade-in for page transitions
    ============================================ */
-   @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  .animate-fadeIn {
-    animation: fadeIn 0.3s ease-in-out;
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  /* ============================================
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* ============================================
      SLIDE IN FROM RIGHT
      For sidebar and modal animations
      ============================================ */
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
   }
-  
-  .animate-slideInRight {
-    animation: slideInRight 0.3s ease-out;
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
-  
-  /* ============================================
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* ============================================
      SLIDE IN FROM LEFT
      For sidebar content
      ============================================ */
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
   }
-  
-  .animate-slideInLeft {
-    animation: slideInLeft 0.3s ease-out;
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
-  
-  /* ============================================
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* ============================================
      SCALE IN
      For modals and dropdowns
      ============================================ */
-  @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
-  
-  .animate-scaleIn {
-    animation: scaleIn 0.2s ease-out;
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
-  
-  /* ============================================
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* ============================================
      SKELETON LOADING SHIMMER
      Beautiful shimmer effect for loading states
      ============================================ */
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
   }
-  
-  .animate-shimmer {
-    background: linear-gradient(
-      90deg,
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
       #f0f0f0 0%,
       #f8f8f8 50%,
-      #f0f0f0 100%
-    );
-    background-size: 1000px 100%;
-    animation: shimmer 2s infinite linear;
-  }
-  
-  /* ============================================
+      #f0f0f0 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* ============================================
      PULSE ANIMATION
      For loading indicators
      ============================================ */
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
   }
-  
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  50% {
+    opacity: 0.5;
   }
-  
-  /* ============================================
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ============================================
      BOUNCE ANIMATION
      For loading dots
      ============================================ */
-  @keyframes bounce {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-8px);
-    }
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
   }
-  
-  .animate-bounce {
-    animation: bounce 1s infinite;
+
+  50% {
+    transform: translateY(-8px);
   }
-  
-  /* ============================================
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+/* ============================================
      SPIN ANIMATION
      For loading spinners
      ============================================ */
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
-  
-  .animate-spin {
-    animation: spin 1s linear infinite;
+
+  to {
+    transform: rotate(360deg);
   }
-  
-  /* ============================================
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
      PAGE TRANSITION
      Smooth transition between pages
      ============================================ */
-  .page-transition-enter {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  
-  .page-transition-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
-  }
-  
-  .page-transition-exit {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  .page-transition-exit-active {
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
-  }
-  
-  /* ============================================
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
+}
+
+/* ============================================
      SMOOTH SCROLLING
      Better scroll behavior
      ============================================ */
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  /* ============================================
+html {
+  scroll-behavior: smooth;
+  background-color: #050505;
+  /* Force dark background */
+}
+
+/* ============================================
      WILL-CHANGE OPTIMIZATION
      Improve animation performance
      ============================================ */
-  .optimize-animation {
-    will-change: transform, opacity;
-  }
-  
-  /* ============================================
+.optimize-animation {
+  will-change: transform, opacity;
+}
+
+/* ============================================
      PREVENT LAYOUT SHIFT
      Maintain layout during loading
      ============================================ */
-  .aspect-ratio-16-9 {
-    aspect-ratio: 16 / 9;
-  }
-  
-  .aspect-ratio-4-3 {
-    aspect-ratio: 4 / 3;
-  }
-  
-  .aspect-ratio-square {
-    aspect-ratio: 1 / 1;
-  }
-  
-  /* ============================================
+.aspect-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.aspect-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.aspect-ratio-square {
+  aspect-ratio: 1 / 1;
+}
+
+/* ============================================
      LOADING STATE UTILITIES
      ============================================ */
-  .loading-overlay {
-    position: absolute;
-    inset: 0;
-    background-color: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-  }
-  
-  .loading-skeleton {
-    background: linear-gradient(
-      90deg,
-      #e0e0e0 25%,
-      #f0f0f0 50%,
-      #e0e0e0 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 4px;
-  }
-  
-  /* ============================================
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(5, 5, 5, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+.loading-skeleton {
+  background: linear-gradient(90deg,
+      #1A1A1A 25%,
+      #2A2A2A 50%,
+      #1A1A1A 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  border: 1px solid rgba(187, 164, 115, 0.1);
+}
+
+/* ============================================
      BACKDROP BLUR
      For modals and overlays
      ============================================ */
-  .backdrop-blur-effect {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-  
-  /* ============================================
+.backdrop-blur-effect {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ============================================
      PERFORMANCE OPTIMIZATIONS
      ============================================ */
-  /* Use GPU acceleration for better performance */
-  .gpu-accelerated {
-    transform: translateZ(0);
-    will-change: transform;
+/* Use GPU acceleration for better performance */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-  
-  /* Reduce motion for users who prefer it */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-  
-  /* ============================================
+}
+
+/* ============================================
      FOCUS VISIBLE
      Better accessibility
      ============================================ */
-  .focus-visible-ring:focus-visible {
-    outline: 2px solid #8E7D5A;
-    outline-offset: 2px;
-  }
-  
-  /* ============================================
+.focus-visible-ring:focus-visible {
+  outline: 2px solid #8E7D5A;
+  outline-offset: 2px;
+}
+
+/* ============================================
      SMOOTH HEIGHT TRANSITION
      For expanding/collapsing content
      ============================================ */
-  .height-transition {
-    transition: height 0.3s ease-in-out;
-  }
-  
-  /* ============================================
+.height-transition {
+  transition: height 0.3s ease-in-out;
+}
+
+/* ============================================
      FADE OUT
      For removing elements
      ============================================ */
-  @keyframes fadeOut {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
+@keyframes fadeOut {
+  from {
+    opacity: 1;
   }
-  
-  .animate-fadeOut {
-    animation: fadeOut 0.2s ease-in-out forwards;
+
+  to {
+    opacity: 0;
   }
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.2s ease-in-out forwards;
+}
 
 .theme-login-two {
   --primary: #035fa8;
@@ -476,6 +490,7 @@
     from {
       height: 0;
     }
+
     to {
       height: var(--radix-accordion-content-height);
     }
@@ -485,6 +500,7 @@
     from {
       height: var(--radix-accordion-content-height);
     }
+
     to {
       height: 0;
     }
@@ -495,8 +511,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#050505] text-white;
+    /* Force dark background */
   }
 }
 
@@ -522,4 +540,77 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   top: calc(50% + 10px);
   transform: translateY(-50%);
   right: 5px;
+}
+
+/* ============================================
+   REACT DATEPICKER DARK THEME OVERRIDES
+   ============================================ */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker {
+  background-color: #1A1A1A !important;
+  border: 1px solid rgba(187, 164, 115, 0.3) !important;
+  border-radius: 0.5rem !important;
+  font-family: inherit !important;
+  color: #fff !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.react-datepicker__header {
+  background-color: #2A2A2A !important;
+  border-bottom: 1px solid rgba(187, 164, 115, 0.3) !important;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  padding-top: 10px !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  color: #E8D5A3 !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day-name {
+  color: #BBA473 !important;
+}
+
+.react-datepicker__day {
+  color: #fff !important;
+  border-radius: 0.3rem !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: rgba(187, 164, 115, 0.2) !important;
+  color: #E8D5A3 !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+  background-color: #BBA473 !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: rgba(187, 164, 115, 0.5) !important;
+  color: #fff !important;
+}
+
+.react-datepicker__day--disabled {
+  color: #4B5563 !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #BBA473 !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+.react-datepicker__month-container {
+  background-color: #1A1A1A !important;
 }

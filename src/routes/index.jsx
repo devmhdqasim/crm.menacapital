@@ -7,6 +7,7 @@ import Sidebar from '@/components/Sidebar';
 // import UserWidget from '@/features/user/components/UserWidget';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { RouteLoadingFallback } from '@/components/LoadingSpinner';
+import GridBackground from '@/components/GridBackground'; // Import GridBackground
 
 import { getUserRole } from '@/utils/authUtils';
 import { ROUTES, getAllowedRoutes } from '@/config/roleConfig';
@@ -35,7 +36,7 @@ export function AppRoutes() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
+
   // Get user role and allowed routes
   const userRole = getUserRole();
   const allowedRoutes = useMemo(() => getAllowedRoutes(userRole), [userRole]);
@@ -141,7 +142,7 @@ export function AppRoutes() {
         </Suspense>
       ),
     },
-    
+
     {
       path: '/branches',
       element: (
@@ -202,7 +203,7 @@ export function AppRoutes() {
         </Suspense>
       ),
     },
-    
+
     {
       path: '/update-password',  // Changed from '/sales-manager' to '/sales-managers'
       element: (
@@ -223,7 +224,7 @@ export function AppRoutes() {
         </Suspense>
       ),
     },
-    
+
     // Catch-all route for undefined paths
     {
       path: '*',
@@ -237,26 +238,29 @@ export function AppRoutes() {
   const isLoginPage = location.pathname === '/';
 
   return (
-    <div className="min-h-screen flex bg-[#BBA473]">
+    <div className="min-h-screen flex bg-[#050505] text-white relative">
+      {/* Global Background */}
+      {!isLoginPage && <GridBackground />}
+
       {!isLoginPage && (
-        <Sidebar 
-          isOpen={isOpen} 
-          setIsOpen={setIsOpen} 
-          isCollapsed={isCollapsed} 
+        <Sidebar
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
           userRole={userRole}
         />
       )}
 
       {/* Main Content Wrapper with smooth transitions */}
-      <div 
+      <div
         className={`
           flex flex-col flex-1 min-w-0
           transition-all duration-300 ease-in-out
-          ${!isLoginPage 
-            ? isCollapsed 
-              ? 'lg:ml-20' 
-              : 'lg:ml-64' 
+          ${!isLoginPage
+            ? isCollapsed
+              ? 'lg:ml-20'
+              : 'lg:ml-64'
             : ''
           }
         `}
@@ -271,11 +275,11 @@ export function AppRoutes() {
         )}
 
         {/* Main Content Area with fade-in animation */}
-        <main 
+        <main
           className={`
             flex-1 w-full
             overflow-x-hidden
-            ${!isLoginPage ? 'bg-gray-50' : 'bg-white'}
+            ${!isLoginPage ? 'bg-transparent' : 'bg-white'}
             animate-fadeIn
           `}
         >

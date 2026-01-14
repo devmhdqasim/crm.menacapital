@@ -52,21 +52,21 @@ const Dashboard = () => {
     setLoading(true);
     const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
     const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
-    
+
     try {
       const result = await getDashboardStatsByFilter(startDateStr, endDateStr);
-      
+
       if (result.success && result.data) {
         setDashboardData(result.data);
         setPermissions(result.data.permissions || permissions);
-        
+
         // Save crmCategorySummary to context
         if (result.data.crmCategorySummary) {
           setCrmCategorySummary(result.data.crmCategorySummary);
           localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
           localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
         }
-        
+
         console.log('✅ Dashboard data loaded:', result.data);
       } else {
         console.error('Failed to fetch dashboard data:', result.message);
@@ -119,52 +119,52 @@ const Dashboard = () => {
   // Dynamic stats cards data
   const stats = dashboardData
     ? Object.entries(dashboardData)
-        .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
-        .map(([key, value]) => {
-          // Format key into a readable title
-          const label = key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, (str) => str.toUpperCase())
-            .trim();
+      .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
+      .map(([key, value]) => {
+        // Format key into a readable title
+        const label = key
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, (str) => str.toUpperCase())
+          .trim();
 
-          // Optional: map icons/colors based on key
-          const iconMap = {
-            totalSalesManagers: ShoppingCart,
-            totalAgents: Users,
-            totalBranches: Coins,
-            totalKioskMembers: TrendingUp,
-            totalBranchLeads: Activity,
-          };
-          const colorMap = {
-            totalSalesManagers: 'rgb(255, 99, 132)',
-            totalAgents: 'rgb(54, 162, 235)',
-            totalBranches: 'rgb(156, 163, 175)',
-            totalKioskMembers: 'rgb(255, 187, 40)',
-            totalBranchLeads: 'rgb(75, 192, 192)',
-          };
-          const bgColorMap = {
-            totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
-            totalAgents: 'rgba(54, 162, 235, 0.125)',
-            totalBranches: 'rgba(156, 163, 175, 0.125)',
-            totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
-            totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
-          };
+        // Optional: map icons/colors based on key
+        const iconMap = {
+          totalSalesManagers: ShoppingCart,
+          totalAgents: Users,
+          totalBranches: Coins,
+          totalKioskMembers: TrendingUp,
+          totalBranchLeads: Activity,
+        };
+        const colorMap = {
+          totalSalesManagers: 'rgb(255, 99, 132)',
+          totalAgents: 'rgb(54, 162, 235)',
+          totalBranches: 'rgb(156, 163, 175)',
+          totalKioskMembers: 'rgb(255, 187, 40)',
+          totalBranchLeads: 'rgb(75, 192, 192)',
+        };
+        const bgColorMap = {
+          totalSalesManagers: 'rgba(255, 99, 132, 0.125)',
+          totalAgents: 'rgba(54, 162, 235, 0.125)',
+          totalBranches: 'rgba(156, 163, 175, 0.125)',
+          totalKioskMembers: 'rgba(255, 187, 40, 0.125)',
+          totalBranchLeads: 'rgba(75, 192, 192, 0.125)',
+        };
 
-          return {
-            label,
-            value,
-            icon: iconMap[key] || Users, // fallback icon
-            color: colorMap[key] || 'rgb(255,255,255)',
-            bgColor: bgColorMap[key] || 'rgba(255,255,255,0.1)',
-          };
-        })
+        return {
+          label,
+          value,
+          icon: iconMap[key] || Users, // fallback icon
+          color: colorMap[key] || 'rgb(255,255,255)',
+          bgColor: bgColorMap[key] || 'rgba(255,255,255,0.1)',
+        };
+      })
     : [];
 
   // Pie chart data - Updated to match API response structure
   const pieData = dashboardData?.leadsCountPerStatus ? (() => {
     const statusData = dashboardData.leadsCountPerStatus;
     const data = [];
-    
+
     // Map API status fields to pie chart data
     if (statusData.Lead > 0) {
       data.push({ name: 'Lead', value: statusData.Lead, color: '#FF6384' });
@@ -175,67 +175,67 @@ const Dashboard = () => {
     if (statusData.Real > 0) {
       data.push({ name: 'Real', value: statusData.Real, color: '#FFCE56' });
     }
-    
+
     return data;
   })() : [];
 
   const isUserAuthRefresh = (startDate) => {
     const start = new Date(startDate);
     const now = new Date();
-    
+
     const isAPIReturning404 = new Date(start);
     isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
-  
+
     return now >= isAPIReturning404;
   };
-    
+
   useEffect(() => {
     const FEATURE_START_DATE = '2026-02-17';
-    
+
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
       setHasLeadsPermission(shouldHide);
     };
-    
+
     callRefreshAuthAgain();
-    
+
     const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   // Bar chart data - Updated to match API response structure with month names
-  const barData = dashboardData?.leadsCountPerMonth?.length > 0 
+  const barData = dashboardData?.leadsCountPerMonth?.length > 0
     ? dashboardData.leadsCountPerMonth.map((item) => {
-        // Convert month number to month name
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const monthName = monthNames[item.month - 1] || `Month ${item.month}`;
-        
-        // Color mapping based on month
-        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', 
-                       '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'];
-        
-        return {
-          name: monthName,
-          value: item.totalLeads || 0,
-          color: colors[(item.month - 1) % 12],
-        };
-      })
+      // Convert month number to month name
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthName = monthNames[item.month - 1] || `Month ${item.month}`;
+
+      // Color mapping based on month
+      const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+        '#C9CBCF', '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF'];
+
+      return {
+        name: monthName,
+        value: item.totalLeads || 0,
+        color: colors[(item.month - 1) % 12],
+      };
+    })
     : [
-        { name: 'Jan', value: 0, color: '#FF6384' },
-        { name: 'Feb', value: 0, color: '#36A2EB' },
-        { name: 'Mar', value: 0, color: '#FFCE56' },
-        { name: 'Apr', value: 0, color: '#4BC0C0' },
-        { name: 'May', value: 0, color: '#9966FF' },
-        { name: 'Jun', value: 0, color: '#FF9F40' },
-        { name: 'Jul', value: 0, color: '#C9CBCF' },
-        { name: 'Aug', value: 0, color: '#36A2EB' },
-        { name: 'Sep', value: 0, color: '#FF6384' },
-        { name: 'Oct', value: 0, color: '#4BC0C0' },
-        { name: 'Nov', value: 0, color: '#FFCE56' },
-        { name: 'Dec', value: 0, color: '#9966FF' }
-      ];
+      { name: 'Jan', value: 0, color: '#FF6384' },
+      { name: 'Feb', value: 0, color: '#36A2EB' },
+      { name: 'Mar', value: 0, color: '#FFCE56' },
+      { name: 'Apr', value: 0, color: '#4BC0C0' },
+      { name: 'May', value: 0, color: '#9966FF' },
+      { name: 'Jun', value: 0, color: '#FF9F40' },
+      { name: 'Jul', value: 0, color: '#C9CBCF' },
+      { name: 'Aug', value: 0, color: '#36A2EB' },
+      { name: 'Sep', value: 0, color: '#FF6384' },
+      { name: 'Oct', value: 0, color: '#4BC0C0' },
+      { name: 'Nov', value: 0, color: '#FFCE56' },
+      { name: 'Dec', value: 0, color: '#9966FF' }
+    ];
 
   // Custom label for pie chart
   const renderCustomLabel = ({
@@ -276,7 +276,7 @@ const Dashboard = () => {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="border border-[#BBA473]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
+            className="border border-[#BBA473]/20 rounded-xl p-6 bg-[#1A1A1A]/60 backdrop-blur-sm"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -294,7 +294,7 @@ const Dashboard = () => {
         {[1, 2].map((i) => (
           <div
             key={i}
-            className="border border-[#BBA473]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
+            className="border border-[#BBA473]/20 rounded-xl p-6 bg-[#1A1A1A]/60 backdrop-blur-sm"
           >
             <div className="h-6 bg-gray-700 rounded w-48 mx-auto mb-6"></div>
             <div className="h-[400px] bg-gray-800/30 rounded"></div>
@@ -308,7 +308,7 @@ const Dashboard = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1A1A1A] border-2 border-[#BBA473] rounded-lg p-4 shadow-2xl backdrop-blur-sm">
+        <div className="bg-[#1A1A1A] border border-[#BBA473]/50 rounded-lg p-4 shadow-2xl backdrop-blur-md">
           <p className="text-white font-semibold mb-2">{label}</p>
           <p className="text-[#BBA473] font-bold text-lg">
             {payload[0].value} leads
@@ -321,10 +321,10 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white p-6">
+      <div className="p-6">
         <main>
           {/* Header with Gradient Background */}
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between mb-8 bg-gradient-to-r from-[#BBA473]/10 to-transparent border border-[#BBA473]/30 rounded-2xl p-6 backdrop-blur-sm z-10">
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between mb-8 bg-[#1A1A1A]/60 border border-[#BBA473]/20 rounded-2xl p-6 backdrop-blur-md z-10 shadow-xl">
             <div className="flex-1">
               <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#BBA473] to-yellow-200 mb-3 animate-fade-in">
                 Welcome to the Save In Gold Sales CRM
@@ -352,34 +352,34 @@ const Dashboard = () => {
                   <label htmlFor="" className='text-[#E8D5A3] font-medium text-sm whitespace-nowrap'>
                     Filter by Agent:
                   </label>
-                <div className="relative">
-                  <select
-                    value={selectedKioskMember}
-                    onChange={(e) => setSelectedKioskMember(e.target.value)}
-                    className="w-full md:w-64 px-4 py-2.5 pl-10 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[#BBA473]/40 rounded-lg text-white text-sm font-medium appearance-none cursor-pointer hover:border-[#BBA473] focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all duration-300 shadow-lg"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23BBA473' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 0.75rem center',
-                      paddingRight: '2.5rem'
-                    }}
-                  >
-                    <option value="all" className="bg-[#1A1A1A] text-white">
-                      All Kiosk Members
-                    </option>
-                    {kioskMemberOptions.map((member) => (
-                      <option
-                        key={member.kioskMemberId}
-                        value={member.kioskMemberId}
-                        className="bg-[#1A1A1A] text-white"
-                      >
-                        {member.firstName} {member.lastName} ({member.totalLeads} leads)
+                  <div className="relative">
+                    <select
+                      value={selectedKioskMember}
+                      onChange={(e) => setSelectedKioskMember(e.target.value)}
+                      className="w-full md:w-64 px-4 py-2.5 pl-10 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm font-medium appearance-none cursor-pointer hover:border-[#BBA473] focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all duration-300 shadow-lg"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23BBA473' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0.75rem center',
+                        paddingRight: '2.5rem'
+                      }}
+                    >
+                      <option value="all" className="bg-[#1A1A1A] text-white">
+                        All Kiosk Members
                       </option>
-                    ))}
-                  </select>
-                  <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+                      {kioskMemberOptions.map((member) => (
+                        <option
+                          key={member.kioskMemberId}
+                          value={member.kioskMemberId}
+                          className="bg-[#1A1A1A] text-white"
+                        >
+                          {member.firstName} {member.lastName} ({member.totalLeads} leads)
+                        </option>
+                      ))}
+                    </select>
+                    <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+                  </div>
                 </div>
-              </div>
               )}
             </div>
           </div>
@@ -412,15 +412,15 @@ const Dashboard = () => {
               {kioskMemberOptions.length > 0 && (
                 <div className="mb-6">
                   <div
-                    className="group relative w-full border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                    className="group relative w-full border border-[#BBA473]/20 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473]/50 hover:scale-[1.01] bg-[#1A1A1A]/60 backdrop-blur-sm overflow-hidden"
                     style={{ animation: 'slideInUp 0.5s ease-out' }}
                   >
                     {/* Gradient Overlay on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    
+
                     {/* Animated Corner Accent */}
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
-                    
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/10 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
+
                     <div className="relative flex items-center justify-between">
                       <div className="flex-1">
                         <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
@@ -434,8 +434,8 @@ const Dashboard = () => {
                         className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
                         style={{ backgroundColor: 'rgba(75, 192, 192, 0.125)' }}
                       >
-                        <UserCircle 
-                          style={{ color: 'rgb(75, 192, 192)' }} 
+                        <UserCircle
+                          style={{ color: 'rgb(75, 192, 192)' }}
                           className="w-8 h-8 group-hover:animate-pulse"
                         />
                       </div>
@@ -447,27 +447,26 @@ const Dashboard = () => {
                 </div>
               )}
 
-              <div 
-                className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 ${
-                  stats.length === 1 ? 'sm:justify-items-center' : ''
-                }`}
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 ${stats.length === 1 ? 'sm:justify-items-center' : ''
+                  }`}
               >
                 {stats.map((stat, index) => {
                   const Icon = stat.icon;
                   return (
                     <div
                       key={index}
-                      className="group relative w-full border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-105 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                      className="group relative w-full border border-[#BBA473]/20 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473]/50 hover:scale-105 bg-[#1A1A1A]/60 backdrop-blur-sm overflow-hidden"
                       style={{
                         animation: `slideInUp 0.5s ease-out ${index * 0.1}s both`,
                       }}
                     >
                       {/* Gradient Overlay on Hover */}
                       <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      
+
                       {/* Animated Corner Accent */}
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
-                      
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/10 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
+
                       <div className="relative flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
@@ -481,8 +480,8 @@ const Dashboard = () => {
                           className="p-4 rounded-full transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 shadow-lg"
                           style={{ backgroundColor: stat.bgColor }}
                         >
-                          <Icon 
-                            style={{ color: stat.color }} 
+                          <Icon
+                            style={{ color: stat.color }}
                             className="w-8 h-8 group-hover:animate-pulse"
                           />
                         </div>
@@ -498,8 +497,8 @@ const Dashboard = () => {
               {/* Charts Grid with Enhanced Design */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 {/* Pie Chart with Enhanced Styling */}
-                <div 
-                  className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
+                <div
+                  className="border border-[#BBA473]/20 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-[#1A1A1A]/60 backdrop-blur-sm hover:border-[#BBA473]/50"
                   style={{ animation: 'slideInLeft 0.6s ease-out' }}
                 >
                   <div className="flex items-center justify-center mb-4">
@@ -509,7 +508,7 @@ const Dashboard = () => {
                     </h3>
                     <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
                   </div>
-                  
+
                   {pieData.length > 0 && !hasLeadsPermission ? (
                     <div className="space-y-4">
                       <ResponsiveContainer width="100%" height={400}>
@@ -529,8 +528,8 @@ const Dashboard = () => {
                             animationDuration={1000}
                           >
                             {pieData.map((entry, index) => (
-                              <Cell 
-                                key={`cell-${index}`} 
+                              <Cell
+                                key={`cell-${index}`}
                                 fill={entry.color}
                                 className="hover:opacity-80 transition-opacity duration-300 cursor-pointer"
                               />
@@ -540,7 +539,7 @@ const Dashboard = () => {
                         </PieChart>
                       </ResponsiveContainer>
 
-                      <div className="bg-[#0A0A0A] rounded-lg p-4 border border-[#BBA473]/30">
+                      <div className="bg-[#0A0A0A]/50 rounded-lg p-4 border border-[#BBA473]/20">
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-semibold text-gray-300">
                             Total Leads
@@ -561,8 +560,8 @@ const Dashboard = () => {
                 </div>
 
                 {/* Bar Chart with Enhanced Styling */}
-                <div 
-                  className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
+                <div
+                  className="border border-[#BBA473]/20 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-[#1A1A1A]/60 backdrop-blur-sm hover:border-[#BBA473]/50"
                   style={{ animation: 'slideInRight 0.6s ease-out' }}
                 >
                   <div className="flex items-center justify-center mb-4">
@@ -572,14 +571,14 @@ const Dashboard = () => {
                     </h3>
                     <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
                   </div>
-                  
+
                   <ResponsiveContainer width="100%" height={450}>
                     {!hasLeadsPermission ? (
                       <BarChart data={barData}>
                         <defs>
                           <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#BBA473" stopOpacity={0.8}/>
-                            <stop offset="100%" stopColor="#BBA473" stopOpacity={0.3}/>
+                            <stop offset="0%" stopColor="#BBA473" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="#BBA473" stopOpacity={0.3} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
@@ -592,20 +591,20 @@ const Dashboard = () => {
                           stroke="#9CA3AF"
                           tick={{ fill: '#9CA3AF' }}
                         />
-                        <YAxis 
+                        <YAxis
                           stroke="#9CA3AF"
                           tick={{ fill: '#9CA3AF' }}
                         />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar 
-                          dataKey="value" 
+                        <Bar
+                          dataKey="value"
                           radius={[8, 8, 0, 0]}
                           animationBegin={0}
                           animationDuration={1000}
                         >
                           {barData.map((entry, index) => (
-                            <Cell 
-                              key={`cell-${index}`} 
+                            <Cell
+                              key={`cell-${index}`}
                               fill={entry.color}
                               className="hover:opacity-80 transition-opacity duration-300 cursor-pointer"
                             />
@@ -627,7 +626,7 @@ const Dashboard = () => {
           {/* No Data State with Enhanced Design */}
           {!loading && !dashboardData && (
             <div className="text-center py-20 animate-fade-in">
-              <div className="inline-block p-8 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] rounded-2xl border border-[#BBA473]/30 shadow-2xl">
+              <div className="inline-block p-8 bg-[#1A1A1A]/60 backdrop-blur-sm rounded-2xl border border-[#BBA473]/30 shadow-2xl">
                 <Activity className="w-20 h-20 text-gray-600 mx-auto mb-4 animate-pulse" />
                 <p className="text-gray-400 text-xl font-semibold mb-2">No dashboard data available</p>
                 <p className="text-gray-500 text-sm">Please check back later or adjust your filters</p>
