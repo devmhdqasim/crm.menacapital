@@ -1,211 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, CheckCheck, Trash2, ChevronDown, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, ChevronDown, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../../services/notificationService';
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "New Interested Lead",
-      message: "John Smith showed interest in your product. Follow up recommended within 24 hours.",
-      type: "interested",
-      time: "2024-11-24T10:30:00Z",
-      unread: true,
-      icon: "👍",
-      priority: "high"
-    },
-    {
-      id: 2,
-      title: "Lead Status Update",
-      message: "Sarah Johnson marked as Not Interested. Reason: Already invested elsewhere.",
-      type: "not_interested",
-      time: "2024-11-24T09:15:00Z",
-      unread: true,
-      icon: "👎",
-      priority: "medium"
-    },
-    {
-      id: 3,
-      title: "Hot Lead Alert",
-      message: "Michael Brown upgraded to Hot Lead status. Schedule a demo call ASAP.",
-      type: "hot_lead",
-      time: "2024-11-24T08:00:00Z",
-      unread: true,
-      icon: "🔥",
-      priority: "high"
-    },
-    {
-      id: 4,
-      title: "Demo Account Created",
-      message: "Emma Wilson created a demo trading account. Provide onboarding support.",
-      type: "demo",
-      time: "2024-11-24T07:45:00Z",
-      unread: true,
-      icon: "🎮",
-      priority: "medium"
-    },
-    {
-      id: 5,
-      title: "Real Account Opened",
-      message: "David Lee opened a real trading account with account number #RT-45892.",
-      type: "real",
-      time: "2024-11-23T16:20:00Z",
-      unread: false,
-      icon: "💼",
-      priority: "high"
-    },
-    {
-      id: 6,
-      title: "Deposit Received",
-      message: "Lisa Chen made a deposit of $5,000. Transaction ID: TXN-789456123.",
-      type: "deposit",
-      time: "2024-11-23T14:10:00Z",
-      unread: false,
-      icon: "💰",
-      priority: "high"
-    },
-    {
-      id: 7,
-      title: "Lead Not Answered",
-      message: "Tom Anderson didn't answer your call. Attempted 3 times. Try again later.",
-      type: "not_answered",
-      time: "2024-11-23T11:30:00Z",
-      unread: false,
-      icon: "📞",
-      priority: "low"
-    },
-    {
-      id: 8,
-      title: "Warm Lead Created",
-      message: "Jessica Martinez marked as Warm Lead. Schedule follow-up for next week.",
-      type: "warm_lead",
-      time: "2024-11-23T09:00:00Z",
-      unread: false,
-      icon: "🌡️",
-      priority: "medium"
-    },
-    {
-      id: 9,
-      title: "Lead Assignment",
-      message: "You have been assigned a new lead: Robert Chen from Dubai.",
-      type: "assignment",
-      time: "2024-11-22T15:45:00Z",
-      unread: false,
-      icon: "👤",
-      priority: "medium"
-    },
-    {
-      id: 10,
-      title: "Meeting Reminder",
-      message: "Scheduled call with Alex Turner in 1 hour. Prepare presentation materials.",
-      type: "reminder",
-      time: "2024-11-22T14:00:00Z",
-      unread: false,
-      icon: "🔔",
-      priority: "high"
-    },
-    {
-      id: 11,
-      title: "Commission Earned",
-      message: "You earned $250 commission from David Lee's deposit. Check your wallet.",
-      type: "commission",
-      time: "2024-11-22T10:30:00Z",
-      unread: false,
-      icon: "💵",
-      priority: "medium"
-    },
-    {
-      id: 12,
-      title: "Lead Follow-up Required",
-      message: "Maria Garcia hasn't been contacted in 7 days. Follow-up needed.",
-      type: "follow_up",
-      time: "2024-11-21T16:20:00Z",
-      unread: false,
-      icon: "⏰",
-      priority: "high"
-    },
-    {
-      id: 13,
-      title: "Account Verification",
-      message: "Peter Wilson completed KYC verification. Account now fully active.",
-      type: "verification",
-      time: "2024-11-21T13:15:00Z",
-      unread: false,
-      icon: "✅",
-      priority: "medium"
-    },
-    {
-      id: 14,
-      title: "Cold Lead Alert",
-      message: "Amanda Davis marked as cold lead after 5 unsuccessful contact attempts.",
-      type: "cold_lead",
-      time: "2024-11-21T10:00:00Z",
-      unread: false,
-      icon: "❄️",
-      priority: "low"
-    },
-    {
-      id: 15,
-      title: "Monthly Target Update",
-      message: "You've achieved 75% of your monthly target. $25,000 more to go!",
-      type: "target",
-      time: "2024-11-20T09:00:00Z",
-      unread: false,
-      icon: "🎯",
-      priority: "medium"
-    },
-    {
-      id: 16,
-      title: "New Message Received",
-      message: "Karen White sent you a message regarding investment options.",
-      type: "message",
-      time: "2024-11-20T08:30:00Z",
-      unread: false,
-      icon: "💬",
-      priority: "medium"
-    },
-    {
-      id: 17,
-      title: "System Update",
-      message: "CRM system will undergo maintenance on Saturday 2 AM - 4 AM GST.",
-      type: "system",
-      time: "2024-11-19T17:00:00Z",
-      unread: false,
-      icon: "⚙️",
-      priority: "low"
-    },
-    {
-      id: 18,
-      title: "Training Session",
-      message: "New product training scheduled for December 1st at 10 AM. Register now.",
-      type: "training",
-      time: "2024-11-19T14:00:00Z",
-      unread: false,
-      icon: "📚",
-      priority: "medium"
-    },
-    {
-      id: 19,
-      title: "Withdrawal Request",
-      message: "Thomas Brown requested withdrawal of $2,000. Verify and process.",
-      type: "withdrawal",
-      time: "2024-11-19T11:20:00Z",
-      unread: false,
-      icon: "💸",
-      priority: "high"
-    },
-    {
-      id: 20,
-      title: "Performance Report",
-      message: "Your weekly performance report is ready. 15 leads converted this week.",
-      type: "report",
-      time: "2024-11-18T09:00:00Z",
-      unread: false,
-      icon: "📊",
-      priority: "low"
-    }
-  ]);
-
+  const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('All');
   const [selectedNotifications, setSelectedNotifications] = useState([]);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -214,42 +13,127 @@ const NotificationsPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const tabs = ['All', 'Unread', 'Read'];
   const perPageOptions = [10, 20, 30, 50];
   const priorityOptions = ['All', 'High', 'Medium', 'Low'];
 
+  // Fetch notifications from backend
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await getNotifications();
+      
+      // Transform backend data to match component format
+      const transformedData = data.map(notification => ({
+        id: notification.id,
+        title: notification.title,
+        message: notification.body || notification.message,
+        type: notification.type || 'general',
+        time: notification.timestamp || notification.createdAt,
+        unread: !notification.read,
+        icon: getIconByType(notification.type),
+        priority: notification.priority || 'medium'
+      }));
+      
+      setNotifications(transformedData);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      toast.error('Failed to load notifications');
+      // Set empty array on error
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getIconByType = (type) => {
+    const icons = {
+      interested: '👍',
+      not_interested: '👎',
+      hot_lead: '🔥',
+      demo: '🎮',
+      real: '💼',
+      deposit: '💰',
+      not_answered: '📞',
+      warm_lead: '🌡️',
+      assignment: '👤',
+      reminder: '🔔',
+      commission: '💵',
+      follow_up: '⏰',
+      verification: '✅',
+      cold_lead: '❄️',
+      target: '🎯',
+      message: '💬',
+      system: '⚙️',
+      training: '📚',
+      withdrawal: '💸',
+      report: '📊',
+      lead: '👤',
+      task: '📋',
+      meeting: '📅'
+    };
+    return icons[type] || '🔔';
+  };
+
   const unreadCount = notifications.filter(n => n.unread).length;
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, unread: false } : n
-    ));
-    toast.success('Notification marked as read');
+  const markAsRead = async (id) => {
+    try {
+      await markNotificationAsRead(id);
+      setNotifications(notifications.map(n => 
+        n.id === id ? { ...n, unread: false } : n
+      ));
+      toast.success('Notification marked as read');
+    } catch (error) {
+      toast.error('Failed to mark as read');
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
-    toast.success('All notifications marked as read');
+  const markAllAsRead = async () => {
+    try {
+      await markAllNotificationsAsRead();
+      setNotifications(notifications.map(n => ({ ...n, unread: false })));
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      toast.error('Failed to mark all as read');
+    }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(n => n.id !== id));
-    toast.success('Notification deleted');
+  const deleteNotif = async (id) => {
+    try {
+      await deleteNotification(id);
+      setNotifications(notifications.filter(n => n.id !== id));
+      toast.success('Notification deleted');
+    } catch (error) {
+      toast.error('Failed to delete notification');
+    }
   };
 
-  const deleteSelected = () => {
+  const deleteSelected = async () => {
     if (selectedNotifications.length === 0) {
       toast.error('No notifications selected');
       return;
     }
-    setNotifications(notifications.filter(n => !selectedNotifications.includes(n.id)));
-    setSelectedNotifications([]);
-    toast.success(`${selectedNotifications.length} notification(s) deleted`);
+    
+    try {
+      // Delete all selected notifications
+      await Promise.all(selectedNotifications.map(id => deleteNotification(id)));
+      setNotifications(notifications.filter(n => !selectedNotifications.includes(n.id)));
+      setSelectedNotifications([]);
+      toast.success(`${selectedNotifications.length} notification(s) deleted`);
+    } catch (error) {
+      toast.error('Failed to delete notifications');
+    }
   };
 
   const toggleSelectNotification = (id) => {
@@ -289,7 +173,10 @@ const NotificationsPage = () => {
       system: 'from-zinc-500/20 to-zinc-600/20 border-zinc-500/30',
       training: 'from-lime-500/20 to-lime-600/20 border-lime-500/30',
       withdrawal: 'from-rose-500/20 to-rose-600/20 border-rose-500/30',
-      report: 'from-fuchsia-500/20 to-fuchsia-600/20 border-fuchsia-500/30'
+      report: 'from-fuchsia-500/20 to-fuchsia-600/20 border-fuchsia-500/30',
+      lead: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+      task: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
+      meeting: 'from-purple-500/20 to-purple-600/20 border-purple-500/30'
     };
     return colors[type] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
   };
@@ -300,11 +187,11 @@ const NotificationsPage = () => {
       medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       low: 'bg-green-500/20 text-green-400 border-green-500/30'
     };
-    return badges[priority] || badges.low;
+    return badges[priority] || badges.medium;
   };
 
-  const formatTime = (utcDateString) => {
-    const date = new Date(utcDateString);
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
@@ -328,7 +215,6 @@ const NotificationsPage = () => {
 
   // Filtering logic
   const filteredNotifications = notifications.filter(notification => {
-    // Tab filter
     let matchesTab = true;
     if (activeTab === 'Unread') {
       matchesTab = notification.unread;
@@ -336,7 +222,6 @@ const NotificationsPage = () => {
       matchesTab = !notification.unread;
     }
 
-    // Priority filter
     let matchesPriority = true;
     if (priorityFilter !== 'All') {
       matchesPriority = notification.priority.toLowerCase() === priorityFilter.toLowerCase();
@@ -393,6 +278,17 @@ const NotificationsPage = () => {
     setCurrentPage(1);
     setShowFilterDropdown(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1A1A1A] text-white p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#BBA473] mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading notifications...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -599,7 +495,7 @@ const NotificationsPage = () => {
                           </button>
                         )}
                         <button
-                          onClick={() => deleteNotification(notification.id)}
+                          onClick={() => deleteNotif(notification.id)}
                           className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all duration-300"
                           title="Delete"
                         >

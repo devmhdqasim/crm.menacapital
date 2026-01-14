@@ -10,7 +10,7 @@ const firebaseConfig = {
   authDomain: "saveingold-crm.firebaseapp.com",
   projectId: "saveingold-crm",
   storageBucket: "saveingold-crm.firebasestorage.app",
-  messagingSenderId: "",
+  messagingSenderId: "650149237633",
   appId: "",
   measurementId: "G-E52RNTDFLC"
 };

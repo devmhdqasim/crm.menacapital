@@ -30,7 +30,7 @@ export const ROUTES = {
   TASKS: '/tasks',
   SALES_MANAGERS: '/sales-managers',   // Changed from '/sales-manager' to '/sales-managers'
   UPDATE_PASSWORD: '/update-password',
-  NOTIFICATIONS: 'notifications',
+  NOTIFICATIONS: '/notifications',
 };
 
 /**

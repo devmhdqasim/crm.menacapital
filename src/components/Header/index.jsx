@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Menu, Bell, LogOut, Key, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from '../../services/authService';
+import { getNotifications, markAllNotificationsAsRead } from '../../services/notificationService';
+import toast from 'react-hot-toast';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -10,80 +12,8 @@ export default function Header() {
   const [userRole, setUserRole] = useState('');
   const [userDetails, setUserDetails] = useState('');
   const [branchDetails, setBranchDetails] = useState('');
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "New Interested Lead",
-      message: "John Smith showed interest in your product",
-      type: "interested",
-      time: "2 min ago",
-      unread: true,
-      icon: "👍"
-    },
-    {
-      id: 2,
-      title: "Lead Status Update",
-      message: "Sarah Johnson marked as Not Interested",
-      type: "not_interested",
-      time: "15 min ago",
-      unread: true,
-      icon: "👎"
-    },
-    {
-      id: 3,
-      title: "Hot Lead Alert",
-      message: "Michael Brown upgraded to Hot Lead status",
-      type: "hot_lead",
-      time: "1 hour ago",
-      unread: true,
-      icon: "🔥"
-    },
-    {
-      id: 4,
-      title: "Demo Account Created",
-      message: "Emma Wilson created a demo trading account",
-      type: "demo",
-      time: "2 hours ago",
-      unread: true,
-      icon: "🎮"
-    },
-    {
-      id: 5,
-      title: "Real Account Opened",
-      message: "David Lee opened a real trading account",
-      type: "real",
-      time: "3 hours ago",
-      unread: false,
-      icon: "💼"
-    },
-    {
-      id: 6,
-      title: "Deposit Received",
-      message: "Lisa Chen made a deposit of $5,000",
-      type: "deposit",
-      time: "5 hours ago",
-      unread: false,
-      icon: "💰"
-    },
-    {
-      id: 7,
-      title: "Lead Not Answered",
-      message: "Tom Anderson didn't answer your call",
-      type: "not_answered",
-      time: "1 day ago",
-      unread: false,
-      icon: "📞"
-    },
-    {
-      id: 8,
-      title: "Warm Lead Created",
-      message: "Jessica Martinez marked as Warm Lead",
-      type: "warm_lead",
-      time: "2 days ago",
-      unread: false,
-      icon: "🌡️"
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const getUserInfo = () => {
     const userInfo = localStorage.getItem('userInfo');
@@ -96,6 +26,97 @@ export default function Header() {
     setBranchDetails(userInfo?.branchName ?? userInfo?.branchUsername);
     setUserRole(userInfo?.roleName);
   }, []);
+
+  // Fetch notifications from backend when dropdown opens
+  useEffect(() => {
+    if (notificationsOpen) {
+      fetchNotifications();
+    }
+  }, [notificationsOpen]);
+
+  // Refresh notifications every 30 seconds when dropdown is open
+  useEffect(() => {
+    if (notificationsOpen) {
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [notificationsOpen]);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await getNotifications();
+      
+      // Transform backend data to match component format
+      const transformedData = data.map(notification => ({
+        id: notification.id,
+        title: notification.title,
+        message: notification.body || notification.message,
+        type: notification.type || 'general',
+        time: formatTime(notification.timestamp || notification.createdAt),
+        unread: !notification.read,
+        icon: getIconByType(notification.type),
+        priority: notification.priority || 'medium'
+      }));
+      
+      setNotifications(transformedData);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      // Keep existing notifications on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getIconByType = (type) => {
+    const icons = {
+      interested: '👍',
+      not_interested: '👎',
+      hot_lead: '🔥',
+      demo: '🎮',
+      real: '💼',
+      deposit: '💰',
+      not_answered: '📞',
+      warm_lead: '🌡️',
+      assignment: '👤',
+      reminder: '🔔',
+      commission: '💵',
+      follow_up: '⏰',
+      verification: '✅',
+      cold_lead: '❄️',
+      target: '🎯',
+      message: '💬',
+      system: '⚙️',
+      training: '📚',
+      withdrawal: '💸',
+      report: '📊',
+      lead: '👤',
+      task: '📋',
+      meeting: '📅'
+    };
+    return icons[type] || '🔔';
+  };
+
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -113,8 +134,14 @@ export default function Header() {
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+  const markAllAsRead = async () => {
+    try {
+      await markAllNotificationsAsRead();
+      setNotifications(notifications.map(n => ({ ...n, unread: false })));
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      toast.error('Failed to mark all as read');
+    }
   };
 
   const getNotificationTypeColor = (type) => {
@@ -126,7 +153,10 @@ export default function Header() {
       real: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
       deposit: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
       not_answered: 'from-gray-500/20 to-gray-600/20 border-gray-500/30',
-      warm_lead: 'from-cyan-500/20 to-cyan-600/20 border-cyan-500/30'
+      warm_lead: 'from-cyan-500/20 to-cyan-600/20 border-cyan-500/30',
+      lead: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+      task: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
+      meeting: 'from-purple-500/20 to-purple-600/20 border-purple-500/30'
     };
     return colors[type] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
   };
@@ -184,39 +214,51 @@ export default function Header() {
 
               {/* Notifications List */}
               <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                {notifications.map((notification, index) => (
-                  <div
-                    key={notification.id}
-                    className={`group relative px-4 py-3 hover:bg-[#3A3A3A] transition-all duration-300 cursor-pointer ${
-                      notification.unread ? 'bg-[#BBA473]/5' : ''
-                    } ${index !== notifications.length - 1 ? 'border-b border-[#BBA473]/10' : ''}`}
-                  >
-                    <div className="flex gap-3">
-                      {/* Icon */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br ${getNotificationTypeColor(notification.type)} border flex items-center justify-center text-lg`}>
-                        {notification.icon}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="text-white font-semibold text-sm group-hover:text-[#BBA473] transition-colors duration-300">
-                            {notification.title}
-                          </h4>
-                          {notification.unread && (
-                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-[#BBA473] mt-1"></div>
-                          )}
+                {loading ? (
+                  <div className="px-4 py-8 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#BBA473] mx-auto mb-2"></div>
+                    <p className="text-gray-400 text-sm">Loading...</p>
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="px-4 py-8 text-center">
+                    <Bell className="w-12 h-12 text-gray-500 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">No notifications</p>
+                  </div>
+                ) : (
+                  notifications.slice(0, 8).map((notification, index) => (
+                    <div
+                      key={notification.id}
+                      className={`group relative px-4 py-3 hover:bg-[#3A3A3A] transition-all duration-300 cursor-pointer ${
+                        notification.unread ? 'bg-[#BBA473]/5' : ''
+                      } ${index !== Math.min(notifications.length, 8) - 1 ? 'border-b border-[#BBA473]/10' : ''}`}
+                    >
+                      <div className="flex gap-3">
+                        {/* Icon */}
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br ${getNotificationTypeColor(notification.type)} border flex items-center justify-center text-lg`}>
+                          {notification.icon}
                         </div>
-                        <p className="text-gray-400 text-xs mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <span className="text-[#BBA473]/70 text-xs mt-1 block">
-                          {notification.time}
-                        </span>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="text-white font-semibold text-sm group-hover:text-[#BBA473] transition-colors duration-300">
+                              {notification.title}
+                            </h4>
+                            {notification.unread && (
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-[#BBA473] mt-1"></div>
+                            )}
+                          </div>
+                          <p className="text-gray-400 text-xs mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <span className="text-[#BBA473]/70 text-xs mt-1 block">
+                            {notification.time}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Footer */}
@@ -224,8 +266,7 @@ export default function Header() {
                 <button
                   onClick={() => {
                     setNotificationsOpen(false);
-                    navigate('/notifications')
-                    // Navigate to full notifications page
+                    navigate('/notifications');
                   }}
                   className="w-full py-2 text-center text-sm font-semibold text-[#BBA473] hover:text-white hover:bg-[#2A2A2A] rounded-lg transition-all duration-300"
                 >
