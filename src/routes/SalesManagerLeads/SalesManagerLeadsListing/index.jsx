@@ -214,12 +214,12 @@ const SalesManagerLeadsListing = ({
 
   const handleDelete = (lead) => {
     // FIXED: Allow delete for Event Leads even if assigned
-    if (activeTab !== 'Event Leads' && isLeadAssigned(lead)) {
-      const agentName = getAgentName(lead);
-      setAssignedLeadMessage(`This lead is currently assigned to ${agentName} and cannot be deleted.`);
-      setShowAssignedLeadModal(true);
-      return;
-    }
+    // if (activeTab !== 'Event Leads' && isLeadAssigned(lead)) {
+    //   const agentName = getAgentName(lead);
+    //   setAssignedLeadMessage(`This lead is currently assigned to ${agentName} and cannot be deleted.`);
+    //   setShowAssignedLeadModal(true);
+    //   return;
+    // }
     setLeadToDelete(lead);
     setShowDeleteConfirmModal(true);
   };
