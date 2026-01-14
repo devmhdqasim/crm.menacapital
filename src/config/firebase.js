@@ -6,12 +6,12 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "",
+  apiKey: "AIzaSyB-dwT4V7vUx32nUdao_BZksPQZcy1SETU",
   authDomain: "saveingold-crm.firebaseapp.com",
   projectId: "saveingold-crm",
   storageBucket: "saveingold-crm.firebasestorage.app",
   messagingSenderId: "650149237633",
-  appId: "",
+  appId: "1:650149237633:web:60d68b25381dfbebe88e80",
   measurementId: "G-E52RNTDFLC"
 };
 
