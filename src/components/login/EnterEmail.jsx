@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Loader2 } from 'lucide-react';
+import logo from '../../assets/images/logo.svg';
 
 const LoginSchema = Yup.object().shape({
   login: Yup.string()
@@ -9,13 +10,31 @@ const LoginSchema = Yup.object().shape({
     .test('valid-login', 'Invalid email or username format', function (value) {
       if (!value) return false;
 
-      // Email validation
+      // 1. Check if it's a valid email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (emailRegex.test(value)) return true;
 
-      // Username validation (alphanumeric, underscore, hyphen, 3-30 chars)
+      // 2. If not email, validate username prefix
+      const allowedPrefixes = ['br', 'sm', 'sa', 'ev', 'ad'];
+      const lowerValue = value.toLowerCase();
+      const hasValidPrefix = allowedPrefixes.some(prefix => lowerValue.startsWith(prefix));
+
+      if (!hasValidPrefix) {
+        return this.createError({
+          message: 'Username must start with BR, SM, SA, EV, or AD'
+        });
+      }
+
+      // 3. Validate username format (alphanumeric, underscore, hyphen, 3-30 chars)
+      // Note: We already checked the prefix, so just ensure the rest is valid chars
       const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
-      return usernameRegex.test(value);
+      if (!usernameRegex.test(value)) {
+        return this.createError({
+          message: 'Invalid username format (3-30 characters)'
+        });
+      }
+
+      return true;
     }),
 });
 
@@ -111,6 +130,11 @@ export default function EnterEmailOrUsername({
 
           {/* Top shine border */}
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
+
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img src={logo} alt="SaveInGold Logo" className="h-16 w-auto object-contain" />
+          </div>
 
           {/* Heading */}
           <div className="text-center mb-8">

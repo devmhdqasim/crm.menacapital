@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import { Eye, EyeOff, Edit2, Loader2 } from 'lucide-react';
 import { loginUser, loginBranch, loginEvent } from '../../services/authService'; // Update path as needed
 import toast from 'react-hot-toast';
+import logo from '../../assets/images/logo.svg';
 
 const LoginSchema = Yup.object().shape({
   password: Yup.string()
@@ -145,6 +146,11 @@ export default function EnterPassword({
 
           {/* Top shine border */}
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
+
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img src={logo} alt="SaveInGold Logo" className="h-16 w-auto object-contain" />
+          </div>
 
           {/* Heading */}
           <div className="text-center mb-8">
