@@ -6,25 +6,25 @@ import { Loader2 } from 'lucide-react';
 const LoginSchema = Yup.object().shape({
   login: Yup.string()
     .required('Email or Username is required')
-    .test('valid-login', 'Invalid email or username format', function(value) {
+    .test('valid-login', 'Invalid email or username format', function (value) {
       if (!value) return false;
-      
+
       // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (emailRegex.test(value)) return true;
-      
+
       // Username validation (alphanumeric, underscore, hyphen, 3-30 chars)
       const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
       return usernameRegex.test(value);
     }),
 });
 
-export default function EnterEmailOrUsername({ 
-  setLogin, 
-  setLoginBy, 
+export default function EnterEmailOrUsername({
+  setLogin,
+  setLoginBy,
   setIsBranchLogin,
   setIsEventLogin,
-  onNext 
+  onNext
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -41,19 +41,19 @@ export default function EnterEmailOrUsername({
     validationSchema: LoginSchema,
     onSubmit: async (values) => {
       setIsLoading(true);
-      
+
       const loginValue = values.login.trim();
-      
+
       // Determine if it's email or username
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const isEmail = emailRegex.test(loginValue);
       const loginType = isEmail ? 'email' : 'username';
-      
+
       // One-liner to check for branch (BR) or event (EV) login
       const upperLogin = loginValue.toUpperCase();
       const isBranch = upperLogin.startsWith('BR');
       const isEvent = upperLogin.startsWith('EV');
-      
+
       console.log('🔍 Login Detection:', {
         login: loginValue,
         loginType,
@@ -61,13 +61,13 @@ export default function EnterEmailOrUsername({
         isEvent,
         isEmail
       });
-      
+
       // Set login states
       setLogin(loginValue);
       setLoginBy(loginType);
       setIsBranchLogin(isBranch);
       setIsEventLogin(isEvent);
-      
+
       // Small delay for better UX
       setTimeout(() => {
         setIsLoading(false);
@@ -86,42 +86,47 @@ export default function EnterEmailOrUsername({
   const isButtonDisabled = !formik.isValid || isLoading || !formik.values.login.trim();
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center p-4 relative overflow-hidden">
-      
-      <div className={`w-full max-w-md relative z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-        
-        {/* Logo with Animation */}
-        <div className={`mb-12 transition-all duration-700 delay-150 ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}>
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative w-10 h-10 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-              <div className="absolute inset-0 bg-[#a38239] rounded transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#BBA473]/50"></div>
-              <div className="absolute bottom-0 left-0 w-5 h-5 bg-[#1A1A1A] rounded-tl-lg transition-all duration-300"></div>
-            </div>
-            <div className="flex items-baseline">
-              <span className="text-3xl font-medium text-white transition-all duration-300 group-hover:text-[#E8D5A3]">Save In GOLD</span>
-            </div>
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
+
+      {/* Enhanced Grid Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Base Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+        {/* Brighter Major Grid Lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.07)_1px,transparent_1px)] bg-[size:200px_200px]"></div>
+
+        {/* Radial Glows */}
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(187,164,115,0.15),transparent_70%)]"></div>
+
+        {/* Animated Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#BBA473] rounded-full mix-blend-screen filter blur-[128px] opacity-10 animate-pulse" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#8E7D5A] rounded-full mix-blend-screen filter blur-[128px] opacity-5 animate-pulse" style={{ animationDuration: '7s' }}></div>
+      </div>
+
+      <div className={`w-full max-w-lg relative z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+
+        {/* Card Container */}
+        <div className="bg-[#1a1a1a]/60 backdrop-blur-xl border border-[#BBA473]/20 rounded-2xl p-8 shadow-2xl relative overflow-hidden group-hover:border-[#BBA473]/40 transition-all duration-500">
+
+          {/* Top shine border */}
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
+
+          {/* Heading */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+              Welcome Back
+            </h1>
+            <p className="text-[#BBA473]/80 text-sm font-medium uppercase tracking-widest">
+              Enter your email or username
+            </p>
           </div>
-        </div>
 
-        {/* Heading with Animation */}
-        <h1 className={`text-4xl font-bold text-white mb-4 transition-all duration-700 delay-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          Welcome Back
-        </h1>
-        
-        {/* Subtitle */}
-        <p className={`text-gray-400 text-lg mb-8 transition-all duration-700 delay-400 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          Enter your email or username to continue
-        </p>
+          {/* Form */}
+          <div className="space-y-6">
 
-        {/* Form with Animation */}
-        <div className={`space-y-6 transition-all duration-700 delay-500 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          
-          {/* Email/Username Field */}
-          <div className="transform transition-all duration-300 hover:scale-[1.01]">
-            <label htmlFor="login" className="block text-[#E8D5A3] font-medium text-lg mb-3 transition-colors duration-300">
-              Email or Username
-            </label>
-            <div className="relative">
+            {/* Email/Username Field */}
+            <div className="relative group">
               <input
                 type="text"
                 id="login"
@@ -135,71 +140,78 @@ export default function EnterEmailOrUsername({
                 onFocus={() => setIsFocused(true)}
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
-                className={`w-full px-4 py-4 border-2 bg-[#2e2e2e] text-white rounded-lg focus:outline-none text-lg transition-all duration-300 placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  formik.touched.login && formik.errors.login
-                    ? 'border-red-500 focus:border-red-400 focus:ring-2 focus:ring-red-500/50 hover:border-red-400 hover:shadow-lg hover:shadow-red-500/20'
-                    : 'border-[#BBA473] focus:border-[#d4bc89] focus:ring-2 focus:ring-[#BBA473]/50 hover:border-[#d4bc89] hover:shadow-lg hover:shadow-[#BBA473]/20'
-                }`}
-                placeholder="Enter your email or username"
+                className={`w-full px-4 py-4 bg-[#0f0f0f]/80 text-white rounded-lg border transition-all duration-300 placeholder-gray-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${formik.touched.login && formik.errors.login
+                    ? 'border-red-500/50 focus:border-red-500'
+                    : 'border-[#BBA473]/10 focus:border-[#BBA473] hover:border-[#BBA473]/30'
+                  }`}
+                placeholder=" "
                 autoComplete="username"
               />
-              
-              {/* Animated underline effect */}
-              <div className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#BBA473] to-[#d4bc89] transition-all duration-300 ${isFocused ? 'w-full' : 'w-0'}`}></div>
-            </div>
-            
-            {formik.touched.login && formik.errors.login && (
-              <div className="text-red-400 text-sm mt-2 animate-pulse">
-                {formik.errors.login}
+              <label
+                htmlFor="login"
+                className={`absolute left-4 transition-all duration-300 pointer-events-none ${isFocused || formik.values.login
+                    ? '-top-2.5 text-xs bg-[#1a1a1a] px-1 text-[#BBA473]'
+                    : 'top-4 text-gray-500'
+                  }`}
+              >
+                Email or Username
+              </label>
+
+              {/* Error text with smooth height transition */}
+              <div className={`transition-all duration-300 overflow-hidden ${formik.touched.login && formik.errors.login ? 'max-h-10 opacity-100 mt-1.5' : 'max-h-0 opacity-0 mt-0'}`}>
+                <div className="text-red-400 text-xs ml-1">
+                  {formik.errors.login}
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Continue Button */}
-          <button
-            type="button"
-            onClick={formik.handleSubmit}
-            disabled={isButtonDisabled}
-            className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-semibold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 relative overflow-hidden group"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              {isLoading ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Processing...
-                </>
-              ) : (
-                'Continue'
+            {/* Continue Button */}
+            <button
+              type="button"
+              onClick={formik.handleSubmit}
+              disabled={isButtonDisabled}
+              className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Processing...
+                  </>
+                ) : (
+                  'Continue'
+                )}
+              </span>
+
+              {/* Shimmer effect */}
+              {!isButtonDisabled && !isLoading && (
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
               )}
-            </span>
-            
-            {/* Shimmer effect */}
-            {!isButtonDisabled && !isLoading && (
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-            )}
-          </button>
+            </button>
 
-          {/* Additional decorative elements */}
-          <div className="flex items-center justify-center gap-2 pt-4 opacity-0 animate-fadeIn" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#BBA473]"></div>
-            <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-pulse"></div>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#BBA473]"></div>
+            {/* Additional decorative elements */}
+            <div className="flex items-center justify-center gap-2 pt-4 opacity-0 animate-fadeIn" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#BBA473]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-pulse"></div>
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#BBA473]"></div>
+            </div>
           </div>
         </div>
+
+        {/* Footer Text */}
+        <div className="text-center mt-8 opacity-50">
+          <p className="text-[#BBA473] text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+        </div>
+
       </div>
 
       <style>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        
         .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out;
+          animation: fadeIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>

@@ -1,104 +1,184 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Mail } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const EmailSchema = Yup.object().shape({
+const ForgotPasswordSchema = Yup.object().shape({
   email: Yup.string()
-    .email('Please enter a valid email address')
+    .email('Invalid email address')
     .required('Email is required'),
 });
 
-export default function ForgotPasswordForm({ setCurrentStep }) {
+export default function ForgetPassword({
+  login,
+  loginBy,
+  onNext,
+  onBack,
+  setCurrentStep
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
   const formik = useFormik({
     initialValues: {
-      email: '',
+      email: loginBy === 'email' ? login : '',
     },
-    validationSchema: EmailSchema,
-    onSubmit: (values) => {
-      console.log('Form submitted:', values);
-      // Add your forgot password logic here
-      toast.success('Password reset link sent to your email!');
+    validationSchema: ForgotPasswordSchema,
+    onSubmit: async (values) => {
+      setIsLoading(true);
+
+      // Simulate API call
+      setTimeout(() => {
+        setIsLoading(false);
+        toast.success('Reset link sent to your email!', {
+          style: {
+            background: '#1a1a1a',
+            color: '#BBA473',
+            border: '1px solid #BBA473',
+          },
+          iconTheme: {
+            primary: '#BBA473',
+            secondary: '#1a1a1a',
+          },
+        });
+        onNext();
+      }, 1500);
     },
   });
 
-  const isButtonDisabled = !formik.isValid || !formik.values.email;
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && formik.isValid && !isLoading) {
+      e.preventDefault();
+      formik.handleSubmit();
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-12">
-          <div className="flex items-center gap-1">
-            <div className="relative w-10 h-10">
-              <div className="absolute inset-0 bg-[#BBA473] rounded"></div>
-              <div className="absolute bottom-0 left-0 w-5 h-5 bg-[#1A1A1A] rounded-tl-lg"></div>
-            </div>
-            <div className="flex items-baseline">
-              <span className="text-3xl font-light text-white">Save In GOLD</span>
-            </div>
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
+
+      {/* Enhanced Grid Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Base Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+        {/* Brighter Major Grid Lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.07)_1px,transparent_1px)] bg-[size:200px_200px]"></div>
+
+        {/* Radial Glows */}
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(187,164,115,0.15),transparent_70%)]"></div>
+
+        {/* Animated Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#BBA473] rounded-full mix-blend-screen filter blur-[128px] opacity-10 animate-pulse" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#8E7D5A] rounded-full mix-blend-screen filter blur-[128px] opacity-5 animate-pulse" style={{ animationDuration: '7s' }}></div>
+      </div>
+
+      <div className={`w-full max-w-lg relative z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+
+        {/* Back Button */}
+        <button
+          onClick={onBack}
+          className="absolute -top-12 left-0 text-[#BBA473]/80 hover:text-[#BBA473] flex items-center gap-2 transition-colors group"
+        >
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-medium">Back to Login</span>
+        </button>
+
+        {/* Card Container */}
+        <div className="bg-[#1a1a1a]/60 backdrop-blur-xl border border-[#BBA473]/20 rounded-2xl p-8 shadow-2xl relative overflow-hidden group-hover:border-[#BBA473]/40 transition-all duration-500">
+
+          {/* Top shine border */}
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
+
+          {/* Heading */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+              Forgot Password?
+            </h1>
+            <p className="text-[#BBA473]/80 text-sm font-medium">
+              Enter your email to receive a reset link
+            </p>
           </div>
-        </div>
 
-        {/* Heading */}
-        <h1 className="text-4xl font-bold text-white mb-4">
-          Forgot Password
-        </h1>
-        <p className="text-lg font-normal text-[#E8D5A3]/70 mb-8">
-          A password reset link will be sent to your email
-        </p>
+          {/* Form */}
+          <div className="space-y-6">
 
-        {/* Form */}
-        <div className="space-y-6">
-          {/* Email Field */}
-          <div>
-            <label htmlFor="email" className="block text-[#E8D5A3] font-medium text-lg mb-3">
-              Email Address
-            </label>
-            <div className="relative">
+            {/* Email Field */}
+            <div className="relative group">
               <input
                 type="email"
                 id="email"
                 name="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="w-full px-4 py-4 pr-12 border-2 border-[#BBA473] bg-[#2e2e2e] text-white rounded-lg focus:outline-none focus:border-[#d4bc89] focus:ring-2 focus:ring-[#BBA473]/50 text-lg transition-colors placeholder-gray-500"
-                placeholder="Enter your email"
+                onBlur={(e) => {
+                  formik.handleBlur(e);
+                  setIsFocused(false);
+                }}
+                onFocus={() => setIsFocused(true)}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading}
+                className={`w-full px-4 py-4 bg-[#0f0f0f]/80 text-white rounded-lg border transition-all duration-300 placeholder-gray-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${formik.touched.email && formik.errors.email
+                    ? 'border-red-500/50 focus:border-red-500'
+                    : 'border-[#BBA473]/10 focus:border-[#BBA473] hover:border-[#BBA473]/30'
+                  }`}
+                placeholder=" "
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <Mail size={22} />
+              <label
+                htmlFor="email"
+                className={`absolute left-4 transition-all duration-300 pointer-events-none ${isFocused || formik.values.email
+                    ? '-top-2.5 text-xs bg-[#1a1a1a] px-1 text-[#BBA473]'
+                    : 'top-4 text-gray-500'
+                  }`}
+              >
+                Email Address
+              </label>
+
+              {/* Error text with smooth height transition */}
+              <div className={`transition-all duration-300 overflow-hidden ${formik.touched.email && formik.errors.email ? 'max-h-10 opacity-100 mt-1.5' : 'max-h-0 opacity-0 mt-0'}`}>
+                <div className="text-red-400 text-xs ml-1">
+                  {formik.errors.email}
+                </div>
               </div>
             </div>
-            {formik.touched.email && formik.errors.email && (
-              <div className="text-red-400 text-sm mt-2">
-                {formik.errors.email}
-              </div>
-            )}
-          </div>
 
-          {/* Submit Button */}
-          <button
-            type="button"
-            onClick={formik.handleSubmit}
-            disabled={isButtonDisabled}
-            className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-semibold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
-          >
-            Send Link
-          </button>
-
-          {/* Back to Login Link */}
-          <div className="text-center">
-            <span className="text-[#E8D5A3] text-lg">Back to </span>
-            <span
-              onClick={() => setCurrentStep('email')}
-              className="text-[#BBA473] hover:text-[#d4bc89] font-medium text-lg transition-colors cursor-pointer"
+            {/* Submit Button */}
+            <button
+              type="button"
+              onClick={formik.handleSubmit}
+              disabled={isLoading || !formik.isValid || !formik.values.email}
+              className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
             >
-              Login
-            </span>
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Sending Link...
+                  </>
+                ) : (
+                  'Send Reset Link'
+                )}
+              </span>
+
+              {/* Shimmer effect */}
+              {!isLoading && formik.isValid && formik.values.email && (
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+              )}
+            </button>
+
           </div>
         </div>
+
+        {/* Footer Text */}
+        <div className="text-center mt-8 opacity-50">
+          <p className="text-[#BBA473] text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+        </div>
+
       </div>
     </div>
   );

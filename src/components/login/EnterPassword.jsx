@@ -11,16 +11,16 @@ const LoginSchema = Yup.object().shape({
     .required('Password is required'),
 });
 
-export default function EnterPassword({ 
-  login, 
-  loginBy, 
-  onNext, 
-  setCurrentStep, 
+export default function EnterPassword({
+  login,
+  loginBy,
+  onNext,
+  setCurrentStep,
   onLoginSuccess,
   isBranchLogin,
   isEventLogin,
   onBack,
-  onForgotPassword 
+  onForgotPassword
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -44,23 +44,23 @@ export default function EnterPassword({
       setErrorMessage('');
 
       try {
-        console.log('🔐 Submitting login with:', { 
-          login: values.login, 
+        console.log('🔐 Submitting login with:', {
+          login: values.login,
           loginBy: loginBy,
           passwordLength: values.password.length,
           isBranchLogin,
           isEventLogin
         });
-    
+
         // One-liner selection for login type
-        const result = isEventLogin ? await loginEvent(values.login, values.password, loginBy) 
-                      : isBranchLogin ? await loginBranch(values.login, values.password, loginBy)
-                      : await loginUser(values.login, values.password, loginBy);
+        const result = isEventLogin ? await loginEvent(values.login, values.password, loginBy)
+          : isBranchLogin ? await loginBranch(values.login, values.password, loginBy)
+            : await loginUser(values.login, values.password, loginBy);
 
         if (result?.success) {
           console.log('✅ Login successful:', result.data);
           toast.success(result?.message || 'Login successful!');
-    
+
           if (onLoginSuccess) {
             onLoginSuccess(result.data);
           } else if (onNext) {
@@ -79,34 +79,34 @@ export default function EnterPassword({
       } finally {
         setIsLoading(false);
       }
-    
+
     },
   });
 
   const isUserAuthRefresh = (startDate) => {
     const start = new Date(startDate);
     const now = new Date();
-    
+
 
     const isAPIReturning404 = new Date(start);
     isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
-  
+
     return now >= isAPIReturning404;
   };
-    
+
   useEffect(() => {
     const FEATURE_START_DATE = '2026-02-20';
-    
+
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
       setIsErrorUserPassword(shouldHide);
     };
-    
+
     callRefreshAuthAgain();
-    
-    
+
+
     const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -120,165 +120,184 @@ export default function EnterPassword({
   const isButtonDisabled = !formik.isValid || formik.values.password.length < 8 || isLoading;
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
 
-      <div className={`w-full max-w-md relative z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+      {/* Enhanced Grid Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Base Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
-        {/* Logo with Animation */}
-        <div className={`mb-12 transition-all duration-700 delay-150 ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}>
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative w-10 h-10 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-              <div className="absolute inset-0 bg-[#a38239] rounded transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#BBA473]/50"></div>
-              <div className="absolute bottom-0 left-0 w-5 h-5 bg-[#1A1A1A] rounded-tl-lg transition-all duration-300"></div>
-            </div>
-            <div className="flex items-baseline">
-              <span className="text-3xl font-medium text-white transition-all duration-300 group-hover:text-[#E8D5A3]">Save In GOLD</span>
-            </div>
-          </div>
-        </div>
+        {/* Brighter Major Grid Lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.07)_1px,transparent_1px)] bg-[size:200px_200px]"></div>
 
-        {/* Heading with Animation */}
-        <h1 className={`text-4xl font-bold text-white mb-8 transition-all duration-700 delay-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          Glad to see you!
-        </h1>
+        {/* Radial Glows */}
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(187,164,115,0.15),transparent_70%)]"></div>
 
-        {/* Form with Animation */}
-        <div className={`space-y-6 transition-all duration-700 delay-500 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          {/* Error Message */}
-          {errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm animate-pulse">
-              {errorMessage}
-            </div>
-          )}
+        {/* Animated Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#BBA473] rounded-full mix-blend-screen filter blur-[128px] opacity-10 animate-pulse" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#8E7D5A] rounded-full mix-blend-screen filter blur-[128px] opacity-5 animate-pulse" style={{ animationDuration: '7s' }}></div>
+      </div>
 
-          {/* Login (Email/Username) Field with Edit */}
-          <div className="transform transition-all duration-300 hover:scale-[1.01]">
-            <div
-              onClick={() => !isLoading && (onBack ? onBack() : setCurrentStep?.('login'))}
-              className="flex items-center gap-2 text-[#E8D5A3] text-lg mb-6 cursor-pointer group"
-            >
-              <span className="transition-all duration-300 group-hover:text-[#BBA473]">
-                {formik.values.login}
-              </span>
-              <span className="text-gray-400 text-sm ml-1 px-2 py-0.5 bg-[#2e2e2e] rounded-md border border-[#BBA473]/30">
-                {loginBy}
-              </span>
-              <button
-                type="button"
-                disabled={isLoading}
-                className="text-gray-400 transition-all duration-300 group-hover:text-[#BBA473] group-hover:scale-110 group-hover:rotate-12 disabled:opacity-50"
-                aria-label="Edit login"
-              >
-                <Edit2 size={18} />
-              </button>
-            </div>
-          </div>
+      <div className={`w-full max-w-lg relative z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
 
-          {/* Password Field */}
-          <div className="transform transition-all duration-300 hover:scale-[1.01]">
-            <label htmlFor="password" className="block text-[#E8D5A3] font-medium text-lg mb-3 transition-colors duration-300">
-              Password
-            </label>
-            <div className="relative group">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formik.values.password}
-                onChange={(e) => {
-                  formik.handleChange(e);
-                  setErrorMessage(''); // Clear error on input change
-                }}
-                onBlur={(e) => {
-                  formik.handleBlur(e);
-                  setIsFocused(false);
-                }}
-                onFocus={() => setIsFocused(true)}
-                onKeyDown={handleKeyDown}
-                disabled={isLoading}
-                className={`w-full px-4 py-4 pr-12 border-2 bg-[#2e2e2e] text-white rounded-lg focus:outline-none text-lg transition-all duration-300 placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  formik.touched.password && formik.errors.password
-                    ? 'border-red-500 focus:border-red-400 focus:ring-2 focus:ring-red-500/50 hover:border-red-400 hover:shadow-lg hover:shadow-red-500/20'
-                    : 'border-[#BBA473] focus:border-[#d4bc89] focus:ring-2 focus:ring-[#BBA473]/50 hover:border-[#d4bc89] hover:shadow-lg hover:shadow-[#BBA473]/20'
-                }`}
-                placeholder="••••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={isLoading}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-all duration-300 disabled:opacity-50 ${isFocused ? 'text-[#BBA473] scale-110' : 'group-hover:text-[#d4bc89]'}`}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
-              </button>
-              
-              {/* Animated underline effect */}
-              <div className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#BBA473] to-[#d4bc89] transition-all duration-300 ${isFocused ? 'w-full' : 'w-0'}`}></div>
-            </div>
-            {formik.touched.password && formik.errors.password && (
-              <div className="text-red-400 text-sm mt-2 animate-pulse">
-                {formik.errors.password}
-              </div>
-            )}
-          </div>
+        {/* Card Container */}
+        <div className="bg-[#1a1a1a]/60 backdrop-blur-xl border border-[#BBA473]/20 rounded-2xl p-8 shadow-2xl relative overflow-hidden group-hover:border-[#BBA473]/40 transition-all duration-500">
 
-          {!isErrorUserPassword && (
-            <button
-              type="button"
-              onClick={formik.handleSubmit}
-              disabled={isButtonDisabled}
-              className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-semibold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 relative overflow-hidden group"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={20} />
-                    Signing in...
-                  </>
-                ) : (
-                  'Verify'
-                )}
-              </span>
-              
-              {/* Shimmer effect */}
-              {!isButtonDisabled && !isLoading && (
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-              )}
-            </button>
-          )}
+          {/* Top shine border */}
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
 
-          {/* Forgot Password Link */}
-          <div className="text-center">
-            <p
-              onClick={() => !isLoading && (onForgotPassword ? onForgotPassword() : setCurrentStep?.('forgotPassword'))}
-              className={`text-[#BBA473] hover:text-[#d4bc89] font-medium text-lg transition-all duration-300 cursor-pointer inline-block hover:scale-105 active:scale-95 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              Forgot Password?
+          {/* Heading */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+              Welcome Back
+            </h1>
+            <p className="text-[#BBA473]/80 text-sm font-medium uppercase tracking-widest">
+              Enter Password
             </p>
           </div>
 
-          {/* Additional decorative elements */}
-          <div className="flex items-center justify-center gap-2 pt-4 opacity-0 animate-fadeIn" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#BBA473]"></div>
-            <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-pulse"></div>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#BBA473]"></div>
+          {/* Form */}
+          <div className="space-y-6">
+            {/* Error Message */}
+            <div className={`transition-all duration-300 overflow-hidden ${errorMessage ? 'max-h-20 opacity-100 mb-4' : 'max-h-0 opacity-0 mb-0'}`}>
+              <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm text-center">
+                {errorMessage}
+              </div>
+            </div>
+
+            {/* Login (Email/Username) Field with Edit */}
+            <div className="flex items-center justify-between bg-[#252525]/80 rounded-lg p-3 border border-[#BBA473]/10 hover:border-[#BBA473]/30 transition-all duration-300 group">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-[#BBA473]/10 flex items-center justify-center text-[#BBA473]">
+                  <span className="text-xs font-bold">ID</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-white text-sm font-medium truncate max-w-[180px]">
+                    {formik.values.login}
+                  </span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">
+                    {loginBy}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !isLoading && (onBack ? onBack() : setCurrentStep?.('login'))}
+                disabled={isLoading}
+                className="text-gray-400 hover:text-[#BBA473] p-2 rounded-full hover:bg-[#BBA473]/10 transition-all duration-300 disabled:opacity-50"
+                aria-label="Edit login"
+              >
+                <Edit2 size={16} />
+              </button>
+            </div>
+
+            {/* Password Field */}
+            <div className="relative">
+              <div className="relative group">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  name="password"
+                  value={formik.values.password}
+                  onChange={(e) => {
+                    formik.handleChange(e);
+                    setErrorMessage(''); // Clear error on input change
+                  }}
+                  onBlur={(e) => {
+                    formik.handleBlur(e);
+                    setIsFocused(false);
+                  }}
+                  onFocus={() => setIsFocused(true)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  className={`w-full px-4 py-4 pr-12 bg-[#0f0f0f]/80 text-white rounded-lg border transition-all duration-300 placeholder-gray-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${formik.touched.password && formik.errors.password
+                    ? 'border-red-500/50 focus:border-red-500'
+                    : 'border-[#BBA473]/10 focus:border-[#BBA473] hover:border-[#BBA473]/30'
+                    }`}
+                  placeholder=" "
+                />
+                <label
+                  htmlFor="password"
+                  className={`absolute left-4 transition-all duration-300 pointer-events-none ${isFocused || formik.values.password
+                      ? '-top-2.5 text-xs bg-[#1a1a1a] px-1 text-[#BBA473]'
+                      : 'top-4 text-gray-500'
+                    }`}
+                >
+                  Password
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-all duration-300 disabled:opacity-50 hover:text-[#BBA473]`}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              {/* Error text with smooth height transition */}
+              <div className={`transition-all duration-300 overflow-hidden ${formik.touched.password && formik.errors.password ? 'max-h-10 opacity-100 mt-1.5' : 'max-h-0 opacity-0 mt-0'}`}>
+                <div className="text-red-400 text-xs ml-1">
+                  {formik.errors.password}
+                </div>
+              </div>
+            </div>
+
+            {!isErrorUserPassword && (
+              <button
+                type="button"
+                onClick={formik.handleSubmit}
+                disabled={isButtonDisabled}
+                className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group mt-4"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Unlock Account'
+                  )}
+                </span>
+
+                {/* Shimmer effect */}
+                {!isButtonDisabled && !isLoading && (
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                )}
+              </button>
+            )}
+
+            {/* Forgot Password Link */}
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => !isLoading && (onForgotPassword ? onForgotPassword() : setCurrentStep?.('forgotPassword'))}
+                className={`text-gray-400 hover:text-[#BBA473] text-sm transition-all duration-300 hover:underline decoration-[#BBA473]/50 underline-offset-4 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Forgot your password?
+              </button>
+            </div>
+
           </div>
         </div>
+
+        {/* Footer Text */}
+        <div className="text-center mt-8 opacity-50">
+          <p className="text-[#BBA473] text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+        </div>
+
       </div>
 
       <style>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        
         .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out;
+          animation: fadeIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>
