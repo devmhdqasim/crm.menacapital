@@ -47,6 +47,17 @@ const Dashboard = () => {
   // Get CRM context
   const { setCrmCategorySummary } = useCRM();
 
+  const [userRole, setUserRole] = useState('');
+
+  // Add this useEffect to get user role from localStorage
+  useEffect(() => {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const parsed = JSON.parse(userInfo);
+      setUserRole(parsed?.roleName || '');
+    }
+  }, []);
+
   // Fetch dashboard data
   const fetchDashboardData = async (filter) => {
     setLoading(true);
@@ -347,7 +358,7 @@ const Dashboard = () => {
               />
 
               {/* Kiosk Member Filter */}
-              {kioskMemberOptions.length > 0 && (
+              {kioskMemberOptions.length > 0 && userRole !== 'Agent' && (
                 <div className='flex items-center gap-3'>
                   <label htmlFor="" className='text-[#E8D5A3] font-medium text-sm whitespace-nowrap'>
                     Filter by Agent:
@@ -409,7 +420,7 @@ const Dashboard = () => {
           {!loading && dashboardData && (
             <div className="animate-fade-in">
               {/* Kiosk Member Total Leads Card */}
-              {kioskMemberOptions.length > 0 && (
+              {kioskMemberOptions.length > 0 && userRole !== 'Agent' && (
                 <div className="mb-6">
                   <div
                     className="group relative w-full border border-[#BBA473]/20 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473]/50 hover:scale-[1.01] bg-[#1A1A1A]/60 backdrop-blur-sm overflow-hidden"
