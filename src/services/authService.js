@@ -11,7 +11,7 @@ import axios from 'axios';
 const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1'; 
 
 /**
- * Login user with email/username and password
+ * Login user with email/username and password 
  * @param {string} login - User's email address or username
  * @param {string} password - User's password
  * @param {string} loginBy - Either "email" or "username"
