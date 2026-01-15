@@ -10,7 +10,7 @@ import axios from 'axios';
  * - Delete User (PATCH)
  */
 
-const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
+const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1'; 
 
 /**
  * Get refresh token from localStorage
