@@ -1,7 +1,6 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp, getApps } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
+// src/config/firebase.js (or firebase.ts)
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getMessaging, isSupported } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -15,25 +14,38 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (prevent multiple initializations)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-
-// Initialize Analytics (only in browser)
-let analytics = null;
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+let app;
+try {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+  console.log('✅ Firebase initialized successfully');
+} catch (error) {
+  console.error('❌ Firebase initialization error:', error);
+  app = initializeApp(firebaseConfig);
 }
 
 // Initialize Firebase Cloud Messaging (only in browser and if supported)
 let messaging = null;
+
 if (typeof window !== 'undefined') {
-  isSupported().then((supported) => {
-    if (supported) {
-      messaging = getMessaging(app);
-    }
-  }).catch((error) => {
-    console.log('Firebase Messaging not supported:', error);
-  });
+  isSupported()
+    .then((supported) => {
+      if (supported) {
+        try {
+          messaging = getMessaging(app);
+          console.log('✅ Firebase Messaging initialized');
+        } catch (error) {
+          console.error('❌ Firebase Messaging initialization error:', error);
+        }
+      } else {
+        console.warn('⚠️ Firebase Messaging not supported in this browser');
+      }
+    })
+    .catch((error) => {
+      console.error('❌ Error checking messaging support:', error);
+    });
 }
 
-export { app, analytics, messaging, getToken, onMessage };
+// IMPORTANT: Only export app and messaging instances
+// DO NOT export getToken, onMessage, etc. - those should be imported from 'firebase/messaging' directly
+export { app, messaging };
 export default app;
