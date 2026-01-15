@@ -1,10 +1,9 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyB-dwT4V7vUx32nUdao_BZksPQZcy1SETU",
   authDomain: "saveingold-crm.firebaseapp.com",
@@ -15,16 +14,26 @@ const firebaseConfig = {
   measurementId: "G-E52RNTDFLC"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// Initialize Firebase (prevent multiple initializations)
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firebase Cloud Messaging
+// Initialize Analytics (only in browser)
+let analytics = null;
+if (typeof window !== 'undefined') {
+  analytics = getAnalytics(app);
+}
+
+// Initialize Firebase Cloud Messaging (only in browser and if supported)
 let messaging = null;
-try {
-  messaging = getMessaging(app);
-} catch (error) {
-  console.log('Firebase Messaging initialization error:', error);
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      messaging = getMessaging(app);
+    }
+  }).catch((error) => {
+    console.log('Firebase Messaging not supported:', error);
+  });
 }
 
 export { app, analytics, messaging, getToken, onMessage };
+export default app;

@@ -3,7 +3,7 @@ import api from '../config/axios';
 
 // ⚠️ IMPORTANT: Replace with your actual VAPID key from Firebase Console
 // Get it from: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
-const VAPID_KEY = 'YOUR_VAPID_KEY_HERE';
+const VAPID_KEY = 'BMlgwOu_IttRJNt-E2IaFi3uTNzyQB0zS0izl3ysAm3zMsw2k38yNotI21fYMLzs6vaKz59V1y7EUh66hys7R5g';
 
 /**
  * Sanitize email to create valid Firebase topic name
@@ -158,7 +158,7 @@ export const requestNotificationPermission = async () => {
       // Get FCM token
       console.log('📱 Getting FCM token...');
       const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY
+        vapidKey: "BMlgwOu_IttRJNt-E2IaFi3uTNzyQB0zS0izl3ysAm3zMsw2k38yNotI21fYMLzs6vaKz59V1y7EUh66hys7R5g"
       });
       
       if (token) {

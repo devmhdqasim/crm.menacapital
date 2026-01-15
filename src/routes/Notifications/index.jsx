@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Bell, Check, CheckCheck, Trash2, ChevronDown, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../../services/notificationService';
+import NotificationComponent from '../../components/NotificationComponent';
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -20,15 +21,7 @@ const NotificationsPage = () => {
   const priorityOptions = ['All', 'High', 'Medium', 'Low'];
 
   // Fetch notifications from backend
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getNotifications();
@@ -49,12 +42,40 @@ const NotificationsPage = () => {
     } catch (error) {
       console.error('Error fetching notifications:', error);
       toast.error('Failed to load notifications');
-      // Set empty array on error
       setNotifications([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  // Handle new notifications from Firebase
+  const handleNotificationReceived = useCallback((payload) => {
+    console.log('New notification received:', payload);
+    
+    // Refresh notifications list
+    fetchNotifications();
+    
+    // You can also add the notification directly to the state
+    // const newNotification = {
+    //   id: Date.now().toString(),
+    //   title: payload.notification?.title || 'New Notification',
+    //   message: payload.notification?.body || '',
+    //   type: payload.data?.type || 'general',
+    //   time: new Date().toISOString(),
+    //   unread: true,
+    //   icon: getIconByType(payload.data?.type || 'general'),
+    //   priority: payload.data?.priority || 'medium'
+    // };
+    // setNotifications(prev => [newNotification, ...prev]);
+  }, [fetchNotifications]);
 
   const getIconByType = (type) => {
     const icons = {
@@ -126,7 +147,6 @@ const NotificationsPage = () => {
     }
     
     try {
-      // Delete all selected notifications
       await Promise.all(selectedNotifications.map(id => deleteNotification(id)));
       setNotifications(notifications.filter(n => !selectedNotifications.includes(n.id)));
       setSelectedNotifications([]);
@@ -291,345 +311,350 @@ const NotificationsPage = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-      {/* Header */}
-      <div className="mb-8 animate-fadeIn">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-[#BBA473]/20 to-[#8E7D5A]/20 rounded-xl border border-[#BBA473]/30">
-              <Bell className="w-8 h-8 text-[#BBA473]" />
+    <>
+      {/* Firebase Notification Component */}
+      <NotificationComponent onNotificationReceived={handleNotificationReceived} />
+      
+      <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Header */}
+        <div className="mb-8 animate-fadeIn">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-[#BBA473]/20 to-[#8E7D5A]/20 rounded-xl border border-[#BBA473]/30">
+                <Bell className="w-8 h-8 text-[#BBA473]" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+                  Notifications
+                </h1>
+                <p className="text-gray-400 mt-2">
+                  Stay updated with your leads and activities
+                  {unreadCount > 0 && (
+                    <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
-                Notifications
-              </h1>
-              <p className="text-gray-400 mt-2">
-                Stay updated with your leads and activities
-                {unreadCount > 0 && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
-                    {unreadCount} new
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3">
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border border-[#BBA473]/30 hover:border-[#BBA473]/50 transition-all duration-300"
-              >
-                <CheckCheck className="w-4 h-4" />
-                <span className="text-sm font-medium">Mark All Read</span>
-              </button>
-            )}
-            
-            {selectedNotifications.length > 0 && (
-              <button
-                onClick={deleteSelected}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 hover:border-red-500/50 transition-all duration-300"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span className="text-sm font-medium">Delete Selected ({selectedNotifications.length})</span>
-              </button>
-            )}
-
-            {/* Priority Filter */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border border-[#BBA473]/30 hover:border-[#BBA473]/50 transition-all duration-300"
-              >
-                <Filter className="w-4 h-4" />
-                <span className="text-sm font-medium">{priorityFilter} Priority</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
-
-              {showFilterDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-20 overflow-hidden animate-slideDown">
-                  {priorityOptions.map(priority => (
-                    <button
-                      key={priority}
-                      onClick={() => handlePriorityFilterChange(priority)}
-                      className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors text-sm ${
-                        priority === priorityFilter ? 'bg-[#BBA473]/20 text-[#BBA473] font-medium' : 'text-white'
-                      }`}
-                    >
-                      {priority} Priority
-                    </button>
-                  ))}
-                </div>
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border border-[#BBA473]/30 hover:border-[#BBA473]/50 transition-all duration-300"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                  <span className="text-sm font-medium">Mark All Read</span>
+                </button>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="mb-6 overflow-x-auto animate-fadeIn">
-        <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
-                activeTab === tab
-                  ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                  : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-              }`}
-            >
-              {tab}
-              {tab === 'Unread' && unreadCount > 0 && (
-                <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Notifications List */}
-      <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
-        {/* Select All Header */}
-        {filteredNotifications.length > 0 && (
-          <div className="flex items-center justify-between px-6 py-3 bg-[#1A1A1A] border-b border-[#BBA473]/30">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={selectedNotifications.length === filteredNotifications.length && filteredNotifications.length > 0}
-                onChange={toggleSelectAll}
-                className="w-4 h-4 rounded border-[#BBA473]/30 bg-[#1A1A1A] text-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer"
-              />
-              <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
-                Select All ({filteredNotifications.length})
-              </span>
-            </label>
-
-            <div className="text-sm text-gray-400">
+              
               {selectedNotifications.length > 0 && (
-                <span>{selectedNotifications.length} selected</span>
+                <button
+                  onClick={deleteSelected}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 hover:border-red-500/50 transition-all duration-300"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="text-sm font-medium">Delete Selected ({selectedNotifications.length})</span>
+                </button>
               )}
-            </div>
-          </div>
-        )}
 
-        {/* Notifications */}
-        <div className="divide-y divide-[#BBA473]/10">
-          {currentNotifications.length === 0 ? (
-            <div className="px-6 py-16 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#BBA473]/10 mb-4">
-                <Bell className="w-8 h-8 text-[#BBA473]/50" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Notifications</h3>
-              <p className="text-gray-500">
-                {activeTab === 'Unread' 
-                  ? "You're all caught up! No unread notifications." 
-                  : "No notifications found."}
-              </p>
-            </div>
-          ) : (
-            currentNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`group relative px-6 py-4 hover:bg-[#3A3A3A] transition-all duration-300 ${
-                  notification.unread ? 'bg-[#BBA473]/5' : ''
-                } ${selectedNotifications.includes(notification.id) ? 'bg-[#BBA473]/10' : ''}`}
-              >
-                <div className="flex gap-4">
-                  {/* Checkbox */}
-                  <div className="flex-shrink-0 pt-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedNotifications.includes(notification.id)}
-                      onChange={() => toggleSelectNotification(notification.id)}
-                      className="w-4 h-4 rounded border-[#BBA473]/30 bg-[#1A1A1A] text-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-
-                  {/* Icon */}
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br ${getNotificationTypeColor(notification.type)} border flex items-center justify-center text-xl`}>
-                    {notification.icon}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-white font-semibold text-sm group-hover:text-[#BBA473] transition-colors">
-                            {notification.title}
-                          </h3>
-                          {notification.unread && (
-                            <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-pulse"></div>
-                          )}
-                        </div>
-                        <p className="text-gray-400 text-sm leading-relaxed">
-                          {notification.message}
-                        </p>
-                      </div>
-
-                      {/* Priority Badge */}
-                      <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border uppercase ${getPriorityBadge(notification.priority)}`}>
-                        {notification.priority}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#BBA473]/70 text-xs">
-                        {formatTime(notification.time)}
-                      </span>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {notification.unread && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="p-1.5 rounded-lg bg-[#BBA473]/20 hover:bg-[#BBA473]/30 text-[#BBA473] transition-all duration-300"
-                            title="Mark as read"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteNotif(notification.id)}
-                          className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all duration-300"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Pagination */}
-        {filteredNotifications.length > 0 && (
-          <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="text-gray-400 text-sm">
-                Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
-                <span className="text-white font-semibold">{showingTo}</span> of{' '}
-                <span className="text-white font-semibold">{filteredNotifications.length}</span> notifications
-              </div>
+              {/* Priority Filter */}
               <div className="relative">
                 <button
-                  onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border border-[#BBA473]/30 hover:border-[#BBA473]/50 transition-all duration-300"
                 >
-                  <span className="text-sm">{itemsPerPage} per page</span>
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm font-medium">{priorityFilter} Priority</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                {showPerPageDropdown && (
-                  <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
-                    {perPageOptions.map(option => (
+
+                {showFilterDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-20 overflow-hidden animate-slideDown">
+                    {priorityOptions.map(priority => (
                       <button
-                        key={option}
-                        onClick={() => handlePerPageChange(option)}
-                        className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                          option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                        key={priority}
+                        onClick={() => handlePriorityFilterChange(priority)}
+                        className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors text-sm ${
+                          priority === priorityFilter ? 'bg-[#BBA473]/20 text-[#BBA473] font-medium' : 'text-white'
                         }`}
                       >
-                        {option} per page
+                        {priority} Priority
                       </button>
                     ))}
                   </div>
                 )}
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              {currentPage > 2 && totalPages > 3 && (
-                <>
-                  <button
-                    onClick={() => handlePageChange(1)}
-                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
-                  >
-                    1
-                  </button>
-                  {currentPage > 3 && <span className="text-gray-400">...</span>}
-                </>
-              )}
-
-              {getPageNumbers().map(page => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
-                    currentPage === page
-                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
-                      : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              {currentPage < totalPages - 1 && totalPages > 3 && (
-                <>
-                  {currentPage < totalPages - 2 && <span className="text-gray-400">...</span>}
-                  <button
-                    onClick={() => handlePageChange(totalPages)}
-                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
-                  >
-                    {totalPages}
-                  </button>
-                </>
-              )}
-
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
           </div>
-        )}
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6 overflow-x-auto animate-fadeIn">
+          <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
+                  activeTab === tab
+                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                    : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                }`}
+              >
+                {tab}
+                {tab === 'Unread' && unreadCount > 0 && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Notifications List */}
+        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+          {/* Select All Header */}
+          {filteredNotifications.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-3 bg-[#1A1A1A] border-b border-[#BBA473]/30">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={selectedNotifications.length === filteredNotifications.length && filteredNotifications.length > 0}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-[#BBA473]/30 bg-[#1A1A1A] text-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer"
+                />
+                <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
+                  Select All ({filteredNotifications.length})
+                </span>
+              </label>
+
+              <div className="text-sm text-gray-400">
+                {selectedNotifications.length > 0 && (
+                  <span>{selectedNotifications.length} selected</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Notifications */}
+          <div className="divide-y divide-[#BBA473]/10">
+            {currentNotifications.length === 0 ? (
+              <div className="px-6 py-16 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#BBA473]/10 mb-4">
+                  <Bell className="w-8 h-8 text-[#BBA473]/50" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-300 mb-2">No Notifications</h3>
+                <p className="text-gray-500">
+                  {activeTab === 'Unread' 
+                    ? "You're all caught up! No unread notifications." 
+                    : "No notifications found."}
+                </p>
+              </div>
+            ) : (
+              currentNotifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`group relative px-6 py-4 hover:bg-[#3A3A3A] transition-all duration-300 ${
+                    notification.unread ? 'bg-[#BBA473]/5' : ''
+                  } ${selectedNotifications.includes(notification.id) ? 'bg-[#BBA473]/10' : ''}`}
+                >
+                  <div className="flex gap-4">
+                    {/* Checkbox */}
+                    <div className="flex-shrink-0 pt-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedNotifications.includes(notification.id)}
+                        onChange={() => toggleSelectNotification(notification.id)}
+                        className="w-4 h-4 rounded border-[#BBA473]/30 bg-[#1A1A1A] text-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+
+                    {/* Icon */}
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br ${getNotificationTypeColor(notification.type)} border flex items-center justify-center text-xl`}>
+                      {notification.icon}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-white font-semibold text-sm group-hover:text-[#BBA473] transition-colors">
+                              {notification.title}
+                            </h3>
+                            {notification.unread && (
+                              <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-pulse"></div>
+                            )}
+                          </div>
+                          <p className="text-gray-400 text-sm leading-relaxed">
+                            {notification.message}
+                          </p>
+                        </div>
+
+                        {/* Priority Badge */}
+                        <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border uppercase ${getPriorityBadge(notification.priority)}`}>
+                          {notification.priority}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#BBA473]/70 text-xs">
+                          {formatTime(notification.time)}
+                        </span>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          {notification.unread && (
+                            <button
+                              onClick={() => markAsRead(notification.id)}
+                              className="p-1.5 rounded-lg bg-[#BBA473]/20 hover:bg-[#BBA473]/30 text-[#BBA473] transition-all duration-300"
+                              title="Mark as read"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteNotif(notification.id)}
+                            className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all duration-300"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          {filteredNotifications.length > 0 && (
+            <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="text-gray-400 text-sm">
+                  Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
+                  <span className="text-white font-semibold">{showingTo}</span> of{' '}
+                  <span className="text-white font-semibold">{filteredNotifications.length}</span> notifications
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                  >
+                    <span className="text-sm">{itemsPerPage} per page</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  {showPerPageDropdown && (
+                    <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
+                      {perPageOptions.map(option => (
+                        <button
+                          key={option}
+                          onClick={() => handlePerPageChange(option)}
+                          className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                          }`}
+                        >
+                          {option} per page
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {currentPage > 2 && totalPages > 3 && (
+                  <>
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                    >
+                      1
+                    </button>
+                    {currentPage > 3 && <span className="text-gray-400">...</span>}
+                  </>
+                )}
+
+                {getPageNumbers().map(page => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
+                      currentPage === page
+                        ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
+                        : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                {currentPage < totalPages - 1 && totalPages > 3 && (
+                  <>
+                    {currentPage < totalPages - 2 && <span className="text-gray-400">...</span>}
+                    <button
+                      onClick={() => handlePageChange(totalPages)}
+                      className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <style jsx>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          
+          .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+          }
+
+          @keyframes slideDown {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          .animate-slideDown {
+            animation: slideDown 0.2s ease-out;
+          }
+        `}</style>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-slideDown {
-          animation: slideDown 0.2s ease-out;
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 
