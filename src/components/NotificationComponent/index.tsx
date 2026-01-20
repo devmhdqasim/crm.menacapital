@@ -16,10 +16,10 @@ const requestNotificationPermission = async (): Promise<NotificationPermission |
   }
 };
 
-interface CustomToastContentProps {
-  title: string;
-  body: string;
-}
+// interface CustomToastContentProps {
+//   title: string;
+//   body: string;
+// }
 
 // const CustomToastContent: React.FC<CustomToastContentProps> = ({ title, body }) => (
 //   <div className="flex flex-col gap-1">
