@@ -38,10 +38,38 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       
       // Parse the current lead response status to set UI state
       const currentStatus = task.taskCreationStatus || '';
+      const kioskStatus = task.kioskLeadStatus || ''; // Get kiosk lead status
       
       if (!currentStatus || currentStatus === '') {
-        // No status set yet
-        resetAllSelections();
+        // No status set yet - but check kiosk status
+        if (kioskStatus === 'Demo') {
+          // Point 2: Auto-select Demo if kioskLeadStatus is Demo
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Demo');
+          setLeadResponseStatus('Demo');
+          setModalDepositStatus('');
+        } else if (kioskStatus === 'Not Deposit') {
+          // Point 4: Auto-select Not Deposit
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Not Deposit');
+          setLeadResponseStatus('Not Deposit');
+        } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+          // Point 3: Auto-select Deposit for Real, Real Deposit, or Deposit
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Deposit');
+          setLeadResponseStatus('Deposit');
+        } else {
+          // Point 1: kioskLeadStatus is "Lead" or empty - no changes
+          resetAllSelections();
+        }
       } else if (currentStatus === 'Not Answered') {
         setModalAnswered('Not Answered');
         setLeadResponseStatus('Not Answered');
@@ -67,21 +95,24 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setLeadResponseStatus('Hot');
         setModalHotLeadType('');
         setModalDepositStatus('');
-      } else if (currentStatus === 'Demo') {
+      } else if (currentStatus === 'Demo' || kioskStatus === 'Demo') {
+        // Point 2: Auto-select Demo if taskCreationStatus OR kioskLeadStatus is Demo
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
-      } else if (currentStatus === 'Not Deposit') {
+      } else if (currentStatus === 'Not Deposit' || kioskStatus === 'Not Deposit') {
+        // Point 4: Auto-select Not Deposit
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
         setModalHotLeadType('Real');
         setModalDepositStatus('Not Deposit');
         setLeadResponseStatus('Not Deposit');
-      } else if (currentStatus === 'Deposit') {
+      } else if (currentStatus === 'Deposit' || kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+        // Point 3: Auto-select Deposit for Real, Real Deposit, or Deposit
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
@@ -373,13 +404,33 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     ];
     
     const currentStatusIndex = statusHierarchy.indexOf(task.taskCreationStatus || '');
+    const kioskStatus = task.kioskLeadStatus || '';
+    
+    // Determine the effective status index (higher of taskCreationStatus or kioskLeadStatus)
+    let effectiveStatusIndex = currentStatusIndex;
+    
+    // Map kiosk status to hierarchy
+    if (kioskStatus === 'Demo') {
+      const kioskIndex = statusHierarchy.indexOf('Demo');
+      effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
+    } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+      const kioskIndex = statusHierarchy.indexOf('Deposit');
+      effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
+    } else if (kioskStatus === 'Not Deposit') {
+      const kioskIndex = statusHierarchy.indexOf('Not Deposit');
+      effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
+    }
+    
     const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
     
-    // If current status not found or checking status not found, don't disable
-    if (currentStatusIndex === -1 || checkStatusIndex === -1) return false;
+    // If checking status not found, don't disable
+    if (checkStatusIndex === -1) return false;
     
-    // Disable if the status to check is before or equal to current status
-    return checkStatusIndex <= currentStatusIndex;
+    // If no effective status set, don't disable anything
+    if (effectiveStatusIndex === -1) return false;
+    
+    // Disable if the status to check is before or equal to effective status
+    return checkStatusIndex <= effectiveStatusIndex;
   };
 
   if (!isOpen || !task) return null;
@@ -488,6 +539,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.taskCreationStatus)}`}>
                     {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
                   </span>
+                  <div>
+                  <label className="text-sm text-[#E8D5A3] font-medium">kiosk Lead Status</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
+                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
+                  </span>
+                  </div>
                 </div>
               </div>
             </div>
