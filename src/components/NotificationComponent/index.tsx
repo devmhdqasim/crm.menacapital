@@ -21,12 +21,12 @@ interface CustomToastContentProps {
   body: string;
 }
 
-const CustomToastContent: React.FC<CustomToastContentProps> = ({ title, body }) => (
-  <div className="flex flex-col gap-1">
-    <h3 className="font-semibold text-lg text-white">{title}</h3>
-    <p className="text-sm text-gray-200">{body}</p>
-  </div>
-);
+// const CustomToastContent: React.FC<CustomToastContentProps> = ({ title, body }) => (
+//   <div className="flex flex-col gap-1">
+//     <h3 className="font-semibold text-lg text-white">{title}</h3>
+//     <p className="text-sm text-gray-200">{body}</p>
+//   </div>
+// );
 
 interface NotificationComponentProps {
   onNotificationReceived?: (payload: MessagePayload) => void;
