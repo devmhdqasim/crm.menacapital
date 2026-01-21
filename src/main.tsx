@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import { CRMProvider } from './context/CRMContext';
 import { AppWrapper } from './Appwrapper';
+import { WebSocketProvider } from './context/WebSocketContext';
 
 // Register Service Worker for Firebase Cloud Messaging
 if ('serviceWorker' in navigator) {
@@ -49,6 +50,7 @@ initMocks().then(() => {
   // eslint-disable-next-line unicorn/prefer-query-selector,@typescript-eslint/no-non-null-assertion
   createRoot(document.getElementById('root')!).render(
     // <StrictMode>
+    <WebSocketProvider>
       <CRMProvider>
         <AppProvider>
           <AppWrapper>
@@ -79,6 +81,7 @@ initMocks().then(() => {
           />
         </AppProvider>
       </CRMProvider>
+      </WebSocketProvider>
     // </StrictMode>,
   );
 });

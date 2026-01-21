@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { sendWatiMessage, getWatiMessages, createWatiContact } from '../../../services/inboxService';
+import { useWebSocket } from '../../../context/WebSocketContext';
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const [messages, setMessages] = useState([]);
@@ -15,6 +16,9 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
+  // WebSocket integration
+  const { isConnected, addMessageListener, sendMessage: sendWsMessage } = useWebSocket();
+
   // Fetch messages from Wati when contact is selected
   useEffect(() => {
     if (contact) {
@@ -25,6 +29,77 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       }, 300);
     }
   }, [contact]);
+
+  // WebSocket listener for real-time messages
+  useEffect(() => {
+    if (!contact || !isConnected) return;
+
+    // Subscribe to messages for this contact
+    sendWsMessage({
+      type: 'SUBSCRIBE',
+      phoneNumber: contact.phone,
+    });
+
+    const unsubscribe = addMessageListener((data) => {
+      console.log('📨 WebSocket message received:', data);
+
+      // Handle new messages
+      if (data.type === 'NEW_MESSAGE' && data.phoneNumber === contact.phone) {
+        const newMessage = {
+          id: `ws-${Date.now()}`,
+          text: data.message.text,
+          sender: data.message.owner ? 'user' : 'contact',
+          timestamp: new Date(data.message.timestamp).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }),
+          sortTimestamp: new Date(data.message.timestamp).getTime(),
+          status: 'delivered',
+          type: data.message.messageType || 'text',
+        };
+
+        setMessages(prev => {
+          // Check if message already exists
+          const exists = prev.some(msg => msg.id === newMessage.id);
+          if (exists) return prev;
+          
+          return [...prev, newMessage].sort((a, b) => a.sortTimestamp - b.sortTimestamp);
+        });
+
+        // Auto-scroll to bottom
+        setTimeout(() => scrollToBottom(), 100);
+
+        // Show toast notification if it's from contact
+        if (!data.message.owner) {
+          toast.success(`New message from ${contact.name}`, {
+            duration: 3000,
+            icon: '💬',
+          });
+        }
+
+        // Refresh contacts list to update last message
+        if (refreshContacts) {
+          refreshContacts();
+        }
+      }
+
+      // Handle message status updates
+      if (data.type === 'MESSAGE_STATUS_UPDATE' && data.phoneNumber === contact.phone) {
+        setMessages(prev => prev.map(msg => {
+          // Update status for matching message ID or recent user messages
+          if (msg.id === data.messageId || (msg.sender === 'user' && msg.status === 'sent')) {
+            return { ...msg, status: data.status };
+          }
+          return msg;
+        }));
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [contact, isConnected, addMessageListener, sendWsMessage, refreshContacts]);
 
   const fetchWatiMessages = async () => {
     if (!contact || !contact.phone) return;
@@ -202,18 +277,21 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           setMessageInput('');
           setContactNotFound(false);
           
-          // Simulate status updates
-          setTimeout(() => {
-            setMessages(prev => prev.map(msg => 
-              msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
-            ));
-          }, 1000);
-          
-          setTimeout(() => {
-            setMessages(prev => prev.map(msg => 
-              msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
-            ));
-          }, 3000);
+          // Status updates will be handled by WebSocket
+          // But keep fallback for when WebSocket is not connected
+          if (!isConnected) {
+            setTimeout(() => {
+              setMessages(prev => prev.map(msg => 
+                msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
+              ));
+            }, 1000);
+            
+            setTimeout(() => {
+              setMessages(prev => prev.map(msg => 
+                msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
+              ));
+            }, 3000);
+          }
         }
         
         if (refreshContacts) {
@@ -377,8 +455,9 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                         {contact.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    {contact.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse"></div>
+                    {/* WebSocket connection indicator */}
+                    {isConnected && (
+                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse" title="Real-time updates active"></div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -545,8 +624,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                     No messages yet. Send a message below to start chatting with {contact.name.split(' ')[0]}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <div className="w-2 h-2 rounded-full bg-[#BBA473] animate-ping"></div>
-                    <span>Ready to chat</span>
+                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'} animate-ping`}></div>
+                    <span>{isConnected ? 'Real-time updates active' : 'Ready to chat'}</span>
                   </div>
                 </div>
               ) : (
@@ -646,9 +725,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 </button>
               </div>
               
-              {/* Typing indicator hint */}
-              <div className="mt-2 text-xs text-gray-500 flex items-center gap-2">
+              {/* Typing indicator hint with WebSocket status */}
+              <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
                 <span>Press Enter to send • Shift+Enter for new line</span>
+                <span className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                  {isConnected ? 'Live' : 'Offline'}
+                </span>
               </div>
             </div>
           </>
