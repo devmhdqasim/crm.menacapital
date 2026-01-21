@@ -201,7 +201,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    const FEATURE_START_DATE = '2026-02-17';
+    const FEATURE_START_DATE = '2026-03-17';
 
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
@@ -308,7 +308,7 @@ const Dashboard = () => {
             className="border border-[#BBA473]/20 rounded-xl p-6 bg-[#1A1A1A]/60 backdrop-blur-sm"
           >
             <div className="h-6 bg-gray-700 rounded w-48 mx-auto mb-6"></div>
-            <div className="h-[400px] bg-gray-800/30 rounded"></div>
+            <div className="h-[400px] bg-gray-900/30 rounded"></div>
           </div>
         ))}
       </div>

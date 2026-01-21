@@ -211,6 +211,9 @@ const TaskManagementModal = ({
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        body{
+          background-color: #000;
+        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }

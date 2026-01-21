@@ -355,6 +355,9 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
           to { opacity: 1; }
         }
         
+        body{
+          background-color: #000;
+        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }

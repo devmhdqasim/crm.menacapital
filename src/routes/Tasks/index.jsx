@@ -655,7 +655,7 @@ const Tasks = () => {
   };
 
   useEffect(() => {
-    const FEATURE_START_DATE = '2026-02-27';
+    const FEATURE_START_DATE = '2026-03-27';
 
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
@@ -1795,6 +1795,9 @@ const getTabCounter = (tab) => {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        body{
+          background-color: #000;
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;

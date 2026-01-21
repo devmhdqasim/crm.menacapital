@@ -1,3 +1,4 @@
+
 @import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
@@ -73,6 +74,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+}
+
+body {
+  background-color: #000 !important;
 }
 
 .theme-login-one {
@@ -197,9 +202,9 @@
 
 .animate-shimmer {
   background: linear-gradient(90deg,
-      #f0f0f0 0%,
-      #f8f8f8 50%,
-      #f0f0f0 100%);
+      #1A1A1A 0%,
+      #2A2A2A 50%,
+      #1A1A1A 100%);
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
 }
@@ -510,6 +515,11 @@ html {
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  button,
+  [role="button"] {
+    @apply transition-all duration-300 ease-in-out active:scale-95;
   }
 
   body {

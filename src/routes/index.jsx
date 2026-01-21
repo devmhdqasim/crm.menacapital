@@ -279,7 +279,7 @@ export function AppRoutes() {
           className={`
             flex-1 w-full
             overflow-x-hidden
-            ${!isLoginPage ? 'bg-transparent' : 'bg-white'}
+            ${!isLoginPage ? 'bg-black' : 'bg-black'}
             animate-fadeIn
           `}
         >

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Bell, Check, CheckCheck, Trash2, ChevronDown, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../../services/notificationService';
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, deleteMultipleNotifications } from '../../services/notificationRESTservice';
 import NotificationComponent from '../../components/NotificationComponent';
 
 const NotificationsPage = () => {
@@ -26,18 +26,28 @@ const NotificationsPage = () => {
       setLoading(true);
       const data = await getNotifications();
       
-      // Transform backend data to match component format
-      const transformedData = data.map(notification => ({
-        id: notification.id,
-        title: notification.title,
-        message: notification.body || notification.message,
-        type: notification.type || 'general',
-        time: notification.timestamp || notification.createdAt,
-        unread: !notification.read,
-        icon: getIconByType(notification.type),
-        priority: notification.priority || 'medium'
-      }));
+      console.log('🔍 Raw API data:', data);
       
+      // Transform backend data to match component format
+      const transformedData = data.map(notification => {
+        // Extract notification type from notificationData or default to 'general'
+        const notificationType = notification.notificationData?.type?.toLowerCase().replace(/\s+/g, '_') || 'general';
+        
+        return {
+          id: notification._id,
+          title: notification.title,
+          message: notification.message,
+          type: notificationType,
+          time: notification.createdAt || notification.updatedAt,
+          unread: !notification.isRead, // Note: API uses 'isRead', not 'read'
+          icon: getIconByType(notificationType),
+          priority: notification.priority || 'medium', // Default to medium if not provided
+          // Store original data for reference
+          originalData: notification
+        };
+      });
+      
+      console.log('✅ Transformed notifications:', transformedData);
       setNotifications(transformedData);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -62,23 +72,11 @@ const NotificationsPage = () => {
     
     // Refresh notifications list
     fetchNotifications();
-    
-    // You can also add the notification directly to the state
-    // const newNotification = {
-    //   id: Date.now().toString(),
-    //   title: payload.notification?.title || 'New Notification',
-    //   message: payload.notification?.body || '',
-    //   type: payload.data?.type || 'general',
-    //   time: new Date().toISOString(),
-    //   unread: true,
-    //   icon: getIconByType(payload.data?.type || 'general'),
-    //   priority: payload.data?.priority || 'medium'
-    // };
-    // setNotifications(prev => [newNotification, ...prev]);
   }, [fetchNotifications]);
 
   const getIconByType = (type) => {
     const icons = {
+      // Existing types
       interested: '👍',
       not_interested: '👎',
       hot_lead: '🔥',
@@ -101,7 +99,13 @@ const NotificationsPage = () => {
       report: '📊',
       lead: '👤',
       task: '📋',
-      meeting: '📅'
+      meeting: '📅',
+      
+      // New types from your API
+      login: '🔐',
+      'password_updated': '🔑',
+      'sales_crm': '💼',
+      general: '🔔'
     };
     return icons[type] || '🔔';
   };
@@ -147,7 +151,8 @@ const NotificationsPage = () => {
     }
     
     try {
-      await Promise.all(selectedNotifications.map(id => deleteNotification(id)));
+      // Use bulk delete API with all selected IDs
+      await deleteMultipleNotifications(selectedNotifications);
       setNotifications(notifications.filter(n => !selectedNotifications.includes(n.id)));
       setSelectedNotifications([]);
       toast.success(`${selectedNotifications.length} notification(s) deleted`);
@@ -174,6 +179,7 @@ const NotificationsPage = () => {
 
   const getNotificationTypeColor = (type) => {
     const colors = {
+      // Existing colors...
       interested: 'from-green-500/20 to-green-600/20 border-green-500/30',
       not_interested: 'from-red-500/20 to-red-600/20 border-red-500/30',
       hot_lead: 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
@@ -196,7 +202,13 @@ const NotificationsPage = () => {
       report: 'from-fuchsia-500/20 to-fuchsia-600/20 border-fuchsia-500/30',
       lead: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
       task: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
-      meeting: 'from-purple-500/20 to-purple-600/20 border-purple-500/30'
+      meeting: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
+      
+      // New types from your API
+      login: 'from-green-500/20 to-green-600/20 border-green-500/30',
+      'password_updated': 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
+      'sales_crm': 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+      general: 'from-gray-500/20 to-gray-600/20 border-gray-500/30'
     };
     return colors[type] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
   };
@@ -659,5 +671,3 @@ const NotificationsPage = () => {
 };
 
 export default NotificationsPage;
-
-

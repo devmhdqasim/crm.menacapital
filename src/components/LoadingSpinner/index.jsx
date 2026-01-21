@@ -80,25 +80,25 @@ export const SkeletonLoader = ({ type = 'page' }) => {
       <div className="p-6 space-y-6 animate-fadeIn">
         {/* Page Header Skeleton */}
         <div className="space-y-3">
-          <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse" />
-          <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+          <div className="h-8 bg-gray-900 rounded w-1/4 animate-pulse" />
+          <div className="h-4 bg-gray-900 rounded w-1/3 animate-pulse" />
         </div>
 
         {/* Action Buttons Skeleton */}
         <div className="flex space-x-3">
-          <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
-          <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
+          <div className="h-10 bg-gray-900 rounded w-32 animate-pulse" />
+          <div className="h-10 bg-gray-900 rounded w-32 animate-pulse" />
         </div>
 
         {/* Cards Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
+            <div key={i} className="bg-black rounded-lg p-6 shadow-sm animate-pulse">
               <div className="space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-20 bg-gray-200 rounded" />
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
+                <div className="h-4 bg-gray-900 rounded w-3/4" />
+                <div className="h-4 bg-gray-900 rounded w-1/2" />
+                <div className="h-20 bg-gray-900 rounded" />
+                <div className="h-4 bg-gray-900 rounded w-2/3" />
               </div>
             </div>
           ))}
@@ -113,19 +113,19 @@ export const SkeletonLoader = ({ type = 'page' }) => {
       <div className="p-6 animate-fadeIn">
         {/* Table Header */}
         <div className="mb-4 space-y-3">
-          <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse" />
-          <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
+          <div className="h-8 bg-gray-900 rounded w-1/4 animate-pulse" />
+          <div className="h-10 bg-gray-900 rounded w-32 animate-pulse" />
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-black rounded-lg shadow-sm overflow-hidden">
           {/* Table Header */}
-          <div className="bg-gray-50 p-4 border-b border-gray-200">
+          <div className="bg-gray-50 p-4 border-b border-black-200">
             <div className="flex space-x-4">
-              <div className="h-4 bg-gray-200 rounded w-1/6 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/5 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/6 animate-pulse" />
+              <div className="h-4 bg-gray-900 rounded w-1/6 animate-pulse" />
+              <div className="h-4 bg-gray-900 rounded w-1/4 animate-pulse" />
+              <div className="h-4 bg-gray-900 rounded w-1/5 animate-pulse" />
+              <div className="h-4 bg-gray-900 rounded w-1/6 animate-pulse" />
             </div>
           </div>
           
@@ -133,10 +133,10 @@ export const SkeletonLoader = ({ type = 'page' }) => {
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div key={i} className="p-4 border-b border-gray-100">
               <div className="flex space-x-4">
-                <div className="h-4 bg-gray-200 rounded w-1/6 animate-pulse" />
-                <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-                <div className="h-4 bg-gray-200 rounded w-1/5 animate-pulse" />
-                <div className="h-4 bg-gray-200 rounded w-1/6 animate-pulse" />
+                <div className="h-4 bg-gray-900 rounded w-1/6 animate-pulse" />
+                <div className="h-4 bg-gray-900 rounded w-1/4 animate-pulse" />
+                <div className="h-4 bg-gray-900 rounded w-1/5 animate-pulse" />
+                <div className="h-4 bg-gray-900 rounded w-1/6 animate-pulse" />
               </div>
             </div>
           ))}
@@ -144,11 +144,11 @@ export const SkeletonLoader = ({ type = 'page' }) => {
 
         {/* Pagination Skeleton */}
         <div className="mt-4 flex justify-between items-center">
-          <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+          <div className="h-4 bg-gray-900 rounded w-32 animate-pulse" />
           <div className="flex space-x-2">
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+            <div className="h-8 w-8 bg-gray-900 rounded animate-pulse" />
+            <div className="h-8 w-8 bg-gray-900 rounded animate-pulse" />
+            <div className="h-8 w-8 bg-gray-900 rounded animate-pulse" />
           </div>
         </div>
       </div>
@@ -161,23 +161,23 @@ export const SkeletonLoader = ({ type = 'page' }) => {
       <div className="p-6 animate-fadeIn">
         {/* Form Header */}
         <div className="mb-6 space-y-2">
-          <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse" />
-          <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+          <div className="h-8 bg-gray-900 rounded w-1/3 animate-pulse" />
+          <div className="h-4 bg-gray-900 rounded w-1/2 animate-pulse" />
         </div>
 
         {/* Form Fields */}
-        <div className="bg-white rounded-lg p-6 shadow-sm space-y-6">
+        <div className="bg-black rounded-lg p-6 shadow-sm space-y-6">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
-              <div className="h-10 bg-gray-200 rounded w-full animate-pulse" />
+              <div className="h-4 bg-gray-900 rounded w-24 animate-pulse" />
+              <div className="h-10 bg-gray-900 rounded w-full animate-pulse" />
             </div>
           ))}
 
           {/* Buttons */}
           <div className="flex space-x-3 pt-4">
-            <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
-            <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
+            <div className="h-10 bg-gray-900 rounded w-32 animate-pulse" />
+            <div className="h-10 bg-gray-900 rounded w-32 animate-pulse" />
           </div>
         </div>
       </div>
@@ -191,11 +191,11 @@ export const SkeletonLoader = ({ type = 'page' }) => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
+            <div key={i} className="bg-black rounded-lg p-6 shadow-sm animate-pulse">
               <div className="space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
-                <div className="h-8 bg-gray-200 rounded w-1/2" />
-                <div className="h-3 bg-gray-200 rounded w-3/4" />
+                <div className="h-4 bg-gray-900 rounded w-2/3" />
+                <div className="h-8 bg-gray-900 rounded w-1/2" />
+                <div className="h-3 bg-gray-900 rounded w-3/4" />
               </div>
             </div>
           ))}
@@ -203,26 +203,26 @@ export const SkeletonLoader = ({ type = 'page' }) => {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-4" />
-            <div className="h-64 bg-gray-200 rounded" />
+          <div className="bg-black rounded-lg p-6 shadow-sm animate-pulse">
+            <div className="h-4 bg-gray-900 rounded w-1/3 mb-4" />
+            <div className="h-64 bg-gray-900 rounded" />
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-4" />
-            <div className="h-64 bg-gray-200 rounded" />
+          <div className="bg-black rounded-lg p-6 shadow-sm animate-pulse">
+            <div className="h-4 bg-gray-900 rounded w-1/3 mb-4" />
+            <div className="h-64 bg-gray-900 rounded" />
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
+        <div className="bg-black rounded-lg p-6 shadow-sm animate-pulse">
+          <div className="h-4 bg-gray-900 rounded w-1/4 mb-4" />
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="h-10 w-10 bg-gray-200 rounded-full" />
+                <div className="h-10 w-10 bg-gray-900 rounded-full" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-gray-900 rounded w-3/4" />
+                  <div className="h-3 bg-gray-900 rounded w-1/2" />
                 </div>
               </div>
             ))}
@@ -234,12 +234,12 @@ export const SkeletonLoader = ({ type = 'page' }) => {
 
   // Card skeleton (default)
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
+    <div className="bg-black rounded-lg p-6 shadow-sm animate-pulse">
       <div className="space-y-3">
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
-        <div className="h-4 bg-gray-200 rounded w-1/2" />
-        <div className="h-20 bg-gray-200 rounded" />
-        <div className="h-4 bg-gray-200 rounded w-2/3" />
+        <div className="h-4 bg-gray-900 rounded w-3/4" />
+        <div className="h-4 bg-gray-900 rounded w-1/2" />
+        <div className="h-20 bg-gray-900 rounded" />
+        <div className="h-4 bg-gray-900 rounded w-2/3" />
       </div>
     </div>
   );
@@ -252,7 +252,7 @@ export const SkeletonLoader = ({ type = 'page' }) => {
  */
 export const RouteLoadingFallback = ({ type = 'page' }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       <SkeletonLoader type={type} />
     </div>
   );

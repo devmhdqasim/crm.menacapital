@@ -274,7 +274,7 @@ const Dashboard = () => {
             className="border border-[#BBA473]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
           >
             <div className="h-6 bg-gray-700 rounded w-48 mx-auto mb-6"></div>
-            <div className="h-[400px] bg-gray-800/30 rounded"></div>
+            <div className="h-[400px] bg-gray-900/30 rounded"></div>
           </div>
         ))}
       </div>

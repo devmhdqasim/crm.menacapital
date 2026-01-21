@@ -187,6 +187,9 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
           from { opacity: 0; }
           to { opacity: 1; }
         }
+        body{
+          background-color: #000;
+        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }

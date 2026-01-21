@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Menu, Bell, LogOut, Key, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from '../../services/authService';
-import { getNotifications, markAllNotificationsAsRead } from '../../services/notificationService';
+import { getNotifications, markAllNotificationsAsRead } from '../../services/notificationRESTservice';
 import toast from 'react-hot-toast';
 
 export default function Header() {
@@ -47,18 +47,28 @@ export default function Header() {
       setLoading(true);
       const data = await getNotifications();
       
-      // Transform backend data to match component format
-      const transformedData = data.map(notification => ({
-        id: notification.id,
-        title: notification.title,
-        message: notification.body || notification.message,
-        type: notification.type || 'general',
-        time: formatTime(notification.timestamp || notification.createdAt),
-        unread: !notification.read,
-        icon: getIconByType(notification.type),
-        priority: notification.priority || 'medium'
-      }));
+      console.log('🔍 Raw API data in Header:', data);
       
+      // Transform backend data to match component format
+      const transformedData = data.map(notification => {
+        // Extract notification type from notificationData or default to 'general'
+        const notificationType = notification.notificationData?.type?.toLowerCase().replace(/\s+/g, '_') || 'general';
+        
+        return {
+          id: notification._id,
+          title: notification.title,
+          message: notification.message,
+          type: notificationType,
+          time: formatTime(notification.createdAt || notification.updatedAt),
+          unread: !notification.isRead, // Note: API uses 'isRead', not 'read'
+          icon: getIconByType(notificationType),
+          priority: notification.priority || 'medium',
+          // Store original data for reference
+          originalData: notification
+        };
+      });
+      
+      console.log('✅ Transformed notifications in Header:', transformedData);
       setNotifications(transformedData);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -92,7 +102,13 @@ export default function Header() {
       report: '📊',
       lead: '👤',
       task: '📋',
-      meeting: '📅'
+      meeting: '📅',
+      
+      // New types from your API
+      login: '🔐',
+      'password_updated': '🔑',
+      'sales_crm': '💼',
+      general: '🔔'
     };
     return icons[type] || '🔔';
   };
@@ -156,7 +172,13 @@ export default function Header() {
       warm_lead: 'from-cyan-500/20 to-cyan-600/20 border-cyan-500/30',
       lead: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
       task: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
-      meeting: 'from-purple-500/20 to-purple-600/20 border-purple-500/30'
+      meeting: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
+      
+      // New types from your API
+      login: 'from-green-500/20 to-green-600/20 border-green-500/30',
+      'password_updated': 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
+      'sales_crm': 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+      general: 'from-gray-500/20 to-gray-600/20 border-gray-500/30'
     };
     return colors[type] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
   };
