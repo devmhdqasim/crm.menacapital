@@ -169,7 +169,10 @@ export default function EnterEmailOrUsername({
                     : 'border-[#BBA473]/10 focus:border-[#BBA473] hover:border-[#BBA473]/30'
                   }`}
                 placeholder=" "
-                autoComplete="username"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
               />
               <label
                 htmlFor="login"
@@ -194,8 +197,8 @@ export default function EnterEmailOrUsername({
               type="button"
               onClick={formik.handleSubmit}
               disabled={isButtonDisabled}
-              className="w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
-            >
+              className="btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+              >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {isLoading ? (
                   <>

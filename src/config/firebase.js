@@ -2,17 +2,25 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getMessaging, isSupported } from "firebase/messaging";
 
-// Helper function to safely get environment variables
+// Helper function to safely get environment variables for Next.js
 const getEnvVar = (key) => {
-  // For Vite
+  // For Next.js (both client and server side)
+  // Next.js exposes NEXT_PUBLIC_ prefixed vars to the client
+  if (typeof process !== 'undefined' && process.env) {
+    // Try NEXT_PUBLIC_ prefix first (for client-side)
+    const publicVar = process.env[`NEXT_PUBLIC_${key}`];
+    if (publicVar) return publicVar;
+    
+    // Try without prefix (for server-side or Vercel secrets)
+    const serverVar = process.env[key];
+    if (serverVar) return serverVar;
+  }
+  
+  // Fallback for other environments (Vite, CRA, etc.)
   if (typeof import.meta !== 'undefined' && import.meta.env) {
     return import.meta.env[`VITE_${key}`];
   }
-  // For Create React App
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env[`REACT_APP_${key}`];
-  }
-  // Fallback
+  
   return undefined;
 };
 
@@ -33,27 +41,37 @@ const validateConfig = () => {
   const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
   
   if (missingKeys.length > 0) {
-    console.error('❌ Missing Firebase configuration:', missingKeys);
-    console.error('Current config:', firebaseConfig);
-    throw new Error(`Missing Firebase config: ${missingKeys.join(', ')}`);
+    console.warn('⚠️ Missing Firebase configuration:', missingKeys);
+    console.warn('ℹ️ Firebase features will be disabled. App will continue to work without Firebase.');
+    return false;
   }
+  return true;
 };
 
 // Initialize Firebase (prevent multiple initializations)
-let app;
+let app = null;
+let isFirebaseEnabled = false;
+
 try {
-  validateConfig();
-  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  console.log('✅ Firebase initialized successfully');
+  isFirebaseEnabled = validateConfig();
+  
+  if (isFirebaseEnabled) {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    console.log('✅ Firebase initialized successfully');
+  } else {
+    console.log('ℹ️ Firebase not configured - app will run without Firebase features');
+  }
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
+  console.log('ℹ️ App will continue without Firebase features');
   app = null;
+  isFirebaseEnabled = false;
 }
 
 // Initialize Firebase Cloud Messaging (only in browser and if supported)
 let messaging = null;
 
-if (typeof window !== 'undefined' && app) {
+if (typeof window !== 'undefined' && app && isFirebaseEnabled) {
   isSupported()
     .then((supported) => {
       if (supported) {
@@ -62,6 +80,7 @@ if (typeof window !== 'undefined' && app) {
           console.log('✅ Firebase Messaging initialized');
         } catch (error) {
           console.error('❌ Firebase Messaging initialization error:', error);
+          console.log('ℹ️ Messaging features will be disabled');
         }
       } else {
         console.warn('⚠️ Firebase Messaging not supported in this browser');
@@ -71,6 +90,9 @@ if (typeof window !== 'undefined' && app) {
       console.error('❌ Error checking messaging support:', error);
     });
 }
+
+// Export helper to check if Firebase is available
+export const isFirebaseAvailable = () => isFirebaseEnabled && app !== null;
 
 export { app, messaging };
 export default app;

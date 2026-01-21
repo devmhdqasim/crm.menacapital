@@ -149,9 +149,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   const validateModalForm = () => {
     const errors = {};
     
-    // Task status is required
-    if (!taskStatus) {
+    // Task status is required only if Completed option is enabled
+    if (!taskStatus && !isTaskStatusCompletedDisabled()) {
       errors.taskStatus = 'Please select a task status';
+    }
+    
+    // If Completed is disabled but user tries to complete without proper status
+    if (isTaskStatusCompletedDisabled() && taskStatus === 'Completed') {
+      errors.taskStatus = 'Task can only be completed when lead reaches Demo status or higher';
     }
     
     // If "Answered" is selected, must select Interested/Not Interested
@@ -340,7 +345,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
 
   // Check if the form is valid for submission
   const isFormValid = () => {
-    if (!taskStatus) return false;
+    // Task status is required, but if Completed is disabled and not selected, that's okay
+    if (!taskStatus && !isTaskStatusCompletedDisabled()) return false;
     
     // If "Answered" is selected, must complete the rest of the hierarchy
     if (modalAnswered === 'Answered') {
@@ -380,6 +386,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     };
 
     return new Intl.DateTimeFormat("en-GB", options).format(date);
+  };
+
+  // Check if task status "Completed" should be disabled
+  const isTaskStatusCompletedDisabled = () => {
+    // Task status can only be completed if lead response status is Demo or higher
+    const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
+    return !allowedStatuses.includes(leadResponseStatus);
   };
 
   // Point 3: Check if reminder date should be enabled (Warm to Deposit only)
@@ -539,12 +552,6 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.taskCreationStatus)}`}>
                     {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
                   </span>
-                  <div>
-                  <label className="text-sm text-[#E8D5A3] font-medium">kiosk Lead Status</label>
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
-                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
-                  </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -588,7 +595,11 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 </label>
                 <div className="grid grid-cols-1 gap-3">
                   <label 
-                    className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50"
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                      isTaskStatusCompletedDisabled()
+                        ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                    }`}
                   >
                     <input
                       type="radio"
@@ -599,11 +610,30 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setTaskStatus(e.target.value);
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                      disabled={isTaskStatusCompletedDisabled()}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Completed</span>
                   </label>
                 </div>
+                
+                {/* Info message when Completed is disabled */}
+                {isTaskStatusCompletedDisabled() && (
+                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-blue-400 text-sm font-medium">Task Status Locked</p>
+                      <p className="text-blue-300 text-xs mt-1">
+                        You can mark this task as completed once the lead reaches <span className="font-semibold">Demo</span> status or higher (Demo, Not Deposit, or Deposit).
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
                 {modalErrors.taskStatus && (
                   <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
                 )}
@@ -619,7 +649,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 <div className="grid grid-cols-2 gap-3">
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     isStatusDisabled('Answered')
-                      ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                       : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
                     <input
@@ -644,7 +674,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     isStatusDisabled('Not Answered')
-                      ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                       : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
                     <input
@@ -674,7 +704,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Interested')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -698,7 +728,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Not Interested')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -732,7 +762,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Warm')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -755,7 +785,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Hot')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -788,7 +818,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Demo')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -810,7 +840,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Real')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -906,7 +936,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Deposit')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -927,7 +957,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Not Deposit')
-                          ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
@@ -1003,7 +1033,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             <button
               onClick={handleModalSubmit}
               disabled={!isFormValid() || isSubmitting}
-              className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg transform ${
+              className={`btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ${
+              // className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg transform ${
                 isFormValid() && !isSubmitting
                   ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
                   : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
@@ -1019,9 +1050,6 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        body{
-          background-color: #000;
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
