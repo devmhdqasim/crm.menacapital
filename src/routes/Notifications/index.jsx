@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Check, CheckCheck, Trash2, ChevronDown, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, deleteMultipleNotifications } from '../../services/notificationRESTservice';
 import NotificationComponent from '../../components/NotificationComponent';
@@ -8,23 +8,21 @@ const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('All');
   const [selectedNotifications, setSelectedNotifications] = useState([]);
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [priorityFilter, setPriorityFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const tabs = ['All', 'Unread', 'Read'];
   const perPageOptions = [10, 20, 30, 50];
-  const priorityOptions = ['All', 'High', 'Medium', 'Low'];
 
-  // Fetch notifications from backend
-  const fetchNotifications = useCallback(async () => {
+  // Fetch notifications from backend with tab filter
+  const fetchNotifications = useCallback(async (filter = 'All') => {
     try {
       setLoading(true);
-      const data = await getNotifications();
+      const data = await getNotifications(filter);
       
       console.log('🔍 Raw API data:', data);
       
@@ -39,9 +37,15 @@ const NotificationsPage = () => {
           message: notification.message,
           type: notificationType,
           time: notification.createdAt || notification.updatedAt,
-          unread: !notification.isRead, // Note: API uses 'isRead', not 'read'
+          unread: !notification.isRead,
           icon: getIconByType(notificationType),
-          priority: notification.priority || 'medium', // Default to medium if not provided
+          // Additional information from API
+          topic: notification.topic,
+          notificationDataId: notification.notificationData?.id,
+          userId: notification.userId?._id,
+          userFirstName: notification.userId?.firstName,
+          userEmail: notification.userId?.email,
+          userPhone: notification.userId?.phoneNumber,
           // Store original data for reference
           originalData: notification
         };
@@ -58,9 +62,21 @@ const NotificationsPage = () => {
     }
   }, []);
 
+  // Fetch unread count separately for badge display
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const unreadData = await getNotifications('Unread');
+      setUnreadCount(unreadData.length);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  }, []);
+
+  // Initial load
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    fetchNotifications(activeTab);
+    fetchUnreadCount();
+  }, []);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -70,9 +86,10 @@ const NotificationsPage = () => {
   const handleNotificationReceived = useCallback((payload) => {
     console.log('New notification received:', payload);
     
-    // Refresh notifications list
-    fetchNotifications();
-  }, [fetchNotifications]);
+    // Refresh notifications list and unread count
+    fetchNotifications(activeTab);
+    fetchUnreadCount();
+  }, [activeTab, fetchNotifications, fetchUnreadCount]);
 
   const getIconByType = (type) => {
     const icons = {
@@ -100,17 +117,18 @@ const NotificationsPage = () => {
       lead: '👤',
       task: '📋',
       meeting: '📅',
+      protocol: '📋',
       
       // New types from your API
       login: '🔐',
+      'user-login': '🔐',
       'password_updated': '🔑',
       'sales_crm': '💼',
+      'user-lead': '👤',
       general: '🔔'
     };
     return icons[type] || '🔔';
   };
-
-  const unreadCount = notifications.filter(n => n.unread).length;
 
   const markAsRead = async (id) => {
     try {
@@ -118,6 +136,8 @@ const NotificationsPage = () => {
       setNotifications(notifications.map(n => 
         n.id === id ? { ...n, unread: false } : n
       ));
+      // Refresh unread count
+      fetchUnreadCount();
       toast.success('Notification marked as read');
     } catch (error) {
       toast.error('Failed to mark as read');
@@ -127,7 +147,9 @@ const NotificationsPage = () => {
   const markAllAsRead = async () => {
     try {
       await markAllNotificationsAsRead();
-      setNotifications(notifications.map(n => ({ ...n, unread: false })));
+      // Refresh current view and unread count
+      fetchNotifications(activeTab);
+      fetchUnreadCount();
       toast.success('All notifications marked as read');
     } catch (error) {
       toast.error('Failed to mark all as read');
@@ -138,6 +160,8 @@ const NotificationsPage = () => {
     try {
       await deleteNotification(id);
       setNotifications(notifications.filter(n => n.id !== id));
+      // Refresh unread count
+      fetchUnreadCount();
       toast.success('Notification deleted');
     } catch (error) {
       toast.error('Failed to delete notification');
@@ -155,6 +179,8 @@ const NotificationsPage = () => {
       await deleteMultipleNotifications(selectedNotifications);
       setNotifications(notifications.filter(n => !selectedNotifications.includes(n.id)));
       setSelectedNotifications([]);
+      // Refresh unread count
+      fetchUnreadCount();
       toast.success(`${selectedNotifications.length} notification(s) deleted`);
     } catch (error) {
       toast.error('Failed to delete notifications');
@@ -170,10 +196,10 @@ const NotificationsPage = () => {
   };
 
   const toggleSelectAll = () => {
-    if (selectedNotifications.length === filteredNotifications.length) {
+    if (selectedNotifications.length === notifications.length) {
       setSelectedNotifications([]);
     } else {
-      setSelectedNotifications(filteredNotifications.map(n => n.id));
+      setSelectedNotifications(notifications.map(n => n.id));
     }
   };
 
@@ -203,23 +229,17 @@ const NotificationsPage = () => {
       lead: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
       task: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
       meeting: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
+      protocol: 'from-indigo-500/20 to-indigo-600/20 border-indigo-500/30',
       
       // New types from your API
       login: 'from-green-500/20 to-green-600/20 border-green-500/30',
+      'user-login': 'from-green-500/20 to-green-600/20 border-green-500/30',
       'password_updated': 'from-orange-500/20 to-orange-600/20 border-orange-500/30',
       'sales_crm': 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+      'user-lead': 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
       general: 'from-gray-500/20 to-gray-600/20 border-gray-500/30'
     };
     return colors[type] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
-  };
-
-  const getPriorityBadge = (priority) => {
-    const badges = {
-      high: 'bg-red-500/20 text-red-400 border-red-500/30',
-      medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      low: 'bg-green-500/20 text-green-400 border-green-500/30'
-    };
-    return badges[priority] || badges.medium;
   };
 
   const formatTime = (timestamp) => {
@@ -245,30 +265,13 @@ const NotificationsPage = () => {
     }).format(date);
   };
 
-  // Filtering logic
-  const filteredNotifications = notifications.filter(notification => {
-    let matchesTab = true;
-    if (activeTab === 'Unread') {
-      matchesTab = notification.unread;
-    } else if (activeTab === 'Read') {
-      matchesTab = !notification.unread;
-    }
-
-    let matchesPriority = true;
-    if (priorityFilter !== 'All') {
-      matchesPriority = notification.priority.toLowerCase() === priorityFilter.toLowerCase();
-    }
-
-    return matchesTab && matchesPriority;
-  });
-
   // Pagination
-  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+  const totalPages = Math.ceil(notifications.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentNotifications = filteredNotifications.slice(startIndex, endIndex);
-  const showingFrom = filteredNotifications.length > 0 ? startIndex + 1 : 0;
-  const showingTo = Math.min(endIndex, filteredNotifications.length);
+  const currentNotifications = notifications.slice(startIndex, endIndex);
+  const showingFrom = notifications.length > 0 ? startIndex + 1 : 0;
+  const showingTo = Math.min(endIndex, notifications.length);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -303,12 +306,9 @@ const NotificationsPage = () => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setCurrentPage(1);
-  };
-
-  const handlePriorityFilterChange = (priority) => {
-    setPriorityFilter(priority);
-    setCurrentPage(1);
-    setShowFilterDropdown(false);
+    setSelectedNotifications([]);
+    // Fetch notifications with the new filter
+    fetchNotifications(tab);
   };
 
   if (loading) {
@@ -371,34 +371,6 @@ const NotificationsPage = () => {
                   <span className="text-sm font-medium">Delete Selected ({selectedNotifications.length})</span>
                 </button>
               )}
-
-              {/* Priority Filter */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border border-[#BBA473]/30 hover:border-[#BBA473]/50 transition-all duration-300"
-                >
-                  <Filter className="w-4 h-4" />
-                  <span className="text-sm font-medium">{priorityFilter} Priority</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-
-                {showFilterDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-20 overflow-hidden animate-slideDown">
-                    {priorityOptions.map(priority => (
-                      <button
-                        key={priority}
-                        onClick={() => handlePriorityFilterChange(priority)}
-                        className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors text-sm ${
-                          priority === priorityFilter ? 'bg-[#BBA473]/20 text-[#BBA473] font-medium' : 'text-white'
-                        }`}
-                      >
-                        {priority} Priority
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -430,17 +402,17 @@ const NotificationsPage = () => {
         {/* Notifications List */}
         <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
           {/* Select All Header */}
-          {filteredNotifications.length > 0 && (
+          {notifications.length > 0 && (
             <div className="flex items-center justify-between px-6 py-3 bg-[#1A1A1A] border-b border-[#BBA473]/30">
               <label className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
-                  checked={selectedNotifications.length === filteredNotifications.length && filteredNotifications.length > 0}
+                  checked={selectedNotifications.length === notifications.length && notifications.length > 0}
                   onChange={toggleSelectAll}
                   className="w-4 h-4 rounded border-[#BBA473]/30 bg-[#1A1A1A] text-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer"
                 />
                 <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
-                  Select All ({filteredNotifications.length})
+                  Select All ({notifications.length})
                 </span>
               </label>
 
@@ -508,9 +480,9 @@ const NotificationsPage = () => {
                           </p>
                         </div>
 
-                        {/* Priority Badge */}
-                        <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border uppercase ${getPriorityBadge(notification.priority)}`}>
-                          {notification.priority}
+                        {/* Type Badge */}
+                        <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border uppercase ${getNotificationTypeColor(notification.type)}`}>
+                          {notification.type.replace(/_/g, ' ')}
                         </span>
                       </div>
 
@@ -547,13 +519,13 @@ const NotificationsPage = () => {
           </div>
 
           {/* Pagination */}
-          {filteredNotifications.length > 0 && (
+          {notifications.length > 0 && (
             <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="text-gray-400 text-sm">
                   Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
                   <span className="text-white font-semibold">{showingTo}</span> of{' '}
-                  <span className="text-white font-semibold">{filteredNotifications.length}</span> notifications
+                  <span className="text-white font-semibold">{notifications.length}</span> notifications
                 </div>
                 <div className="relative">
                   <button

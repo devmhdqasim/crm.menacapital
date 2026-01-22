@@ -13,6 +13,7 @@ export default function Header() {
   const [userDetails, setUserDetails] = useState('');
   const [branchDetails, setBranchDetails] = useState('');
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const getUserInfo = () => {
@@ -25,6 +26,17 @@ export default function Header() {
     setUserDetails(userInfo?.firstName?.en ?? userInfo?.email);
     setBranchDetails(userInfo?.branchName ?? userInfo?.branchUsername);
     setUserRole(userInfo?.roleName);
+  }, []);
+
+  // Fetch unread count on component mount
+  useEffect(() => {
+    fetchUnreadCount();
+  }, []);
+
+  // Refresh unread count every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch notifications from backend when dropdown opens
@@ -41,6 +53,18 @@ export default function Header() {
       return () => clearInterval(interval);
     }
   }, [notificationsOpen]);
+
+  // Fetch only unread count (lightweight)
+  const fetchUnreadCount = async () => {
+    try {
+      // Fetch only unread notifications to get count
+      const data = await getNotifications('Unread');
+      setUnreadCount(data.length);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      // Keep existing count on error
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -70,6 +94,10 @@ export default function Header() {
       
       console.log('✅ Transformed notifications in Header:', transformedData);
       setNotifications(transformedData);
+      
+      // Update unread count from fetched notifications
+      const newUnreadCount = transformedData.filter(n => n.unread).length;
+      setUnreadCount(newUnreadCount);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       // Keep existing notifications on error
@@ -148,12 +176,11 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [profileOpen, notificationsOpen]);
 
-  const unreadCount = notifications.filter(n => n.unread).length;
-
   const markAllAsRead = async () => {
     try {
       await markAllNotificationsAsRead();
       setNotifications(notifications.map(n => ({ ...n, unread: false })));
+      setUnreadCount(0);
       toast.success('All notifications marked as read');
     } catch (error) {
       toast.error('Failed to mark all as read');

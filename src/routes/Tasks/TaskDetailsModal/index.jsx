@@ -123,6 +123,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     }
   }, [task]);
 
+  // Auto-enable task completion when reaching Demo or higher
+  useEffect(() => {
+    const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
+    if (allowedStatuses.includes(leadResponseStatus)) {
+      setTaskStatus('Completed');
+    }
+  }, [leadResponseStatus]);
+
   const resetAllSelections = () => {
     setModalAnswered('');
     setModalInterested('');
@@ -588,33 +596,78 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 </div>
               </div>
 
-              {/* Point 2: Task Status Selection - Remove "Open" & "Pending" */}
+              {/* Task Status Toggle Switch */}
               <div className="space-y-4 mb-6">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
-                <div className="grid grid-cols-1 gap-3">
-                  <label 
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                
+                <div className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300 ${
+                  isTaskStatusCompletedDisabled()
+                    ? 'bg-gray-900/50 border-gray-700 opacity-50'
+                    : taskStatus === 'Completed'
+                      ? 'bg-green-500/10 border-green-500/50'
+                      : 'bg-[#1A1A1A] border-[#BBA473]/30 hover:border-[#BBA473]/50'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      taskStatus === 'Completed' 
+                        ? 'bg-green-500/20' 
+                        : 'bg-gray-700/50'
+                    }`}>
+                      <svg 
+                        className={`w-5 h-5 transition-colors ${
+                          taskStatus === 'Completed' 
+                            ? 'text-green-400' 
+                            : 'text-gray-500'
+                        }`} 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className={`font-medium ${
+                        taskStatus === 'Completed' 
+                          ? 'text-green-400' 
+                          : 'text-white'
+                      }`}>
+                        Mark as Completed
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {isTaskStatusCompletedDisabled() 
+                          ? 'Available at Demo status or higher' 
+                          : 'Task will be marked as complete'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Toggle Switch */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isTaskStatusCompletedDisabled()) {
+                        setTaskStatus(taskStatus === 'Completed' ? 'Open' : 'Completed');
+                        setModalErrors({});
+                      }
+                    }}
+                    disabled={isTaskStatusCompletedDisabled()}
+                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#2A2A2A] ${
                       isTaskStatusCompletedDisabled()
-                        ? 'bg-gray-900/50 cursor-not-allowed opacity-50 border-gray-700'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        ? 'bg-gray-700 cursor-not-allowed'
+                        : taskStatus === 'Completed'
+                          ? 'bg-green-500'
+                          : 'bg-gray-600 hover:bg-gray-500'
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="taskStatus"
-                      value="Completed"
-                      checked={taskStatus === 'Completed'}
-                      onChange={(e) => {
-                        setTaskStatus(e.target.value);
-                        setModalErrors({});
-                      }}
-                      disabled={isTaskStatusCompletedDisabled()}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                        taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
+                      }`}
                     />
-                    <span className="text-white font-medium">Completed</span>
-                  </label>
+                  </button>
                 </div>
                 
                 {/* Info message when Completed is disabled */}
@@ -626,7 +679,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <p className="text-blue-400 text-sm font-medium">Task Status Locked</p>
+                      <p className="text-blue-400 text-sm font-medium">Task Completion Locked</p>
                       <p className="text-blue-300 text-xs mt-1">
                         You can mark this task as completed once the lead reaches <span className="font-semibold">Demo</span> status or higher (Demo, Not Deposit, or Deposit).
                       </p>
@@ -1034,7 +1087,6 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
               onClick={handleModalSubmit}
               disabled={!isFormValid() || isSubmitting}
               className={`btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ${
-              // className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg transform ${
                 isFormValid() && !isSubmitting
                   ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
                   : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
