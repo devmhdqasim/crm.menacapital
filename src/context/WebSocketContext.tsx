@@ -1,7 +1,15 @@
-// contexts/WebSocketContext.js
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+// contexts/WebSocketContext.tsx
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 
-const WebSocketContext = createContext(null);
+interface WebSocketContextType {
+  isConnected: boolean;
+  lastMessage: any;
+  sendMessage: (data: any) => void;
+  addMessageListener: (callback: (data: any) => void) => () => void;
+  reconnect: () => void;
+}
+
+const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
@@ -11,12 +19,16 @@ export const useWebSocket = () => {
   return context;
 };
 
-export const WebSocketProvider = ({ children }) => {
+interface WebSocketProviderProps {
+  children: ReactNode;
+}
+
+export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState(null);
-  const wsRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-  const messageListenersRef = useRef(new Set());
+  const [lastMessage, setLastMessage] = useState<any>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageListenersRef = useRef<Set<(data: any) => void>>(new Set());
 
   const connect = () => {
     try {
@@ -89,7 +101,7 @@ export const WebSocketProvider = ({ children }) => {
     }
   };
 
-  const addMessageListener = (callback) => {
+  const addMessageListener = (callback: (data: any) => void) => {
     messageListenersRef.current.add(callback);
     
     // Return unsubscribe function
@@ -98,7 +110,7 @@ export const WebSocketProvider = ({ children }) => {
     };
   };
 
-  const sendMessage = (data) => {
+  const sendMessage = (data: any) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(data));
     } else {
@@ -114,7 +126,7 @@ export const WebSocketProvider = ({ children }) => {
     };
   }, []);
 
-  const value = {
+  const value: WebSocketContextType = {
     isConnected,
     lastMessage,
     sendMessage,
