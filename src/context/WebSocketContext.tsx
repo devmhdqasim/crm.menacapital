@@ -34,7 +34,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     try {
       // Use wss:// for production, ws:// for local development
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+      const wsUrl = `${protocol}//${window.location.host}/api/ws`; 
       
       console.log('🔌 Connecting to WebSocket:', wsUrl);
       
