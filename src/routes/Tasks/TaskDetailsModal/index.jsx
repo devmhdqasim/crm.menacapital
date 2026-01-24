@@ -183,35 +183,33 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       errors.answeredStatus = 'Please select Answered or Not Answered';
     }
     
-    // NEW: If "Not Answered" is selected in Answered Status, cannot update Update Status
-    if (answeredStatus === 'Not Answered' && modalAnswered) {
-      errors.answeredStatus = 'Not Answered status cannot update Update Status. Please change Answered Status to "Answered" first.';
-    }
-    
-    // If "Answered" is selected, must select Interested/Not Interested
-    if (modalAnswered === 'Answered' && !modalInterested) {
-      errors.interested = 'Please select Interested or Not Interested';
-    }
-    
-    // If "Interested" is selected, must select Warm/Hot
-    if (modalInterested === 'Interested' && !modalLeadType) {
-      errors.leadType = 'Please select Warm Lead or Hot Lead';
-    }
-    
-    // If "Hot" is selected, must select Demo/Real
-    if (modalLeadType === 'Hot' && !modalHotLeadType) {
-      errors.hotLeadType = 'Please select Demo or Real';
-    }
-    
-    // If "Real" is selected, must select Deposit/Not Deposit
-    if (modalHotLeadType === 'Real' && !modalDepositStatus) {
-      errors.depositStatus = 'Please select Deposit or Not Deposit';
-    }
-    
-    // If Demo is selected, first two checkboxes must be checked
-    if (modalHotLeadType === 'Demo') {
-      if (!demoInstallApp || !demoEducationVideo) {
-        errors.demoCheckboxes = 'Please complete the first two required demo steps';
+    // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
+    if (answeredStatus === 'Answered') {
+      // If "Answered" is selected in Update Status section, must select Interested/Not Interested
+      if (modalAnswered === 'Answered' && !modalInterested) {
+        errors.interested = 'Please select Interested or Not Interested';
+      }
+      
+      // If "Interested" is selected, must select Warm/Hot
+      if (modalInterested === 'Interested' && !modalLeadType) {
+        errors.leadType = 'Please select Warm Lead or Hot Lead';
+      }
+      
+      // If "Hot" is selected, must select Demo/Real
+      if (modalLeadType === 'Hot' && !modalHotLeadType) {
+        errors.hotLeadType = 'Please select Demo or Real';
+      }
+      
+      // If "Real" is selected, must select Deposit/Not Deposit
+      if (modalHotLeadType === 'Real' && !modalDepositStatus) {
+        errors.depositStatus = 'Please select Deposit or Not Deposit';
+      }
+      
+      // If Demo is selected, first two checkboxes must be checked
+      if (modalHotLeadType === 'Demo') {
+        if (!demoInstallApp || !demoEducationVideo) {
+          errors.demoCheckboxes = 'Please complete the first two required demo steps';
+        }
       }
     }
     
@@ -397,26 +395,26 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     // NEW: Answered Status is mandatory
     if (!answeredStatus) return false;
     
-    // NEW: If "Not Answered" is selected, cannot proceed with Update Status
-    if (answeredStatus === 'Not Answered' && modalAnswered) return false;
-    
-    // If "Answered" is selected in Update Status section, must complete the rest of the hierarchy
-    if (modalAnswered === 'Answered') {
-      if (!modalInterested) return false;
-      
-      if (modalInterested === 'Interested') {
-        if (!modalLeadType) return false;
+    // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
+    if (answeredStatus === 'Answered') {
+      // If "Answered" is selected in Update Status section, must complete the rest of the hierarchy
+      if (modalAnswered === 'Answered') {
+        if (!modalInterested) return false;
         
-        if (modalLeadType === 'Hot') {
-          if (!modalHotLeadType) return false;
+        if (modalInterested === 'Interested') {
+          if (!modalLeadType) return false;
           
-          // If Demo is selected, first two checkboxes must be checked
-          if (modalHotLeadType === 'Demo') {
-            if (!demoInstallApp || !demoEducationVideo) return false;
-          }
-          
-          if (modalHotLeadType === 'Real') {
-            if (!modalDepositStatus) return false;
+          if (modalLeadType === 'Hot') {
+            if (!modalHotLeadType) return false;
+            
+            // If Demo is selected, first two checkboxes must be checked
+            if (modalHotLeadType === 'Demo') {
+              if (!demoInstallApp || !demoEducationVideo) return false;
+            }
+            
+            if (modalHotLeadType === 'Real') {
+              if (!modalDepositStatus) return false;
+            }
           }
         }
       }
@@ -498,14 +496,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     return checkStatusIndex <= effectiveStatusIndex;
   };
 
-  // NEW: Check if Update Status section should be disabled
+  // MODIFIED: Update Status section should only be disabled if task is unassigned
   const isUpdateStatusDisabled = () => {
-    // Disable if task is unassigned
+    // Only disable if task is unassigned
     if (isTaskUnassigned) return true;
     
-    // Disable if "Not Answered" is selected in Answered Status
-    if (answeredStatus === 'Not Answered') return true;
-    
+    // REMOVED: Don't disable when "Not Answered" is selected
     return false;
   };
 
@@ -634,7 +630,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 <div>
                   <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
-                    {(task.kioskLeadStatus == 'Deposit' || task.kioskLeadStatus == 'Not Deposit') ? `Real - ${task.kioskLeadStatus}` : task.kioskLeadStatus}
+                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
                   </span>
                 </div>
                 </div>
@@ -840,16 +836,18 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   </div>
                 )}
                 
-                {/* Show info when "Not Answered" is selected */}
+                {/* MODIFIED: Updated info message when "Not Answered" is selected */}
                 {answeredStatus === 'Not Answered' && (
-                  <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
+                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
-                      <AlertCircle className="w-5 h-5 text-orange-400" />
+                      <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
                     </div>
                     <div className="flex-1">
-                      <p className="text-orange-400 text-sm font-medium">Update Status Disabled</p>
-                      <p className="text-orange-300 text-xs mt-1">
-                        When "Not Answered" is selected, you cannot update the status below. Please change to "Answered" to enable status updates.
+                      <p className="text-blue-400 text-sm font-medium">Not Answered Selected</p>
+                      <p className="text-blue-300 text-xs mt-1">
+                        You can still toggle the Task Status above and submit. The Update Status section below is not required when "Not Answered" is selected.
                       </p>
                     </div>
                   </div>
