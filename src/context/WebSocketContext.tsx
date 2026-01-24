@@ -53,7 +53,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
       ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
+          const data = JSON.parse(event.data); 
           console.log('📩 WebSocket message received:', data);
           
           setLastMessage(data);
