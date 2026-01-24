@@ -58,7 +58,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           
           setLastMessage(data);
           
-          // Notify all listeners
+          // Notify all listeners 
           messageListenersRef.current.forEach((listener) => {
             listener(data);
           });
