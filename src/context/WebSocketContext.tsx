@@ -67,7 +67,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         }
       };
 
-      ws.onerror = (error) => {
+      ws.onerror = (error) => { 
         console.error('❌ WebSocket error:', error);
       };
 
