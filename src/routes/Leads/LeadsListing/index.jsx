@@ -348,6 +348,9 @@ const LeadsListing = ({
                           {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                             {(lead.status == 'Deposit' || lead.status == 'Not Deposit') ? `Real - ${lead.status}` : lead.status}
                           </span>: ''}
+                          {lead.lastTaskStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.lastTaskStatus)}`}>
+                            {lead.lastTaskStatus}
+                          </span>: ''}
                         </td>
                       </>
                     )}

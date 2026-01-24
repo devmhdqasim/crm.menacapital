@@ -153,6 +153,7 @@ const LeadManagement = () => {
           leadSource: lead.leadSource,
           remarks: lead.leadDescription || '',
           status: lead.leadStatus ?? '-',
+          lastTaskStatus: lead.lastTaskStatus,
           createdAt: lead.createdAt,
           kioskLeadStatus: lead.kioskLeadStatus ?? '-',
           chatbotMessage: lead.chatbotMessage,

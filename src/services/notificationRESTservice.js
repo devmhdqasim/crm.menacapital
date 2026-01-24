@@ -275,7 +275,7 @@ export const markAllNotificationsAsRead = async () => {
     const response = await axios.patch(
       endpoint,
       {
-        _id: unreadIds,
+        notificationIds: unreadIds,
         isRead: true
       },
       {
@@ -442,7 +442,7 @@ export const deleteMultipleNotifications = async (notificationIds) => {
           'Authorization': `Bearer ${authToken}`,
         },
         data: {
-          _id: notificationIds
+          notificationIds: notificationIds
         },
         timeout: 30000,
       }

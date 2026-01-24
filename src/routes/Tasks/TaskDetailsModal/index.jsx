@@ -8,6 +8,7 @@ import { updateTask, createTask, createAutoTask } from '../../../services/taskSe
 const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   // Modal form state
   const [taskStatus, setTaskStatus] = useState('');
+  const [answeredStatus, setAnsweredStatus] = useState(''); // NEW: Answered status field
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
   const [modalRemarks, setModalRemarks] = useState('');
   const [modalErrors, setModalErrors] = useState({});
@@ -35,6 +36,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       setModalRemarks(task.leadRemarks || '');
       setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
       setReminderDateTime(null);
+      
+      // NEW: Set answered status from task
+      setAnsweredStatus(''); // Will be set by user
       
       // Parse the current lead response status to set UI state
       const currentStatus = task.taskCreationStatus || '';
@@ -237,6 +241,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         taskPriority: task.priority,
         // taskScheduledDate: scheduledDateISO,
         taskStatus: taskStatus,
+        answeredStatus: answeredStatus, // NEW: Include answered status in payload
         leadRemarks: modalRemarks || '',
         leadResponseStatus: leadResponseStatus || '',
       };
@@ -279,6 +284,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             taskPriority: task.priority,
             taskScheduledDate: scheduledDateISO,
             taskStatus: 'Open',
+            answeredStatus: answeredStatus, // NEW: Include answered status
             leadRemarks: modalRemarks || '',
             leadResponseStatus: leadResponseStatus || '',
             leadStatus: leadResponseStatus || '', // Point 1: Add leadStatus
@@ -690,6 +696,53 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 {modalErrors.taskStatus && (
                   <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
                 )}
+              </div>
+
+              {/* NEW: Answered Status Section */}
+              <div className="space-y-4 mb-6">
+                <label className="text-sm text-[#E8D5A3] font-medium block">
+                  Answered Status
+                </label>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border cursor-pointer ${
+                    answeredStatus === 'Answered'
+                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="answeredStatus"
+                      value="Answered"
+                      checked={answeredStatus === 'Answered'}
+                      onChange={(e) => {
+                        setAnsweredStatus(e.target.value);
+                        setModalErrors({});
+                      }}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                    />
+                    <span className="text-white font-medium">Answered</span>
+                  </label>
+                  
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border cursor-pointer ${
+                    answeredStatus === 'Not Answered'
+                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="answeredStatus"
+                      value="Not Answered"
+                      checked={answeredStatus === 'Not Answered'}
+                      onChange={(e) => {
+                        setAnsweredStatus(e.target.value);
+                        setModalErrors({});
+                      }}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                    />
+                    <span className="text-white font-medium">Not Answered</span>
+                  </label>
+                </div>
               </div>
 
               {/* Lead Response Status Update */}

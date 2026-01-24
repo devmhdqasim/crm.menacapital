@@ -135,6 +135,7 @@ export const searchLeadById = async (keyword, page = 1, limit = 10) => {
  * @param {string} taskData.taskPriority - Task priority (High, Normal, Low)
  * @param {string} taskData.taskScheduledDate - Scheduled date (YYYY-MM-DD)
  * @param {string} taskData.taskStatus - Task status (Open, In Progress, Completed, Pending)
+ * @param {string} taskData.answeredStatus - Answered status (Answered, Not Answered) - Optional
  * @param {string} taskData.leadRemarks - Lead remarks (optional)
  * @param {string} taskData.leadResponseStatus - Lead response status (optional)
  * @param {string} taskData.leadStatus - Lead status (optional)
@@ -163,6 +164,7 @@ export const createTask = async (taskData) => {
       taskPriority: taskData.taskPriority,
       taskScheduledDate: taskData.taskScheduledDate,
       taskStatus: taskData.taskStatus,
+      answeredStatus: taskData.answeredStatus || '', // NEW: Include answered status
       leadRemarks: taskData.leadRemarks || '',
       leadResponseStatus: taskData.leadResponseStatus || '',
       leadStatus: taskData.leadStatus || '', // Add leadStatus field
@@ -406,6 +408,7 @@ export const updateTask = async (taskId, taskData) => {
       taskPriority: taskData.taskPriority,
       taskScheduledDate: taskData.taskScheduledDate,
       taskStatus: taskData.taskStatus,
+      answeredStatus: taskData.answeredStatus || '', // NEW: Include answered status
       leadRemarks: taskData.leadRemarks || '',
       leadResponseStatus: taskData.leadResponseStatus || '',
     };

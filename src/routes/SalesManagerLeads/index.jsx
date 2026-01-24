@@ -204,6 +204,7 @@ const SalesManagerLeadManagement = () => {
           remarks: lead.leadDescription || '',
           depositStatus: lead.depositStatus || '',
           status: lead.leadStatus,
+          lastTaskStatus: lead.lastTaskStatus,
           createdAt: lead.createdAt,
           leadSourceId: lead?.leadSourceId?.[0],
           kioskLeadStatus: lead.kioskLeadStatus ?? '-',

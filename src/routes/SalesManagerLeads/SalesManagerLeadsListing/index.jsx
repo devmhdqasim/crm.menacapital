@@ -99,6 +99,7 @@ const SalesManagerLeadsListing = ({
           remarks: lead.leadDescription || '',
           depositStatus: lead.depositStatus || '',
           status: lead.leadStatus,
+          lastTaskStatus: lead.lastTaskStatus,
           createdAt: lead.createdAt,
           leadSourceId: lead?.leadSourceId?.[0],
           kioskLeadStatus: lead.kioskLeadStatus ?? '-',
@@ -572,6 +573,9 @@ const SalesManagerLeadsListing = ({
                         </span> : ''}
                         {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                           {lead.status}
+                        </span>: ''}
+                        {lead.lastTaskStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.lastTaskStatus)}`}>
+                          {lead.lastTaskStatus}
                         </span>: ''}
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
