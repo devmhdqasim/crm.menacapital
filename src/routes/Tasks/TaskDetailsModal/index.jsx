@@ -630,7 +630,23 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.taskCreationStatus)}`}>
                     {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
                   </span>
+
+                <div>
+                  <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
+                    {(task.kioskLeadStatus == 'Deposit' || task.kioskLeadStatus == 'Not Deposit') ? `Real - ${task.kioskLeadStatus}` : task.kioskLeadStatus}
+                  </span>
                 </div>
+                </div>
+
+                {task.latestRemarks && (
+                  <div className="space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium flex items-center gap-2">
+                      Kiosk Lead Remarks
+                    </label>
+                    <p className="text-white font-mono">{task.latestRemarks}</p>
+                  </div>
+                )}
               </div>
             </div>
 

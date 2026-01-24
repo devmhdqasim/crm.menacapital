@@ -489,11 +489,11 @@ const AssignLeadModal = ({
               </div>
               {selectedLead.remarks ? (<div className="space-y-2 col-span-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">{selectedLead.chatbotMessage.length ? 'Chatbot Message' : 'Kiosk Remarks'}</label>
-                {selectedLead.chatbotMessage.length && selectedLead.chatbotMessage.map((item, _index) => (
+                {selectedLead.chatbotMessage.length ? selectedLead.chatbotMessage.map((item, _index) => (
                   <>
                     <p className="text-white mb-0.5">{item}</p>
                   </>
-                ))}
+                )) : ''}
                 {!selectedLead.chatbotMessage.length && <p className="text-white">{selectedLead.remarks || 'No remarks'}</p>}              </div>) : ''}
             </div>
 
