@@ -83,7 +83,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         }, 3000);
       };
 
-      wsRef.current = ws;
+      wsRef.current = ws; 
     } catch (error) {
       console.error('❌ Error creating WebSocket connection:', error);
     }
