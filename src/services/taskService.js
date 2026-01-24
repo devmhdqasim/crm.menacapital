@@ -135,7 +135,7 @@ export const searchLeadById = async (keyword, page = 1, limit = 10) => {
  * @param {string} taskData.taskPriority - Task priority (High, Normal, Low)
  * @param {string} taskData.taskScheduledDate - Scheduled date (YYYY-MM-DD)
  * @param {string} taskData.taskStatus - Task status (Open, In Progress, Completed, Pending)
- * @param {string} taskData.answeredStatus - Answered status (Answered, Not Answered) - Optional
+ * @param {string} taskData.answerStatus - Answer status (Answered, Not Answered) - Optional
  * @param {string} taskData.leadRemarks - Lead remarks (optional)
  * @param {string} taskData.leadResponseStatus - Lead response status (optional)
  * @param {string} taskData.leadStatus - Lead status (optional)
@@ -164,7 +164,7 @@ export const createTask = async (taskData) => {
       taskPriority: taskData.taskPriority,
       taskScheduledDate: taskData.taskScheduledDate,
       taskStatus: taskData.taskStatus,
-      answerStatus: taskData.answeredStatus || '', // NEW: Include answered status
+      answerStatus: taskData.answerStatus || '', // FIXED: Use answerStatus (without "ed")
       leadRemarks: taskData.leadRemarks || '',
       leadResponseStatus: taskData.leadResponseStatus || '',
       leadStatus: taskData.leadStatus || '', // Add leadStatus field
@@ -389,7 +389,7 @@ export const updateTask = async (taskId, taskData) => {
     
     console.log('🔵 Updating task...');
     console.log('🆔 Task ID:', taskId);
-    console.log('📝 Task data:', taskData);
+    console.log('📝 Task data received:', taskData);
     
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
@@ -398,7 +398,7 @@ export const updateTask = async (taskId, taskData) => {
 
     console.log('🔑 Using refresh token for API call');
 
-    // Prepare the payload
+    // Prepare the payload - FIXED: Use answerStatus instead of answeredStatus
     const payload = {
       _id: taskId,
       agentId: taskData.agentId,
@@ -408,7 +408,7 @@ export const updateTask = async (taskId, taskData) => {
       taskPriority: taskData.taskPriority,
       taskScheduledDate: taskData.taskScheduledDate,
       taskStatus: taskData.taskStatus,
-      answerStatus: taskData.answeredStatus || '', // NEW: Include answered status
+      answerStatus: taskData.answerStatus || '', // FIXED: Use answerStatus (not answeredStatus)
       leadRemarks: taskData.leadRemarks || '',
       leadResponseStatus: taskData.leadResponseStatus || '',
     };
@@ -419,6 +419,7 @@ export const updateTask = async (taskId, taskData) => {
     }
 
     console.log('📤 Sending payload to API:', payload);
+    console.log('📤 answerStatus value:', payload.answerStatus);
 
     const response = await axios.patch(
       `${API_BASE_URL}/task/update/en`,
