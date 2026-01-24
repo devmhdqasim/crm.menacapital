@@ -164,7 +164,7 @@ export const createTask = async (taskData) => {
       taskPriority: taskData.taskPriority,
       taskScheduledDate: taskData.taskScheduledDate,
       taskStatus: taskData.taskStatus,
-      answeredStatus: taskData.answeredStatus || '', // NEW: Include answered status
+      answerStatus: taskData.answeredStatus || '', // NEW: Include answered status
       leadRemarks: taskData.leadRemarks || '',
       leadResponseStatus: taskData.leadResponseStatus || '',
       leadStatus: taskData.leadStatus || '', // Add leadStatus field
