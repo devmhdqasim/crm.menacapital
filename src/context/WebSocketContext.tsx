@@ -79,7 +79,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         // Attempt to reconnect after 3 seconds 
         reconnectTimeoutRef.current = setTimeout(() => {
           console.log('🔄 Attempting to reconnect...');
-          connect();
+          connect(); 
         }, 3000);
       };
 
