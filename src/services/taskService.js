@@ -408,7 +408,7 @@ export const updateTask = async (taskId, taskData) => {
       taskPriority: taskData.taskPriority,
       taskScheduledDate: taskData.taskScheduledDate,
       taskStatus: taskData.taskStatus,
-      answeredStatus: taskData.answeredStatus || '', // NEW: Include answered status
+      answerStatus: taskData.answeredStatus || '', // NEW: Include answered status
       leadRemarks: taskData.leadRemarks || '',
       leadResponseStatus: taskData.leadResponseStatus || '',
     };

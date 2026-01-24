@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, Mail } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, Mail, AlertCircle } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
@@ -30,6 +30,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   // Animation state
   const [isClosing, setIsClosing] = useState(false);
 
+  // Check if task is unassigned
+  const isTaskUnassigned = task?.assignedTo === 'Unassigned';
+
   // Pre-populate modal when task changes
   useEffect(() => {
     if (task) {
@@ -37,8 +40,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
       setReminderDateTime(null);
       
-      // NEW: Set answered status from task
-      setAnsweredStatus(''); // Will be set by user
+      // NEW: Set answered status from task (if exists, otherwise empty for user to select)
+      // Check multiple possible field names from API
+      const initialAnswerStatus = task.answerStatus || task.answeredStatus || '';
+      console.log('🔍 Task object:', task);
+      console.log('🔍 Initial answerStatus from task:', initialAnswerStatus);
+      setAnsweredStatus(initialAnswerStatus);
       
       // Parse the current lead response status to set UI state
       const currentStatus = task.taskCreationStatus || '';
@@ -171,6 +178,16 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       errors.taskStatus = 'Task can only be completed when lead reaches Demo status or higher';
     }
     
+    // NEW: Answered Status is mandatory
+    if (!answeredStatus) {
+      errors.answeredStatus = 'Please select Answered or Not Answered';
+    }
+    
+    // NEW: If "Not Answered" is selected in Answered Status, cannot update Update Status
+    if (answeredStatus === 'Not Answered' && modalAnswered) {
+      errors.answeredStatus = 'Not Answered status cannot update Update Status. Please change Answered Status to "Answered" first.';
+    }
+    
     // If "Answered" is selected, must select Interested/Not Interested
     if (modalAnswered === 'Answered' && !modalInterested) {
       errors.interested = 'Please select Interested or Not Interested';
@@ -215,6 +232,16 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       return;
     }
 
+    // Debug: Log the answeredStatus value
+    console.log('==========================================');
+    console.log('📝 FORM SUBMISSION - ALL VALUES');
+    console.log('==========================================');
+    console.log('answeredStatus:', answeredStatus, '| Type:', typeof answeredStatus, '| Length:', answeredStatus?.length);
+    console.log('taskStatus:', taskStatus);
+    console.log('leadResponseStatus:', leadResponseStatus);
+    console.log('modalRemarks:', modalRemarks);
+    console.log('==========================================');
+
     setIsSubmitting(true);
 
     try {
@@ -241,10 +268,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         taskPriority: task.priority,
         // taskScheduledDate: scheduledDateISO,
         taskStatus: taskStatus,
-        answeredStatus: answeredStatus, // NEW: Include answered status in payload
+        answerStatus: answeredStatus, // NEW: Include answered status in payload (using answerStatus as per API)
         leadRemarks: modalRemarks || '',
         leadResponseStatus: leadResponseStatus || '',
       };
+
+      console.log('📤 Payload being sent to API:', updateTaskData);
 
       const updateResult = await updateTask(task.id, updateTaskData);
 
@@ -284,7 +313,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             taskPriority: task.priority,
             taskScheduledDate: scheduledDateISO,
             taskStatus: 'Open',
-            answeredStatus: answeredStatus, // NEW: Include answered status
+            answerStatus: answeredStatus, // NEW: Include answered status (using answerStatus as per API)
             leadRemarks: modalRemarks || '',
             leadResponseStatus: leadResponseStatus || '',
             leadStatus: leadResponseStatus || '', // Point 1: Add leadStatus
@@ -359,10 +388,19 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
 
   // Check if the form is valid for submission
   const isFormValid = () => {
+    // Task is unassigned - cannot update
+    if (isTaskUnassigned) return false;
+    
     // Task status is required, but if Completed is disabled and not selected, that's okay
     if (!taskStatus && !isTaskStatusCompletedDisabled()) return false;
     
-    // If "Answered" is selected, must complete the rest of the hierarchy
+    // NEW: Answered Status is mandatory
+    if (!answeredStatus) return false;
+    
+    // NEW: If "Not Answered" is selected, cannot proceed with Update Status
+    if (answeredStatus === 'Not Answered' && modalAnswered) return false;
+    
+    // If "Answered" is selected in Update Status section, must complete the rest of the hierarchy
     if (modalAnswered === 'Answered') {
       if (!modalInterested) return false;
       
@@ -460,6 +498,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     return checkStatusIndex <= effectiveStatusIndex;
   };
 
+  // NEW: Check if Update Status section should be disabled
+  const isUpdateStatusDisabled = () => {
+    // Disable if task is unassigned
+    if (isTaskUnassigned) return true;
+    
+    // Disable if "Not Answered" is selected in Answered Status
+    if (answeredStatus === 'Not Answered') return true;
+    
+    return false;
+  };
+
   if (!isOpen || !task) return null;
 
   return (
@@ -492,6 +541,19 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         {/* Modal Content - Scrollable */}
         <div className="overflow-y-auto flex-1">
           <div className="p-6 space-y-6">
+            {/* NEW: Unassigned Task Warning */}
+            {isTaskUnassigned && (
+              <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-lg flex items-start gap-3 animate-fadeIn">
+                <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-red-400 text-sm font-semibold">Unassigned Task</p>
+                  <p className="text-red-300 text-xs mt-1">
+                    This task is currently unassigned. Please assign this task to an agent before updating the status. All status updates are disabled until the task is assigned.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Task Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2 col-span-2">
@@ -526,7 +588,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
               <div className="space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Assigned To</label>
                 <div>
-                  <p className="text-white">{task.assignedTo}</p>
+                  <p className={`${isTaskUnassigned ? 'text-red-400 font-semibold' : 'text-white'}`}>
+                    {task.assignedTo}
+                  </p>
                   {task.assignedToUsername && (
                     <p className="text-gray-400 text-xs">@{task.assignedToUsername}</p>
                   )}
@@ -701,14 +765,16 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
               {/* NEW: Answered Status Section */}
               <div className="space-y-4 mb-6">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
-                  Answered Status
+                  Answered Status <span className="text-red-400">*</span>
                 </label>
                 
                 <div className="grid grid-cols-2 gap-3">
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border cursor-pointer ${
-                    answeredStatus === 'Answered'
-                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                    isTaskUnassigned
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                      : answeredStatus === 'Answered'
+                        ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
+                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
                   }`}>
                     <input
                       type="radio"
@@ -716,18 +782,22 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       value="Answered"
                       checked={answeredStatus === 'Answered'}
                       onChange={(e) => {
+                        console.log('🔵 Answered Status onChange triggered:', e.target.value);
                         setAnsweredStatus(e.target.value);
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                      disabled={isTaskUnassigned}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
                   
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border cursor-pointer ${
-                    answeredStatus === 'Not Answered'
-                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                    isTaskUnassigned
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                      : answeredStatus === 'Not Answered'
+                        ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
+                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
                   }`}>
                     <input
                       type="radio"
@@ -735,18 +805,43 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       value="Not Answered"
                       checked={answeredStatus === 'Not Answered'}
                       onChange={(e) => {
+                        console.log('🔵 Answered Status onChange triggered:', e.target.value);
                         setAnsweredStatus(e.target.value);
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                      disabled={isTaskUnassigned}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Not Answered</span>
                   </label>
                 </div>
+                
+                {/* Show error for Answered Status */}
+                {modalErrors.answeredStatus && (
+                  <div className="text-red-400 text-sm animate-pulse flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{modalErrors.answeredStatus}</span>
+                  </div>
+                )}
+                
+                {/* Show info when "Not Answered" is selected */}
+                {answeredStatus === 'Not Answered' && (
+                  <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <AlertCircle className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-orange-400 text-sm font-medium">Update Status Disabled</p>
+                      <p className="text-orange-300 text-xs mt-1">
+                        When "Not Answered" is selected, you cannot update the status below. Please change to "Answered" to enable status updates.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Lead Response Status Update */}
-              <div className="space-y-4">
+              <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-50 pointer-events-none' : ''}`}>
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Update Status
                 </label>
@@ -754,7 +849,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 {/* Level 1: Answered / Not Answered - Point 5: Disable previous statuses */}
                 <div className="grid grid-cols-2 gap-3">
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isStatusDisabled('Answered')
+                    isStatusDisabled('Answered') || isUpdateStatusDisabled()
                       ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                       : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
@@ -772,14 +867,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      disabled={isStatusDisabled('Answered')}
+                      disabled={isStatusDisabled('Answered') || isUpdateStatusDisabled()}
                       className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
                   
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isStatusDisabled('Not Answered')
+                    isStatusDisabled('Not Answered') || isUpdateStatusDisabled()
                       ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                       : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
@@ -797,7 +892,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      disabled={isStatusDisabled('Not Answered')}
+                      disabled={isStatusDisabled('Not Answered') || isUpdateStatusDisabled()}
                       className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Not Answered</span>

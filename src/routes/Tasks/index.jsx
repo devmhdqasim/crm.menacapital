@@ -436,6 +436,8 @@ const Tasks = () => {
             leadRemarks: task.leadRemarks || '',
             leadResponseStatus: task.leadResponseStatus || '',
             taskScheduledDate: task.taskScheduledDate || '',
+            answerStatus: task.answerStatus || '', // NEW: Map answerStatus from API
+
           };
         });
 

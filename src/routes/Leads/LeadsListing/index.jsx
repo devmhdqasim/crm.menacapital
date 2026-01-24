@@ -300,8 +300,8 @@ const LeadsListing = ({
                 {!isLeadsSelectedId && (
                   <>
                     <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
-                  </>
+                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Kiosk - Lead - Task</th>
+                    </>
                 )}
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
               </tr>
