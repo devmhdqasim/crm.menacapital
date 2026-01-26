@@ -425,6 +425,7 @@ const Tasks = () => {
             taskCreationStatus: task?.taskCreationStatus ? task.taskCreationStatus : '-',
             kioskLeadStatus: task?.leadId?.length && task?.leadId?.[0]?.kioskLeadStatus ? task?.leadId?.[0]?.kioskLeadStatus : '-', // ⭐ ADD THIS LINE
             kioskDepositStatus: task?.leadId?.length && task?.leadId?.[0]?.depositStatus ? task?.leadId?.[0]?.depositStatus : '-', // ⭐ ADD THIS LINE
+            leadDescription: task?.leadId?.length && task?.leadId?.[0]?.leadDescription ? task?.leadId?.[0]?.leadDescription : '-', // ⭐ ADD THIS LINE
             leadPhone: task.leadId?.length > 0 ? task.leadId[0].leadPhoneNumber : '',
             dueDate: task.taskDueDate || new Date().toISOString(),
             createdAt: task.createdAt,

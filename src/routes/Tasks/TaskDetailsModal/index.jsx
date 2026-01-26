@@ -492,6 +492,20 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     // If no effective status set, don't disable anything
     if (effectiveStatusIndex === -1) return false;
     
+    // Get current effective status
+    const currentStatus = statusHierarchy[effectiveStatusIndex];
+    
+    // Special handling for Deposit/Not Deposit mutual exclusivity
+    // If current status is "Not Deposit", allow changing to "Deposit"
+    if (currentStatus === 'Not Deposit' && statusToCheck === 'Deposit') {
+      return false; // Enable Deposit option
+    }
+    
+    // If current status is "Deposit", allow changing to "Not Deposit"  
+    if (currentStatus === 'Deposit' && statusToCheck === 'Not Deposit') {
+      return false; // Enable Not Deposit option
+    }
+    
     // Disable if the status to check is before or equal to effective status
     return checkStatusIndex <= effectiveStatusIndex;
   };
@@ -630,17 +644,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 <div>
                   <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
-                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
+                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
                   </span>
                 </div>
                 </div>
 
-                {task.latestRemarks && (
+                {task.leadDescription && (
                   <div className="space-y-2">
                     <label className="text-sm text-[#E8D5A3] font-medium flex items-center gap-2">
-                      Kiosk Lead Remarks
+                      Lead Description
                     </label>
-                    <p className="text-white font-mono">{task.latestRemarks}</p>
+                    <p className="text-white font-mono">{task.leadDescription}</p>
                   </div>
                 )}
               </div>
