@@ -510,12 +510,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     return checkStatusIndex <= effectiveStatusIndex;
   };
 
-  // MODIFIED: Update Status section should only be disabled if task is unassigned
+  // MODIFIED: Update Status section should be disabled if task is unassigned OR if "Not Answered" is selected
   const isUpdateStatusDisabled = () => {
-    // Only disable if task is unassigned
+    // Disable if task is unassigned
     if (isTaskUnassigned) return true;
     
-    // REMOVED: Don't disable when "Not Answered" is selected
+    // Disable if "Not Answered" is selected in Answered Status
+    if (answeredStatus === 'Not Answered') return true;
+    
     return false;
   };
 
@@ -644,7 +646,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 <div>
                   <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
-                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
+                  {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
                   </span>
                 </div>
                 </div>
@@ -852,16 +854,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 
                 {/* MODIFIED: Updated info message when "Not Answered" is selected */}
                 {answeredStatus === 'Not Answered' && (
-                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
+                  <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
-                      <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
+                      <AlertCircle className="w-5 h-5 text-orange-400" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-blue-400 text-sm font-medium">Not Answered Selected</p>
-                      <p className="text-blue-300 text-xs mt-1">
-                        You can still toggle the Task Status above and submit. The Update Status section below is not required when "Not Answered" is selected.
+                      <p className="text-orange-400 text-sm font-medium">Update Status Disabled</p>
+                      <p className="text-orange-300 text-xs mt-1">
+                        When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.
                       </p>
                     </div>
                   </div>
