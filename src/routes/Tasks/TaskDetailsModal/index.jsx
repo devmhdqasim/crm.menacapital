@@ -183,6 +183,11 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       errors.answeredStatus = 'Please select Answered or Not Answered';
     }
     
+    // NEW: When "Not Answered" is selected, task must be marked as "Completed"
+    if (answeredStatus === 'Not Answered' && taskStatus !== 'Completed') {
+      errors.taskStatus = 'Task must be marked as Completed when selecting "Not Answered"';
+    }
+    
     // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
     if (answeredStatus === 'Answered') {
       // If "Answered" is selected in Update Status section, must select Interested/Not Interested
@@ -394,6 +399,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     
     // NEW: Answered Status is mandatory
     if (!answeredStatus) return false;
+    
+    // When "Not Answered" is selected, task must be marked as "Completed" to enable submit
+    if (answeredStatus === 'Not Answered' && taskStatus !== 'Completed') return false;
     
     // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
     if (answeredStatus === 'Answered') {
@@ -861,7 +869,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     <div className="flex-1">
                       <p className="text-orange-400 text-sm font-medium">Update Status Disabled</p>
                       <p className="text-orange-300 text-xs mt-1">
-                        When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.
+                        {taskStatus === 'Completed' 
+                          ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'
+                          : 'To save with "Not Answered", please enable the Task Completion toggle above first.'}
                       </p>
                     </div>
                   </div>
