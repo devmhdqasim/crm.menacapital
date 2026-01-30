@@ -529,6 +529,21 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     return false;
   };
 
+  // Helper function to check if a status is the final selected status
+  const isFinalSelectedStatus = (statusValue) => {
+    return leadResponseStatus === statusValue && leadResponseStatus !== '';
+  };
+
+  // Helper component for the selected status indicator
+  const SelectedStatusIndicator = () => (
+    <div className="flex items-center gap-1 ml-auto">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+      </span>
+    </div>
+  );
+
   if (!isOpen || !task) return null;
 
   return (
@@ -914,7 +929,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     isStatusDisabled('Not Answered') || isUpdateStatusDisabled()
                       ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      : isFinalSelectedStatus('Not Answered')
+                        ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
                     <input
                       type="radio"
@@ -933,7 +950,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       disabled={isStatusDisabled('Not Answered') || isUpdateStatusDisabled()}
                       className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
-                    <span className="text-white font-medium">Not Answered</span>
+                    <span className={`font-medium ${isFinalSelectedStatus('Not Answered') ? 'text-green-400' : 'text-white'}`}>Not Answered</span>
+                    {isFinalSelectedStatus('Not Answered') && <SelectedStatusIndicator />}
                   </label>
                 </div>
                 
@@ -968,7 +986,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Not Interested')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          : isFinalSelectedStatus('Not Interested')
+                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
@@ -986,7 +1006,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           disabled={isStatusDisabled('Not Interested')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
-                        <span className="text-white font-medium">Not Interested</span>
+                        <span className={`font-medium ${isFinalSelectedStatus('Not Interested') ? 'text-green-400' : 'text-white'}`}>Not Interested</span>
+                        {isFinalSelectedStatus('Not Interested') && <SelectedStatusIndicator />}
                       </label>
                     </div>
                     {modalErrors.interested && (
@@ -1002,7 +1023,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Warm')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          : isFinalSelectedStatus('Warm')
+                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
@@ -1019,13 +1042,16 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           disabled={isStatusDisabled('Warm')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
-                        <span className="text-white font-medium">Warm Lead</span>
+                        <span className={`font-medium ${isFinalSelectedStatus('Warm') ? 'text-green-400' : 'text-white'}`}>Warm Lead</span>
+                        {isFinalSelectedStatus('Warm') && <SelectedStatusIndicator />}
                       </label>
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Hot')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          : isFinalSelectedStatus('Hot')
+                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
@@ -1042,7 +1068,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           disabled={isStatusDisabled('Hot')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
-                        <span className="text-white font-medium">Hot Lead</span>
+                        <span className={`font-medium ${isFinalSelectedStatus('Hot') ? 'text-green-400' : 'text-white'}`}>Hot Lead</span>
+                        {isFinalSelectedStatus('Hot') && <SelectedStatusIndicator />}
                       </label>
                     </div>
                     {modalErrors.leadType && (
@@ -1058,7 +1085,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Demo')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          : isFinalSelectedStatus('Demo')
+                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
@@ -1074,7 +1103,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           disabled={isStatusDisabled('Demo')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
-                        <span className="text-white font-medium">Demo</span>
+                        <span className={`font-medium ${isFinalSelectedStatus('Demo') ? 'text-green-400' : 'text-white'}`}>Demo</span>
+                        {isFinalSelectedStatus('Demo') && <SelectedStatusIndicator />}
                       </label>
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
@@ -1176,7 +1206,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Deposit')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          : isFinalSelectedStatus('Deposit')
+                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
@@ -1191,13 +1223,16 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           disabled={isStatusDisabled('Deposit')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
-                        <span className="text-white font-medium">Deposit</span>
+                        <span className={`font-medium ${isFinalSelectedStatus('Deposit') ? 'text-green-400' : 'text-white'}`}>Deposit</span>
+                        {isFinalSelectedStatus('Deposit') && <SelectedStatusIndicator />}
                       </label>
                       
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Not Deposit')
                           ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          : isFinalSelectedStatus('Not Deposit')
+                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
@@ -1212,7 +1247,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                           disabled={isStatusDisabled('Not Deposit')}
                           className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
-                        <span className="text-white font-medium">Not Deposit</span>
+                        <span className={`font-medium ${isFinalSelectedStatus('Not Deposit') ? 'text-green-400' : 'text-white'}`}>Not Deposit</span>
+                        {isFinalSelectedStatus('Not Deposit') && <SelectedStatusIndicator />}
                       </label>
                     </div>
                     {modalErrors.depositStatus && (
@@ -1291,6 +1327,18 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes bounce-subtle {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-3px);
+          }
+        }
+        .animate-bounce-subtle {
+          animation: bounce-subtle 1s ease-in-out infinite;
         }
 
         /* Custom DatePicker Styling */
