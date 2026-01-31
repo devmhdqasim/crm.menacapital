@@ -14,7 +14,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   const [modalErrors, setModalErrors] = useState({});
   const [reminderDateTime, setReminderDateTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Helper states for hierarchical selections
   const [modalAnswered, setModalAnswered] = useState('');
   const [modalInterested, setModalInterested] = useState('');
@@ -39,18 +39,18 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       setModalRemarks(task.leadRemarks || '');
       setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
       setReminderDateTime(null);
-      
+
       // NEW: Set answered status from task (if exists, otherwise empty for user to select)
       // Check multiple possible field names from API
       const initialAnswerStatus = task.answerStatus || task.answeredStatus || '';
       console.log('🔍 Task object:', task);
       console.log('🔍 Initial answerStatus from task:', initialAnswerStatus);
       setAnsweredStatus(initialAnswerStatus);
-      
+
       // Parse the current lead response status to set UI state
       const currentStatus = task.taskCreationStatus || '';
       const kioskStatus = task.kioskLeadStatus || ''; // Get kiosk lead status
-      
+
       if (!currentStatus || currentStatus === '') {
         // No status set yet - but check kiosk status
         if (kioskStatus === 'Demo') {
@@ -61,7 +61,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           setModalHotLeadType('Demo');
           setLeadResponseStatus('Demo');
           setModalDepositStatus('');
-        } else if (kioskStatus === 'Not Deposit') {
+        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
           // Point 4: Auto-select Not Deposit
           setModalAnswered('Answered');
           setModalInterested('Interested');
@@ -114,7 +114,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
-      } else if (currentStatus === 'Not Deposit' || kioskStatus === 'Not Deposit') {
+      } else if (currentStatus === 'Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
         // Point 4: Auto-select Not Deposit
         setModalAnswered('Answered');
         setModalInterested('Interested');
@@ -167,49 +167,49 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
 
   const validateModalForm = () => {
     const errors = {};
-    
+
     // Task status is required only if Completed option is enabled
     if (!taskStatus && !isTaskStatusCompletedDisabled()) {
       errors.taskStatus = 'Please select a task status';
     }
-    
+
     // If Completed is disabled but user tries to complete without proper status
     if (isTaskStatusCompletedDisabled() && taskStatus === 'Completed') {
       errors.taskStatus = 'Task can only be completed when lead reaches Demo status or higher';
     }
-    
+
     // NEW: Answered Status is mandatory
     if (!answeredStatus) {
       errors.answeredStatus = 'Please select Answered or Not Answered';
     }
-    
+
     // NEW: When "Not Answered" is selected, task must be marked as "Completed"
     if (answeredStatus === 'Not Answered' && taskStatus !== 'Completed') {
       errors.taskStatus = 'Task must be marked as Completed when selecting "Not Answered"';
     }
-    
+
     // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
     if (answeredStatus === 'Answered') {
       // If "Answered" is selected in Update Status section, must select Interested/Not Interested
       if (modalAnswered === 'Answered' && !modalInterested) {
         errors.interested = 'Please select Interested or Not Interested';
       }
-      
+
       // If "Interested" is selected, must select Warm/Hot
       if (modalInterested === 'Interested' && !modalLeadType) {
         errors.leadType = 'Please select Warm Lead or Hot Lead';
       }
-      
+
       // If "Hot" is selected, must select Demo/Real
       if (modalLeadType === 'Hot' && !modalHotLeadType) {
         errors.hotLeadType = 'Please select Demo or Real';
       }
-      
+
       // If "Real" is selected, must select Deposit/Not Deposit
       if (modalHotLeadType === 'Real' && !modalDepositStatus) {
         errors.depositStatus = 'Please select Deposit or Not Deposit';
       }
-      
+
       // If Demo is selected, first two checkboxes must be checked
       if (modalHotLeadType === 'Demo') {
         if (!demoInstallApp || !demoEducationVideo) {
@@ -217,19 +217,19 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         }
       }
     }
-    
+
     // Validate remarks length (max 500 characters)
     if (modalRemarks && modalRemarks.length > 500) {
       errors.remarks = 'Remarks must not exceed 500 characters';
     }
-    
+
     return errors;
   };
 
   const handleModalSubmit = async () => {
     // Validate form
     const errors = validateModalForm();
-    
+
     if (Object.keys(errors).length > 0) {
       setModalErrors(errors);
       return;
@@ -255,7 +255,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         // We need to convert this to UTC for the API
         const dubaiOffset = 4 * 60; // Dubai is UTC+4 (240 minutes)
         const userTimezoneOffset = reminderDateTime.getTimezoneOffset(); // User's local timezone offset in minutes
-        
+
         // Adjust the date to account for Dubai timezone
         const adjustedDate = new Date(reminderDateTime.getTime() - (dubaiOffset + userTimezoneOffset) * 60000);
         scheduledDateISO = adjustedDate.toISOString();
@@ -293,19 +293,19 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       // After successful update, check if we need to create a new task based on reminder date
       // Only create new task if lead response status is between Warm and Deposit
       const shouldCreateNewTask = ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
-      
+
       if (shouldCreateNewTask) {
         let createResult;
-        
+
         if (reminderDateTime) {
           // Convert selected time from Dubai timezone to UTC for backend
           const dubaiOffset = 4 * 60; // Dubai is UTC+4 (240 minutes)
           const userTimezoneOffset = reminderDateTime.getTimezoneOffset(); // User's local timezone offset in minutes
-          
+
           // Adjust the date to account for Dubai timezone
           const adjustedDate = new Date(reminderDateTime.getTime() - (dubaiOffset + userTimezoneOffset) * 60000);
           const scheduledDateISO = adjustedDate.toISOString();
-          
+
           // If reminder date is set, use createTask API
           const newTaskData = {
             agentId: task.agentIdRaw,
@@ -321,7 +321,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             leadResponseStatus: leadResponseStatus || '',
             leadStatus: leadResponseStatus || '', // Point 1: Add leadStatus
           };
-          
+
           createResult = await createTask(newTaskData);
         } else {
           // If no reminder date, use createAutoTask API
@@ -331,10 +331,10 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             taskTitle: task.title,
             taskDescription: task.description,
           };
-          
+
           createResult = await createAutoTask(autoTaskData);
         }
-        
+
         if (!createResult.success) {
           console.warn('Failed to create follow-up task:', createResult.message);
           // Don't show error to user, just log it
@@ -343,7 +343,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
 
       toast.success('Task updated successfully!');
       handleClose();
-      
+
       // Call the callback to refresh the task list if provided
       if (onTaskUpdated) {
         onTaskUpdated();
@@ -393,33 +393,33 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   const isFormValid = () => {
     // Task is unassigned - cannot update
     if (isTaskUnassigned) return false;
-    
+
     // Task status is required, but if Completed is disabled and not selected, that's okay
     if (!taskStatus && !isTaskStatusCompletedDisabled()) return false;
-    
+
     // NEW: Answered Status is mandatory
     if (!answeredStatus) return false;
-    
+
     // When "Not Answered" is selected, task must be marked as "Completed" to enable submit
     if (answeredStatus === 'Not Answered' && taskStatus !== 'Completed') return false;
-    
+
     // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
     if (answeredStatus === 'Answered') {
       // If "Answered" is selected in Update Status section, must complete the rest of the hierarchy
       if (modalAnswered === 'Answered') {
         if (!modalInterested) return false;
-        
+
         if (modalInterested === 'Interested') {
           if (!modalLeadType) return false;
-          
+
           if (modalLeadType === 'Hot') {
             if (!modalHotLeadType) return false;
-            
+
             // If Demo is selected, first two checkboxes must be checked
             if (modalHotLeadType === 'Demo') {
               if (!demoInstallApp || !demoEducationVideo) return false;
             }
-            
+
             if (modalHotLeadType === 'Real') {
               if (!modalDepositStatus) return false;
             }
@@ -427,7 +427,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         }
       }
     }
-    
+
     return true;
   };
 
@@ -462,24 +462,49 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   // Status hierarchy: Not Answered < Not Interested < Warm < Hot < Demo < Not Deposit < Deposit
   const isStatusDisabled = (statusToCheck) => {
     if (!task) return false;
-    
+
     const statusHierarchy = [
       '',
       'Not Answered',
-      'Not Interested', 
+      'Not Interested',
       'Warm',
       'Hot',
       'Demo',
       'Not Deposit',
       'Deposit'
     ];
-    
+
     const currentStatusIndex = statusHierarchy.indexOf(task.taskCreationStatus || '');
     const kioskStatus = task.kioskLeadStatus || '';
-    
+
+    // List of kiosk statuses that should allow sibling selection when "Not Answered" is selected
+    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+
+    // NEW REQUIREMENT: If user selects "Not Answered" and kiosk status is in allowed list,
+    // allow selecting sibling statuses at the same level
+    if (answeredStatus === 'Not Answered' && allowedKioskStatuses.includes(kioskStatus)) {
+      // Map kiosk status to its hierarchy level
+      let kioskHierarchyLevel = -1;
+      if (kioskStatus === 'Demo') {
+        kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
+      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+        kioskHierarchyLevel = statusHierarchy.indexOf('Deposit');
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+        kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
+      }
+
+      const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
+
+      // Allow selecting statuses at the same level (siblings) or higher
+      // Disable only statuses that are strictly lower than the kiosk status level
+      if (checkStatusIndex !== -1 && kioskHierarchyLevel !== -1) {
+        return checkStatusIndex < kioskHierarchyLevel;
+      }
+    }
+
     // Determine the effective status index (higher of taskCreationStatus or kioskLeadStatus)
     let effectiveStatusIndex = currentStatusIndex;
-    
+
     // Map kiosk status to hierarchy
     if (kioskStatus === 'Demo') {
       const kioskIndex = statusHierarchy.indexOf('Demo');
@@ -487,45 +512,46 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
-    } else if (kioskStatus === 'Not Deposit') {
+    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Not Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
     }
-    
+
     const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
-    
+
     // If checking status not found, don't disable
     if (checkStatusIndex === -1) return false;
-    
+
     // If no effective status set, don't disable anything
     if (effectiveStatusIndex === -1) return false;
-    
+
     // Get current effective status
     const currentStatus = statusHierarchy[effectiveStatusIndex];
-    
+
     // Special handling for Deposit/Not Deposit mutual exclusivity
     // If current status is "Not Deposit", allow changing to "Deposit"
     if (currentStatus === 'Not Deposit' && statusToCheck === 'Deposit') {
       return false; // Enable Deposit option
     }
-    
+
     // If current status is "Deposit", allow changing to "Not Deposit"  
     if (currentStatus === 'Deposit' && statusToCheck === 'Not Deposit') {
       return false; // Enable Not Deposit option
     }
-    
+
     // Disable if the status to check is before or equal to effective status
     return checkStatusIndex <= effectiveStatusIndex;
   };
 
   // MODIFIED: Update Status section should be disabled if task is unassigned OR if "Not Answered" is selected
+  // BUT NOT when kiosk status is at certain levels (handled by isStatusDisabled)
   const isUpdateStatusDisabled = () => {
     // Disable if task is unassigned
     if (isTaskUnassigned) return true;
-    
-    // Disable if "Not Answered" is selected in Answered Status
-    if (answeredStatus === 'Not Answered') return true;
-    
+
+    // NEW: Don't disable the entire Update Status section if "Not Answered" is selected
+    // because we now allow sibling selections when kiosk status is at certain levels
+    // The individual status options will be controlled by isStatusDisabled() instead
     return false;
   };
 
@@ -547,16 +573,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   if (!isOpen || !task) return null;
 
   return (
-    <div 
-      className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${
-        isClosing ? 'opacity-0' : 'opacity-100'
-      }`}
+    <div
+      className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'
+        }`}
       onClick={handleClose}
     >
-      <div 
-        className={`bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${
-          isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
-        }`}
+      <div
+        className={`bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+          }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header - Sticky */}
@@ -595,7 +619,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 <label className="text-sm text-[#E8D5A3] font-medium">Task Title</label>
                 <p className="text-white text-lg font-semibold">{task.title}</p>
               </div>
-              
+
               <div className="space-y-2 col-span-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Description</label>
                 <p className="text-white">{task.description}</p>
@@ -666,12 +690,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
                   </span>
 
-                <div>
-                  <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
-                  {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
-                  </span>
-                </div>
+                  <div>
+                    <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
+                      {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
+                    </span>
+                  </div>
                 </div>
 
                 {task.leadDescription && (
@@ -689,7 +713,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             <div className="border-t border-[#BBA473]/30 pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Task</h3>
-                
+
                 {/* Date Time Picker - Point 3: Only enabled for Warm to Deposit */}
                 <div className="flex items-center gap-2">
                   <div className="relative flex">
@@ -703,16 +727,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       placeholderText="Set reminder"
                       minDate={new Date()}
                       disabled={!isReminderDateEnabled()}
-                      className={`px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] ${
-                        isReminderDateEnabled() ? 'cursor-pointer border-[#BBA473]/30' : 'cursor-not-allowed border-gray-600 opacity-50'
-                      }`}
+                      className={`px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] ${isReminderDateEnabled() ? 'cursor-pointer border-[#BBA473]/30' : 'cursor-not-allowed border-gray-600 opacity-50'
+                        }`}
                       calendarClassName="custom-datepicker"
                       wrapperClassName="w-full"
                       timeCaption="Time"
                     />
-                    <Clock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                      isReminderDateEnabled() ? 'text-[#BBA473]' : 'text-gray-600'
-                    }`} />
+                    <Clock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isReminderDateEnabled() ? 'text-[#BBA473]' : 'text-gray-600'
+                      }`} />
                   </div>
                 </div>
               </div>
@@ -722,49 +744,45 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
-                
-                <div className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300 ${
-                  isTaskStatusCompletedDisabled()
-                    ? 'bg-gray-900/50 border-gray-700 opacity-50'
-                    : taskStatus === 'Completed'
-                      ? 'bg-green-500/10 border-green-500/50'
-                      : 'bg-[#1A1A1A] border-[#BBA473]/30 hover:border-[#BBA473]/50'
-                }`}>
+
+                <div className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300 ${isTaskStatusCompletedDisabled()
+                  ? 'bg-gray-900/50 border-gray-700 opacity-50'
+                  : taskStatus === 'Completed'
+                    ? 'bg-green-500/10 border-green-500/50'
+                    : 'bg-[#1A1A1A] border-[#BBA473]/30 hover:border-[#BBA473]/50'
+                  }`}>
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      taskStatus === 'Completed' 
-                        ? 'bg-green-500/20' 
-                        : 'bg-gray-700/50'
-                    }`}>
-                      <svg 
-                        className={`w-5 h-5 transition-colors ${
-                          taskStatus === 'Completed' 
-                            ? 'text-green-400' 
-                            : 'text-gray-500'
-                        }`} 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
+                    <div className={`p-2 rounded-lg ${taskStatus === 'Completed'
+                      ? 'bg-green-500/20'
+                      : 'bg-gray-700/50'
+                      }`}>
+                      <svg
+                        className={`w-5 h-5 transition-colors ${taskStatus === 'Completed'
+                          ? 'text-green-400'
+                          : 'text-gray-500'
+                          }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <p className={`font-medium ${
-                        taskStatus === 'Completed' 
-                          ? 'text-green-400' 
-                          : 'text-white'
-                      }`}>
+                      <p className={`font-medium ${taskStatus === 'Completed'
+                        ? 'text-green-400'
+                        : 'text-white'
+                        }`}>
                         Mark as Completed
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {isTaskStatusCompletedDisabled() 
-                          ? 'Available at Demo status or higher' 
+                        {isTaskStatusCompletedDisabled()
+                          ? 'Available at Demo status or higher'
                           : 'Task will be marked as complete'}
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Toggle Switch */}
                   <button
                     type="button"
@@ -775,22 +793,20 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       }
                     }}
                     disabled={isTaskStatusCompletedDisabled()}
-                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#2A2A2A] ${
-                      isTaskStatusCompletedDisabled()
-                        ? 'bg-gray-700 cursor-not-allowed'
-                        : taskStatus === 'Completed'
-                          ? 'bg-green-500'
-                          : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
+                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#2A2A2A] ${isTaskStatusCompletedDisabled()
+                      ? 'bg-gray-700 cursor-not-allowed'
+                      : taskStatus === 'Completed'
+                        ? 'bg-green-500'
+                        : 'bg-gray-600 hover:bg-gray-500'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
-                        taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
-                
+
                 {/* Info message when Completed is disabled */}
                 {isTaskStatusCompletedDisabled() && (
                   <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
@@ -807,7 +823,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     </div>
                   </div>
                 )}
-                
+
                 {modalErrors.taskStatus && (
                   <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
                 )}
@@ -818,15 +834,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Answered Status <span className="text-red-400">*</span>
                 </label>
-                
+
                 <div className="grid grid-cols-2 gap-3">
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isTaskUnassigned
-                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                      : answeredStatus === 'Answered'
-                        ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
-                  }`}>
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isTaskUnassigned
+                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                    : answeredStatus === 'Answered'
+                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
+                    }`}>
                     <input
                       type="radio"
                       name="answeredStatus"
@@ -842,14 +857,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
-                  
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isTaskUnassigned
-                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                      : answeredStatus === 'Not Answered'
-                        ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
-                  }`}>
+
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isTaskUnassigned
+                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                    : answeredStatus === 'Not Answered'
+                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
+                    }`}>
                     <input
                       type="radio"
                       name="answeredStatus"
@@ -866,7 +880,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     <span className="text-white font-medium">Not Answered</span>
                   </label>
                 </div>
-                
+
                 {/* Show error for Answered Status */}
                 {modalErrors.answeredStatus && (
                   <div className="text-red-400 text-sm animate-pulse flex items-start gap-2">
@@ -874,7 +888,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     <span>{modalErrors.answeredStatus}</span>
                   </div>
                 )}
-                
+
                 {/* MODIFIED: Updated info message when "Not Answered" is selected */}
                 {answeredStatus === 'Not Answered' && (
                   <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
@@ -882,11 +896,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       <AlertCircle className="w-5 h-5 text-orange-400" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-orange-400 text-sm font-medium">Update Status Disabled</p>
+                      <p className="text-orange-400 text-sm font-medium">
+                        {task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
+                          ? 'Sibling Status Selection Enabled'
+                          : 'Update Status Disabled'}
+                      </p>
                       <p className="text-orange-300 text-xs mt-1">
-                        {taskStatus === 'Completed' 
-                          ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'
-                          : 'To save with "Not Answered", please enable the Task Completion toggle above first.'}
+                        {task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
+                          ? `Since the Kiosk Lead Status is "${task.kioskLeadStatus}", you can select statuses at the same level or higher in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
+                          : taskStatus === 'Completed'
+                            ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'
+                            : 'To save with "Not Answered", please enable the Task Completion toggle above first.'}
                       </p>
                     </div>
                   </div>
@@ -901,11 +921,10 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
 
                 {/* Level 1: Answered / Not Answered - Point 5: Disable previous statuses */}
                 <div className="grid grid-cols-2 gap-3">
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isStatusDisabled('Answered') || isUpdateStatusDisabled()
-                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                  }`}>
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Answered') || isUpdateStatusDisabled()
+                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                    : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                    }`}>
                     <input
                       type="radio"
                       name="answered"
@@ -925,14 +944,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
-                  
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                    isStatusDisabled('Not Answered') || isUpdateStatusDisabled()
-                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                      : isFinalSelectedStatus('Not Answered')
-                        ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                  }`}>
+
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Answered') || isUpdateStatusDisabled()
+                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                    : isFinalSelectedStatus('Not Answered')
+                      ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                    }`}>
                     <input
                       type="radio"
                       name="answered"
@@ -954,16 +972,15 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     {isFinalSelectedStatus('Not Answered') && <SelectedStatusIndicator />}
                   </label>
                 </div>
-                
+
                 {/* Level 2: Interested / Not Interested */}
                 {modalAnswered === 'Answered' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Interested')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Interested')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="interested"
@@ -982,14 +999,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         />
                         <span className="text-white font-medium">Interested</span>
                       </label>
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Not Interested')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : isFinalSelectedStatus('Not Interested')
-                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Interested')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : isFinalSelectedStatus('Not Interested')
+                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="interested"
@@ -1015,18 +1031,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Level 3: Warm Lead / Hot Lead */}
                 {modalInterested === 'Interested' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Warm')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : isFinalSelectedStatus('Warm')
-                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Warm')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : isFinalSelectedStatus('Warm')
+                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="leadType"
@@ -1045,14 +1060,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         <span className={`font-medium ${isFinalSelectedStatus('Warm') ? 'text-green-400' : 'text-white'}`}>Warm Lead</span>
                         {isFinalSelectedStatus('Warm') && <SelectedStatusIndicator />}
                       </label>
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Hot')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : isFinalSelectedStatus('Hot')
-                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Hot')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : isFinalSelectedStatus('Hot')
+                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="leadType"
@@ -1077,18 +1091,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Level 4: Demo / Real */}
                 {modalLeadType === 'Hot' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Demo')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : isFinalSelectedStatus('Demo')
-                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Demo')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : isFinalSelectedStatus('Demo')
+                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
@@ -1106,12 +1119,11 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         <span className={`font-medium ${isFinalSelectedStatus('Demo') ? 'text-green-400' : 'text-white'}`}>Demo</span>
                         {isFinalSelectedStatus('Demo') && <SelectedStatusIndicator />}
                       </label>
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Real')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Real')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
@@ -1134,7 +1146,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Demo Checkboxes */}
                 {modalHotLeadType === 'Demo' && (
                   <div className="mt-4 p-4 bg-[#1A1A1A] rounded-lg border-2 border-[#BBA473]/30 animate-fadeIn">
@@ -1142,7 +1154,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       <span className="text-sm">Demo Steps</span>
                       <span className="text-xs text-gray-400">(First 2 are required)</span>
                     </h4>
-                    
+
                     <div className="space-y-3">
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <input
@@ -1198,18 +1210,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Level 5: Deposit / Not Deposit */}
                 {modalHotLeadType === 'Real' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Deposit')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : isFinalSelectedStatus('Deposit')
-                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Deposit')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : isFinalSelectedStatus('Deposit')
+                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="depositStatus"
@@ -1226,14 +1237,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         <span className={`font-medium ${isFinalSelectedStatus('Deposit') ? 'text-green-400' : 'text-white'}`}>Deposit</span>
                         {isFinalSelectedStatus('Deposit') && <SelectedStatusIndicator />}
                       </label>
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                        isStatusDisabled('Not Deposit')
-                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                          : isFinalSelectedStatus('Not Deposit')
-                            ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                      }`}>
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Deposit')
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : isFinalSelectedStatus('Not Deposit')
+                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="depositStatus"
@@ -1256,7 +1266,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Remarks */}
                 <div className="space-y-2 pt-4">
                   <label className="text-sm text-[#E8D5A3] font-medium block">
@@ -1273,11 +1283,10 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                         setModalErrors({ ...modalErrors, remarks: '' });
                       }
                     }}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
-                      modalErrors.remarks
-                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
-                    }`}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${modalErrors.remarks
+                      ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      }`}
                   />
                   <div className="flex justify-between items-center">
                     <div>
@@ -1308,11 +1317,10 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
             <button
               onClick={handleModalSubmit}
               disabled={!isFormValid() || isSubmitting}
-              className={`btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ${
-                isFormValid() && !isSubmitting
-                  ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
-              }`}
+              className={`btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ${isFormValid() && !isSubmitting
+                ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                }`}
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
