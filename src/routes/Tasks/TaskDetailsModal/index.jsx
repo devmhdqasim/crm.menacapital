@@ -250,6 +250,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     try {
       // Convert selected time from Dubai timezone to UTC for backend
       let scheduledDateISO = null;
+      
       if (reminderDateTime) {
         // The user selects time thinking in Dubai timezone (UTC+4)
         // We need to convert this to UTC for the API
