@@ -7,6 +7,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { Wrench, Sparkles, ArrowRight } from 'lucide-react';
 
 // Animated Loading Component
+
 function LoadingFallback() {
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
