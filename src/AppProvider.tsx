@@ -79,6 +79,8 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   const [statusText, setStatusText] = React.useState("Checking connection...");
 
   React.useEffect(() => {
+    console.log(error, 'error in AppProvider.tsx')
+
     // Simulate progress animation
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
