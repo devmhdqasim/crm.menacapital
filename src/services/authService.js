@@ -41,7 +41,6 @@ export const loginUser = async (login, password, loginBy = 'email') => {
     console.log('✅ Login response received:', response.data);
 
     const data = response.data;
-
     if (data.status === 'success' && data.payload?.userInfo) {
       const { accessToken, ...userInfo } = data.payload.userInfo;
       
