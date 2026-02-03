@@ -1,5 +1,5 @@
 import { store } from '@/shared/store';
-import { Button, Theme } from '@radix-ui/themes';
+import { Theme } from '@radix-ui/themes';
 import * as React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Provider } from 'react-redux';
@@ -29,7 +29,7 @@ function LoadingFallback() {
 
       {/* Loading Content */}
       <div className="relative z-10 flex flex-col items-center gap-8">
-        
+
         {/* Animated Logo Container */}
         <div className="relative">
           {/* Outer Ring */}
