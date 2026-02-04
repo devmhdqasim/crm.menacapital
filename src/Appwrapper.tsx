@@ -19,7 +19,7 @@ interface NotificationData {
 export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
   const [notification, setNotification] = useState<NotificationData | null>(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [showDebugPanel, setShowDebugPanel] = useState(true);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   useEffect(() => {
     console.log('🚀 AppWrapper initialized');
