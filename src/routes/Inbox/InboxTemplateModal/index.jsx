@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Plus, Trash2, FileText, Image, Video, FileIcon, Link, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, FileText, Image, Video, FileIcon, Link, AlertCircle, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const InboxTemplateModal = ({ isOpen, onClose }) => {
@@ -19,6 +19,58 @@ const InboxTemplateModal = ({ isOpen, onClose }) => {
   });
 
   const [showVariableHelper, setShowVariableHelper] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Real-time validation
+  useEffect(() => {
+    const errors = {};
+    
+    if (touched.name && !templateData.name.trim()) {
+      errors.name = 'Template name is required';
+    } else if (touched.name && !/^[a-z0-9_]+$/.test(templateData.name)) {
+      errors.name = 'Only lowercase letters, numbers, and underscores';
+    }
+    
+    if (touched.body && !templateData.body.trim()) {
+      errors.body = 'Message body is required';
+    } else if (touched.body && templateData.body.length > 1024) {
+      errors.body = 'Body exceeds 1024 characters';
+    }
+    
+    if (templateData.header.type === 'TEXT') {
+      if (touched.headerText && !templateData.header.text.trim()) {
+        errors.headerText = 'Header text is required';
+      } else if (touched.headerText && templateData.header.text.length > 60) {
+        errors.headerText = 'Header exceeds 60 characters';
+      }
+    }
+    
+    if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(templateData.header.type)) {
+      if (touched.mediaUrl && !templateData.header.mediaUrl.trim()) {
+        errors.mediaUrl = 'Media URL is required';
+      }
+    }
+    
+    if (touched.footer && templateData.footer.length > 60) {
+      errors.footer = 'Footer exceeds 60 characters';
+    }
+    
+    setValidationErrors(errors);
+  }, [templateData, touched]);
 
   const categories = [
     { value: 'MARKETING', label: 'Marketing' },
@@ -308,7 +360,7 @@ const InboxTemplateModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar">
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-240px)] custom-scrollbar">
             <div className="space-y-6">
               {/* Basic Information */}
               <div className="bg-[#2A2A2A] rounded-xl p-5 border border-[#BBA473]/20">
@@ -325,40 +377,53 @@ const InboxTemplateModal = ({ isOpen, onClose }) => {
                       type="text"
                       value={templateData.name}
                       onChange={(e) => handleInputChange('name', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                      onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
                       placeholder="my_template_name"
-                      className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
+                      className={`w-full px-4 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                        validationErrors.name ? 'border-red-500' : 'border-[#BBA473]/30 focus:border-[#BBA473]'
+                      }`}
                     />
-                    <p className="text-xs text-gray-500 mt-1">Lowercase letters, numbers, and underscores only</p>
+                    {validationErrors.name ? (
+                      <p className="text-xs text-red-400 mt-1">{validationErrors.name}</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-1">Lowercase letters, numbers, and underscores only</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Category <span className="text-red-400">*</span>
                     </label>
-                    <select
-                      value={templateData.category}
-                      onChange={(e) => handleInputChange('category', e.target.value)}
-                      className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
-                    >
-                      {categories.map(cat => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={templateData.category}
+                        onChange={(e) => handleInputChange('category', e.target.value)}
+                        className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 appearance-none cursor-pointer"
+                      >
+                        {categories.map(cat => (
+                          <option key={cat.value} value={cat.value}>{cat.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Language <span className="text-red-400">*</span>
                     </label>
-                    <select
-                      value={templateData.language}
-                      onChange={(e) => handleInputChange('language', e.target.value)}
-                      className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
-                    >
-                      {languages.map(lang => (
-                        <option key={lang.value} value={lang.value}>{lang.label}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={templateData.language}
+                        onChange={(e) => handleInputChange('language', e.target.value)}
+                        className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 appearance-none cursor-pointer"
+                      >
+                        {languages.map(lang => (
+                          <option key={lang.value} value={lang.value}>{lang.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -482,15 +547,22 @@ const InboxTemplateModal = ({ isOpen, onClose }) => {
                 <textarea
                   value={templateData.body}
                   onChange={(e) => handleInputChange('body', e.target.value)}
+                  onBlur={() => setTouched(prev => ({ ...prev, body: true }))}
                   placeholder="Enter your message body here... Use {1}, {2} for variables"
                   rows={6}
                   maxLength={1024}
-                  className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 resize-none"
+                  className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 resize-none ${
+                    validationErrors.body ? 'border-red-500' : 'border-[#BBA473]/30 focus:border-[#BBA473]'
+                  }`}
                 />
                 <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Variables: {varCounts.body} in body
-                  </p>
+                  {validationErrors.body ? (
+                    <p className="text-xs text-red-400">{validationErrors.body}</p>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      Variables: {varCounts.body} in body
+                    </p>
+                  )}
                   <p className="text-xs text-gray-500">{templateData.body.length}/1024</p>
                 </div>
               </div>
@@ -537,62 +609,70 @@ const InboxTemplateModal = ({ isOpen, onClose }) => {
                 <div className="space-y-4">
                   {templateData.buttons.map((button, index) => (
                     <div key={button.id} className="bg-[#1A1A1A] rounded-lg p-4 border border-[#BBA473]/20">
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center justify-between mb-4">
                         <span className="text-sm font-semibold text-white">Button {index + 1}</span>
                         <button
                           onClick={() => removeButton(button.id)}
-                          className="p-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300"
+                          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
 
                       <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Button Type</label>
-                          <select
-                            value={button.type}
-                            onChange={(e) => handleButtonChange(button.id, 'type', e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300"
-                          >
-                            {buttonTypes.map(type => (
-                              <option key={type.value} value={type.value}>{type.label}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Button Text <span className="text-red-400">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={button.text}
-                            onChange={(e) => handleButtonChange(button.id, 'text', e.target.value)}
-                            placeholder="Button text (max 25 chars)"
-                            maxLength={25}
-                            className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">{button.text.length}/25</p>
-                        </div>
-
-                        {button.type === 'CALL_TO_ACTION' && (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">Action Type</label>
+                        {/* Button Type and Text in one line */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-400 mb-1.5">Button Type</label>
+                            <div className="relative">
                               <select
-                                value={button.actionType}
-                                onChange={(e) => handleButtonChange(button.id, 'actionType', e.target.value)}
-                                className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300"
+                                value={button.type}
+                                onChange={(e) => handleButtonChange(button.id, 'type', e.target.value)}
+                                className="w-full px-3 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300 appearance-none cursor-pointer text-sm"
                               >
-                                {actionTypes.map(type => (
+                                {buttonTypes.map(type => (
                                   <option key={type.value} value={type.value}>{type.label}</option>
                                 ))}
                               </select>
+                              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                              Button Text <span className="text-red-400">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={button.text}
+                              onChange={(e) => handleButtonChange(button.id, 'text', e.target.value)}
+                              placeholder="Click here"
+                              maxLength={25}
+                              className="w-full px-3 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        {button.type === 'CALL_TO_ACTION' && (
+                          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#BBA473]/10">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1.5">Action Type</label>
+                              <div className="relative">
+                                <select
+                                  value={button.actionType}
+                                  onChange={(e) => handleButtonChange(button.id, 'actionType', e.target.value)}
+                                  className="w-full px-3 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300 appearance-none cursor-pointer text-sm"
+                                >
+                                  {actionTypes.map(type => (
+                                    <option key={type.value} value={type.value}>{type.label}</option>
+                                  ))}
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                              </div>
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">
+                              <label className="block text-xs font-medium text-gray-400 mb-1.5">
                                 {button.actionType === 'PHONE_NUMBER' ? 'Phone Number' : 'URL'} <span className="text-red-400">*</span>
                               </label>
                               <input
@@ -600,10 +680,10 @@ const InboxTemplateModal = ({ isOpen, onClose }) => {
                                 value={button.actionValue}
                                 onChange={(e) => handleButtonChange(button.id, 'actionValue', e.target.value)}
                                 placeholder={button.actionType === 'PHONE_NUMBER' ? '+1234567890' : 'https://example.com'}
-                                className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300"
+                                className="w-full px-3 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#2A2A2A] text-white transition-all duration-300 text-sm"
                               />
                             </div>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -640,7 +720,7 @@ const InboxTemplateModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Footer Actions */}
-          <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-6 flex items-center justify-between sticky bottom-0">
+          <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-6 flex items-center justify-between">
             <button
               onClick={handleReset}
               className="px-6 py-2.5 bg-[#3A3A3A] text-white rounded-lg font-semibold transition-all duration-300 hover:bg-[#4A4A4A] border border-[#BBA473]/20"

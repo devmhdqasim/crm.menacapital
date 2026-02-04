@@ -691,7 +691,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
             {/* Enhanced Message Input */}
             <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 shadow-lg">
-              <div className="flex items-end gap-3">
+              <div className="flex items-start gap-3">
                 <div className="flex-1 relative">
                   <textarea
                     ref={inputRef}

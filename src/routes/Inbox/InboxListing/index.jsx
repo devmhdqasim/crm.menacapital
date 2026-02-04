@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Plus } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
-import InboxTemplateModal from './InboxTemplateModal';
+import InboxTemplateModal from '../InboxTemplateModal';
 
 const InboxListing = ({
   contacts,
@@ -190,21 +190,24 @@ const InboxListing = ({
               <div
                 key={contact.id}
                 onClick={() => handleContactClick(contact)}
-                className="p-4 hover:bg-[#3A3A3A] transition-all duration-300 cursor-pointer group"
+                className="p-5 hover:bg-gradient-to-r hover:from-[#2A2A2A] hover:to-[#252525] transition-all duration-300 cursor-pointer group relative"
               >
-                <div className="flex items-start gap-4">
+                {/* Hover indicator line */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <div className="flex items-start gap-4 pl-1">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center">
-                      <span className="text-xl font-bold text-white">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                      <span className="text-2xl font-bold text-white">
                         {contact.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     {contact.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A]"></div>
+                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse"></div>
                     )}
                     {contact.unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 min-w-[24px] h-6 bg-red-500 rounded-full flex items-center justify-center px-1.5 shadow-lg">
                         <span className="text-xs font-bold text-white">{contact.unreadCount}</span>
                       </div>
                     )}
@@ -212,29 +215,36 @@ const InboxListing = ({
 
                   {/* Contact Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-white truncate group-hover:text-[#BBA473] transition-colors duration-300">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-white truncate group-hover:text-[#BBA473] transition-colors duration-300">
                         {capitalizeWords(contact.name)}
                       </h3>
-                      <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0 ml-2">
-                        <Clock className="w-3 h-3" />
-                        <span>{formatTimeAgo(contact.lastMessageTime)}</span>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 flex-shrink-0 ml-3 bg-[#1A1A1A] px-2 py-1 rounded-md">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-400 truncate mb-1">{contact.lastMessage}</p>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <span>📱</span>
-                        {formatPhoneDisplay(contact.phone)}
+                    
+                    <p className="text-sm text-gray-300 truncate mb-2 leading-relaxed">
+                      {contact.lastMessage}
+                    </p>
+                    
+                    <div className="flex items-center gap-4 text-xs">
+                      <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
+                        <span className="text-base">📱</span>
+                        <span className="font-medium">{formatPhoneDisplay(contact.phone)}</span>
                       </span>
                       {userRole === 'Sales Manager' && contact.agent !== 'Not Assigned' && (
-                        <span className="flex items-center gap-1">
-                          <span>👤</span>
-                          {capitalizeWords(contact.agent)}
+                        <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
+                          <span className="text-base">👤</span>
+                          <span className="font-medium">{capitalizeWords(contact.agent)}</span>
                         </span>
                       )}
                       {contact.nationality && (
-                        <span>{contact.nationality}</span>
+                        <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
+                          <span className="text-base">🌍</span>
+                          <span className="font-medium">{contact.nationality}</span>
+                        </span>
                       )}
                     </div>
                   </div>
@@ -242,12 +252,12 @@ const InboxListing = ({
                   {/* Status Badge */}
                   {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
                     <div className="flex-shrink-0">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${
+                      <span className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border shadow-sm ${
                         contact.kioskLeadStatus === 'Demo' 
-                          ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                          ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-400 border-yellow-500/30'
                           : contact.kioskLeadStatus === 'Real'
-                          ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                          : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                          ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-400 border-green-500/30'
+                          : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border-blue-500/30'
                       }`}>
                         {contact.kioskLeadStatus}
                       </span>

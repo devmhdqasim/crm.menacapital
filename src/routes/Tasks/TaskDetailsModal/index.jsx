@@ -464,6 +464,17 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   const isStatusDisabled = (statusToCheck) => {
     if (!task) return false;
 
+    const currentStatus = task.taskCreationStatus || '';
+    const kioskStatus = task.kioskLeadStatus || '';
+
+    // NEW REQUIREMENT: If Lead Task Status or Kiosk Lead Status is "Lead", remove all validations
+    // User can select any status without restrictions
+    if (currentStatus === 'Lead' || currentStatus === 'lead' || 
+        kioskStatus === 'Lead' || kioskStatus === 'lead' || 
+        currentStatus === '-' || kioskStatus === '-') {
+      return false; // Don't disable any status options
+    }
+
     const statusHierarchy = [
       '',
       'Not Answered',
@@ -475,8 +486,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       'Deposit'
     ];
 
-    const currentStatusIndex = statusHierarchy.indexOf(task.taskCreationStatus || '');
-    const kioskStatus = task.kioskLeadStatus || '';
+    const currentStatusIndex = statusHierarchy.indexOf(currentStatus);
 
     // List of kiosk statuses that should allow sibling selection when "Not Answered" is selected
     const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
@@ -527,16 +537,16 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     if (effectiveStatusIndex === -1) return false;
 
     // Get current effective status
-    const currentStatus = statusHierarchy[effectiveStatusIndex];
+    const currentEffectiveStatus = statusHierarchy[effectiveStatusIndex];
 
     // Special handling for Deposit/Not Deposit mutual exclusivity
     // If current status is "Not Deposit", allow changing to "Deposit"
-    if (currentStatus === 'Not Deposit' && statusToCheck === 'Deposit') {
+    if (currentEffectiveStatus === 'Not Deposit' && statusToCheck === 'Deposit') {
       return false; // Enable Deposit option
     }
 
     // If current status is "Deposit", allow changing to "Not Deposit"  
-    if (currentStatus === 'Deposit' && statusToCheck === 'Not Deposit') {
+    if (currentEffectiveStatus === 'Deposit' && statusToCheck === 'Not Deposit') {
       return false; // Enable Not Deposit option
     }
 
@@ -898,16 +908,20 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                     </div>
                     <div className="flex-1">
                       <p className="text-orange-400 text-sm font-medium">
-                        {task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
-                          ? 'Sibling Status Selection Enabled'
-                          : 'Update Status Disabled'}
+                        {task && (task.kioskLeadStatus === 'Lead' || task.kioskLeadStatus === 'lead' || task.kioskLeadStatus === '-' || task.taskCreationStatus === 'Lead' || task.taskCreationStatus === 'lead' || task.taskCreationStatus === '-')
+                          ? 'All Status Options Enabled'
+                          : task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
+                            ? 'Sibling Status Selection Enabled'
+                            : 'Update Status Disabled'}
                       </p>
                       <p className="text-orange-300 text-xs mt-1">
-                        {task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
-                          ? `Since the Kiosk Lead Status is "${task.kioskLeadStatus}", you can select statuses at the same level or higher in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
-                          : taskStatus === 'Completed'
-                            ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'
-                            : 'To save with "Not Answered", please enable the Task Completion toggle above first.'}
+                        {task && (task.kioskLeadStatus === 'Lead' || task.kioskLeadStatus === 'lead' || task.kioskLeadStatus === '-' || task.taskCreationStatus === 'Lead' || task.taskCreationStatus === 'lead' || task.taskCreationStatus === '-')
+                          ? `Since the status is "Lead", you can select any status without restrictions in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
+                          : task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
+                            ? `Since the Kiosk Lead Status is "${task.kioskLeadStatus}", you can select statuses at the same level or higher in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
+                            : taskStatus === 'Completed'
+                              ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'
+                              : 'To save with "Not Answered", please enable the Task Completion toggle above first.'}
                       </p>
                     </div>
                   </div>

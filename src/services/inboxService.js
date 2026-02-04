@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Wati API Configuration
-const WATI_API_URL = 'https://live-mt-server.wati.io/206676/api/v1';
+const WATI_API_URL = 'https://live-mt-server.wati.io/1071091/api/v1';
 const WATI_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsIm5hbWVpZCI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsImVtYWlsIjoiaW5mb0BzYXZlaW5nb2xkLmFlIiwiYXV0aF90aW1lIjoiMDEvMDUvMjAyNiAxMTo1NTowOCIsInRlbmFudF9pZCI6IjIwNjY3NiIsImRiX25hbWUiOiJtdC1wcm9kLVRlbmFudHMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBRE1JTklTVFJBVE9SIiwiZXhwIjoyNTM0MDIzMDA4MDAsImlzcyI6IkNsYXJlX0FJIiwiYXVkIjoiQ2xhcmVfQUkifQ.n_-Y-1caVpYdcLwRrIeIJK_uTAvkOnEfTKKZZfcel34';
 
 // Phone number formatting utilities
