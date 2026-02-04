@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Plus } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
+import InboxTemplateModal from './InboxTemplateModal';
 
 const InboxListing = ({
   contacts,
@@ -24,6 +25,7 @@ const InboxListing = ({
   setSelectedAgentFilter,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   const perPageOptions = [10, 20, 30, 50, 100];
 
@@ -103,41 +105,53 @@ const InboxListing = ({
             </p>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {/* Agent Filter - Only show for Sales Manager */}
-            {userRole === 'Sales Manager' && (
-              <div className="flex items-center gap-4 ml-auto">
-                <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
-                  Filter by Agent:
-                </label>
-                <div className="relative w-full max-w-xs min-w-64">
-                  <select
-                    value={selectedAgentFilter}
-                    onChange={(e) => setSelectedAgentFilter(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
-                  >
-                    <option value="">All Agents</option>
-                    {agents.map((agent) => (
-                      <option key={agent.id} value={agent.id}>
-                        {agent.fullName}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-            )}
-
-            {/* Date Range Filter */}
-            <DateRangePicker
-              startDate={startDate}
-              endDate={endDate}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              maxDate={new Date()}
-              isClearable={true}
-            />
+          <div className="flex items-center gap-3">
+            {/* Create Template Button */}
+            <button
+              onClick={() => setShowTemplateModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg font-semibold transition-all duration-300 hover:from-[#d4bc89] hover:to-[#a69363] shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              <FileText className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
+              Create Template
+            </button>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-3 mt-4">
+          {/* Agent Filter - Only show for Sales Manager */}
+          {userRole === 'Sales Manager' && (
+            <div className="flex items-center gap-4 ml-auto">
+              <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+                Filter by Agent:
+              </label>
+              <div className="relative w-full max-w-xs min-w-64">
+                <select
+                  value={selectedAgentFilter}
+                  onChange={(e) => setSelectedAgentFilter(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                >
+                  <option value="">All Agents</option>
+                  {agents.map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.fullName}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+          )}
+
+          {/* Date Range Filter */}
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            maxDate={new Date()}
+            isClearable={true}
+          />
         </div>
       </div>
 
@@ -336,6 +350,12 @@ const InboxListing = ({
           </div>
         </div>
       </div>
+
+      {/* Template Modal */}
+      <InboxTemplateModal 
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+      />
 
       <style>{`
         @keyframes fadeIn {
