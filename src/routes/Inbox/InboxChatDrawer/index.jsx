@@ -1339,7 +1339,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   </button>
                   <button
                     onClick={handleSendTemplateMessage}
-                    disabled={isSendingTemplate || Object.values(templateParams).some(v => !v.trim()) && Object.keys(templateParams).length > 0}
+                    disabled={isSendingTemplate || Object.values(templateParams).some(v => !v) && Object.keys(templateParams).length > 0}
                     className="flex-1 px-4 py-3 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isSendingTemplate ? (
