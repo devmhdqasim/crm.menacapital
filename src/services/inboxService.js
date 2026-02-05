@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Wati API Configuration
 const WATI_API_URL = 'https://live-mt-server.wati.io/1071091/api/v1';
-const WATI_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsIm5hbWVpZCI6ImluZm9Ac2F2ZWluZ29sZC5hZSIsImVtYWlsIjoiaW5mb0BzYXZlaW5nb2xkLmFlIiwiYXV0aF90aW1lIjoiMDEvMDUvMjAyNiAxMTo1NTowOCIsInRlbmFudF9pZCI6IjIwNjY3NiIsImRiX25hbWUiOiJtdC1wcm9kLVRlbmFudHMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBRE1JTklTVFJBVE9SIiwiZXhwIjoyNTM0MDIzMDA4MDAsImlzcyI6IkNsYXJlX0FJIiwiYXVkIjoiQ2xhcmVfQUkifQ.n_-Y-1caVpYdcLwRrIeIJK_uTAvkOnEfTKKZZfcel34';
+const WATI_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InNhbGVzQHNhdmVpbmdvbGQuYWUiLCJuYW1laWQiOiJzYWxlc0BzYXZlaW5nb2xkLmFlIiwiZW1haWwiOiJzYWxlc0BzYXZlaW5nb2xkLmFlIiwiYXV0aF90aW1lIjoiMDIvMDUvMjAyNiAwNjozOToyNyIsInRlbmFudF9pZCI6IjEwNzEwOTEiLCJkYl9uYW1lIjoibXQtcHJvZC1UZW5hbnRzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQURNSU5JU1RSQVRPUiIsImV4cCI6MjUzNDAyMzAwODAwLCJpc3MiOiJDbGFyZV9BSSIsImF1ZCI6IkNsYXJlX0FJIn0.t9wvx6-EtH0zdMZFzhQWXlL0pWz-SWwZQ13E9tKkmV4';
 
 // Phone number formatting utilities
 const formatPhoneForWati = (phoneNumber, defaultCountryCode = '971') => {
@@ -311,9 +311,37 @@ export const getWatiMessages = async (phoneNumber, pageSize = 100, pageNumber = 
 };
 
 /**
+ * Get all WhatsApp message templates from Wati
+ * @returns {Promise} API response with templates list
+ */
+export const getWatiTemplates = async () => {
+  try {
+    console.log('📋 Fetching Wati templates');
+    
+    const response = await watiApi.get('/getMessageTemplates');
+
+    console.log('📋 Full API response:', response.data);
+
+    return {
+      success: true,
+      data: response.data, // Return full response data
+      templates: response.data?.messageTemplates || [],
+    };
+  } catch (error) {
+    console.error('❌ Error fetching Wati templates:', error.response?.data);
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || error.response?.data?.info || error.response?.data?.error || 'Failed to fetch templates',
+      templates: [],
+    };
+  }
+};
+
+/**
  * Send a WhatsApp template message via Wati (for outside 24-hour window)
  * @param {string} phoneNumber - Recipient phone number with country code
- * @param {string} templateName - Name of the approved template
+ * @param {string} templateName - Name of the approved template (elementName from template)
  * @param {Array} parameters - Array of parameter values for the template
  * @returns {Promise} API response
  */
@@ -321,14 +349,31 @@ export const sendWatiTemplateMessage = async (phoneNumber, templateName, paramet
   try {
     const cleanPhone = formatPhoneForWati(phoneNumber);
 
-    console.log('📨 Sending Wati template message to:', cleanPhone);
+    console.log('📨 Sending Wati template message to:', cleanPhone, 'Template:', templateName);
     
-    const response = await watiApi.post('/sendTemplateMessage', {
-      whatsappNumber: cleanPhone,
+    // Format parameters for Wati API
+    // Wati expects: parameters: [{ name: "1", value: "John" }, { name: "2", value: "Doe" }]
+    const formattedParams = parameters.map((value, index) => ({
+      name: `${index + 1}`,
+      value: value,
+    }));
+
+    const payload = {
       template_name: templateName,
       broadcast_name: `Template_${Date.now()}`,
-      parameters: parameters,
-    });
+      receivers: [
+        {
+          whatsappNumber: cleanPhone,
+          customParams: formattedParams,
+        }
+      ],
+    };
+
+    console.log('📤 Template payload:', payload);
+
+    const response = await watiApi.post('/sendTemplateMessage', payload);
+
+    console.log('✅ Template send response:', response.data);
 
     return {
       success: true,
@@ -337,10 +382,42 @@ export const sendWatiTemplateMessage = async (phoneNumber, templateName, paramet
     };
   } catch (error) {
     console.error('❌ Error sending Wati template message:', error.response?.data);
+    
+    const errorData = error.response?.data || {};
+    const errorInfo = errorData.info || errorData.message || '';
+    const errorStatus = error.response?.status;
+    
+    // Handle specific error cases
+    if (errorInfo.includes("Can't find Contact") || errorInfo.includes("Contact not found")) {
+      return {
+        success: false,
+        error: errorData || error.message,
+        message: 'Contact not found in Wati. The contact needs to message your WhatsApp Business number first.',
+        contactNotFound: true,
+      };
+    }
+    
+    if (errorInfo.includes('outside the 24 hour window') || errorInfo.includes('expired')) {
+      return {
+        success: false,
+        error: errorData || error.message,
+        message: '24-hour messaging window expired. Template messages are for re-engaging outside the window, but the contact must have previously messaged you.',
+        windowExpired: true,
+      };
+    }
+
+    if (errorInfo.includes('not approved') || errorInfo.includes('template not found')) {
+      return {
+        success: false,
+        error: errorData || error.message,
+        message: 'Template not found or not approved. Please ensure the template is approved in your Wati account.',
+      };
+    }
+    
     return {
       success: false,
-      error: error.response?.data || error.message,
-      message: error.response?.data?.message || error.response?.data?.error || 'Failed to send template message',
+      error: errorData || error.message,
+      message: errorData.message || errorInfo || 'Failed to send template message',
     };
   }
 };
@@ -460,6 +537,7 @@ export const setupWatiWebhook = async (webhookUrl) => {
 export default {
   sendWatiMessage,
   getWatiMessages,
+  getWatiTemplates,
   sendWatiTemplateMessage,
   sendWatiMediaMessage,
   getWatiContactInfo,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Plus } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
-import InboxTemplateModal from '../InboxTemplateModal';
+import InboxTemplateManager from '../InboxTemplateManager';
 
 const InboxListing = ({
   contacts,
@@ -25,7 +25,7 @@ const InboxListing = ({
   setSelectedAgentFilter,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
 
   const perPageOptions = [10, 20, 30, 50, 100];
 
@@ -106,14 +106,13 @@ const InboxListing = ({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Create Template Button */}
+            {/* Manage Templates Button */}
             <button
-              onClick={() => setShowTemplateModal(true)}
+              onClick={() => setShowTemplateManager(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg font-semibold transition-all duration-300 hover:from-[#d4bc89] hover:to-[#a69363] shadow-lg hover:shadow-xl hover:scale-105"
             >
               <FileText className="w-5 h-5" />
-              <Plus className="w-4 h-4" />
-              Create Template
+              Manage Templates
             </button>
           </div>
         </div>
@@ -361,10 +360,10 @@ const InboxListing = ({
         </div>
       </div>
 
-      {/* Template Modal */}
-      <InboxTemplateModal 
-        isOpen={showTemplateModal}
-        onClose={() => setShowTemplateModal(false)}
+      {/* Template Manager Modal */}
+      <InboxTemplateManager 
+        isOpen={showTemplateManager}
+        onClose={() => setShowTemplateManager(false)}
       />
 
       <style>{`
