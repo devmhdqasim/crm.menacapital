@@ -53,6 +53,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       setIsLoading(true);
       setContactNotFound(false);
 
+      // Reset state on open to ensure fresh start
+      setMessageInput('');
+      setShowTemplatePicker(false);
+      setShowContactInfo(false);
+      setRetryingMessageId(null);
+      setIsSending(false);
+
       fetchWatiMessages();
 
       // Focus input when drawer opens
@@ -741,11 +748,32 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <div className="relative flex-shrink-0 group">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg ring-2 ring-[#BBA473]/20 transition-transform duration-300 group-hover:scale-110">
-                      <span className="text-2xl font-bold text-white">
-                        {contact.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    {contact.avatar ? (
+                      <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] shadow-lg ring-2 ring-[#BBA473]/20 transition-transform duration-300 group-hover:scale-110">
+                        <img
+                          src={contact.avatar}
+                          alt={contact.name}
+                          className="w-full h-full rounded-full object-cover border-2 border-[#1A1A1A]"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        {/* Fallback to initials if image fails to load */}
+                        <div className="hidden w-full h-full rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
+                          <span className="text-2xl font-bold text-white">
+                            {contact.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg ring-2 ring-[#BBA473]/20 transition-transform duration-300 group-hover:scale-110">
+                        <span className="text-2xl font-bold text-white">
+                          {contact.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     {/* WebSocket connection indicator */}
                     {isConnected && (
                       <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse" title="Real-time updates active"></div>
@@ -1034,7 +1062,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               {/* Typing indicator hint with WebSocket status */}
               <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
                 <span>Press Enter to send • Shift+Enter for new line</span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5 opacity-0">
                   <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
                   {isConnected ? 'Live' : 'Offline'}
                 </span>

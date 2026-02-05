@@ -153,6 +153,8 @@ const InboxPage = () => {
           lastMessageTime: lead.updatedAt || lead.createdAt,
           unreadCount: 0, // TODO: Implement unread count from backend
           isOnline: false, // TODO: Implement online status from backend
+          // Map potential profile picture fields
+          avatar: lead.profilePicture || lead.avatar || lead.profileUrl || lead.profileImg || null,
         }));
 
         setContacts(transformedContacts);

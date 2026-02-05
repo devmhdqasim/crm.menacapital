@@ -78,13 +78,13 @@ const InboxListing = ({
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
+
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   const capitalizeWords = (str) => {
     if (!str) return '';
-    return str.split(' ').map(word => 
+    return str.split(' ').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     ).join(' ');
   };
@@ -99,8 +99,8 @@ const InboxListing = ({
               Inbox
             </h1>
             <p className="text-gray-400 mt-2">
-              {userRole === 'Sales Manager' 
-                ? 'Manage conversations with all leads' 
+              {userRole === 'Sales Manager'
+                ? 'Manage conversations with all leads'
                 : 'Manage conversations with your assigned leads'}
             </p>
           </div>
@@ -193,15 +193,35 @@ const InboxListing = ({
               >
                 {/* Hover indicator line */}
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                
+
                 <div className="flex items-start gap-4 pl-1">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                      <span className="text-2xl font-bold text-white">
-                        {contact.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    {contact.avatar ? (
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 p-0.5">
+                        <img
+                          src={contact.avatar}
+                          alt={contact.name}
+                          className="w-full h-full rounded-2xl object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div className="hidden w-full h-full rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
+                          <span className="text-2xl font-bold text-white">
+                            {contact.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                        <span className="text-2xl font-bold text-white">
+                          {contact.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     {contact.isOnline && (
                       <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse"></div>
                     )}
@@ -223,11 +243,11 @@ const InboxListing = ({
                         <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
                       </div>
                     </div>
-                    
+
                     <p className="text-sm text-gray-300 truncate mb-2 leading-relaxed">
                       {contact.lastMessage}
                     </p>
-                    
+
                     <div className="flex items-center gap-4 text-xs">
                       <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
                         <span className="text-base">📱</span>
@@ -251,13 +271,12 @@ const InboxListing = ({
                   {/* Status Badge */}
                   {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
                     <div className="flex-shrink-0">
-                      <span className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border shadow-sm ${
-                        contact.kioskLeadStatus === 'Demo' 
+                      <span className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border shadow-sm ${contact.kioskLeadStatus === 'Demo'
                           ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-400 border-yellow-500/30'
                           : contact.kioskLeadStatus === 'Real'
-                          ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-400 border-green-500/30'
-                          : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border-blue-500/30'
-                      }`}>
+                            ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-400 border-green-500/30'
+                            : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border-blue-500/30'
+                        }`}>
                         {contact.kioskLeadStatus}
                       </span>
                     </div>
@@ -290,9 +309,8 @@ const InboxListing = ({
                     <button
                       key={option}
                       onClick={() => handlePerPageChange(option)}
-                      className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                        option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
-                      }`}
+                      className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                        }`}
                     >
                       {option} per page
                     </button>
@@ -327,11 +345,10 @@ const InboxListing = ({
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
-                  currentPage === page
+                className={`px-4 py-2 rounded-lg transition-all duration-300 border ${currentPage === page
                     ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
                     : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
-                }`}
+                  }`}
               >
                 {page}
               </button>
@@ -361,7 +378,7 @@ const InboxListing = ({
       </div>
 
       {/* Template Manager Modal */}
-      <InboxTemplateManager 
+      <InboxTemplateManager
         isOpen={showTemplateManager}
         onClose={() => setShowTemplateManager(false)}
       />
