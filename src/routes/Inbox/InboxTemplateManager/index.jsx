@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Send, FileText, AlertCircle, CheckCircle, RefreshCw, Eye, Filter, ChevronDown } from 'lucide-react';
+import { X, Search, Send, FileText, AlertCircle, CheckCircle, RefreshCw, Eye, Filter, ChevronDown, Users, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getWatiTemplates, sendWatiTemplateMessage } from '../../../services/inboxService';
 
@@ -14,9 +14,55 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
   const [categories, setCategories] = useState([]);
   
   // Send template modal state
+  const [sendMode, setSendMode] = useState('single'); // 'single' or 'bulk'
   const [recipientPhone, setRecipientPhone] = useState('');
   const [templateParams, setTemplateParams] = useState({});
   const [isSending, setIsSending] = useState(false);
+  
+  // Bulk send state
+  const [bulkFilterStatus, setBulkFilterStatus] = useState('all');
+  const [bulkFilterAgent, setBulkFilterAgent] = useState('all');
+  const [estimatedRecipients, setEstimatedRecipients] = useState(0);
+  
+  // Preview modal state
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  // Calculate estimated recipients based on filters (placeholder - will need actual API integration)
+  useEffect(() => {
+    if (sendMode === 'bulk') {
+      // This is a placeholder - you should replace with actual API call to get count
+      // For now, showing a mock calculation
+      const getEstimatedCount = () => {
+        // Mock data - replace with actual API call
+        const mockCounts = {
+          'all': 150,
+          'contacted': 45,
+          'interested': 30,
+          'hot': 15,
+          'cold': 25,
+          'demo': 20,
+          'real': 15,
+        };
+        
+        return mockCounts[bulkFilterStatus] || 0;
+      };
+      
+      setEstimatedRecipients(getEstimatedCount());
+    }
+  }, [sendMode, bulkFilterStatus, bulkFilterAgent]);
+
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (isOpen || selectedTemplate || showSendModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, selectedTemplate, showSendModal]);
 
   useEffect(() => {
     if (isOpen) {
@@ -98,6 +144,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
   const handleSendTemplate = (template) => {
     setSelectedTemplate(template);
     setShowSendModal(true);
+    setSendMode('single'); // Reset to single mode
     
     // Extract parameters from template body ({{1}}, {{2}}, etc.)
     const paramMatches = (template.body || '').match(/\{\{(\d+)\}\}/g);
@@ -111,6 +158,15 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
     } else {
       setTemplateParams({});
     }
+  };
+
+  const handleCloseSendModal = () => {
+    setShowSendModal(false);
+    setRecipientPhone('');
+    setTemplateParams({});
+    setSendMode('single');
+    setBulkFilterStatus('all');
+    setBulkFilterAgent('all');
   };
 
   const handleSendTemplateMessage = async () => {
@@ -181,6 +237,19 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
     );
   };
 
+  // Function to render template with actual parameter values
+  const renderTemplatePreview = (template, params) => {
+    let text = template.body || '';
+    
+    // Replace parameters with actual values or placeholders
+    Object.keys(params).forEach(key => {
+      const value = params[key] || `{{${key}}}`;
+      text = text.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), `<span class="text-[#BBA473] font-semibold bg-[#BBA473]/10 px-1 rounded">${value}</span>`);
+    });
+    
+    return text;
+  };
+
   const renderTemplateText = (text) => {
     if (!text) return '';
     // Highlight parameters in template text
@@ -193,13 +262,22 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 transition-opacity duration-300"
+        className={`fixed inset-0 bg-black/60 backdrop-blur-md z-50 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
         onClick={onClose}
       />
 
       {/* Main Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col animate-slideUp border border-[#BBA473]/30">
+      <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none ${
+        isOpen ? 'opacity-100' : 'opacity-0'
+      }`}>
+        <div 
+          className={`bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-[#BBA473]/30 pointer-events-auto transition-all duration-300 ${
+            isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-6 rounded-t-2xl">
             <div className="flex items-center justify-between">
@@ -294,7 +372,8 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                 {filteredTemplates.map((template) => (
                   <div
                     key={template.id || template.elementName}
@@ -406,19 +485,30 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                   </div>
                 ))}
               </div>
-            )}
+              
+              {/* Bottom Spacer for better UX */}
+              <div className="h-8"></div>
+            </>
+          )}
           </div>
         </div>
       </div>
 
       {/* Template Detail Modal */}
       {selectedTemplate && !showSendModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+        <div className={`fixed inset-0 z-60 flex items-center justify-center p-4 transition-opacity duration-300 ${
+          selectedTemplate ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}>
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
             onClick={() => setSelectedTemplate(null)}
           />
-          <div className="bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden relative z-10 border border-[#BBA473]/30 flex flex-col">
+          <div 
+            className={`bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden relative z-10 border border-[#BBA473]/30 flex flex-col transition-all duration-300 ${
+              selectedTemplate ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sticky top-0 bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-5 rounded-t-2xl z-10">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 mr-4">
@@ -581,75 +671,178 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
       {/* Send Template Modal */}
       {showSendModal && selectedTemplate && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+        <div className={`fixed inset-0 z-60 flex items-center justify-center p-4 transition-opacity duration-300 ${
+          showSendModal ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}>
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
-            onClick={() => {
-              setShowSendModal(false);
-              setRecipientPhone('');
-              setTemplateParams({});
-            }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            onClick={handleCloseSendModal}
           />
-          <div className="bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 border border-[#BBA473]/30">
+          <div 
+            className={`bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-3xl relative z-10 border border-[#BBA473]/30 transition-all duration-300 ${
+              showSendModal ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-5 rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white">Send Template Message</h3>
+                <div className="flex-1 min-w-0 mr-4">
+                  <h3 className="text-xl font-bold text-white">Send Template Message</h3>
+                  <p className="text-gray-400 text-sm mt-1">{selectedTemplate.elementName}</p>
+                </div>
                 <button
-                  onClick={() => {
-                    setShowSendModal(false);
-                    setRecipientPhone('');
-                    setTemplateParams({});
-                  }}
-                  className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300"
+                  onClick={handleCloseSendModal}
+                  className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300 flex-shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Tabs */}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setSendMode('single')}
+                  className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold ${
+                    sendMode === 'single'
+                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black shadow-lg'
+                      : 'bg-[#1A1A1A] text-gray-400 hover:bg-[#2A2A2A]'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Single Recipient
+                </button>
+                <button
+                  onClick={() => setSendMode('bulk')}
+                  className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold ${
+                    sendMode === 'bulk'
+                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black shadow-lg'
+                      : 'bg-[#1A1A1A] text-gray-400 hover:bg-[#2A2A2A]'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  Bulk Send
+                </button>
+              </div>
             </div>
 
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="p-6 space-y-4 max-h-[65vh] min-h-[400px] overflow-y-auto custom-scrollbar">
               {/* Template Preview */}
               <div>
-                <label className="text-gray-400 text-sm font-semibold mb-2 block">Template</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-gray-400 text-sm font-semibold flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#BBA473]" />
+                    Live Template Preview
+                  </label>
+                  <button
+                    onClick={() => setShowPreviewModal(true)}
+                    className="text-[#BBA473] hover:text-[#d4bc89] text-xs font-semibold flex items-center gap-1 transition-colors"
+                  >
+                    <Eye className="w-3 h-3" />
+                    Expand Preview
+                  </button>
+                </div>
                 <div className="bg-[#2A2A2A] rounded-lg p-4 border border-[#BBA473]/20">
-                  <p className="text-white font-semibold mb-2">{selectedTemplate.elementName}</p>
                   {selectedTemplate.header && selectedTemplate.header.text && (
-                    <p className="text-[#BBA473] text-sm mb-2 font-semibold">{selectedTemplate.header.text}</p>
+                    <div className="mb-3 pb-3 border-b border-[#BBA473]/10">
+                      <p className="text-[#BBA473] text-sm font-semibold">{selectedTemplate.header.text}</p>
+                    </div>
                   )}
                   <p 
                     className="text-gray-300 text-sm leading-relaxed"
                     dangerouslySetInnerHTML={{ 
-                      __html: renderTemplateText(selectedTemplate.body) 
+                      __html: renderTemplatePreview(selectedTemplate, templateParams) 
                     }}
                   />
                   {selectedTemplate.footer && (
-                    <p className="text-gray-500 text-xs mt-2">{selectedTemplate.footer}</p>
+                    <div className="mt-3 pt-3 border-t border-[#BBA473]/10">
+                      <p className="text-gray-500 text-xs italic">{selectedTemplate.footer}</p>
+                    </div>
+                  )}
+                  {selectedTemplate.buttons && selectedTemplate.buttons.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-[#BBA473]/10 flex flex-wrap gap-2">
+                      {selectedTemplate.buttons.map((btn, idx) => (
+                        <div key={idx} className="px-3 py-1.5 bg-[#1A1A1A] rounded-lg text-xs text-[#BBA473] border border-[#BBA473]/20">
+                          {btn.parameter?.text}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* Recipient Phone */}
-              <div>
-                <label className="text-gray-400 text-sm font-semibold mb-2 block">
-                  Recipient Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  placeholder="e.g., +1234567890"
-                  value={recipientPhone}
-                  onChange={(e) => setRecipientPhone(e.target.value)}
-                  className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
-                />
-                <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +92 for Pakistan)</p>
-              </div>
+              {/* Single Recipient Form */}
+              {sendMode === 'single' && (
+                <>
+                  <div>
+                    <label className="text-gray-400 text-sm font-semibold mb-2 block">
+                      Recipient Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="e.g., +971501234567"
+                      value={recipientPhone}
+                      onChange={(e) => setRecipientPhone(e.target.value)}
+                      className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +971 for UAE)</p>
+                  </div>
+                </>
+              )}
+
+              {/* Bulk Send Form */}
+              {sendMode === 'bulk' && (
+                <>
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                    <div className="flex gap-3">
+                      <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-blue-400 text-sm font-semibold">Bulk Send</p>
+                        <p className="text-blue-300/80 text-xs mt-1">
+                          This will send the template to all leads matching your filters. Use with caution.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Filter Options */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-gray-400 text-sm font-semibold mb-2 block">Filter by Status</label>
+                      <select
+                        value={bulkFilterStatus}
+                        onChange={(e) => setBulkFilterStatus(e.target.value)}
+                        className="w-full px-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
+                      >
+                        <option value="all">All Statuses</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="interested">Interested</option>
+                        <option value="hot">Hot Leads</option>
+                        <option value="cold">Cold Leads</option>
+                        <option value="demo">Demo</option>
+                        <option value="real">Real</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-gray-400 text-sm font-semibold mb-2 block">Estimated Recipients</label>
+                      <div className="bg-[#2A2A2A] rounded-lg p-3 border border-[#BBA473]/20 flex items-center justify-between">
+                        <span className="text-white font-semibold text-lg">{estimatedRecipients} leads</span>
+                        <span className="text-xs text-gray-500 bg-[#1A1A1A] px-2 py-1 rounded">
+                          {bulkFilterStatus === 'all' ? 'All statuses' : bulkFilterStatus}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Template Parameters */}
               {Object.keys(templateParams).length > 0 && (
                 <div>
                   <label className="text-gray-400 text-sm font-semibold mb-3 block">
-                    Template Parameters *
+                    Template Parameters * <span className="text-xs text-gray-500 font-normal">(Values update live in preview)</span>
                   </label>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {Object.keys(templateParams).sort((a, b) => parseInt(a) - parseInt(b)).map((paramKey) => (
                       <div key={`param-${paramKey}`}>
                         <label className="text-gray-300 text-xs mb-1 block">
@@ -676,30 +869,30 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                 <div className="flex gap-3">
                   <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-yellow-400 text-sm font-semibold">Important</p>
+                    <p className="text-yellow-400 text-sm font-semibold">24-Hour Messaging Window</p>
                     <p className="text-yellow-300/80 text-xs mt-1">
-                      Template messages can only be sent if the recipient has messaged you first or within 24 hours of their last message.
+                      {sendMode === 'single' 
+                        ? 'Template messages can only be sent if the recipient has messaged you first or within 24 hours of their last message.'
+                        : 'Template messages will only be sent to contacts who have messaged you within the last 24 hours.'}
                     </p>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Send Button */}
-              <div className="flex gap-3 pt-2">
+            {/* Action Footer */}
+            <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 rounded-b-2xl">
+              <div className="flex gap-3">
                 <button
-                  onClick={() => {
-                    setShowSendModal(false);
-                    setRecipientPhone('');
-                    setTemplateParams({});
-                  }}
+                  onClick={handleCloseSendModal}
                   className="flex-1 px-4 py-3 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-lg transition-all duration-300 font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendTemplateMessage}
-                  disabled={isSending || !recipientPhone.trim()}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSending || (sendMode === 'single' && !recipientPhone.trim())}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                 >
                   {isSending ? (
                     <>
@@ -709,7 +902,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      Send Template
+                      {sendMode === 'single' ? 'Send Template' : 'Send to All'}
                     </>
                   )}
                 </button>
@@ -719,28 +912,181 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
         </div>
       )}
 
+      {/* Expanded Preview Modal */}
+      {showPreviewModal && selectedTemplate && (
+        <div className={`fixed inset-0 z-[70] flex items-center justify-center p-4 transition-opacity duration-300 ${
+          showPreviewModal ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}>
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            onClick={() => setShowPreviewModal(false)}
+          />
+          <div 
+            className={`bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col relative z-10 border border-[#BBA473]/30 transition-all duration-300 ${
+              showPreviewModal ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sticky Header */}
+            <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-5 rounded-t-2xl flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0 mr-4">
+                  <h3 className="text-xl font-bold text-white">Full Template Preview</h3>
+                  <p className="text-gray-400 text-sm mt-1">{selectedTemplate.elementName}</p>
+                </div>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300 flex-shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              {/* Phone-like preview container */}
+              <div className="bg-[#0A0A0A] rounded-3xl p-4 shadow-2xl border-4 border-[#2A2A2A] max-w-md mx-auto">
+                {/* Phone header */}
+                <div className="bg-[#1A1A1A] rounded-t-2xl px-4 py-3 border-b border-[#2A2A2A]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">W</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">WhatsApp Business</p>
+                      <p className="text-gray-500 text-xs">Online</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Message bubble - Scrollable */}
+                <div className="bg-[#1A1A1A] rounded-b-2xl p-4 max-h-[500px] overflow-y-auto custom-scrollbar-dark">
+                  <div className="bg-[#005C4B] rounded-lg rounded-tl-none p-4 shadow-lg">
+                    {/* Header */}
+                    {selectedTemplate.header && selectedTemplate.header.type > 0 && (
+                      <div className="mb-3 pb-3 border-b border-white/10">
+                        {selectedTemplate.header.text && (
+                          <p className="text-white font-bold text-sm">{selectedTemplate.header.text}</p>
+                        )}
+                        {selectedTemplate.header.type === 3 && selectedTemplate.header.link && (
+                          <div className="mt-2 bg-black/20 rounded p-2 text-xs text-white/80">
+                            📷 Image attached
+                          </div>
+                        )}
+                        {selectedTemplate.header.type === 4 && selectedTemplate.header.link && (
+                          <div className="mt-2 bg-black/20 rounded p-2 text-xs text-white/80">
+                            📄 Document attached
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Body */}
+                    <p 
+                      className="text-white text-sm leading-relaxed whitespace-pre-wrap break-words"
+                      dangerouslySetInnerHTML={{ 
+                        __html: renderTemplatePreview(selectedTemplate, templateParams).replace(/class=/g, 'className=')
+                      }}
+                    />
+
+                    {/* Footer */}
+                    {selectedTemplate.footer && (
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <p className="text-white/60 text-xs break-words">{selectedTemplate.footer}</p>
+                      </div>
+                    )}
+
+                    {/* Buttons */}
+                    {selectedTemplate.buttons && selectedTemplate.buttons.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                        {selectedTemplate.buttons.map((btn, idx) => (
+                          <div 
+                            key={idx} 
+                            className="bg-white/10 hover:bg-white/20 rounded-lg px-4 py-2 text-center cursor-pointer transition-colors"
+                          >
+                            <p className="text-white text-sm font-medium break-words">{btn.parameter?.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Timestamp */}
+                    <div className="flex items-center justify-end gap-1 mt-2">
+                      <span className="text-white/50 text-xs">
+                        {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sticky Footer */}
+            <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-4 rounded-b-2xl flex-shrink-0">
+              <p className="text-center text-gray-500 text-xs">
+                This is how your template will appear in WhatsApp
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(20px) scale(0.98);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
           }
         }
 
         .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
+          animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-scaleIn {
+          animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
+          height: 8px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
           background: #1A1A1A;
+          border-radius: 4px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -750,6 +1096,25 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(180deg, #d4bc89 0%, #a69363 100%);
+        }
+
+        /* Dark scrollbar for message preview */
+        .custom-scrollbar-dark::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .custom-scrollbar-dark::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 3px;
+        }
+
+        .custom-scrollbar-dark::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 3px;
+        }
+
+        .custom-scrollbar-dark::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.5);
         }
 
         .line-clamp-3 {
@@ -768,6 +1133,22 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
         .z-60 {
           z-index: 60;
+        }
+
+        .z-\\[70\\] {
+          z-index: 70;
+        }
+
+        /* Smooth transitions for modals */
+        .modal-transition {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Backdrop blur animation */
+        @supports (backdrop-filter: blur(10px)) {
+          .backdrop-blur-md {
+            backdrop-filter: blur(12px);
+          }
         }
       `}</style>
     </>
