@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle, FileText, Search, Eye, ChevronLeft, Filter, Smartphone } from 'lucide-react';
+import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle, FileText, Search, ChevronLeft, Filter, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { sendWatiMessage, getWatiMessages, createWatiContact, getWatiTemplates, sendWatiTemplateMessage } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
@@ -145,29 +145,55 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       
       if (result.success && result.data && result.data.messages && result.data.messages.items) {
         const watiMessages = result.data.messages.items;
-        
+
         // Transform Wati messages to our format
         const transformedMessages = watiMessages
-          .filter(msg => msg.eventType === 'message')
+          .filter(msg => msg.eventType === 'message' || msg.type === 'template')
           .map((msg) => {
             const timestamp = msg.timestamp ? parseInt(msg.timestamp) * 1000 : new Date(msg.created).getTime();
             const date = new Date(timestamp);
-            
-            const timeString = date.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
+
+            const timeString = date.toLocaleTimeString('en-US', {
+              hour: '2-digit',
               minute: '2-digit',
-              hour12: true 
+              hour12: true
             });
-            
+
+            // Handle different message types
+            let messageText = msg.text;
+            let isTemplate = msg.type === 'template';
+
+            if (msg.type === 'template') {
+              // Template message - show template info
+              const templateData = msg.data || {};
+              messageText = templateData.body || templateData.text || msg.text || '📋 Template Message';
+              // Add header if present
+              if (templateData.header?.text) {
+                messageText = `*${templateData.header.text}*\n\n${messageText}`;
+              }
+              // Add footer if present
+              if (templateData.footer) {
+                messageText = `${messageText}\n\n_${templateData.footer}_`;
+              }
+            } else if (!messageText) {
+              // Handle media types
+              if (msg.type === 'image') messageText = '📷 Image';
+              else if (msg.type === 'document') messageText = '📄 Document';
+              else if (msg.type === 'audio') messageText = '🎵 Audio';
+              else if (msg.type === 'video') messageText = '🎬 Video';
+              else messageText = '📎 Media';
+            }
+
             return {
               id: msg.id,
-              text: msg.text || (msg.type === 'image' ? '📷 Image' : msg.type === 'document' ? '📄 Document' : msg.type === 'audio' ? '🎵 Audio' : '📎 Media'),
+              text: messageText,
               sender: msg.owner ? 'user' : 'contact',
               timestamp: timeString,
               sortTimestamp: timestamp,
               status: msg.statusString ? msg.statusString.toLowerCase() : 'sent',
               type: msg.type || 'text',
               mediaUrl: msg.data?.url || null,
+              isTemplate: isTemplate,
             };
           });
         
@@ -304,17 +330,37 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // Select a template
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);
-    // Extract parameters from template body
-    const paramMatches = (template.body || '').match(/\{\{(\d+)\}\}/g);
-    if (paramMatches) {
+    // Extract parameters from template's customParams array
+    // customParams contains: [{ paramName: "name", paramValue: "default" }, ...]
+    if (template.customParams && template.customParams.length > 0) {
       const params = {};
-      paramMatches.forEach(match => {
-        const paramNum = match.match(/\d+/)[0];
-        params[paramNum] = '';
+      template.customParams.forEach((param, index) => {
+        // Use paramName as the key, store with index for ordering
+        params[index] = {
+          name: param.paramName,
+          value: '', // Empty value to be filled by user
+          placeholder: param.paramValue || '', // Default value as placeholder
+        };
       });
       setTemplateParams(params);
     } else {
-      setTemplateParams({});
+      // Fallback: extract from body pattern {{1}}, {{2}}, etc.
+      const paramMatches = (template.body || '').match(/\{\{(\d+)\}\}/g);
+      if (paramMatches) {
+        const uniqueParams = [...new Set(paramMatches)];
+        const params = {};
+        uniqueParams.forEach((match, index) => {
+          const paramNum = match.match(/\d+/)[0];
+          params[index] = {
+            name: paramNum,
+            value: '',
+            placeholder: '',
+          };
+        });
+        setTemplateParams(params);
+      } else {
+        setTemplateParams({});
+      }
     }
   };
 
@@ -328,10 +374,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // Render template with parameter values
   const renderTemplatePreviewText = (template, params) => {
     let text = template.body || '';
-    Object.keys(params).forEach(key => {
-      const value = params[key] || `{{${key}}}`;
+    // Replace {{1}}, {{2}}, etc. with parameter values
+    Object.keys(params).forEach((key, idx) => {
+      const param = params[key];
+      const value = typeof param === 'object' ? (param.value || `{{${idx + 1}}}`) : (param || `{{${key}}}`);
+      // Replace {{n}} where n is the 1-based index
       text = text.replace(
-        new RegExp(`\\{\\{${key}\\}\\}`, 'g'),
+        new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'),
         `<span class="text-[#BBA473] font-semibold bg-[#BBA473]/10 px-1 rounded">${value}</span>`
       );
     });
@@ -350,7 +399,10 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
     // Validate all parameters are filled
     const requiredParams = Object.keys(templateParams);
-    const missingParams = requiredParams.filter(key => !templateParams[key].trim());
+    const missingParams = requiredParams.filter(key => {
+      const param = templateParams[key];
+      return typeof param === 'object' ? !param.value?.trim() : !param?.trim();
+    });
 
     if (missingParams.length > 0) {
       toast.error('Please fill in all template parameters');
@@ -359,15 +411,28 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
     setIsSendingTemplate(true);
     try {
-      // Sort parameters by key and get values in order
-      const sortedParams = Object.keys(templateParams)
+      // Format parameters with name and value for the API
+      const formattedParams = Object.keys(templateParams)
         .sort((a, b) => parseInt(a) - parseInt(b))
-        .map(key => templateParams[key]);
+        .map(key => {
+          const param = templateParams[key];
+          if (typeof param === 'object') {
+            return {
+              name: param.name,
+              value: param.value,
+            };
+          }
+          // Legacy format fallback
+          return {
+            name: key,
+            value: param,
+          };
+        });
 
       const result = await sendWatiTemplateMessage(
         contact.phone,
         selectedTemplate.elementName,
-        sortedParams
+        formattedParams
       );
 
       if (result.success) {
@@ -846,28 +911,39 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   </div>
                 </div>
               ) : (
-                messages.map((message, index) => (
+                messages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-[80%] group ${message.sender === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
+                      {/* Template indicator */}
+                      {message.isTemplate && (
+                        <div className={`flex items-center gap-1 mb-1 text-xs ${message.sender === 'user' ? 'text-[#BBA473]' : 'text-gray-400'}`}>
+                          <FileText className="w-3 h-3" />
+                          <span>Template</span>
+                        </div>
+                      )}
                       <div
                         className={`rounded-2xl px-4 py-3 shadow-md ${
                           message.sender === 'user'
                             ? message.failed
                               ? 'bg-red-500/20 text-white border border-red-500/30'
-                              : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
+                              : message.isTemplate
+                                ? 'bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30'
+                                : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
                             : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
                         } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
                       >
                         <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
                         <div className="flex items-center justify-end gap-1.5 mt-2">
                           <span className={`text-xs font-medium ${
-                            message.sender === 'user' 
-                              ? message.failed 
-                                ? 'text-red-300' 
-                                : 'text-black/70' 
+                            message.sender === 'user'
+                              ? message.failed
+                                ? 'text-red-300'
+                                : message.isTemplate
+                                  ? 'text-white/70'
+                                  : 'text-black/70'
                               : 'text-gray-400'
                           }`}>
                             {message.timestamp}
@@ -1188,37 +1264,47 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                           Template Variables
                         </h5>
                         <span className="text-xs text-gray-500">
-                          {Object.values(templateParams).filter(v => v.trim()).length} / {Object.keys(templateParams).length} filled
+                          {Object.values(templateParams).filter(p => typeof p === 'object' ? p.value?.trim() : p?.trim()).length} / {Object.keys(templateParams).length} filled
                         </span>
                       </div>
                       <div className="space-y-4">
-                        {Object.keys(templateParams).sort((a, b) => parseInt(a) - parseInt(b)).map((paramKey) => (
+                        {Object.keys(templateParams).sort((a, b) => parseInt(a) - parseInt(b)).map((paramKey) => {
+                          const param = templateParams[paramKey];
+                          const paramName = typeof param === 'object' ? param.name : paramKey;
+                          const paramValue = typeof param === 'object' ? param.value : param;
+                          const paramPlaceholder = typeof param === 'object' ? param.placeholder : '';
+                          const isFilled = typeof param === 'object' ? param.value?.trim() : param?.trim();
+
+                          return (
                           <div key={`param-${paramKey}`} className="group">
                             <label className="text-gray-300 text-sm mb-2 block font-medium flex items-center gap-2">
                               <span className="w-5 h-5 rounded bg-[#BBA473]/10 flex items-center justify-center text-[#BBA473] text-xs font-bold">
-                                {paramKey}
+                                {parseInt(paramKey) + 1}
                               </span>
-                              Variable {`{{${paramKey}}}`}
-                              {!templateParams[paramKey].trim() && (
+                              <span className="text-[#BBA473]">{paramName}</span>
+                              {!isFilled && (
                                 <span className="text-red-400 text-xs">*required</span>
                               )}
                             </label>
                             <input
                               type="text"
-                              placeholder={`Enter value for variable ${paramKey}...`}
-                              value={templateParams[paramKey]}
+                              placeholder={paramPlaceholder || `Enter ${paramName}...`}
+                              value={paramValue}
                               onChange={(e) => setTemplateParams({
                                 ...templateParams,
-                                [paramKey]: e.target.value
+                                [paramKey]: typeof param === 'object'
+                                  ? { ...param, value: e.target.value }
+                                  : e.target.value
                               })}
                               className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white text-sm transition-all duration-300 ${
-                                templateParams[paramKey].trim()
+                                isFilled
                                   ? 'border-green-500/30 focus:border-green-500'
                                   : 'border-[#BBA473]/30 focus:border-[#BBA473]'
                               }`}
                             />
                           </div>
-                        ))}
+                        );
+                        })}
                       </div>
                     </div>
                   )}

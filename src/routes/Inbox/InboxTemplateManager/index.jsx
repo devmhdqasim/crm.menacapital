@@ -145,18 +145,36 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
     setSelectedTemplate(template);
     setShowSendModal(true);
     setSendMode('single'); // Reset to single mode
-    
-    // Extract parameters from template body ({{1}}, {{2}}, etc.)
-    const paramMatches = (template.body || '').match(/\{\{(\d+)\}\}/g);
-    if (paramMatches) {
+
+    // Extract parameters from template's customParams array
+    if (template.customParams && template.customParams.length > 0) {
       const params = {};
-      paramMatches.forEach(match => {
-        const paramNum = match.match(/\d+/)[0];
-        params[paramNum] = '';
+      template.customParams.forEach((param, index) => {
+        params[index] = {
+          name: param.paramName,
+          value: '',
+          placeholder: param.paramValue || '',
+        };
       });
       setTemplateParams(params);
     } else {
-      setTemplateParams({});
+      // Fallback: extract from body pattern {{1}}, {{2}}, etc.
+      const paramMatches = (template.body || '').match(/\{\{(\d+)\}\}/g);
+      if (paramMatches) {
+        const uniqueParams = [...new Set(paramMatches)];
+        const params = {};
+        uniqueParams.forEach((match, index) => {
+          const paramNum = match.match(/\d+/)[0];
+          params[index] = {
+            name: paramNum,
+            value: '',
+            placeholder: '',
+          };
+        });
+        setTemplateParams(params);
+      } else {
+        setTemplateParams({});
+      }
     }
   };
 
@@ -182,8 +200,11 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
     // Validate all parameters are filled
     const requiredParams = Object.keys(templateParams);
-    const missingParams = requiredParams.filter(key => !templateParams[key].trim());
-    
+    const missingParams = requiredParams.filter(key => {
+      const param = templateParams[key];
+      return typeof param === 'object' ? !param.value?.trim() : !param?.trim();
+    });
+
     if (missingParams.length > 0) {
       toast.error('Please fill in all template parameters');
       return;
@@ -191,15 +212,27 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
     setIsSending(true);
     try {
-      // Sort parameters by key and get values in order
-      const sortedParams = Object.keys(templateParams)
+      // Format parameters with name and value for the API
+      const formattedParams = Object.keys(templateParams)
         .sort((a, b) => parseInt(a) - parseInt(b))
-        .map(key => templateParams[key]);
+        .map(key => {
+          const param = templateParams[key];
+          if (typeof param === 'object') {
+            return {
+              name: param.name,
+              value: param.value,
+            };
+          }
+          return {
+            name: key,
+            value: param,
+          };
+        });
 
       const result = await sendWatiTemplateMessage(
         recipientPhone,
         selectedTemplate.elementName,
-        sortedParams
+        formattedParams
       );
 
       if (result.success) {
@@ -245,13 +278,19 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
   // Function to render template with actual parameter values
   const renderTemplatePreview = (template, params) => {
     let text = template.body || '';
-    
+
     // Replace parameters with actual values or placeholders
-    Object.keys(params).forEach(key => {
-      const value = params[key] || `{{${key}}}`;
-      text = text.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), `<span class="text-[#BBA473] font-semibold bg-[#BBA473]/10 px-1 rounded">${value}</span>`);
+    // Params can be objects { name, value } or simple strings
+    Object.keys(params).forEach((key, idx) => {
+      const param = params[key];
+      const value = typeof param === 'object' ? (param.value || `{{${idx + 1}}}`) : (param || `{{${key}}}`);
+      // Replace {{n}} where n is the 1-based index
+      text = text.replace(
+        new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'),
+        `<span class="text-[#BBA473] font-semibold bg-[#BBA473]/10 px-1 rounded">${value}</span>`
+      );
     });
-    
+
     return text;
   };
 
@@ -848,23 +887,35 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                     Template Parameters * <span className="text-xs text-gray-500 font-normal">(Values update live in preview)</span>
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {Object.keys(templateParams).sort((a, b) => parseInt(a) - parseInt(b)).map((paramKey) => (
+                    {Object.keys(templateParams).sort((a, b) => parseInt(a) - parseInt(b)).map((paramKey) => {
+                      const param = templateParams[paramKey];
+                      const paramName = typeof param === 'object' ? param.name : paramKey;
+                      const paramValue = typeof param === 'object' ? param.value : param;
+                      const paramPlaceholder = typeof param === 'object' ? param.placeholder : '';
+
+                      return (
                       <div key={`param-${paramKey}`}>
-                        <label className="text-gray-300 text-xs mb-1 block">
-                          Parameter {paramKey}
+                        <label className="text-gray-300 text-xs mb-1 block flex items-center gap-2">
+                          <span className="w-4 h-4 rounded bg-[#BBA473]/20 flex items-center justify-center text-[#BBA473] text-[10px] font-bold">
+                            {parseInt(paramKey) + 1}
+                          </span>
+                          <span className="text-[#BBA473]">{paramName}</span>
                         </label>
                         <input
                           type="text"
-                          placeholder={`Enter value for parameter ${paramKey}`}
-                          value={templateParams[paramKey]}
+                          placeholder={paramPlaceholder || `Enter ${paramName}...`}
+                          value={paramValue}
                           onChange={(e) => setTemplateParams({
                             ...templateParams,
-                            [paramKey]: e.target.value
+                            [paramKey]: typeof param === 'object'
+                              ? { ...param, value: e.target.value }
+                              : e.target.value
                           })}
                           className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
                         />
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
               )}

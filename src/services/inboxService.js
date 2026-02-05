@@ -342,7 +342,7 @@ export const getWatiTemplates = async () => {
  * Send a WhatsApp template message via Wati (for outside 24-hour window)
  * @param {string} phoneNumber - Recipient phone number with country code
  * @param {string} templateName - Name of the approved template (elementName from template)
- * @param {Array} parameters - Array of parameter values for the template (in order)
+ * @param {Array} parameters - Array of parameter objects with name and value: [{ name: "param_name", value: "value" }]
  * @returns {Promise} API response
  */
 export const sendWatiTemplateMessage = async (phoneNumber, templateName, parameters = []) => {
@@ -356,11 +356,22 @@ export const sendWatiTemplateMessage = async (phoneNumber, templateName, paramet
     console.log('📨 Sending Wati template message to:', cleanPhone, 'Template:', templateName, 'Params:', parameters);
 
     // Format parameters for Wati API
-    // Wati expects: customParams: [{ name: "1", value: "John" }, { name: "2", value: "Doe" }]
-    const formattedParams = parameters.map((value, index) => ({
-      name: `${index + 1}`,
-      value: String(value || ''),
-    }));
+    // Wati expects: customParams: [{ name: "param_name", value: "value" }]
+    // Parameters should already be in the correct format with name and value
+    const formattedParams = parameters.map((param) => {
+      // Handle both object format { name, value } and legacy array format
+      if (typeof param === 'object' && param.name !== undefined) {
+        return {
+          name: String(param.name),
+          value: String(param.value || ''),
+        };
+      }
+      // Legacy support for simple value array (shouldn't be used anymore)
+      return {
+        name: String(param),
+        value: String(param || ''),
+      };
+    });
 
     const payload = {
       template_name: templateName,
