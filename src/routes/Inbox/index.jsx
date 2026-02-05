@@ -22,7 +22,7 @@ const InboxPage = () => {
   const [endDate, setEndDate] = useState(null);
   const [agents, setAgents] = useState([]);
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
-  
+
   // Chat drawer state
   const [selectedContact, setSelectedContact] = useState(null);
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
@@ -43,7 +43,7 @@ const InboxPage = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const role = userInfo.roleName || userInfo.role || '';
     const userId = userInfo._id || userInfo.id;
-    
+
     setUserRole(role);
     setCurrentUserId(userId);
   }, []);
@@ -52,13 +52,13 @@ const InboxPage = () => {
   const fetchAgents = async () => {
     try {
       const result = await getAllUsers(1, 100);
-      
+
       if (result.success && result.data) {
-        const agentsData = result.data.filter(user => 
-          user.roleName === 'Agent' || user.role === 'Agent' || 
+        const agentsData = result.data.filter(user =>
+          user.roleName === 'Agent' || user.role === 'Agent' ||
           user.roleName === 'Sales Manager' || user.role === 'Sales Manager'
         );
-        
+
         const transformedAgents = agentsData.map((user) => ({
           id: user._id,
           username: user.username,
@@ -70,7 +70,7 @@ const InboxPage = () => {
           department: user.department || 'Sales',
           role: user.roleName || 'Agent',
         }));
-        
+
         setAgents(transformedAgents);
       } else {
         console.error('Failed to fetch agents:', result.message);
@@ -91,9 +91,9 @@ const InboxPage = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const agentId = selectedAgentFilter || '';
-      
+
       let result;
-      
+
       if (userRole === 'Sales Manager') {
         // Sales Manager sees all leads
         result = await getAllSalesManagerLeads(
@@ -116,7 +116,7 @@ const InboxPage = () => {
           '' // No status filter
         );
       }
-      
+
       if (result.success && result.data) {
         const transformedContacts = result.data.map((lead) => ({
           id: lead._id,
@@ -124,8 +124,8 @@ const InboxPage = () => {
           name: lead.leadName,
           email: lead.leadEmail,
           phone: lead.leadPhoneNumber,
-          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
-            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}`
             : 'Not Assigned',
           agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
           dateOfBirth: lead.leadDateOfBirth,
@@ -154,7 +154,7 @@ const InboxPage = () => {
           unreadCount: 0, // TODO: Implement unread count from backend
           isOnline: false, // TODO: Implement online status from backend
         }));
-        
+
         setContacts(transformedContacts);
         setTotalContacts(result.metadata?.total || 0);
       } else {

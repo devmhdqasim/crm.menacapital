@@ -95,7 +95,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           // Check if message already exists
           const exists = prev.some(msg => msg.id === newMessage.id);
           if (exists) return prev;
-          
+
           return [...prev, newMessage].sort((a, b) => a.sortTimestamp - b.sortTimestamp);
         });
 
@@ -135,20 +135,24 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
   const fetchWatiMessages = async () => {
     if (!contact || !contact.phone) return;
-    
+
     setIsLoading(true);
     setContactNotFound(false);
     try {
       const result = await getWatiMessages(contact.phone, 100, 0);
-      
+
       console.log('📥 Wati API Response:', result);
-      
+
       if (result.success && result.data && result.data.messages && result.data.messages.items) {
         const watiMessages = result.data.messages.items;
 
         // Transform Wati messages to our format
         const transformedMessages = watiMessages
-          .filter(msg => msg.eventType === 'message' || msg.type === 'template')
+          .filter(msg =>
+            msg.eventType === 'message' ||
+            msg.type === 'template' ||
+            msg.eventType === 'broadcastMessage' // Add support for broadcast messages
+          )
           .map((msg) => {
             const timestamp = msg.timestamp ? parseInt(msg.timestamp) * 1000 : new Date(msg.created).getTime();
             const date = new Date(timestamp);
@@ -161,9 +165,16 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
             // Handle different message types
             let messageText = msg.text;
-            let isTemplate = msg.type === 'template';
+            let isTemplate = msg.type === 'template' || msg.eventType === 'broadcastMessage';
 
-            if (msg.type === 'template') {
+            // Special handling for broadcast/template messages
+            if (msg.eventType === 'broadcastMessage' && msg.finalText) {
+              messageText = msg.finalText;
+              // If it has parameters replaced, it might just be text now, but we treat it as template for styling
+
+              // Try to preserve newlines if they exist in finalText
+              // finalText often comes with actual text, so we use that directly
+            } else if (msg.type === 'template') {
               // Template message - show template info
               const templateData = msg.data || {};
               messageText = templateData.body || templateData.text || msg.text || '📋 Template Message';
@@ -187,7 +198,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
             return {
               id: msg.id,
               text: messageText,
-              sender: msg.owner ? 'user' : 'contact',
+              sender: (msg.owner || msg.eventType === 'broadcastMessage') ? 'user' : 'contact',
               timestamp: timeString,
               sortTimestamp: timestamp,
               status: msg.statusString ? msg.statusString.toLowerCase() : 'sent',
@@ -196,25 +207,25 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               isTemplate: isTemplate,
             };
           });
-        
+
         transformedMessages.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
-        
+
         console.log('✅ Transformed messages:', transformedMessages);
         setMessages(transformedMessages);
       } else if (result.info && result.info.includes('Contact not found')) {
         setContactNotFound(true);
         console.log('⚠️ Contact not found in Wati:', contact.phone);
-        
+
         if (contact.remarks || contact.latestRemarks) {
           setMessages([
             {
               id: 1,
               text: contact.remarks || contact.latestRemarks,
               sender: 'contact',
-              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', {
+                hour: '2-digit',
                 minute: '2-digit',
-                hour12: true 
+                hour12: true
               }),
               sortTimestamp: new Date(contact.createdAt).getTime(),
               status: 'read',
@@ -231,10 +242,10 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               id: 1,
               text: contact.remarks || contact.latestRemarks,
               sender: 'contact',
-              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', {
+                hour: '2-digit',
                 minute: '2-digit',
-                hour12: true 
+                hour12: true
               }),
               sortTimestamp: new Date(contact.createdAt).getTime(),
               status: 'read',
@@ -487,7 +498,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
   const handleCreateContact = async () => {
     if (!contact) return;
-    
+
     setIsSending(true);
     try {
       const result = await createWatiContact(contact.phone, contact.name, {
@@ -495,7 +506,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         nationality: contact.nationality,
         source: contact.source,
       });
-      
+
       if (result.success) {
         toast.success('Contact added to Wati successfully!');
         setContactNotFound(false);
@@ -516,21 +527,21 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     if (!textToSend || !contact) return;
 
     const isRetry = retryMessageId !== null;
-    
+
     if (isRetry) {
       setRetryingMessageId(retryMessageId);
     } else {
       setIsSending(true);
     }
-    
+
     try {
       const result = await sendWatiMessage(contact.phone, textToSend);
-      
+
       if (result.success) {
         if (isRetry) {
           // Update the failed message to sent
-          setMessages(prev => prev.map(msg => 
-            msg.id === retryMessageId 
+          setMessages(prev => prev.map(msg =>
+            msg.id === retryMessageId
               ? { ...msg, status: 'sent', failed: false }
               : msg
           ));
@@ -545,10 +556,10 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
             id: Date.now(),
             text: textToSend,
             sender: 'user',
-            timestamp: new Date().toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
+            timestamp: new Date().toLocaleTimeString('en-US', {
+              hour: '2-digit',
               minute: '2-digit',
-              hour12: true 
+              hour12: true
             }),
             sortTimestamp: Date.now(),
             status: 'sent',
@@ -558,24 +569,24 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           setMessages([...messages, newMessage]);
           setMessageInput('');
           setContactNotFound(false);
-          
+
           // Status updates will be handled by WebSocket
           // But keep fallback for when WebSocket is not connected
           if (!isConnected) {
             setTimeout(() => {
-              setMessages(prev => prev.map(msg => 
+              setMessages(prev => prev.map(msg =>
                 msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
               ));
             }, 1000);
-            
+
             setTimeout(() => {
-              setMessages(prev => prev.map(msg => 
+              setMessages(prev => prev.map(msg =>
                 msg.id === newMessage.id ? { ...msg, status: 'read' } : msg
               ));
             }, 3000);
           }
         }
-        
+
         if (refreshContacts) {
           refreshContacts();
         }
@@ -600,20 +611,20 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
             id: Date.now(),
             text: textToSend,
             sender: 'user',
-            timestamp: new Date().toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
+            timestamp: new Date().toLocaleTimeString('en-US', {
+              hour: '2-digit',
               minute: '2-digit',
-              hour12: true 
+              hour12: true
             }),
             sortTimestamp: Date.now(),
             status: 'failed',
             failed: true,
           };
-          
+
           setMessages([...messages, failedMessage]);
           setFailedMessages(prev => new Set(prev).add(failedMessage.id));
           setMessageInput('');
-          
+
           // Show error toast for new messages
           if (result.contactNotFound || result.windowExpired) {
             setContactNotFound(true);
@@ -630,7 +641,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       }
     } catch (error) {
       console.error('❌ Error sending message:', error);
-      
+
       if (isRetry) {
         // For retry errors, just show the error toast without creating a new message
         toast.error('Failed to resend message. Please try again.', {
@@ -642,20 +653,20 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           id: Date.now(),
           text: textToSend,
           sender: 'user',
-          timestamp: new Date().toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
+          timestamp: new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
             minute: '2-digit',
-            hour12: true 
+            hour12: true
           }),
           sortTimestamp: Date.now(),
           status: 'failed',
           failed: true,
         };
-        
+
         setMessages([...messages, failedMessage]);
         setFailedMessages(prev => new Set(prev).add(failedMessage.id));
         setMessageInput('');
-        
+
         toast.error('Failed to send message. Please try again.', {
           duration: 4000,
         });
@@ -684,7 +695,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     if (failed) {
       return <AlertTriangle className="w-4 h-4 text-red-500" />;
     }
-    
+
     switch (status) {
       case 'sent':
         return <Check className="w-4 h-4 text-gray-400" />;
@@ -704,7 +715,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
   const capitalizeWords = (str) => {
     if (!str) return '';
-    return str.split(' ').map(word => 
+    return str.split(' ').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     ).join(' ');
   };
@@ -714,17 +725,15 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   return (
     <>
       {/* Backdrop with blur */}
-      <div 
-        className={`fixed inset-0 bg-black/60 backdrop-blur-md z-40 transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0'
-        }`}
+      <div
+        className={`fixed inset-0 bg-black/60 backdrop-blur-md z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'
+          }`}
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className={`fixed right-0 top-0 h-full w-full md:w-[500px] lg:w-[650px] bg-gradient-to-br from-[#1A1A1A] to-[#252525] shadow-2xl z-50 flex flex-col transform transition-all duration-300 ease-out ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}>
+      <div className={`fixed right-0 top-0 h-full w-full md:w-[500px] lg:w-[650px] bg-gradient-to-br from-[#1A1A1A] to-[#252525] shadow-2xl z-50 flex flex-col transform transition-all duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
         {contact && (
           <>
             {/* Enhanced Header */}
@@ -808,13 +817,12 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   </div>
                   {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
                     <div className="mt-3 pt-3 border-t border-[#BBA473]/10">
-                      <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${
-                        contact.kioskLeadStatus === 'Demo' 
-                          ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                          : contact.kioskLeadStatus === 'Real'
+                      <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${contact.kioskLeadStatus === 'Demo'
+                        ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                        : contact.kioskLeadStatus === 'Real'
                           ? 'bg-green-500/20 text-green-400 border-green-500/30'
                           : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                      }`}>
+                        }`}>
                         <CheckCircle className="w-3 h-3" />
                         {contact.kioskLeadStatus}
                       </span>
@@ -838,7 +846,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                     <p className="text-sm text-gray-300 mb-4 leading-relaxed">
                       WhatsApp Business requires the contact to message you first or the conversation must be within 24 hours of their last message.
                     </p>
-                    
+
                     <div className="bg-[#1A1A1A] rounded-xl p-4 mb-4 border border-yellow-500/20">
                       <p className="text-sm font-semibold text-yellow-400 mb-3 flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" />
@@ -925,27 +933,25 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                         </div>
                       )}
                       <div
-                        className={`rounded-2xl px-4 py-3 shadow-md ${
-                          message.sender === 'user'
-                            ? message.failed
-                              ? 'bg-red-500/20 text-white border border-red-500/30'
-                              : message.isTemplate
-                                ? 'bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30'
-                                : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
-                            : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
-                        } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
+                        className={`rounded-2xl px-4 py-3 shadow-md ${message.sender === 'user'
+                          ? message.failed
+                            ? 'bg-red-500/20 text-white border border-red-500/30'
+                            : message.isTemplate
+                              ? 'bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30'
+                              : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
+                          : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
+                          } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
                       >
                         <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
                         <div className="flex items-center justify-end gap-1.5 mt-2">
-                          <span className={`text-xs font-medium ${
-                            message.sender === 'user'
-                              ? message.failed
-                                ? 'text-red-300'
-                                : message.isTemplate
-                                  ? 'text-white/70'
-                                  : 'text-black/70'
-                              : 'text-gray-400'
-                          }`}>
+                          <span className={`text-xs font-medium ${message.sender === 'user'
+                            ? message.failed
+                              ? 'text-red-300'
+                              : message.isTemplate
+                                ? 'text-white/70'
+                                : 'text-black/70'
+                            : 'text-gray-400'
+                            }`}>
                             {message.timestamp}
                           </span>
                           {message.sender === 'user' && (
@@ -953,7 +959,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Retry Button for Failed Messages */}
                       {message.failed && message.sender === 'user' && (
                         <button
@@ -1012,11 +1018,10 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!messageInput.trim() || isSending}
-                  className={`p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform ${
-                    messageInput.trim() && !isSending
-                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 shadow-lg hover:shadow-xl active:scale-95'
-                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  }`}
+                  className={`p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform ${messageInput.trim() && !isSending
+                    ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 shadow-lg hover:shadow-xl active:scale-95'
+                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
                 >
                   {isSending ? (
                     <RefreshCw className="w-5 h-5 animate-spin" />
@@ -1276,34 +1281,33 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                           const isFilled = typeof param === 'object' ? param.value?.trim() : param?.trim();
 
                           return (
-                          <div key={`param-${paramKey}`} className="group">
-                            <label className="text-gray-300 text-sm mb-2 block font-medium flex items-center gap-2">
-                              <span className="w-5 h-5 rounded bg-[#BBA473]/10 flex items-center justify-center text-[#BBA473] text-xs font-bold">
-                                {parseInt(paramKey) + 1}
-                              </span>
-                              <span className="text-[#BBA473]">{paramName}</span>
-                              {!isFilled && (
-                                <span className="text-red-400 text-xs">*required</span>
-                              )}
-                            </label>
-                            <input
-                              type="text"
-                              placeholder={paramPlaceholder || `Enter ${paramName}...`}
-                              value={paramValue}
-                              onChange={(e) => setTemplateParams({
-                                ...templateParams,
-                                [paramKey]: typeof param === 'object'
-                                  ? { ...param, value: e.target.value }
-                                  : e.target.value
-                              })}
-                              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white text-sm transition-all duration-300 ${
-                                isFilled
+                            <div key={`param-${paramKey}`} className="group">
+                              <label className="text-gray-300 text-sm mb-2 block font-medium flex items-center gap-2">
+                                <span className="w-5 h-5 rounded bg-[#BBA473]/10 flex items-center justify-center text-[#BBA473] text-xs font-bold">
+                                  {parseInt(paramKey) + 1}
+                                </span>
+                                <span className="text-[#BBA473]">{paramName}</span>
+                                {!isFilled && (
+                                  <span className="text-red-400 text-xs">*required</span>
+                                )}
+                              </label>
+                              <input
+                                type="text"
+                                placeholder={paramPlaceholder || `Enter ${paramName}...`}
+                                value={paramValue}
+                                onChange={(e) => setTemplateParams({
+                                  ...templateParams,
+                                  [paramKey]: typeof param === 'object'
+                                    ? { ...param, value: e.target.value }
+                                    : e.target.value
+                                })}
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white text-sm transition-all duration-300 ${isFilled
                                   ? 'border-green-500/30 focus:border-green-500'
                                   : 'border-[#BBA473]/30 focus:border-[#BBA473]'
-                              }`}
-                            />
-                          </div>
-                        );
+                                  }`}
+                              />
+                            </div>
+                          );
                         })}
                       </div>
                     </div>
