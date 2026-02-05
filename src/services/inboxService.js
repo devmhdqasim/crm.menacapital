@@ -342,20 +342,24 @@ export const getWatiTemplates = async () => {
  * Send a WhatsApp template message via Wati (for outside 24-hour window)
  * @param {string} phoneNumber - Recipient phone number with country code
  * @param {string} templateName - Name of the approved template (elementName from template)
- * @param {Array} parameters - Array of parameter values for the template
+ * @param {Array} parameters - Array of parameter values for the template (in order)
  * @returns {Promise} API response
  */
 export const sendWatiTemplateMessage = async (phoneNumber, templateName, parameters = []) => {
   try {
-    const cleanPhone = formatPhoneForWati(phoneNumber);
+    let cleanPhone = formatPhoneForWati(phoneNumber);
+    // Remove the + sign for Wati template API - it expects just the number
+    if (cleanPhone.startsWith('+')) {
+      cleanPhone = cleanPhone.substring(1);
+    }
 
-    console.log('📨 Sending Wati template message to:', cleanPhone, 'Template:', templateName);
-    
+    console.log('📨 Sending Wati template message to:', cleanPhone, 'Template:', templateName, 'Params:', parameters);
+
     // Format parameters for Wati API
-    // Wati expects: parameters: [{ name: "1", value: "John" }, { name: "2", value: "Doe" }]
+    // Wati expects: customParams: [{ name: "1", value: "John" }, { name: "2", value: "Doe" }]
     const formattedParams = parameters.map((value, index) => ({
       name: `${index + 1}`,
-      value: value,
+      value: String(value || ''),
     }));
 
     const payload = {
@@ -369,22 +373,42 @@ export const sendWatiTemplateMessage = async (phoneNumber, templateName, paramet
       ],
     };
 
-    console.log('📤 Template payload:', payload);
+    console.log('📤 Template payload:', JSON.stringify(payload, null, 2));
 
-    const response = await watiApi.post('/sendTemplateMessage', payload);
+    // Use the correct endpoint - sendTemplateMessages (plural)
+    const response = await watiApi.post('/sendTemplateMessages', payload);
 
     console.log('✅ Template send response:', response.data);
 
+    // Check for success in response
+    if (response.data && (response.data.result === true || response.data.result === 'true' || response.status === 200)) {
+      return {
+        success: true,
+        data: response.data,
+        message: 'Template message sent successfully',
+      };
+    }
+
+    // Handle API returned success but result is false
+    if (response.data && response.data.result === false) {
+      return {
+        success: false,
+        data: response.data,
+        message: response.data.message || response.data.info || 'Failed to send template message',
+      };
+    }
+
+    // Default to success if we got a 200 response
     return {
       success: true,
       data: response.data,
       message: 'Template message sent successfully',
     };
   } catch (error) {
-    console.error('❌ Error sending Wati template message:', error.response?.data);
-    
+    console.error('❌ Error sending Wati template message:', error.response?.data || error.message);
+
     const errorData = error.response?.data || {};
-    const errorInfo = errorData.info || errorData.message || '';
+    const errorInfo = errorData.info || errorData.message || errorData.error || '';
     const errorStatus = error.response?.status;
     
     // Handle specific error cases

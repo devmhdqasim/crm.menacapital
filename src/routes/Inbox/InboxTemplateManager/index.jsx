@@ -191,10 +191,15 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
     setIsSending(true);
     try {
+      // Sort parameters by key and get values in order
+      const sortedParams = Object.keys(templateParams)
+        .sort((a, b) => parseInt(a) - parseInt(b))
+        .map(key => templateParams[key]);
+
       const result = await sendWatiTemplateMessage(
         recipientPhone,
         selectedTemplate.elementName,
-        Object.values(templateParams)
+        sortedParams
       );
 
       if (result.success) {

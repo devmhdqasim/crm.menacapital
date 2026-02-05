@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle, FileText, Search, Eye, ChevronLeft, Filter, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { sendWatiMessage, getWatiMessages, createWatiContact } from '../../../services/inboxService';
+import { sendWatiMessage, getWatiMessages, createWatiContact, getWatiTemplates, sendWatiTemplateMessage } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
@@ -16,13 +16,45 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
+  // Template picker state
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [filteredTemplates, setFilteredTemplates] = useState([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateParams, setTemplateParams] = useState({});
+  const [isSendingTemplate, setIsSendingTemplate] = useState(false);
+  const [showWhatsAppPreview, setShowWhatsAppPreview] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [categories, setCategories] = useState([]);
+
   // WebSocket integration
   const { isConnected, addMessageListener, sendMessage: sendWsMessage } = useWebSocket();
+
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   // Fetch messages from Wati when contact is selected
   useEffect(() => {
     if (contact) {
+      // Clear previous messages and set loading immediately to prevent UI flash
+      setMessages([]);
+      setIsLoading(true);
+      setContactNotFound(false);
+
       fetchWatiMessages();
+
       // Focus input when drawer opens
       setTimeout(() => {
         inputRef.current?.focus();
@@ -192,6 +224,191 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       setMessages([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch templates when template picker is opened
+  const fetchTemplates = async () => {
+    setIsLoadingTemplates(true);
+    try {
+      const result = await getWatiTemplates();
+
+      if (result.success && result.data) {
+        const templatesList = result.data.messageTemplates || result.templates || result.data || [];
+        // Only show APPROVED templates
+        const activeTemplates = templatesList.filter(t =>
+          t.status === 'APPROVED'
+        );
+        setTemplates(activeTemplates);
+        setFilteredTemplates(activeTemplates);
+
+        // Extract unique categories
+        const uniqueCategories = [...new Set(activeTemplates.map(t => t.category || 'UNCATEGORIZED'))];
+        setCategories(uniqueCategories);
+      } else {
+        toast.error('Failed to load templates');
+        setTemplates([]);
+        setFilteredTemplates([]);
+      }
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      toast.error('Failed to load templates');
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+
+  // Filter templates based on search query and category
+  useEffect(() => {
+    let filtered = templates;
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(t => (t.category || 'UNCATEGORIZED') === selectedCategory);
+    }
+
+    // Filter by search query
+    if (templateSearchQuery.trim()) {
+      const query = templateSearchQuery.toLowerCase();
+      filtered = filtered.filter(t =>
+        (t.elementName || '').toLowerCase().includes(query) ||
+        (t.body || '').toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredTemplates(filtered);
+  }, [templateSearchQuery, selectedCategory, templates]);
+
+  // Open template picker
+  const handleOpenTemplatePicker = () => {
+    setShowTemplatePicker(true);
+    setSelectedTemplate(null);
+    setTemplateParams({});
+    setTemplateSearchQuery('');
+    setSelectedCategory('all');
+    if (templates.length === 0) {
+      fetchTemplates();
+    }
+  };
+
+  // Close template picker
+  const handleCloseTemplatePicker = () => {
+    setShowTemplatePicker(false);
+    setSelectedTemplate(null);
+    setTemplateParams({});
+    setTemplateSearchQuery('');
+    setSelectedCategory('all');
+    setShowWhatsAppPreview(false);
+  };
+
+  // Select a template
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template);
+    // Extract parameters from template body
+    const paramMatches = (template.body || '').match(/\{\{(\d+)\}\}/g);
+    if (paramMatches) {
+      const params = {};
+      paramMatches.forEach(match => {
+        const paramNum = match.match(/\d+/)[0];
+        params[paramNum] = '';
+      });
+      setTemplateParams(params);
+    } else {
+      setTemplateParams({});
+    }
+  };
+
+  // Go back to template list
+  const handleBackToTemplateList = () => {
+    setSelectedTemplate(null);
+    setTemplateParams({});
+    setShowWhatsAppPreview(false);
+  };
+
+  // Render template with parameter values
+  const renderTemplatePreviewText = (template, params) => {
+    let text = template.body || '';
+    Object.keys(params).forEach(key => {
+      const value = params[key] || `{{${key}}}`;
+      text = text.replace(
+        new RegExp(`\\{\\{${key}\\}\\}`, 'g'),
+        `<span class="text-[#BBA473] font-semibold bg-[#BBA473]/10 px-1 rounded">${value}</span>`
+      );
+    });
+    return text;
+  };
+
+  // Render template text with highlighted parameters
+  const renderTemplateText = (text) => {
+    if (!text) return '';
+    return text.replace(/\{\{(\d+)\}\}/g, '<span class="text-[#BBA473] font-semibold">{{$1}}</span>');
+  };
+
+  // Send template message
+  const handleSendTemplateMessage = async () => {
+    if (!selectedTemplate || !contact) return;
+
+    // Validate all parameters are filled
+    const requiredParams = Object.keys(templateParams);
+    const missingParams = requiredParams.filter(key => !templateParams[key].trim());
+
+    if (missingParams.length > 0) {
+      toast.error('Please fill in all template parameters');
+      return;
+    }
+
+    setIsSendingTemplate(true);
+    try {
+      // Sort parameters by key and get values in order
+      const sortedParams = Object.keys(templateParams)
+        .sort((a, b) => parseInt(a) - parseInt(b))
+        .map(key => templateParams[key]);
+
+      const result = await sendWatiTemplateMessage(
+        contact.phone,
+        selectedTemplate.elementName,
+        sortedParams
+      );
+
+      if (result.success) {
+        toast.success('Template message sent successfully!');
+
+        // Add message to chat
+        const newMessage = {
+          id: Date.now(),
+          text: `📋 Template: ${selectedTemplate.elementName}\n\n${Object.keys(templateParams).length > 0
+            ? selectedTemplate.body.replace(/\{\{(\d+)\}\}/g, (_, num) => templateParams[num] || `{{${num}}}`)
+            : selectedTemplate.body}`,
+          sender: 'user',
+          timestamp: new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }),
+          sortTimestamp: Date.now(),
+          status: 'sent',
+          isTemplate: true,
+        };
+        setMessages(prev => [...prev, newMessage]);
+
+        handleCloseTemplatePicker();
+        setContactNotFound(false);
+
+        if (refreshContacts) {
+          refreshContacts();
+        }
+      } else {
+        if (result.contactNotFound || result.windowExpired) {
+          toast.error(result.message || 'Failed to send template', { duration: 4000 });
+        } else {
+          toast.error(result.message || 'Failed to send template message');
+        }
+      }
+    } catch (error) {
+      console.error('Error sending template:', error);
+      toast.error('Failed to send template message');
+    } finally {
+      setIsSendingTemplate(false);
     }
   };
 
@@ -632,8 +849,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 messages.map((message, index) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slideIn`}
-                    style={{ animationDelay: `${index * 0.03}s` }}
+                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-[80%] group ${message.sender === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
                       <div
@@ -692,6 +908,15 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
             {/* Enhanced Message Input */}
             <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 shadow-lg">
               <div className="flex items-start gap-3">
+                {/* Template Button */}
+                <button
+                  onClick={handleOpenTemplatePicker}
+                  className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group"
+                  title="Send Template"
+                >
+                  <FileText className="w-5 h-5 group-hover:rotate-6 transition-transform" />
+                </button>
+
                 <div className="flex-1 relative">
                   <textarea
                     ref={inputRef}
@@ -724,7 +949,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   )}
                 </button>
               </div>
-              
+
               {/* Typing indicator hint with WebSocket status */}
               <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
                 <span>Press Enter to send • Shift+Enter for new line</span>
@@ -735,6 +960,484 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               </div>
             </div>
           </>
+        )}
+
+        {/* Template Picker Overlay */}
+        {showTemplatePicker && (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A1A] to-[#252525] z-10 flex flex-col animate-slideInRight">
+            {/* Template Picker Header */}
+            <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-5 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={selectedTemplate ? handleBackToTemplateList : handleCloseTemplatePicker}
+                  className="p-2 rounded-lg bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] transition-all duration-300"
+                >
+                  {selectedTemplate ? <ChevronLeft className="w-5 h-5" /> : <X className="w-5 h-5" />}
+                </button>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#BBA473]" />
+                    {selectedTemplate ? 'Configure Template' : 'Send Template'}
+                  </h3>
+                  <p className="text-gray-400 text-sm mt-0.5">
+                    {selectedTemplate
+                      ? `Sending to ${contact?.name || 'Contact'}`
+                      : 'Choose a template to send'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Search and Filter - Only show when viewing template list */}
+              {!selectedTemplate && (
+                <div className="mt-4 space-y-3">
+                  {/* Search and Category Filter - One line on desktop */}
+                  <div className="flex flex-col md:flex-row gap-2">
+                    {/* Search Bar */}
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder="Search templates..."
+                        value={templateSearchQuery}
+                        onChange={(e) => setTemplateSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 border-2 border-[#BBA473]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white text-sm transition-all duration-300"
+                      />
+                    </div>
+
+                    {/* Category Filter */}
+                    <div className="relative md:w-40">
+                      <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full pl-9 pr-8 py-2.5 border-2 border-[#BBA473]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white text-sm transition-all duration-300 appearance-none cursor-pointer"
+                      >
+                        <option value="all">All</option>
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Results count */}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''}</span>
+                    {(selectedCategory !== 'all' || templateSearchQuery) && (
+                      <button
+                        onClick={() => {
+                          setSelectedCategory('all');
+                          setTemplateSearchQuery('');
+                        }}
+                        className="text-[#BBA473] hover:text-[#d4bc89] transition-colors"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Template List or Selected Template View */}
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              {!selectedTemplate ? (
+                // Template List
+                isLoadingTemplates ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#BBA473]/20 border-t-[#BBA473]"></div>
+                    <span className="text-gray-400 mt-4">Loading templates...</span>
+                  </div>
+                ) : filteredTemplates.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                    <FileText className="w-12 h-12 text-gray-600 mb-4" />
+                    <p className="text-gray-400">No templates found</p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      {templateSearchQuery ? 'Try adjusting your search' : 'No approved templates available'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredTemplates.map((template) => (
+                      <button
+                        key={template.id || template.elementName}
+                        onClick={() => handleSelectTemplate(template)}
+                        className="w-full text-left bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/20 hover:border-[#BBA473]/50 transition-all duration-300 hover:shadow-lg group"
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <h4 className="text-white font-semibold text-sm group-hover:text-[#BBA473] transition-colors truncate">
+                            {template.elementName}
+                          </h4>
+                          <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                            Approved
+                          </span>
+                        </div>
+                        <p
+                          className="text-gray-400 text-sm line-clamp-2 leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: renderTemplateText(template.body) }}
+                        />
+                        <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <span className="text-[#BBA473]">📁</span>
+                            {template.category || 'General'}
+                          </span>
+                          {(() => {
+                            const paramCount = (template.body || '').match(/\{\{\d+\}\}/g)?.length || 0;
+                            return paramCount > 0 ? (
+                              <span className="flex items-center gap-1">
+                                <span className="text-[#BBA473]">📝</span>
+                                {paramCount} param{paramCount > 1 ? 's' : ''}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )
+              ) : (
+                // Selected Template View with Parameter Input - Enhanced UI
+                <div className="space-y-4">
+                  {/* Template Info Header Card */}
+                  <div className="bg-gradient-to-br from-[#2A2A2A] to-[#1F1F1F] rounded-2xl p-5 border border-[#BBA473]/20 shadow-lg">
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                            Approved
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#BBA473]/10 text-[#BBA473] border border-[#BBA473]/20">
+                            {selectedTemplate.category || 'General'}
+                          </span>
+                        </div>
+                        <h4 className="text-white font-bold text-base mt-2">{selectedTemplate.elementName}</h4>
+                        {selectedTemplate.language && (
+                          <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                            <span>🌐</span> {selectedTemplate.language.text || selectedTemplate.language.key}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setShowWhatsAppPreview(true)}
+                        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#2be374] hover:to-[#15a08e] text-white rounded-xl text-xs font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        Preview
+                      </button>
+                    </div>
+
+                    {/* Template Body Preview */}
+                    <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#BBA473]/10">
+                      {selectedTemplate.header && selectedTemplate.header.text && (
+                        <div className="mb-3 pb-3 border-b border-[#BBA473]/10">
+                          <p className="text-[#BBA473] text-sm font-semibold">{selectedTemplate.header.text}</p>
+                        </div>
+                      )}
+                      <p
+                        className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{
+                          __html: renderTemplatePreviewText(selectedTemplate, templateParams)
+                        }}
+                      />
+                      {selectedTemplate.footer && (
+                        <div className="mt-3 pt-3 border-t border-[#BBA473]/10">
+                          <p className="text-gray-500 text-xs italic">{selectedTemplate.footer}</p>
+                        </div>
+                      )}
+                      {selectedTemplate.buttons && selectedTemplate.buttons.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-[#BBA473]/10 flex flex-wrap gap-2">
+                          {selectedTemplate.buttons.map((btn, idx) => (
+                            <div key={idx} className="px-3 py-1.5 bg-[#2A2A2A] rounded-lg text-xs text-[#BBA473] border border-[#BBA473]/20">
+                              {btn.parameter?.text}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Recipient Card */}
+                  <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/20">
+                    <h5 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Sending To</h5>
+                    <div className="flex items-center gap-3 bg-[#1A1A1A] rounded-xl px-4 py-3 border border-[#BBA473]/10">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center flex-shrink-0 shadow-lg">
+                        <span className="text-lg font-bold text-white">
+                          {contact?.name?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-semibold truncate">{contact?.name}</p>
+                        <p className="text-gray-400 text-sm truncate flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          {contact?.phone}
+                        </p>
+                      </div>
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    </div>
+                  </div>
+
+                  {/* Parameter Inputs */}
+                  {Object.keys(templateParams).length > 0 && (
+                    <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/20">
+                      <div className="flex items-center justify-between mb-4">
+                        <h5 className="text-white font-semibold text-sm flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-[#BBA473]/20 flex items-center justify-center">
+                            <span className="text-[#BBA473] text-xs">📝</span>
+                          </div>
+                          Template Variables
+                        </h5>
+                        <span className="text-xs text-gray-500">
+                          {Object.values(templateParams).filter(v => v.trim()).length} / {Object.keys(templateParams).length} filled
+                        </span>
+                      </div>
+                      <div className="space-y-4">
+                        {Object.keys(templateParams).sort((a, b) => parseInt(a) - parseInt(b)).map((paramKey) => (
+                          <div key={`param-${paramKey}`} className="group">
+                            <label className="text-gray-300 text-sm mb-2 block font-medium flex items-center gap-2">
+                              <span className="w-5 h-5 rounded bg-[#BBA473]/10 flex items-center justify-center text-[#BBA473] text-xs font-bold">
+                                {paramKey}
+                              </span>
+                              Variable {`{{${paramKey}}}`}
+                              {!templateParams[paramKey].trim() && (
+                                <span className="text-red-400 text-xs">*required</span>
+                              )}
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={`Enter value for variable ${paramKey}...`}
+                              value={templateParams[paramKey]}
+                              onChange={(e) => setTemplateParams({
+                                ...templateParams,
+                                [paramKey]: e.target.value
+                              })}
+                              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white text-sm transition-all duration-300 ${
+                                templateParams[paramKey].trim()
+                                  ? 'border-green-500/30 focus:border-green-500'
+                                  : 'border-[#BBA473]/30 focus:border-[#BBA473]'
+                              }`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info Banner */}
+                  <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl p-4">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                        <AlertCircle className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-blue-400 font-semibold text-sm">Template Messages</p>
+                        <p className="text-blue-300/80 text-xs mt-1 leading-relaxed">
+                          Template messages are pre-approved by WhatsApp and can be sent even outside the 24-hour messaging window.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Send Button - Only show when template is selected */}
+            {selectedTemplate && (
+              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 flex-shrink-0">
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCloseTemplatePicker}
+                    className="flex-1 px-4 py-3 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-xl transition-all duration-300 font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSendTemplateMessage}
+                    disabled={isSendingTemplate || Object.values(templateParams).some(v => !v.trim()) && Object.keys(templateParams).length > 0}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {isSendingTemplate ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Send Template
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* WhatsApp Preview Modal */}
+        {showWhatsAppPreview && selectedTemplate && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
+            <div
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              onClick={() => setShowWhatsAppPreview(false)}
+            />
+            <div
+              className="bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col relative z-10 border border-[#BBA473]/30 animate-scaleIn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-4 rounded-t-2xl flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-lg">
+                      <Smartphone className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold">WhatsApp Preview</h3>
+                      <p className="text-gray-400 text-xs">{selectedTemplate.elementName}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowWhatsAppPreview(false)}
+                    className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Phone Preview */}
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <div className="bg-[#0A0A0A] rounded-3xl p-3 shadow-2xl border-4 border-[#2A2A2A]">
+                  {/* Phone Status Bar */}
+                  <div className="flex items-center justify-between px-4 py-2 text-white/60 text-xs">
+                    <span>{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className="flex items-center gap-1">
+                      <div className="w-4 h-2 border border-white/40 rounded-sm">
+                        <div className="w-3/4 h-full bg-green-400 rounded-sm"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Header */}
+                  <div className="bg-[#075E54] rounded-t-2xl px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <ChevronLeft className="w-5 h-5 text-white" />
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">
+                          {contact?.name?.charAt(0)?.toUpperCase() || 'W'}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white font-semibold text-sm">{contact?.name || 'Contact'}</p>
+                        <p className="text-white/70 text-xs">online</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chat Area */}
+                  <div className="bg-[#0B141A] min-h-[300px] p-4 relative">
+                    {/* WhatsApp Background Pattern */}
+                    <div className="absolute inset-0 opacity-5" style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                    }}></div>
+
+                    {/* Message Bubble */}
+                    <div className="relative max-w-[85%] ml-auto">
+                      <div className="bg-[#005C4B] rounded-lg rounded-tr-none p-3 shadow-lg">
+                        {/* Header */}
+                        {selectedTemplate.header && selectedTemplate.header.type > 0 && (
+                          <div className="mb-2 pb-2 border-b border-white/10">
+                            {selectedTemplate.header.text && (
+                              <p className="text-white font-bold text-sm">{selectedTemplate.header.text}</p>
+                            )}
+                            {selectedTemplate.header.type === 3 && (
+                              <div className="mt-2 bg-black/20 rounded-lg p-3 flex items-center gap-2">
+                                <div className="w-10 h-10 bg-white/10 rounded flex items-center justify-center">
+                                  📷
+                                </div>
+                                <span className="text-white/80 text-xs">Image</span>
+                              </div>
+                            )}
+                            {selectedTemplate.header.type === 4 && (
+                              <div className="mt-2 bg-black/20 rounded-lg p-3 flex items-center gap-2">
+                                <div className="w-10 h-10 bg-white/10 rounded flex items-center justify-center">
+                                  📹
+                                </div>
+                                <span className="text-white/80 text-xs">Video</span>
+                              </div>
+                            )}
+                            {selectedTemplate.header.type === 5 && (
+                              <div className="mt-2 bg-black/20 rounded-lg p-3 flex items-center gap-2">
+                                <div className="w-10 h-10 bg-white/10 rounded flex items-center justify-center">
+                                  📄
+                                </div>
+                                <span className="text-white/80 text-xs">Document</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Body */}
+                        <p
+                          className="text-white text-sm leading-relaxed whitespace-pre-wrap break-words"
+                          dangerouslySetInnerHTML={{
+                            __html: renderTemplatePreviewText(selectedTemplate, templateParams)
+                          }}
+                        />
+
+                        {/* Footer */}
+                        {selectedTemplate.footer && (
+                          <div className="mt-2 pt-2 border-t border-white/10">
+                            <p className="text-white/60 text-xs">{selectedTemplate.footer}</p>
+                          </div>
+                        )}
+
+                        {/* Timestamp */}
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <span className="text-white/50 text-[10px]">
+                            {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <CheckCheck className="w-4 h-4 text-blue-400" />
+                        </div>
+                      </div>
+
+                      {/* Buttons */}
+                      {selectedTemplate.buttons && selectedTemplate.buttons.length > 0 && (
+                        <div className="mt-1 space-y-1">
+                          {selectedTemplate.buttons.map((btn, idx) => (
+                            <div
+                              key={idx}
+                              className="bg-[#005C4B] rounded-lg px-4 py-2 text-center border-t border-[#0B141A]"
+                            >
+                              <p className="text-[#53BDEB] text-sm font-medium">{btn.parameter?.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Input Bar */}
+                  <div className="bg-[#1F2C33] rounded-b-2xl px-3 py-2 flex items-center gap-2">
+                    <div className="flex-1 bg-[#2A3942] rounded-full px-4 py-2">
+                      <p className="text-gray-400 text-sm">Type a message</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-[#00A884] flex items-center justify-center">
+                      <Send className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-4 rounded-b-2xl flex-shrink-0">
+                <p className="text-center text-gray-500 text-xs">
+                  This is how your message will appear in WhatsApp
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -798,6 +1501,47 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         
         .animate-pulse-slow {
           animation: pulse-slow 3s ease-in-out infinite;
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-slideInRight {
+          animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-scaleIn {
+          animation: scaleIn 0.2s ease-out;
+        }
+
+        .z-\\[60\\] {
+          z-index: 60;
+        }
+
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         /* Custom scrollbar */
