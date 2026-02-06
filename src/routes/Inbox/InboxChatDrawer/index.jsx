@@ -32,7 +32,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
   const [categories, setCategories] = useState([]);
 
   // NEW: Profile sidebar state
-  const [showProfileSidebar, setShowProfileSidebar] = useState(true);
+  const [showProfileSidebar, setShowProfileSidebar] = useState(false);
   
   // NEW: Notes state
   const [notes, setNotes] = useState([]);
@@ -273,67 +273,71 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     return groups;
   };
 
-  // WebSocket listener for real-time messages
+  // Replace the existing WebSocket listener useEffect (around line 250) with this:
+
   useEffect(() => {
     if (!contact || !isConnected) return;
 
-    sendWsMessage({
-      type: 'SUBSCRIBE',
-      phoneNumber: contact.phone,
-    });
+    // Subscribe to messages for this specific contact
+    // Note: Adjust this based on your backend's subscription logic
+    console.log('👂 Listening for messages from:', contact.phone);
 
     const unsubscribe = addMessageListener((data) => {
-      console.log('📨 WebSocket message received:', data);
+      console.log('📨 Socket.IO message received:', data);
 
-      if (data.type === 'NEW_MESSAGE' && data.phoneNumber === contact.phone) {
-        const newMessage = {
-          id: `ws-${Date.now()}`,
-          text: data.message.text,
-          sender: data.message.owner ? 'user' : 'contact',
-          timestamp: new Date(data.message.timestamp).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }),
-          sortTimestamp: new Date(data.message.timestamp).getTime(),
-          status: 'delivered',
-          type: data.message.messageType || 'text',
-        };
-
-        setMessages(prev => {
-          const exists = prev.some(msg => msg.id === newMessage.id);
-          if (exists) return prev;
-          return [...prev, newMessage].sort((a, b) => a.sortTimestamp - b.sortTimestamp);
-        });
-
-        setTimeout(() => scrollToBottom(), 100);
-
-        if (!data.message.owner) {
-          toast.success(`New message from ${contact.name}`, {
-            duration: 3000,
-            icon: '💬',
-          });
-        }
-
-        if (refreshContacts) {
-          refreshContacts();
-        }
+      // Check if message is for current contact
+      // The backend sends: { from: waId, waId: waId, text: message, name: contactName }
+      const messageWaId = data.from || data.waId;
+      const contactWaId = contact.phone.replace(/\D/g, ''); // Remove non-digits
+      
+      if (!messageWaId.includes(contactWaId) && !contactWaId.includes(messageWaId)) {
+        return; // Not for this contact
       }
 
-      if (data.type === 'MESSAGE_STATUS_UPDATE' && data.phoneNumber === contact.phone) {
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === data.messageId || (msg.sender === 'user' && msg.status === 'sent')) {
-            return { ...msg, status: data.status };
-          }
-          return msg;
-        }));
+      // Create new message object
+      const newMessage = {
+        id: `socket-${Date.now()}`,
+        text: data.text || data.message || '',
+        sender: 'contact', // Message from customer
+        timestamp: new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        }),
+        sortTimestamp: Date.now(),
+        status: 'delivered',
+        type: 'text',
+      };
+
+      setMessages(prev => {
+        // Avoid duplicates
+        const exists = prev.some(msg => 
+          msg.text === newMessage.text && 
+          Math.abs(msg.sortTimestamp - newMessage.sortTimestamp) < 5000
+        );
+        if (exists) return prev;
+        
+        return [...prev, newMessage].sort((a, b) => a.sortTimestamp - b.sortTimestamp);
+      });
+
+      setTimeout(() => scrollToBottom(), 100);
+
+      // Show toast notification
+      toast.success(`New message from ${contact.name}`, {
+        duration: 3000,
+        icon: '💬',
+      });
+
+      // Refresh contacts list
+      if (refreshContacts) {
+        refreshContacts();
       }
     });
 
     return () => {
       unsubscribe();
     };
-  }, [contact, isConnected, addMessageListener, sendWsMessage, refreshContacts]);
+  }, [contact, isConnected, addMessageListener, refreshContacts]);
 
   const fetchWatiMessages = async () => {
     if (!contact || !contact.phone) return;
@@ -707,6 +711,16 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
             status: 'sent',
             failed: false,
           };
+
+            // Send via Socket.IO for real-time delivery notification
+          if (isConnected) {
+            const cleanPhone = contact.phone.replace(/\D/g, '');
+            sendWsMessage({
+              waId: cleanPhone,
+              text: textToSend,
+              name: 'Agent',
+            });
+          }
 
           setMessages([...messages, newMessage]);
           setMessageInput('');

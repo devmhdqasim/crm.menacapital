@@ -1,5 +1,5 @@
-// contexts/WebSocketContext.tsx
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -26,78 +26,56 @@ interface WebSocketProviderProps {
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const messageListenersRef = useRef<Set<(data: any) => void>>(new Set());
 
   const connect = () => {
     try {
-      // Use wss:// for production, ws:// for local development
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/ws`; 
-      
-      console.log('🔌 Connecting to WebSocket:', wsUrl);
-      
-      const ws = new WebSocket(wsUrl);
+      // Connect to Socket.IO server
+      const socket = io({
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 3000,
+        reconnectionAttempts: 5,
+      });
 
-      ws.onopen = () => {
-        console.log('✅ WebSocket connected');
+      socket.on('connect', () => {
+        console.log('✅ Socket.IO connected');
         setIsConnected(true);
+      });
+
+      // Listen for customer messages from WhatsApp
+      socket.on('customer_message', (data) => {
+        console.log('📩 Customer message received:', data);
         
-        // Clear any pending reconnection attempts
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-          reconnectTimeoutRef.current = null;
-        }
-      };
+        setLastMessage(data);
+        
+        // Notify all listeners
+        messageListenersRef.current.forEach((listener) => {
+          listener(data);
+        });
+      });
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data); 
-          console.log('📩 WebSocket message received:', data);
-          
-          setLastMessage(data);
-          
-          // Notify all listeners 
-          messageListenersRef.current.forEach((listener) => {
-            listener(data);
-          });
-        } catch (error) {
-          console.error('❌ Error parsing WebSocket message:', error);
-        }
-      };
-
-      ws.onerror = (error) => { 
-        console.error('❌ WebSocket error:', error);
-      };
-
-      ws.onclose = () => {
-        console.log('🔌 WebSocket disconnected');
+      socket.on('disconnect', () => {
+        console.log('🔌 Socket.IO disconnected');
         setIsConnected(false);
-        wsRef.current = null;
-        
-        // Attempt to reconnect after 3 seconds 
-        reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('🔄 Attempting to reconnect...');
-          connect(); 
-        }, 3000);
-      };
+      });
 
-      wsRef.current = ws; 
+      socket.on('connect_error', (error) => {
+        console.error('❌ Socket.IO connection error:', error);
+        setIsConnected(false);
+      });
+
+      socketRef.current = socket;
     } catch (error) {
-      console.error('❌ Error creating WebSocket connection:', error);
+      console.error('❌ Error creating Socket.IO connection:', error);
     }
   };
 
   const disconnect = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
   };
 
@@ -111,10 +89,12 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   };
 
   const sendMessage = (data: any) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(data));
+    if (socketRef.current && socketRef.current.connected) {
+      // Emit to backend using the 'send_message' event
+      socketRef.current.emit('send_message', data);
+      console.log('📤 Message sent via Socket.IO:', data);
     } else {
-      console.warn('⚠️ WebSocket not connected. Message not sent:', data);
+      console.warn('⚠️ Socket.IO not connected. Message not sent:', data);
     }
   };
 
