@@ -101,7 +101,7 @@ const SalesManagerLeadsListing = ({
   const selfFetchingTabs = ['Event Leads', ...dynamicSourceTabs.map(t => t.name)];
 
   // ─── Critical tabs that get a red badge (high priority) ───────────────────
-  const criticalTabs = ['Not Assigned'];
+  const criticalTabs = ['Not Assigned', 'Contacted'];
 
   // ─── Fetch leads based on active tab ─────────────────────────────────────
   useEffect(() => {
@@ -199,41 +199,15 @@ const SalesManagerLeadsListing = ({
       // Pass source as the `status` param — getAllSalesManagerLeads signature:
       // (page, limit, fromDate, toDate, keyword, status, agentId)
       // Sanitize to strip special chars like "/" before building the URL.
-// Build URL manually to send `source=` instead of `status=`
-const axios = (await import('axios')).default;
-const authToken = localStorage.getItem('refreshToken');
-const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
-
-const queryParams = new URLSearchParams({
-  paramPage: currentPage,
-  paramLimit: itemsPerPage,
-  fromDate: startDateStr,
-  toDate: endDateStr,
-  keyword: debouncedSearchQuery || '',
-  source: source,  // ← source param, not status
-});
-
-if (agentId) queryParams.append('agent', agentId);
-
-const response = await axios.get(
-  `${API_BASE_URL}/lead/sales/en?${queryParams.toString()}`,
-  {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
-    },
-    timeout: 30000,
-  }
-);
-
-const data = response.data;
-const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.data
-  ? {
-      success: true,
-      data: data.payload.allBranchLeads[0].data,
-      metadata: data.payload.allBranchLeads[0].metadata?.[0] || {},
-    }
-  : { success: false, data: [], metadata: {}, error: { payload: { message: data.message } } };
+      const result = await getAllSalesManagerLeads(
+        currentPage,
+        itemsPerPage,
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        sanitizeStatusParam(source),   // ← e.g. "Social MediaWhatsApp", "MobileApp"
+        agentId
+      );
 
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
@@ -443,7 +417,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
   // sending as the ?status= query param so the URL stays clean.
   // e.g. "Social Media/WhatsApp" → "Social MediaWhatsApp"
   const sanitizeStatusParam = (source) =>
-    source.replace(/[^a-zA-Z0-9\-_]/g, '').trim();
+    source.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
 
   // Helper: capitalize first letter of every word for tab display labels.
   // e.g. "social media/whatsapp" → "Social Media/Whatsapp"
@@ -699,7 +673,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                     {count ? (
                       <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none rounded-full ${
                         isDepositCritical
-                          ? 'text-white bg-green-500 animate-pulse'
+                          ? 'text-white bg-red-500 animate-pulse'
                           : 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
                       }`}>
                         {count}
