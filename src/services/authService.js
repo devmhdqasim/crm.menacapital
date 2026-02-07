@@ -18,7 +18,7 @@ const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
  * @returns {Promise} - Returns user info and access token 
  */
 
-export const loginUser = async (login, password, loginBy = 'email') => { 
+export const loginUser = async (login, password, loginBy = 'email') => {  
   try { 
     console.log('🔵 Attempting login...');
     console.log('📝 Login with:', { login, loginBy });
