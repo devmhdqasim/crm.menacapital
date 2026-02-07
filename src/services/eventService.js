@@ -9,7 +9,7 @@ import axios from 'axios';
  * - Delete Event
  */
 
-const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
 
 /**
  * Get refresh token from localStorage
