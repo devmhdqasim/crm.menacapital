@@ -114,23 +114,42 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
-      } else if (currentStatus === 'Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
-        // Point 4: Auto-select Not Deposit
-        setModalAnswered('Answered');
-        setModalInterested('Interested');
-        setModalLeadType('Hot');
-        setModalHotLeadType('Real');
-        setModalDepositStatus('Not Deposit');
-        setLeadResponseStatus('Not Deposit');
-      } else if (currentStatus === 'Deposit' || kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        // Point 3: Auto-select Deposit for Real, Real Deposit, or Deposit
-        setModalAnswered('Answered');
-        setModalInterested('Interested');
-        setModalLeadType('Hot');
-        setModalHotLeadType('Real');
-        setModalDepositStatus('Deposit');
-        setLeadResponseStatus('Deposit');
-      }
+      } 
+      else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' || 
+        kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || 
+        kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+ // Point 4: Auto-select Not Deposit
+ setModalAnswered('Answered');
+ setModalInterested('Interested');
+ setModalLeadType('Hot');
+ setModalHotLeadType('Real');
+ setModalDepositStatus('Not Deposit');
+ setLeadResponseStatus('Not Deposit');
+} else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || 
+          kioskStatus === 'Deposit' || currentStatus === 'Deposit' || 
+          currentStatus === 'Real - Deposit') {
+ // Point 3: Auto-select Deposit for Real, Real Deposit, or Deposit
+ // Check depositStatus from lead to determine which one
+ const leadDepositStatus = task.kioskDepositStatus || '';
+ 
+ if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
+   // If depositStatus indicates Not Deposit, select Not Deposit
+   setModalAnswered('Answered');
+   setModalInterested('Interested');
+   setModalLeadType('Hot');
+   setModalHotLeadType('Real');
+   setModalDepositStatus('Not Deposit');
+   setLeadResponseStatus('Not Deposit');
+ } else {
+   // Otherwise, select Deposit (this is the true Real/Deposit case)
+   setModalAnswered('Answered');
+   setModalInterested('Interested');
+   setModalLeadType('Hot');
+   setModalHotLeadType('Real');
+   setModalDepositStatus('Deposit');
+   setLeadResponseStatus('Deposit');
+ }
+}
     }
   }, [task]);
 
@@ -141,6 +160,47 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       setTaskStatus('Completed');
     }
   }, [leadResponseStatus]);
+
+  // Auto-reset to default valid selection when answeredStatus changes and current selection becomes disabled
+useEffect(() => {
+  if (!task) return;
+
+  // When answeredStatus changes to "Not Answered", check if current selections are now disabled
+  if (answeredStatus === 'Not Answered') {
+    const currentStatus = task.taskCreationStatus || '';
+    const kioskStatus = task.kioskLeadStatus || '';
+
+    // Map kiosk status to determine what should be selected
+    if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+      // If Not Deposit is selected but should default to Deposit
+      if (modalDepositStatus === 'Not Deposit') {
+        setModalDepositStatus('Deposit');
+        setLeadResponseStatus('Deposit');
+      }
+    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+      // If Deposit is selected but should default to Not Deposit
+      if (modalDepositStatus === 'Deposit') {
+        setModalDepositStatus('Not Deposit');
+        setLeadResponseStatus('Not Deposit');
+      }
+    } else if (kioskStatus === 'Demo') {
+      // Demo level - ensure Demo is selected
+      if (modalHotLeadType !== 'Demo') {
+        setModalHotLeadType('Demo');
+        setLeadResponseStatus('Demo');
+        setModalDepositStatus('');
+      }
+    } else if (currentStatus === 'Warm') {
+      // Warm level - ensure Warm is selected
+      if (modalLeadType !== 'Warm' || leadResponseStatus !== 'Warm') {
+        setModalLeadType('Warm');
+        setLeadResponseStatus('Warm');
+        setModalHotLeadType('');
+        setModalDepositStatus('');
+      }
+    }
+  }
+}, [answeredStatus, task]);
 
   const resetAllSelections = () => {
     setModalAnswered('');
@@ -459,6 +519,19 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     return ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
   };
 
+  // Helper to determine if "Not Interested" should show special availability indicator
+const shouldShowNotInterestedAvailable = () => {
+  if (answeredStatus !== 'Answered' || modalAnswered !== 'Answered') return false;
+  
+  const currentStatus = task?.taskCreationStatus || '';
+  const kioskStatus = task?.kioskLeadStatus || '';
+  
+  // List of statuses that are beyond "Not Interested"
+  const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+  
+  return advancedStatuses.includes(currentStatus) || advancedStatuses.includes(kioskStatus);
+};
+
   // Point 5: Check if a lead response option should be disabled (previous statuses)
   // Status hierarchy: Not Answered < Not Interested < Warm < Hot < Demo < Not Deposit < Deposit
   const isStatusDisabled = (statusToCheck) => {
@@ -474,6 +547,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         currentStatus === '-' || kioskStatus === '-') {
       return false; // Don't disable any status options
     }
+
+    // SPECIAL RULE: "Not Interested" is always available when "Answered" is selected in Answered Status
+// This allows users to mark leads as "Not Interested" at any point in the journey
+if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modalAnswered === 'Answered') {
+  return false;
+}
 
     const statusHierarchy = [
       '',
@@ -539,16 +618,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     // Get current effective status
     const currentEffectiveStatus = statusHierarchy[effectiveStatusIndex];
 
-    // Special handling for Deposit/Not Deposit mutual exclusivity
-    // If current status is "Not Deposit", allow changing to "Deposit"
-    if (currentEffectiveStatus === 'Not Deposit' && statusToCheck === 'Deposit') {
-      return false; // Enable Deposit option
-    }
-
-    // If current status is "Deposit", allow changing to "Not Deposit"  
-    if (currentEffectiveStatus === 'Deposit' && statusToCheck === 'Not Deposit') {
-      return false; // Enable Not Deposit option
-    }
+// CRITICAL FIX: Special handling for Deposit/Not Deposit mutual exclusivity
+// Always allow toggling between Deposit and Not Deposit regardless of current selection
+// This fixes both issues where users couldn't switch between these sibling statuses
+if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') && 
+    (currentEffectiveStatus === 'Deposit' || currentEffectiveStatus === 'Not Deposit')) {
+  return false; // Always enable both Deposit and Not Deposit options when at Real level
+}
 
     // Disable if the status to check is before or equal to effective status
     return checkStatusIndex <= effectiveStatusIndex;
@@ -1016,11 +1092,13 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
                       </label>
 
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Interested')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                        : isFinalSelectedStatus('Not Interested')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-                        }`}>
+  ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+  : isFinalSelectedStatus('Not Interested')
+    ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+    : shouldShowNotInterestedAvailable()
+      ? 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50 animate-pulse-border-subtle'
+      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+  }`}>
                         <input
                           type="radio"
                           name="interested"
@@ -1351,6 +1429,21 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }
+
+        @keyframes pulse-border-subtle {
+    0%, 100% {
+      border-color: rgba(187, 164, 115, 0.3);
+      box-shadow: 0 0 0 0 rgba(187, 164, 115, 0);
+    }
+    50% {
+      border-color: rgba(187, 164, 115, 0.6);
+      box-shadow: 0 0 8px 2px rgba(187, 164, 115, 0.2);
+    }
+  }
+  
+  .animate-pulse-border-subtle {
+    animation: pulse-border-subtle 2.5s ease-in-out infinite;
+  }
         
         @keyframes bounce-subtle {
           0%, 100% {
