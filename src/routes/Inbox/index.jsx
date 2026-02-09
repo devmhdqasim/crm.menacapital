@@ -48,6 +48,41 @@ const InboxPage = () => {
     setCurrentUserId(userId);
   }, []);
 
+  useEffect(() => {
+    // Check if we need to auto-open a chat from Tasks page
+    const phoneToOpen = sessionStorage.getItem('openChatForPhone');
+    const nameToOpen = sessionStorage.getItem('openChatForName');
+    const leadIdToOpen = sessionStorage.getItem('openChatForLeadId');
+    
+    if (phoneToOpen && contacts.length > 0) {
+      // Find the contact by phone number
+      const contactToOpen = contacts.find(
+        contact => contact.phone === phoneToOpen || contact.id === leadIdToOpen
+      );
+      
+      if (contactToOpen) {
+        // Clear the sessionStorage
+        sessionStorage.removeItem('openChatForPhone');
+        sessionStorage.removeItem('openChatForName');
+        sessionStorage.removeItem('openChatForLeadId');
+        
+        // Open the chat
+        setTimeout(() => {
+          handleContactClick(contactToOpen);
+        }, 300);
+      } else if (nameToOpen) {
+        // If contact not found but we have the name, show a helpful message
+        sessionStorage.removeItem('openChatForPhone');
+        sessionStorage.removeItem('openChatForName');
+        sessionStorage.removeItem('openChatForLeadId');
+        
+        toast.error(`Contact "${nameToOpen}" not found in current filters.`, {
+          duration: 5000,
+        });
+      }
+    }
+  }, [contacts]); // Re-run when contacts are loaded
+
   // Fetch agents
   const fetchAgents = async () => {
     try {

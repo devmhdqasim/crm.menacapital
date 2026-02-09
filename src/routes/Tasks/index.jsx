@@ -1,4 +1,6 @@
 import React, { useState, useEffect, use } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MessageSquare } from 'lucide-react';
 import { Search, ChevronDown, Edit, Trash2, Filter, Plus, X, Calendar } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useFormik } from 'formik';
@@ -36,6 +38,7 @@ const taskValidationSchema = Yup.object({
 });
 
 const Tasks = () => {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -255,6 +258,23 @@ const Tasks = () => {
     setLeadSearchTotalResults(0);
     setLeadSearchPriority('All'); 
     setSelectedLeadId(''); // Clear selected lead ID 
+  };
+
+  const handleOpenChat = (task) => {
+    // Navigate to inbox with the lead's phone number
+    if (task.leadPhone) {
+      // Store the selected lead phone in sessionStorage so InboxPage can auto-open it
+      sessionStorage.setItem('openChatForPhone', task.leadPhone);
+      sessionStorage.setItem('openChatForName', task.leadName);
+      sessionStorage.setItem('openChatForLeadId', task.leadIdRaw);
+      
+      // Navigate to inbox
+      navigate('/inbox');
+      
+      toast.success(`Opening chat with ${task.leadName}`);
+    } else {
+      toast.error('No phone number available for this lead');
+    }
   };
 
   // Handle lead click - filter tasks by lead ID
@@ -1339,16 +1359,21 @@ const getTabCounter = (tab) => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex justify-center gap-2">
-                            {/* <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(task);
-                              }}
-                              className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
-                              title="Edit"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button> */}
+                            {/* Chat Icon - Only show for Today Pending tab */}
+                            {activeTab === 'Today Pending' && task.leadPhone && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenChat(task);
+                                }}
+                                className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white transition-all duration-300 hover:scale-110"
+                                title="Open Chat"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </button>
+                            )}
+                            
+                            {/* Delete Button */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
