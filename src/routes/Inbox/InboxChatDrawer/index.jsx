@@ -18,6 +18,13 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [recordingTimer, setRecordingTimer] = useState(null);
 
   // Template picker state
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
@@ -913,6 +920,183 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
     }
   };
 
+  // NEW: Start voice recording
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Create MediaRecorder with ogg format (WhatsApp compatible)
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm' // Will be converted to ogg/mp4
+      });
+      
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/ogg' });
+        
+        // Only send if we actually have audio data and recording wasn't cancelled
+        if (audioChunksRef.current.length > 0 && recordingDuration > 0) {
+          await sendVoiceNote(audioBlob);
+        }
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Reset state
+        setIsRecording(false);
+        setRecordingDuration(0);
+        if (recordingTimer) {
+          clearInterval(recordingTimer);
+          setRecordingTimer(null);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      // Start timer
+      const timer = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+      setRecordingTimer(timer);
+
+      toast.success('Recording started', { duration: 1500, icon: '🎙️' });
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setIsRecording(false);
+      if (error.name === 'NotAllowedError') {
+        toast.error('Microphone access denied. Please allow microphone permissions.');
+      } else {
+        toast.error('Failed to start recording. Please check your microphone.');
+      }
+    }
+  };
+
+  // NEW: Stop voice recording
+  const stopVoiceRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  // NEW: Cancel voice recording
+  const cancelVoiceRecording = () => {
+    // Clear audio chunks to prevent sending
+    audioChunksRef.current = [];
+    setRecordingDuration(0);
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    
+    setIsRecording(false);
+    
+    if (recordingTimer) {
+      clearInterval(recordingTimer);
+      setRecordingTimer(null);
+    }
+    
+    toast.success('Recording cancelled', { duration: 1500, icon: '❌' });
+  };
+
+  // NEW: Send voice note
+  const sendVoiceNote = async (audioBlob) => {
+    if (!contact || !isConnected) {
+      toast.error('Not connected to server. Please try again.');
+      return;
+    }
+
+    if (audioBlob.size === 0) {
+      toast.error('Recording is empty');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const reader = new FileReader();
+      
+      reader.onload = async () => {
+        const cleanPhone = contact.phone.replace(/\D/g, '');
+        
+        sendWsMessage({
+          waId: cleanPhone,
+          type: 'audio',
+          file: {
+            buffer: reader.result,
+            originalName: `voice-note-${Date.now()}.ogg`,
+            mimeType: 'audio/ogg',
+            size: audioBlob.size
+          },
+          name: 'Agent'
+        });
+
+        // Add optimistic message to UI
+        const newMessage = {
+          id: Date.now(),
+          text: '🎤 Voice Message',
+          sender: 'user',
+          timestamp: new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }),
+          sortTimestamp: Date.now(),
+          status: 'sent',
+          type: 'audio',
+          mediaUrl: URL.createObjectURL(audioBlob),
+        };
+
+        setMessages(prev => [...prev, newMessage]);
+        toast.success('Voice message sent!', { icon: '🎤' });
+        
+        if (refreshContacts) {
+          refreshContacts();
+        }
+        
+        setIsSending(false);
+      };
+
+      reader.onerror = () => {
+        toast.error('Failed to send voice message');
+        setIsSending(false);
+      };
+
+      reader.readAsArrayBuffer(audioBlob);
+    } catch (error) {
+      console.error('Error sending voice note:', error);
+      toast.error('Failed to send voice message');
+      setIsSending(false);
+    }
+  };
+
+  // NEW: Format recording duration
+  const formatRecordingTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Cleanup recording on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimer) {
+        clearInterval(recordingTimer);
+      }
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, [recordingTimer, isRecording]);
+
   const handleRetryMessage = (messageId, messageText) => {
     handleSendMessage(messageId, messageText);
   };
@@ -1437,59 +1621,131 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
 
               {/* Message Input */}
               <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 shadow-lg flex-shrink-0">
-                <div className="flex items-start gap-3">
-                  <button
-                    onClick={handleOpenTemplatePicker}
-                    className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group"
-                    title="Send Template"
-                  >
-                    <FileText className="w-5 h-5 group-hover:rotate-6 transition-transform" />
-                  </button>
+                {isRecording ? (
+                  // Voice Recording UI (WhatsApp style)
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      {/* Cancel Button */}
+                      <button
+                        onClick={cancelVoiceRecording}
+                        className="p-3 rounded-full flex-shrink-0 transition-all duration-300 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:scale-110 active:scale-95"
+                        title="Cancel Recording"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
 
-                  {/* NEW: Attachment button */}
-                  <button
-                    onClick={handleFileAttachment}
-                    disabled={isSending}
-                    className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Send Image or Audio"
-                  >
-                    <Paperclip className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                  </button>
+                      {/* Recording Info */}
+                      <div className="flex-1 bg-[#1A1A1A] rounded-2xl px-4 py-3 border-2 border-red-500/30">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                          <span className="text-white font-semibold text-base">Recording...</span>
+                          <span className="text-[#BBA473] font-bold text-lg ml-auto">{formatRecordingTime(recordingDuration)}</span>
+                        </div>
+                      </div>
 
-                  <div className="flex-1 relative">
-                    <textarea
-                      ref={inputRef}
-                      value={messageInput}
-                      onChange={(e) => setMessageInput(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
-                      rows="1"
-                      disabled={isSending}
-                      className="w-full px-5 py-3.5 pr-12 border-2 border-[#BBA473]/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white placeholder-gray-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ minHeight: '52px', maxHeight: '120px' }}
-                    />
-                    <div className="absolute right-4 bottom-4 text-xs text-gray-500">
-                      {messageInput.length > 0 && `${messageInput.length} chars`}
+                      {/* Send Button */}
+                      <button
+                        onClick={stopVoiceRecording}
+                        disabled={isSending || recordingDuration < 1}
+                        className="p-3 rounded-full flex-shrink-0 transition-all duration-300 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                        title="Send Voice Note"
+                      >
+                        {isSending ? (
+                          <RefreshCw className="w-6 h-6 animate-spin" />
+                        ) : (
+                          <Send className="w-6 h-6" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Waveform animation */}
+                    <div className="flex items-center gap-1 h-12 px-2">
+                      {[...Array(30)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="flex-1 bg-[#BBA473] rounded-full transition-all duration-150"
+                          style={{
+                            height: `${20 + Math.random() * 80}%`,
+                            animation: `pulse 0.8s ease-in-out infinite`,
+                            animationDelay: `${i * 0.05}s`,
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleSendMessage()}
-                    disabled={!messageInput.trim() || isSending}
-                    className={`p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform ${messageInput.trim() && !isSending
-                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 shadow-lg hover:shadow-xl active:scale-95'
-                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                      }`}
-                  >
-                    {isSending ? (
-                      <RefreshCw className="w-5 h-5 animate-spin" />
+                ) : (
+                  // Normal Message Input
+                  <div className="flex items-start gap-3">
+                    <button
+                      onClick={handleOpenTemplatePicker}
+                      className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group"
+                      title="Send Template"
+                    >
+                      <FileText className="w-5 h-5 group-hover:rotate-6 transition-transform" />
+                    </button>
+
+                    <button
+                      onClick={handleFileAttachment}
+                      disabled={isSending}
+                      className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Send Image or Audio"
+                    >
+                      <Paperclip className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                    </button>
+
+                    <div className="flex-1 relative">
+                      <textarea
+                        ref={inputRef}
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Type your message..."
+                        rows="1"
+                        disabled={isSending}
+                        className="w-full px-5 py-3.5 pr-12 border-2 border-[#BBA473]/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white placeholder-gray-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ minHeight: '52px', maxHeight: '120px' }}
+                      />
+                      <div className="absolute right-4 bottom-4 text-xs text-gray-500">
+                        {messageInput.length > 0 && `${messageInput.length} chars`}
+                      </div>
+                    </div>
+                    
+                    {/* Voice/Send Button (WhatsApp style - switches based on input) */}
+                    {messageInput.trim() ? (
+                      <button
+                        onClick={() => handleSendMessage()}
+                        disabled={!messageInput.trim() || isSending}
+                        className={`p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform ${messageInput.trim() && !isSending
+                          ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 shadow-lg hover:shadow-xl active:scale-95'
+                          : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          }`}
+                      >
+                        {isSending ? (
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Send className="w-5 h-5" />
+                        )}
+                      </button>
                     ) : (
-                      <Send className="w-5 h-5" />
+                      <button
+                        onClick={startVoiceRecording}
+                        disabled={isSending}
+                        className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
+                        title="Record Voice Message"
+                      >
+                        <Mic className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      </button>
                     )}
-                  </button>
-                </div>
+                  </div>
+                )}
 
                 <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
-                  <span>Press Enter to send • Shift+Enter for new line • 📎 for media</span>
+                  <span>
+                    {isRecording 
+                      ? '🔴 Tap X to cancel • Tap Send arrow to send voice note' 
+                      : 'Press Enter to send • Shift+Enter for new line • 📎 for media • 🎤 for voice'
+                    }
+                  </span>
                   <span className="flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
                     {isConnected ? 'Live' : 'Offline'}

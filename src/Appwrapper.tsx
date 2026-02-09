@@ -223,7 +223,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
       {!showDebugPanel && (
         <button
           onClick={() => setShowDebugPanel(true)}
-          className="fixed bottom-4 right-4 z-[9998] w-12 h-12 bg-[#1A1A1A]/95 backdrop-blur-sm border border-[#BBA473]/30 rounded-full flex items-center justify-center shadow-2xl hover:bg-[#BBA473]/20 transition-all duration-300 group animate-fadeIn"
+          className="fixed !hidden bottom-4 right-4 z-[9998] w-12 h-12 bg-[#1A1A1A]/95 backdrop-blur-sm border border-[#BBA473]/30 rounded-full flex items-center justify-center shadow-2xl hover:bg-[#BBA473]/20 transition-all duration-300 group animate-fadeIn"
           aria-label="Open debug panel"
         >
           <span className="text-xl group-hover:scale-110 transition-transform">🔔</span>
