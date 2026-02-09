@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle, FileText, Search, ChevronLeft, Filter, Smartphone, StickyNote, Bell, Tag, Calendar, MessageSquare, Info } from 'lucide-react';
+import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle, FileText, Search, ChevronLeft, Filter, Smartphone, StickyNote, Bell, Tag, Calendar, MessageSquare, Info, Paperclip, Image as ImageIcon, Mic } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { sendWatiMessage, getWatiMessages, createWatiContact, getWatiTemplates, sendWatiTemplateMessage } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
 
-const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) => {
+const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -17,6 +17,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
   const [failedMessages, setFailedMessages] = useState(new Set());
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Template picker state
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
@@ -31,27 +32,27 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categories, setCategories] = useState([]);
 
-  // NEW: Profile sidebar state
+  // Profile sidebar state
   const [showProfileSidebar, setShowProfileSidebar] = useState(false);
   
-  // NEW: Notes state
+  // Notes state
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'notes'
+  const [activeTab, setActiveTab] = useState('chat');
 
-  // NEW: Message search state
+  // Message search state
   const [showMessageSearch, setShowMessageSearch] = useState(false);
   const [messageSearchQuery, setMessageSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
 
-  // NEW: Follow-up reminder state
+  // Follow-up reminder state
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderTime, setReminderTime] = useState('');
   const [reminderNote, setReminderNote] = useState('');
 
-  // NEW: Tags state
+  // Tags state
   const [contactTags, setContactTags] = useState([]);
   const [newTag, setNewTag] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
@@ -97,7 +98,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     }
   }, [contact]);
 
-  // NEW: Load contact notes from localStorage/API
+  // Load contact notes from localStorage/API
   const loadContactNotes = () => {
     try {
       const storedNotes = localStorage.getItem(`notes_${contact.id}`);
@@ -112,7 +113,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     }
   };
 
-  // NEW: Save note
+  // Save note
   const handleAddNote = () => {
     if (!newNote.trim()) return;
 
@@ -130,7 +131,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     toast.success('Note added');
   };
 
-  // NEW: Delete note
+  // Delete note
   const handleDeleteNote = (noteId) => {
     const updatedNotes = notes.filter(n => n.id !== noteId);
     setNotes(updatedNotes);
@@ -138,7 +139,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     toast.success('Note deleted');
   };
 
-  // NEW: Load contact tags
+  // Load contact tags
   const loadContactTags = () => {
     try {
       const storedTags = localStorage.getItem(`tags_${contact.id}`);
@@ -153,7 +154,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     }
   };
 
-  // NEW: Add tag
+  // Add tag
   const handleAddTag = () => {
     if (!newTag.trim() || contactTags.includes(newTag.trim())) return;
 
@@ -165,7 +166,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     toast.success('Tag added');
   };
 
-  // NEW: Remove tag
+  // Remove tag
   const handleRemoveTag = (tagToRemove) => {
     const updatedTags = contactTags.filter(t => t !== tagToRemove);
     setContactTags(updatedTags);
@@ -173,12 +174,12 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     toast.success('Tag removed');
   };
 
-  // NEW: Load reminders
+  // Load reminders
   const loadContactReminders = () => {
     // TODO: Implement reminder loading from backend
   };
 
-  // NEW: Set follow-up reminder
+  // Set follow-up reminder
   const handleSetReminder = () => {
     if (!reminderTime) {
       toast.error('Please select a time');
@@ -193,7 +194,6 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
       createdAt: new Date().toISOString(),
     };
 
-    // Save to localStorage for now (should be backend in production)
     const existingReminders = JSON.parse(localStorage.getItem('reminders') || '[]');
     existingReminders.push(reminder);
     localStorage.setItem('reminders', JSON.stringify(existingReminders));
@@ -204,7 +204,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     setReminderNote('');
   };
 
-  // NEW: Search messages
+  // Search messages
   const handleMessageSearch = (query) => {
     setMessageSearchQuery(query);
     if (!query.trim()) {
@@ -215,19 +215,18 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     const results = messages
       .map((msg, index) => ({ ...msg, originalIndex: index }))
       .filter(msg => 
-        msg.text.toLowerCase().includes(query.toLowerCase())
+        msg.text && msg.text.toLowerCase().includes(query.toLowerCase())
       );
     
     setSearchResults(results);
     setCurrentSearchIndex(0);
 
     if (results.length > 0) {
-      // Scroll to first result
       scrollToMessage(results[0].id);
     }
   };
 
-  // NEW: Navigate search results
+  // Navigate search results
   const navigateSearch = (direction) => {
     if (searchResults.length === 0) return;
 
@@ -242,7 +241,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     scrollToMessage(searchResults[newIndex].id);
   };
 
-  // NEW: Scroll to specific message
+  // Scroll to specific message
   const scrollToMessage = (messageId) => {
     const element = document.getElementById(`message-${messageId}`);
     if (element) {
@@ -252,7 +251,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     }
   };
 
-  // NEW: Group messages by date
+  // Group messages by date
   const groupMessagesByDate = (messages) => {
     const groups = {};
     
@@ -273,32 +272,27 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     return groups;
   };
 
-  // Replace the existing WebSocket listener useEffect (around line 250) with this:
-
+  // WebSocket listener for incoming messages
   useEffect(() => {
     if (!contact || !isConnected) return;
 
-    // Subscribe to messages for this specific contact
-    // Note: Adjust this based on your backend's subscription logic
     console.log('👂 Listening for messages from:', contact.phone);
 
     const unsubscribe = addMessageListener((data) => {
       console.log('📨 Socket.IO message received:', data);
 
-      // Check if message is for current contact
-      // The backend sends: { from: waId, waId: waId, text: message, name: contactName }
       const messageWaId = data.from || data.waId;
-      const contactWaId = contact.phone.replace(/\D/g, ''); // Remove non-digits
+      const contactWaId = contact.phone.replace(/\D/g, '');
       
       if (!messageWaId.includes(contactWaId) && !contactWaId.includes(messageWaId)) {
-        return; // Not for this contact
+        return;
       }
 
-      // Create new message object
+      // Create new message object with media support
       const newMessage = {
         id: `socket-${Date.now()}`,
         text: data.text || data.message || '',
-        sender: 'contact', // Message from customer
+        sender: 'contact',
         timestamp: new Date().toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
@@ -306,11 +300,11 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
         }),
         sortTimestamp: Date.now(),
         status: 'delivered',
-        type: 'text',
+        type: data.type || 'text',
+        mediaUrl: data.media?.url || data.data || null,
       };
 
       setMessages(prev => {
-        // Avoid duplicates
         const exists = prev.some(msg => 
           msg.text === newMessage.text && 
           Math.abs(msg.sortTimestamp - newMessage.sortTimestamp) < 5000
@@ -322,13 +316,11 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
 
       setTimeout(() => scrollToBottom(), 100);
 
-      // Show toast notification
       toast.success(`New message from ${contact.name}`, {
         duration: 3000,
         icon: '💬',
       });
 
-      // Refresh contacts list
       if (refreshContacts) {
         refreshContacts();
       }
@@ -419,6 +411,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
               }),
               sortTimestamp: new Date(contact.createdAt).getTime(),
               status: 'read',
+              type: 'text',
             },
           ]);
         } else {
@@ -611,6 +604,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
           sortTimestamp: Date.now(),
           status: 'sent',
           isTemplate: true,
+          type: 'text',
         };
         setMessages(prev => [...prev, newMessage]);
 
@@ -710,9 +704,9 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
             sortTimestamp: Date.now(),
             status: 'sent',
             failed: false,
+            type: 'text',
           };
 
-            // Send via Socket.IO for real-time delivery notification
           if (isConnected) {
             const cleanPhone = contact.phone.replace(/\D/g, '');
             sendWsMessage({
@@ -770,6 +764,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
             sortTimestamp: Date.now(),
             status: 'failed',
             failed: true,
+            type: 'text',
           };
 
           setMessages([...messages, failedMessage]);
@@ -809,6 +804,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
           sortTimestamp: Date.now(),
           status: 'failed',
           failed: true,
+          type: 'text',
         };
 
         setMessages([...messages, failedMessage]);
@@ -825,6 +821,95 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
       } else {
         setIsSending(false);
       }
+    }
+  };
+
+  // NEW: Handle file attachment
+  const handleFileAttachment = () => {
+    fileInputRef.current?.click();
+  };
+
+  // NEW: Handle file selection and send
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !contact) return;
+
+    // WhatsApp-safe MIME types
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'audio/mpeg',
+      'audio/ogg',
+      'audio/mp4'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Unsupported file type. Only JPEG, PNG images and MP3, OGG, MP4 audio files are supported.');
+      event.target.value = '';
+      return;
+    }
+
+    const type = file.type.startsWith('audio') ? 'audio' : 'image';
+
+    setIsSending(true);
+    try {
+      // Read file as ArrayBuffer
+      const reader = new FileReader();
+      
+      reader.onload = async () => {
+        // Send via Socket.IO
+        if (isConnected) {
+          const cleanPhone = contact.phone.replace(/\D/g, '');
+          sendWsMessage({
+            waId: cleanPhone,
+            type,
+            file: {
+              buffer: reader.result,
+              originalName: file.name,
+              mimeType: file.type,
+              size: file.size
+            },
+            name: 'Agent'
+          });
+
+          // Add optimistic message to UI
+          const newMessage = {
+            id: Date.now(),
+            text: type === 'image' ? '📷 Image' : '🎵 Audio',
+            sender: 'user',
+            timestamp: new Date().toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }),
+            sortTimestamp: Date.now(),
+            status: 'sent',
+            type,
+            mediaUrl: URL.createObjectURL(file), // Temporary local URL for preview
+          };
+
+          setMessages(prev => [...prev, newMessage]);
+          toast.success(`${type === 'image' ? 'Image' : 'Audio'} sent successfully!`);
+          
+          if (refreshContacts) {
+            refreshContacts();
+          }
+        } else {
+          toast.error('Not connected to server. Please try again.');
+        }
+      };
+
+      reader.onerror = () => {
+        toast.error('Failed to read file');
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('Error sending file:', error);
+      toast.error(`Failed to send ${type}`);
+    } finally {
+      setIsSending(false);
+      event.target.value = ''; // Reset file input
     }
   };
 
@@ -884,6 +969,43 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  // NEW: Render message content based on type
+  const renderMessageContent = (message) => {
+    if (message.type === 'image' && message.mediaUrl) {
+      return (
+        <div className="space-y-2">
+          <img
+            src={message.mediaUrl}
+            alt="Shared image"
+            className="rounded-lg border-2 border-white/10 max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => window.open(message.mediaUrl, '_blank')}
+            style={{ maxHeight: '300px', objectFit: 'cover' }}
+          />
+          {message.text && message.text !== '📷 Image' && (
+            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+        </div>
+      );
+    }
+
+    if (message.type === 'audio' && message.mediaUrl) {
+      return (
+        <div className="space-y-2">
+          <audio controls className="w-full rounded-lg">
+            <source src={message.mediaUrl} />
+            Your browser does not support the audio element.
+          </audio>
+          {message.text && message.text !== '🎵 Audio' && (
+            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Default text message
+    return <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>;
+  };
+
   if (!isOpen) return null;
 
   const messageGroups = groupMessagesByDate(messages);
@@ -897,7 +1019,16 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
         onClick={onClose}
       />
 
-      {/* Drawer - Adjust width based on sidebar */}
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,audio/mpeg,audio/ogg,audio/mp4"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {/* Drawer */}
       <div className={`fixed right-0 top-0 h-full bg-gradient-to-br from-[#1A1A1A] to-[#252525] shadow-2xl z-50 flex transform transition-all duration-300 ease-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } ${showProfileSidebar ? 'w-full lg:w-[900px]' : 'w-full md:w-[500px] lg:w-[650px]'}`}>
@@ -950,7 +1081,6 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                   
                   {/* Header Actions */}
                   <div className="flex gap-2 flex-shrink-0">
-                    {/* NEW: Search Button */}
                     <button
                       onClick={() => setShowMessageSearch(!showMessageSearch)}
                       className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-110 ${
@@ -963,7 +1093,6 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                       <Search className="w-5 h-5" />
                     </button>
 
-                    {/* NEW: Reminder Button */}
                     <button
                       onClick={() => setShowReminderModal(true)}
                       className="p-2.5 rounded-lg bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] transition-all duration-300 hover:scale-110"
@@ -972,7 +1101,6 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                       <Bell className="w-5 h-5" />
                     </button>
 
-                    {/* NEW: Toggle Profile Sidebar */}
                     <button
                       onClick={() => setShowProfileSidebar(!showProfileSidebar)}
                       className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-110 ${
@@ -995,7 +1123,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                   </div>
                 </div>
 
-                {/* NEW: Message Search Bar - Only show for Messages tab */}
+                {/* Message Search Bar */}
                 {showMessageSearch && activeTab === 'chat' && (
                   <div className="mt-4 animate-slideDown">
                     <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-lg p-2 border border-[#BBA473]/30">
@@ -1097,7 +1225,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                 </div>
               )}
 
-              {/* NEW: Chat/Notes Tab Switcher */}
+              {/* Chat/Notes Tab Switcher */}
               <div className="bg-[#1A1A1A] border-b border-[#BBA473]/20 px-5 flex-shrink-0">
                 <div className="flex gap-1">
                   <button
@@ -1165,7 +1293,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                       </div>
                     ) : (
                       <>
-                        {/* NEW: Grouped Messages by Date */}
+                        {/* Grouped Messages by Date */}
                         {Object.keys(messageGroups).map((dateKey) => (
                           <div key={dateKey} className="space-y-3">
                             {/* Sticky Date Separator */}
@@ -1199,7 +1327,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                                       : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
                                       } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
                                   >
-                                    <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+                                    {renderMessageContent(message)}
                                     <div className="flex items-center justify-end gap-1.5 mt-2">
                                       <span className={`text-xs font-medium ${message.sender === 'user'
                                         ? message.failed
@@ -1246,7 +1374,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                     )}
                   </div>
                 ) : (
-                  // NEW: Notes View
+                  // Notes View
                   <div className="p-6 space-y-4">
                     {/* Add Note Form */}
                     <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/20">
@@ -1318,6 +1446,16 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                     <FileText className="w-5 h-5 group-hover:rotate-6 transition-transform" />
                   </button>
 
+                  {/* NEW: Attachment button */}
+                  <button
+                    onClick={handleFileAttachment}
+                    disabled={isSending}
+                    className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Send Image or Audio"
+                  >
+                    <Paperclip className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  </button>
+
                   <div className="flex-1 relative">
                     <textarea
                       ref={inputRef}
@@ -1351,7 +1489,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                 </div>
 
                 <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
-                  <span>Press Enter to send • Shift+Enter for new line</span>
+                  <span>Press Enter to send • Shift+Enter for new line • 📎 for media</span>
                   <span className="flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
                     {isConnected ? 'Live' : 'Offline'}
@@ -1360,7 +1498,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
               </div>
             </div>
 
-            {/* NEW: Profile Sidebar */}
+            {/* Profile Sidebar - keeping existing code */}
             {showProfileSidebar && (
               <div className="w-80 bg-[#1A1A1A] border-l border-[#BBA473]/30 flex flex-col animate-slideInRight">
                 {/* Profile Header */}
@@ -1442,7 +1580,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
                     </div>
                   </div>
 
-                  {/* NEW: Tags */}
+                  {/* Tags */}
                   <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/10">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Tags</h4>
@@ -2028,7 +2166,7 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
           </div>
         )}
 
-        {/* NEW: Reminder Modal */}
+        {/* Reminder Modal */}
         {showReminderModal && (
           <div className="absolute inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
             <div className="bg-gradient-to-br from-[#2A2A2A] to-[#1F1F1F] rounded-2xl shadow-2xl w-full max-w-md border border-[#BBA473]/30 animate-scaleIn">
@@ -2373,4 +2511,4 @@ const InboxChatDrawerEnhanced = ({ isOpen, onClose, contact, refreshContacts }) 
   );
 };
 
-export default InboxChatDrawerEnhanced;
+export default InboxChatDrawerWithMedia;

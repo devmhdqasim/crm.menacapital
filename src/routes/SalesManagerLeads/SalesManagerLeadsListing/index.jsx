@@ -53,7 +53,7 @@ const SalesManagerLeadsListing = ({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
 
-  const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
+  const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads', 'Social Sources Leads'];
   const perPageOptions = [10, 20, 30, 50, 100];
 
   // Fetch Event Leads when Event Leads tab is active
