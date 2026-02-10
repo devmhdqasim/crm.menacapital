@@ -155,52 +155,67 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
 
   // Auto-enable task completion when reaching Demo or higher
   useEffect(() => {
+    const kioskStatus = task?.kioskLeadStatus || '';
+    
+    // For "Lead" status, don't auto-enable - but still allow manual control
+    // For all other statuses, maintain existing auto-enable behavior
+    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      return; // Skip auto-enable, but toggle remains enabled via isTaskStatusCompletedDisabled
+    }
+
+    // Original logic for all other statuses
     const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
     if (allowedStatuses.includes(leadResponseStatus)) {
       setTaskStatus('Completed');
     }
-  }, [leadResponseStatus]);
+  }, [leadResponseStatus, task]);
 
   // Auto-reset to default valid selection when answeredStatus changes and current selection becomes disabled
-useEffect(() => {
-  if (!task) return;
+  useEffect(() => {
+    if (!task) return;
 
-  // When answeredStatus changes to "Not Answered", check if current selections are now disabled
-  if (answeredStatus === 'Not Answered') {
     const currentStatus = task.taskCreationStatus || '';
     const kioskStatus = task.kioskLeadStatus || '';
 
-    // Map kiosk status to determine what should be selected
-    if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-      // If Not Deposit is selected but should default to Deposit
-      if (modalDepositStatus === 'Not Deposit') {
-        setModalDepositStatus('Deposit');
-        setLeadResponseStatus('Deposit');
-      }
-    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
-      // If Deposit is selected but should default to Not Deposit
-      if (modalDepositStatus === 'Deposit') {
-        setModalDepositStatus('Not Deposit');
-        setLeadResponseStatus('Not Deposit');
-      }
-    } else if (kioskStatus === 'Demo') {
-      // Demo level - ensure Demo is selected
-      if (modalHotLeadType !== 'Demo') {
-        setModalHotLeadType('Demo');
-        setLeadResponseStatus('Demo');
-        setModalDepositStatus('');
-      }
-    } else if (currentStatus === 'Warm') {
-      // Warm level - ensure Warm is selected
-      if (modalLeadType !== 'Warm' || leadResponseStatus !== 'Warm') {
-        setModalLeadType('Warm');
-        setLeadResponseStatus('Warm');
-        setModalHotLeadType('');
-        setModalDepositStatus('');
+    // NEW: For Kiosk Lead Status "Lead", reset all selections when Answered Status changes
+    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      resetAllSelections();
+      return;
+    }
+
+    // When answeredStatus changes to "Not Answered", check if current selections are now disabled
+    if (answeredStatus === 'Not Answered') {
+      // Map kiosk status to determine what should be selected
+      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+        // If Not Deposit is selected but should default to Deposit
+        if (modalDepositStatus === 'Not Deposit') {
+          setModalDepositStatus('Deposit');
+          setLeadResponseStatus('Deposit');
+        }
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+        // If Deposit is selected but should default to Not Deposit
+        if (modalDepositStatus === 'Deposit') {
+          setModalDepositStatus('Not Deposit');
+          setLeadResponseStatus('Not Deposit');
+        }
+      } else if (kioskStatus === 'Demo') {
+        // Demo level - ensure Demo is selected
+        if (modalHotLeadType !== 'Demo') {
+          setModalHotLeadType('Demo');
+          setLeadResponseStatus('Demo');
+          setModalDepositStatus('');
+        }
+      } else if (currentStatus === 'Warm') {
+        // Warm level - ensure Warm is selected
+        if (modalLeadType !== 'Warm' || leadResponseStatus !== 'Warm') {
+          setModalLeadType('Warm');
+          setLeadResponseStatus('Warm');
+          setModalHotLeadType('');
+          setModalDepositStatus('');
+        }
       }
     }
-  }
-}, [answeredStatus, task]);
+  }, [answeredStatus, task]);
 
   const resetAllSelections = () => {
     setModalAnswered('');
@@ -509,6 +524,17 @@ useEffect(() => {
 
   // Check if task status "Completed" should be disabled
   const isTaskStatusCompletedDisabled = () => {
+    // NEW: Always enable task complete when Kiosk Lead Status is "Lead"
+    const kioskStatus = task?.kioskLeadStatus || '';
+    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      return false; // Always enable completion for "Lead" status
+    }
+
+    // NEW: Also enable when "Not Answered" is selected in Answered Status (regardless of kiosk status)
+    if (answeredStatus === 'Not Answered') {
+      return false; // Enable completion when Not Answered is selected
+    }
+
     // Task status can only be completed if lead response status is Demo or higher
     const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
     return !allowedStatuses.includes(leadResponseStatus);
@@ -532,6 +558,35 @@ const shouldShowNotInterestedAvailable = () => {
   return advancedStatuses.includes(currentStatus) || advancedStatuses.includes(kioskStatus);
 };
 
+// NEW: Helper function to check if Update Status options should be disabled based on Answered Status
+const isUpdateStatusOptionDisabled = (statusToCheck) => {
+  if (!task) return false;
+
+  const currentStatus = task.taskCreationStatus || '';
+  const kioskStatus = task.kioskLeadStatus || '';
+
+  // Only apply this logic when Kiosk Lead Status is "Lead"
+  if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+    // If user selected "Answered" in Answered Status section
+    if (answeredStatus === 'Answered') {
+      // Disable "Not Answered" option in Update Status
+      if (statusToCheck === 'Not Answered') {
+        return true;
+      }
+    }
+    
+    // If user selected "Not Answered" in Answered Status section
+    if (answeredStatus === 'Not Answered') {
+      // Disable "Answered" option in Update Status, only enable "Not Answered"
+      if (statusToCheck === 'Answered') {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
   // Point 5: Check if a lead response option should be disabled (previous statuses)
   // Status hierarchy: Not Answered < Not Interested < Warm < Hot < Demo < Not Deposit < Deposit
   const isStatusDisabled = (statusToCheck) => {
@@ -540,8 +595,13 @@ const shouldShowNotInterestedAvailable = () => {
     const currentStatus = task.taskCreationStatus || '';
     const kioskStatus = task.kioskLeadStatus || '';
 
+    // NEW REQUIREMENT: Check Answered Status-based disabling first (for Kiosk Lead Status "Lead")
+    if (isUpdateStatusOptionDisabled(statusToCheck)) {
+      return true;
+    }
+
     // NEW REQUIREMENT: If Lead Task Status or Kiosk Lead Status is "Lead", remove all validations
-    // User can select any status without restrictions
+    // User can select any status without restrictions (except Answered Status based restrictions above)
     if (currentStatus === 'Lead' || currentStatus === 'lead' || 
         kioskStatus === 'Lead' || kioskStatus === 'lead' || 
         currentStatus === '-' || kioskStatus === '-') {
@@ -1092,13 +1152,13 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       </label>
 
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Interested')
-  ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-  : isFinalSelectedStatus('Not Interested')
-    ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-    : shouldShowNotInterestedAvailable()
-      ? 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50 animate-pulse-border-subtle'
-      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
-  }`}>
+                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        : isFinalSelectedStatus('Not Interested')
+                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          : shouldShowNotInterestedAvailable()
+                            ? 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50 animate-pulse-border-subtle'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        }`}>
                         <input
                           type="radio"
                           name="interested"
