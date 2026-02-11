@@ -569,6 +569,39 @@ export const setupWatiWebhook = async (webhookUrl) => {
   }
 };
 
+/**
+ * Fetch image with authorization header and return blob URL
+ * @param {string} imageUrl - Wati image URL
+ * @returns {Promise} Blob URL for the image
+ */
+export const fetchWatiImage = async (imageUrl) => {
+  try {
+    console.log('🖼️ Fetching Wati image:', imageUrl);
+    
+    const response = await watiApi.get(imageUrl, {
+      responseType: 'blob',
+      // Remove baseURL for this request since imageUrl is already complete
+      baseURL: '',
+    });
+
+    // Create blob URL
+    const blobUrl = URL.createObjectURL(response.data);
+    
+    console.log('✅ Image fetched successfully, blob URL:', blobUrl);
+    
+    return {
+      success: true,
+      blobUrl: blobUrl,
+    };
+  } catch (error) {
+    console.error('❌ Error fetching Wati image:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
 export default {
   sendWatiMessage,
   getWatiMessages,
@@ -580,4 +613,5 @@ export default {
   setupWatiWebhook,
   createWatiContact,
   checkWatiContactExists,
+  fetchWatiImage, // ✨ NEW
 };

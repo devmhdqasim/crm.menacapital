@@ -56,6 +56,18 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         });
       });
 
+      // ✨ NEW: Listen for message status updates (single tick, double tick, read)
+      socket.on('message_status', (data) => {
+        console.log('📊 Message status update:', data);
+        
+        setLastMessage({ ...data, type: 'status_update' });
+        
+        // Notify all listeners
+        messageListenersRef.current.forEach((listener) => {
+          listener({ ...data, type: 'status_update' });
+        });
+      });
+
       socket.on('disconnect', () => {
         console.log('🔌 Socket.IO disconnected');
         setIsConnected(false);

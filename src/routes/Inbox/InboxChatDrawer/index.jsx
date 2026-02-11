@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle, FileText, Search, ChevronLeft, Filter, Smartphone, StickyNote, Bell, Tag, Calendar, MessageSquare, Info, Paperclip, Image as ImageIcon, Mic } from 'lucide-react';
+import { X, Send, Check, CheckCheck, Clock, AlertCircle, RefreshCw, Phone, Mail, Globe, User, ChevronDown, AlertTriangle, CheckCircle, FileText, Search, ChevronLeft, Filter, Smartphone, StickyNote, Bell, Tag, Calendar, MessageSquare, Info, Paperclip, Image as ImageIcon, Mic, Smile } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { sendWatiMessage, getWatiMessages, createWatiContact, getWatiTemplates, sendWatiTemplateMessage } from '../../../services/inboxService';
+import EmojiPicker from 'emoji-picker-react';
+import { sendWatiMessage, getWatiMessages, createWatiContact, getWatiTemplates, sendWatiTemplateMessage, fetchWatiImage } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
+
+// ✨ Notification sound
+const notificationSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
 const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts }) => {
   const [messages, setMessages] = useState([]);
@@ -48,11 +52,19 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
 
-  // Message search state
-  const [showMessageSearch, setShowMessageSearch] = useState(false);
-  const [messageSearchQuery, setMessageSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+// Message search state
+const [showMessageSearch, setShowMessageSearch] = useState(false);
+const [messageSearchQuery, setMessageSearchQuery] = useState('');
+const [searchResults, setSearchResults] = useState([]);
+const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+
+// ✨ NEW: Image loading states
+const [loadingImages, setLoadingImages] = useState(new Set());
+const [downloadedImages, setDownloadedImages] = useState(new Set());
+
+// ✨ NEW: Emoji picker state
+const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+const emojiPickerRef = useRef(null);
 
   // Follow-up reminder state
   const [showReminderModal, setShowReminderModal] = useState(false);
@@ -64,8 +76,74 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
   const [newTag, setNewTag] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
 
-  // WebSocket integration
-  const { isConnected, addMessageListener, sendMessage: sendWsMessage } = useWebSocket();
+// WebSocket integration
+const { isConnected, addMessageListener, sendMessage: sendWsMessage } = useWebSocket();
+
+// ✨ UPDATED: Image download handler with authorization
+const handleImageDownload = async (imageUrl, messageId) => {
+  try {
+    setLoadingImages(prev => new Set(prev).add(messageId));
+    
+    console.log('⬇️ Downloading image:', { imageUrl, messageId });
+    
+    // Use our service to fetch image with authorization
+    const result = await fetchWatiImage(imageUrl);
+    
+    if (result.success && result.blobUrl) {
+      // Update state to show unblurred image
+      setDownloadedImages(prev => new Set(prev).add(messageId));
+      
+      // Update the message with the downloaded image URL
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, downloadedImageUrl: result.blobUrl }
+          : msg
+      ));
+      
+      console.log('✅ Image downloaded successfully');
+    } else {
+      throw new Error('Failed to fetch image');
+    }
+    
+    setLoadingImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(messageId);
+      return newSet;
+    });
+  } catch (error) {
+    console.error('❌ Error downloading image:', error);
+    toast.error('Failed to download image');
+    setLoadingImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(messageId);
+      return newSet;
+    });
+  }
+};
+
+  // ✨ NEW: Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+// ✨ UPDATED: Handle emoji selection - keep picker open
+const handleEmojiClick = (emojiObject) => {
+  setMessageInput(prev => prev + emojiObject.emoji);
+  // Don't close picker - allow multiple emoji selection
+  inputRef.current?.focus();
+};
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -279,64 +357,140 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
     return groups;
   };
 
-  // WebSocket listener for incoming messages
-  useEffect(() => {
-    if (!contact || !isConnected) return;
+// WebSocket listener for incoming messages and status updates
+useEffect(() => {
+  if (!contact || !isConnected) return;
 
-    console.log('👂 Listening for messages from:', contact.phone);
+  console.log('👂 Listening for messages from:', contact.phone);
 
-    const unsubscribe = addMessageListener((data) => {
-      console.log('📨 Socket.IO message received:', data);
+  const unsubscribe = addMessageListener((data) => {
+    console.log('📨 Socket.IO data received:', data);
 
-      const messageWaId = data.from || data.waId;
+    // ✨ NEW: Handle message status updates (single/double tick)
+    if (data.type === 'status_update') {
+      const { messageId, status, waId } = data;
       const contactWaId = contact.phone.replace(/\D/g, '');
       
-      if (!messageWaId.includes(contactWaId) && !contactWaId.includes(messageWaId)) {
+      if (!waId || (!waId.includes(contactWaId) && !contactWaId.includes(waId))) {
         return;
       }
 
-      // Create new message object with media support
-      const newMessage = {
-        id: `socket-${Date.now()}`,
-        text: data.text || data.message || '',
-        sender: 'contact',
-        timestamp: new Date().toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        }),
-        sortTimestamp: Date.now(),
-        status: 'delivered',
-        type: data.type || 'text',
-        mediaUrl: data.media?.url || data.data || null,
-      };
+      console.log('📊 Updating message status:', messageId, status);
 
-      setMessages(prev => {
-        const exists = prev.some(msg => 
-          msg.text === newMessage.text && 
-          Math.abs(msg.sortTimestamp - newMessage.sortTimestamp) < 5000
-        );
-        if (exists) return prev;
-        
-        return [...prev, newMessage].sort((a, b) => a.sortTimestamp - b.sortTimestamp);
-      });
+      // Update message status in state
+      setMessages(prev => prev.map(msg => {
+        // Match by message ID or by recent timestamp for optimistic messages
+        if (msg.id === messageId || 
+            (msg.sender === 'user' && Math.abs(msg.sortTimestamp - Date.now()) < 10000)) {
+          return { ...msg, status: status.toLowerCase() };
+        }
+        return msg;
+      }));
+      
+      return;
+    }
 
-      setTimeout(() => scrollToBottom(), 100);
+    // Handle regular incoming messages
+    const messageWaId = data.from || data.waId;
+    const contactWaId = contact.phone.replace(/\D/g, '');
+    
+    if (!messageWaId.includes(contactWaId) && !contactWaId.includes(messageWaId)) {
+      return;
+    }
 
-      toast.success(`New message from ${contact.name}`, {
-        duration: 3000,
-        icon: '💬',
-      });
+// ✨ NEW: Play notification sound
+notificationSound.play().catch(err => {
+  console.log('Could not play notification sound:', err);
+});
 
-      if (refreshContacts) {
-        refreshContacts();
-      }
+// ✨ Debug incoming message data
+console.log('📬 Processing incoming message:', {
+  from: data.from,
+  hasText: !!data.text,
+  text: data.text,
+  hasData: !!data.data,
+  dataUrl: data.data,
+  hasMediaUrl: !!data.media?.url,
+  mediaUrl: data.media?.url,
+  detectedType: data.data && !data.text ? 'image' : (data.type || 'text')
+});
+
+// ✨ UPDATED: Create new message object with proper media handling
+const newMessage = {
+  id: `socket-${Date.now()}`,
+  text: data.text || data.message || '',
+  sender: 'contact',
+  timestamp: new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }),
+  sortTimestamp: Date.now(),
+  status: 'delivered',
+  type: data.data && !data.text ? 'image' : (data.type || 'text'), // ✨ Auto-detect image
+  mediaUrl: data.data || data.media?.url || null, // ✨ Use data field first
+};
+
+console.log('📨 Created message:', {
+  id: newMessage.id,
+  type: newMessage.type,
+  hasText: !!newMessage.text,
+  hasMediaUrl: !!newMessage.mediaUrl,
+  mediaUrl: newMessage.mediaUrl
+});
+
+// ✨ UPDATED: Auto-download images and audio immediately
+if ((newMessage.type === 'image' || newMessage.type === 'audio') && newMessage.mediaUrl) {
+  console.log('⬇️ Auto-downloading media:', newMessage.type);
+  
+  fetchWatiImage(newMessage.mediaUrl).then(result => {
+    if (result.success && result.blobUrl) {
+      console.log('✅ Media downloaded successfully');
+      
+      // Mark as downloaded and update URL
+      setDownloadedImages(prev => new Set(prev).add(newMessage.id));
+      setMessages(prev => prev.map(msg => 
+        msg.id === newMessage.id 
+          ? { 
+              ...msg, 
+              mediaUrl: result.blobUrl,
+              downloadedImageUrl: result.blobUrl 
+            }
+          : msg
+      ));
+    }
+  }).catch(err => {
+    console.error('❌ Failed to auto-download media:', err);
+  });
+}
+
+setMessages(prev => {
+      const exists = prev.some(msg => 
+        msg.text === newMessage.text && 
+        Math.abs(msg.sortTimestamp - newMessage.sortTimestamp) < 5000
+      );
+      if (exists) return prev;
+      
+      return [...prev, newMessage].sort((a, b) => a.sortTimestamp - b.sortTimestamp);
     });
 
-    return () => {
-      unsubscribe();
-    };
-  }, [contact, isConnected, addMessageListener, refreshContacts]);
+    setTimeout(() => scrollToBottom(), 100);
+
+    // ✨ REMOVED: toast notification (notification sound is enough)
+    // toast.success(`New message from ${contact.name}`, {
+    //   duration: 3000,
+    //   icon: '💬',
+    // });
+
+    if (refreshContacts) {
+      refreshContacts();
+    }
+  });
+
+  return () => {
+    unsubscribe();
+  };
+}, [contact, isConnected, addMessageListener, refreshContacts]);
 
   const fetchWatiMessages = async () => {
     if (!contact || !contact.phone) return;
@@ -367,6 +521,8 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
 
             let messageText = msg.text;
             let isTemplate = msg.type === 'template' || msg.eventType === 'broadcastMessage';
+            let messageType = msg.type || 'text';
+            let mediaUrl = msg.data?.url || null;
 
             if (msg.eventType === 'broadcastMessage' && msg.finalText) {
               messageText = msg.finalText;
@@ -380,11 +536,20 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
                 messageText = `${messageText}\n\n_${templateData.footer}_`;
               }
             } else if (!messageText) {
-              if (msg.type === 'image') messageText = '📷 Image';
-              else if (msg.type === 'document') messageText = '📄 Document';
-              else if (msg.type === 'audio') messageText = '🎵 Audio';
-              else if (msg.type === 'video') messageText = '🎬 Video';
-              else messageText = '📎 Media';
+              // ✨ UPDATED: Don't show placeholder text, keep empty for media
+              if (msg.type === 'image') {
+                messageText = '';
+                messageType = 'image';
+              } else if (msg.type === 'audio') {
+                messageText = '';
+                messageType = 'audio';
+              } else if (msg.type === 'document') {
+                messageText = '📄 Document';
+              } else if (msg.type === 'video') {
+                messageText = '🎬 Video';
+              } else {
+                messageText = '📎 Media';
+              }
             }
 
             return {
@@ -394,16 +559,41 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
               timestamp: timeString,
               sortTimestamp: timestamp,
               status: msg.statusString ? msg.statusString.toLowerCase() : 'sent',
-              type: msg.type || 'text',
-              mediaUrl: msg.data?.url || null,
+              type: messageType, // ✨ Use detected type
+              mediaUrl: mediaUrl || msg.data?.url || null, // ✨ Use detected URL
               isTemplate: isTemplate,
             };
           });
+          transformedMessages.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
 
-        transformedMessages.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
-
-        setMessages(transformedMessages);
-      } else if (result.info && result.info.includes('Contact not found')) {
+          setMessages(transformedMessages);
+  
+          // ✨ NEW: Auto-download all images and audio in background
+          console.log('📥 Auto-downloading media for', transformedMessages.length, 'messages');
+          
+          transformedMessages.forEach(async (msg) => {
+            if ((msg.type === 'image' || msg.type === 'audio') && msg.mediaUrl) {
+              try {
+                const result = await fetchWatiImage(msg.mediaUrl);
+                if (result.success && result.blobUrl) {
+                  setDownloadedImages(prev => new Set(prev).add(msg.id));
+                  setMessages(prev => prev.map(m => 
+                    m.id === msg.id 
+                      ? { 
+                          ...m, 
+                          mediaUrl: result.blobUrl,
+                          downloadedImageUrl: result.blobUrl 
+                        }
+                      : m
+                  ));
+                }
+              } catch (error) {
+                console.error('Failed to download media for message:', msg.id, error);
+              }
+            }
+          });
+  
+        } else if (result.info && result.info.includes('Contact not found')) {
         setContactNotFound(true);
         if (contact.remarks || contact.latestRemarks) {
           setMessages([
@@ -841,6 +1031,13 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
     const file = event.target.files?.[0];
     if (!file || !contact) return;
 
+    console.log('📎 File selected:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      contact: contact.phone
+    });
+
     // WhatsApp-safe MIME types
     const allowedTypes = [
       'image/jpeg',
@@ -878,24 +1075,39 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
             },
             name: 'Agent'
           });
+// ✨ UPDATED: Add optimistic message with proper image preview
+const localUrl = URL.createObjectURL(file);
+const newMessage = {
+  id: Date.now(),
+  text: '', // ✨ Empty text for media messages
+  sender: 'user',
+  timestamp: new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }),
+  sortTimestamp: Date.now(),
+  status: 'sent',
+  type,
+  mediaUrl: localUrl,
+  downloadedImageUrl: localUrl, // ✨ Already "downloaded" for sent media
+  localFile: true, // ✨ Mark as local file to prevent opening in new tab
+};
 
-          // Add optimistic message to UI
-          const newMessage = {
-            id: Date.now(),
-            text: type === 'image' ? '📷 Image' : '🎵 Audio',
-            sender: 'user',
-            timestamp: new Date().toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            }),
-            sortTimestamp: Date.now(),
-            status: 'sent',
-            type,
-            mediaUrl: URL.createObjectURL(file), // Temporary local URL for preview
-          };
+console.log('📤 Sending media message:', {
+  id: newMessage.id,
+  type: newMessage.type,
+  hasMediaUrl: !!newMessage.mediaUrl,
+  hasDownloadedUrl: !!newMessage.downloadedImageUrl,
+  localUrl: localUrl,
+  isLocal: true
+});
 
-          setMessages(prev => [...prev, newMessage]);
+setMessages(prev => [...prev, newMessage]);
+
+// ✨ Mark sent media as downloaded immediately
+setDownloadedImages(prev => new Set(prev).add(newMessage.id));
+
           toast.success(`${type === 'image' ? 'Image' : 'Audio'} sent successfully!`);
           
           if (refreshContacts) {
@@ -1039,23 +1251,29 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
           name: 'Agent'
         });
 
-        // Add optimistic message to UI
-        const newMessage = {
-          id: Date.now(),
-          text: '🎤 Voice Message',
-          sender: 'user',
-          timestamp: new Date().toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }),
-          sortTimestamp: Date.now(),
-          status: 'sent',
-          type: 'audio',
-          mediaUrl: URL.createObjectURL(audioBlob),
-        };
+// ✨ UPDATED: Add optimistic message with proper image preview
+const newMessage = {
+  id: Date.now(),
+  text: type === 'image' ? '📷 Image' : '🎵 Audio',
+  sender: 'user',
+  timestamp: new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }),
+  sortTimestamp: Date.now(),
+  status: 'sent',
+  type,
+  mediaUrl: URL.createObjectURL(file), // Temporary local URL for preview
+  downloadedImageUrl: URL.createObjectURL(file), // ✨ Mark as already downloaded for sent images
+};
 
-        setMessages(prev => [...prev, newMessage]);
+setMessages(prev => [...prev, newMessage]);
+
+// ✨ Mark sent images as downloaded immediately
+if (type === 'image') {
+  setDownloadedImages(prev => new Set(prev).add(newMessage.id));
+}
         toast.success('Voice message sent!', { icon: '🎤' });
         
         if (refreshContacts) {
@@ -1115,11 +1333,11 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
 
     switch (status) {
       case 'sent':
-        return <Check className="w-4 h-4 text-gray-400" />;
+        return <Check className="w-4 h-4 text-gray-600" />; // ✨ Single tick - gray
       case 'delivered':
-        return <CheckCheck className="w-4 h-4 text-gray-400" />;
+        return <CheckCheck className="w-4 h-4 text-gray-600" />; // ✨ Double tick - gray (not read yet)
       case 'read':
-        return <CheckCheck className="w-4 h-4 text-[#BBA473]" />;
+        return <CheckCheck className="w-4 h-4 text-[#BBA473]" />; // ✨ Read - your theme gold color
       default:
         return <Clock className="w-4 h-4 text-gray-400" />;
     }
@@ -1153,18 +1371,53 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // NEW: Render message content based on type
+  // ✨ UPDATED: Simple, clean media display with auto-download
   const renderMessageContent = (message) => {
+    // IMAGE DISPLAY
     if (message.type === 'image' && message.mediaUrl) {
+      const imageUrl = message.downloadedImageUrl || message.mediaUrl;
+      
       return (
         <div className="space-y-2">
-          <img
-            src={message.mediaUrl}
-            alt="Shared image"
-            className="rounded-lg border-2 border-white/10 max-w-full cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={() => window.open(message.mediaUrl, '_blank')}
-            style={{ maxHeight: '300px', objectFit: 'cover' }}
-          />
+          {/* Clean image container */}
+          <div 
+            className="relative rounded-xl overflow-hidden bg-black/20 cursor-pointer group"
+            onClick={() => window.open(imageUrl, '_blank')}
+            style={{ maxWidth: '300px' }}
+          >
+            <img
+              src={imageUrl}
+              alt="Shared image"
+              className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+              style={{ 
+                maxHeight: '400px',
+                minHeight: '150px'
+              }}
+              onError={(e) => {
+                console.error('❌ Image failed to load');
+                e.target.parentElement.innerHTML = `
+                  <div class="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px]">
+                    <svg class="w-12 h-12 text-[#BBA473]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p class="text-[#BBA473]/70 text-sm">Image unavailable</p>
+                  </div>
+                `;
+              }}
+            />
+            
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="bg-white/90 rounded-full p-2 shadow-lg">
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {message.text && message.text !== '📷 Image' && (
             <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
           )}
@@ -1172,21 +1425,46 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
       );
     }
 
+    // AUDIO/VOICE NOTE DISPLAY
     if (message.type === 'audio' && message.mediaUrl) {
+      const audioUrl = message.downloadedImageUrl || message.mediaUrl;
+      
       return (
         <div className="space-y-2">
-          <audio controls className="w-full rounded-lg">
-            <source src={message.mediaUrl} />
-            Your browser does not support the audio element.
-          </audio>
-          {message.text && message.text !== '🎵 Audio' && (
+          {/* Custom themed voice note player */}
+          <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20">
+            {/* Mic icon */}
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
+              <Mic className="w-5 h-5 text-[#BBA473]" />
+            </div>
+            
+            {/* Audio player */}
+            <div className="flex-1">
+              <audio 
+                controls 
+                className="w-full audio-player-custom"
+                style={{ 
+                  height: '36px',
+                  filter: 'sepia(0.5) saturate(1.2) hue-rotate(5deg)'
+                }}
+              >
+                <source src={audioUrl} type="audio/ogg" />
+                <source src={audioUrl} type="audio/mpeg" />
+                <source src={audioUrl} type="audio/mp4" />
+                <source src={audioUrl} type="audio/wav" />
+                Your browser does not support the audio element.
+              </audio>
+            </div>
+          </div>
+          
+          {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
             <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
           )}
         </div>
       );
     }
 
-    // Default text message
+    // TEXT MESSAGE
     return <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>;
   };
 
@@ -1619,59 +1897,12 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
                 )}
               </div>
 
-              {/* Message Input */}
-              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 shadow-lg flex-shrink-0">
+{/* Message Input */}
+<div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 shadow-lg flex-shrink-0">
                 {isRecording ? (
                   // Voice Recording UI (WhatsApp style)
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      {/* Cancel Button */}
-                      <button
-                        onClick={cancelVoiceRecording}
-                        className="p-3 rounded-full flex-shrink-0 transition-all duration-300 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:scale-110 active:scale-95"
-                        title="Cancel Recording"
-                      >
-                        <X className="w-6 h-6" />
-                      </button>
-
-                      {/* Recording Info */}
-                      <div className="flex-1 bg-[#1A1A1A] rounded-2xl px-4 py-3 border-2 border-red-500/30">
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                          <span className="text-white font-semibold text-base">Recording...</span>
-                          <span className="text-[#BBA473] font-bold text-lg ml-auto">{formatRecordingTime(recordingDuration)}</span>
-                        </div>
-                      </div>
-
-                      {/* Send Button */}
-                      <button
-                        onClick={stopVoiceRecording}
-                        disabled={isSending || recordingDuration < 1}
-                        className="p-3 rounded-full flex-shrink-0 transition-all duration-300 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                        title="Send Voice Note"
-                      >
-                        {isSending ? (
-                          <RefreshCw className="w-6 h-6 animate-spin" />
-                        ) : (
-                          <Send className="w-6 h-6" />
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Waveform animation */}
-                    <div className="flex items-center gap-1 h-12 px-2">
-                      {[...Array(30)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 bg-[#BBA473] rounded-full transition-all duration-150"
-                          style={{
-                            height: `${20 + Math.random() * 80}%`,
-                            animation: `pulse 0.8s ease-in-out infinite`,
-                            animationDelay: `${i * 0.05}s`,
-                          }}
-                        />
-                      ))}
-                    </div>
+                    {/* ... recording UI ... */}
                   </div>
                 ) : (
                   // Normal Message Input
@@ -1692,6 +1923,51 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
                     >
                       <Paperclip className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                     </button>
+
+                    {/* ✨ NEW: Emoji Picker Button */}
+                    <div className="relative" ref={emojiPickerRef}>
+                      <button
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className={`p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform hover:scale-110 active:scale-95 group ${
+                          showEmojiPicker 
+                            ? 'bg-[#BBA473] text-black' 
+                            : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
+                        }`}
+                        title="Add Emoji"
+                      >
+                        <Smile className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                      </button>
+
+                     {/* Emoji Picker Popup */}
+                     {showEmojiPicker && (
+                        <div className="absolute bottom-full left-0 mb-2 z-50 animate-scaleIn">
+                          <EmojiPicker
+                            onEmojiClick={handleEmojiClick}
+                            theme="dark"
+                            searchPlaceholder="Search emoji..."
+                            width={350}
+                            height={400}
+                            emojiStyle="native"
+                            previewConfig={{
+                              showPreview: false
+                            }}
+                            style={{
+                              '--epr-bg-color': '#2A2A2A',
+                              '--epr-category-label-bg-color': '#1A1A1A',
+                              '--epr-emoji-hover-color': 'rgba(187, 164, 115, 0.1)',
+                              '--epr-highlight-color': '#BBA473',
+                              '--epr-search-border-color': 'rgba(255, 255, 255, 0.1)',
+                              '--epr-search-input-bg-color': '#1A1A1A',
+                              '--epr-search-input-bg-color-active': '#1A1A1A',
+                              '--epr-text-color': '#ffffff',
+                              '--epr-category-icon-active-color': '#BBA473',
+                              '--epr-picker-border-color': 'rgba(187, 164, 115, 0.2)',
+                              '--epr-category-navigation-button-size': '0',
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex-1 relative">
                       <textarea
@@ -1739,11 +2015,11 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
                   </div>
                 )}
 
-                <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
+<div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
                   <span>
                     {isRecording 
                       ? '🔴 Tap X to cancel • Tap Send arrow to send voice note' 
-                      : 'Press Enter to send • Shift+Enter for new line • 📎 for media • 🎤 for voice'
+                      : 'Press Enter to send • Shift+Enter for new line • 😊 for emoji • 📎 for media • 🎤 for voice'
                     }
                   </span>
                   <span className="flex items-center gap-1.5">
@@ -2536,6 +2812,40 @@ const InboxChatDrawerWithMedia = ({ isOpen, onClose, contact, refreshContacts })
       </div>
 
       <style>{`
+        /* ✨ Custom Audio Player Styling */
+        .audio-player-custom {
+          outline: none;
+        }
+        
+        .audio-player-custom::-webkit-media-controls-panel {
+          background: linear-gradient(to right, rgba(187, 164, 115, 0.05), rgba(142, 125, 90, 0.05));
+          border-radius: 8px;
+        }
+        
+        .audio-player-custom::-webkit-media-controls-play-button,
+        .audio-player-custom::-webkit-media-controls-pause-button {
+          background-color: rgba(187, 164, 115, 0.2);
+          border-radius: 50%;
+        }
+        
+        .audio-player-custom::-webkit-media-controls-current-time-display,
+        .audio-player-custom::-webkit-media-controls-time-remaining-display {
+          color: #BBA473;
+          text-shadow: none;
+          font-size: 11px;
+        }
+        
+        .audio-player-custom::-webkit-media-controls-timeline {
+          background: rgba(187, 164, 115, 0.1);
+          border-radius: 25px;
+          margin: 0 8px;
+        }
+        
+        .audio-player-custom::-webkit-media-controls-volume-slider {
+          background: rgba(187, 164, 115, 0.1);
+          border-radius: 25px;
+        }
+
         @keyframes slideIn {
           from { 
             opacity: 0; 
