@@ -20,7 +20,7 @@ const AssignLeadModal = ({
 
   // Modal form state - using single variable to track the final selected status
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
-  const [answeredStatus, setAnsweredStatus] = useState(''); // NEW: Answered status field
+  const [answeredStatus, setAnsweredStatus] = useState('');
   const [modalRemarks, setModalRemarks] = useState('');
   const [modalErrors, setModalErrors] = useState({});
   const [taskTitle, setTaskTitle] = useState('');
@@ -47,93 +47,161 @@ const AssignLeadModal = ({
       setModalRemarks(selectedLead.latestRemarks || '');
       setTaskTitle('');
       setReminderDateTime(null);
-      setTaskStatus(''); // Reset task status
-      setAnsweredStatus(''); // Reset answered status
+      setTaskStatus('');
+      setAnsweredStatus('');
       
       // Reset demo checkboxes first
       setDemoInstallApp(false);
       setDemoEducationVideo(false);
       setDemoAnalyzeChannel(false);
-      
-      // Determine the current status based on boolean flags
-      if (!selectedLead.contacted) {
-        // Lead hasn't been contacted yet - no selections
-        setModalAnswered('');
-        setModalInterested('');
-        setModalLeadType('');
-        setModalHotLeadType('');
+
+      // Get current status and kiosk status
+      const currentStatus = selectedLead.status || '';
+      const kioskStatus = selectedLead.kioskLeadStatus || '';
+
+      // Determine initial state based on kiosk status and current status
+      if (kioskStatus === 'Demo') {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setModalHotLeadType('Demo');
+        setLeadResponseStatus('Demo');
         setModalDepositStatus('');
-        setLeadResponseStatus('');
-      } else if (selectedLead.contacted && !selectedLead.answered) {
-        // Contacted but not answered
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setModalHotLeadType('Real');
+        setModalDepositStatus('Not Deposit');
+        setLeadResponseStatus('Not Deposit');
+      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setModalHotLeadType('Real');
+        setModalDepositStatus('Deposit');
+        setLeadResponseStatus('Deposit');
+      } else if (currentStatus === 'Not Answered') {
         setModalAnswered('Not Answered');
         setLeadResponseStatus('Not Answered');
-        setModalInterested('');
-        setModalLeadType('');
-        setModalHotLeadType('');
-        setModalDepositStatus('');
-      } else if (selectedLead.contacted && selectedLead.answered && !selectedLead.interested) {
-        // Answered but not interested (cold lead)
+        resetSubSelections();
+      } else if (currentStatus === 'Not Interested') {
         setModalAnswered('Answered');
         setModalInterested('Not Interested');
         setLeadResponseStatus('Not Interested');
         setModalLeadType('');
         setModalHotLeadType('');
         setModalDepositStatus('');
-      } else if (selectedLead.contacted && selectedLead.answered && selectedLead.interested) {
-        // Answered and interested
+      } else if (currentStatus === 'Warm') {
         setModalAnswered('Answered');
         setModalInterested('Interested');
-        
-        if (!selectedLead.hot) {
-          // Warm lead
-          setModalLeadType('Warm');
-          setLeadResponseStatus('Warm');
-          setModalHotLeadType('');
-          setModalDepositStatus('');
-        } else if (selectedLead.hot) {
-          // Hot lead
-          setModalLeadType('Hot');
-          
-          if (selectedLead.demo && !selectedLead.real) {
-            // Demo account - set demo checkboxes based on lead data
-            setModalHotLeadType('Demo');
-            setLeadResponseStatus('Demo');
-            setModalDepositStatus('');
-            
-            // Set demo checkboxes from lead data
-            setDemoInstallApp(selectedLead.applicationInstalled || false);
-            setDemoEducationVideo(selectedLead.educationalVideosSent || false);
-            setDemoAnalyzeChannel(selectedLead.socialMediaLinksSent || false);
-          } else if (selectedLead.real) {
-            // Real account
-            setModalHotLeadType('Real');
-            
-            if (selectedLead.deposited) {
-              setModalDepositStatus('Deposit');
-              setLeadResponseStatus('Deposit');
-            } else {
-              setModalDepositStatus('Not Deposit');
-              setLeadResponseStatus('Not Deposit');
-            }
-          } else {
-            // Hot lead but no demo or real yet
-            setLeadResponseStatus('Hot');
-            setModalHotLeadType('');
-            setModalDepositStatus('');
-          }
-        }
+        setModalLeadType('Warm');
+        setLeadResponseStatus('Warm');
+        setModalHotLeadType('');
+        setModalDepositStatus('');
+      } else if (currentStatus === 'Hot') {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setLeadResponseStatus('Hot');
+        setModalHotLeadType('');
+        setModalDepositStatus('');
+      } else if (currentStatus === 'Demo') {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setModalHotLeadType('Demo');
+        setLeadResponseStatus('Demo');
+        setModalDepositStatus('');
+      } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit') {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setModalHotLeadType('Real');
+        setModalDepositStatus('Not Deposit');
+        setLeadResponseStatus('Not Deposit');
+      } else if (currentStatus === 'Deposit' || currentStatus === 'Real - Deposit') {
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setModalHotLeadType('Real');
+        setModalDepositStatus('Deposit');
+        setLeadResponseStatus('Deposit');
+      } else {
+        resetAllSelections();
       }
     }
   }, [selectedLead]);
 
+  const resetAllSelections = () => {
+    setModalAnswered('');
+    setModalInterested('');
+    setModalLeadType('');
+    setModalHotLeadType('');
+    setModalDepositStatus('');
+    setLeadResponseStatus('');
+  };
+
+  const resetSubSelections = () => {
+    setModalInterested('');
+    setModalLeadType('');
+    setModalHotLeadType('');
+    setModalDepositStatus('');
+  };
+
   // Auto-enable task completion when reaching Demo or higher
   useEffect(() => {
+    const kioskStatus = selectedLead?.kioskLeadStatus || '';
+    
+    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      return;
+    }
+
     const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
     if (allowedStatuses.includes(leadResponseStatus)) {
       setTaskStatus('Completed');
     }
-  }, [leadResponseStatus]);
+  }, [leadResponseStatus, selectedLead]);
+
+  // Auto-reset to default valid selection when answeredStatus changes
+  useEffect(() => {
+    if (!selectedLead) return;
+
+    const currentStatus = selectedLead.status || '';
+    const kioskStatus = selectedLead.kioskLeadStatus || '';
+
+    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      resetAllSelections();
+      return;
+    }
+
+    if (answeredStatus === 'Not Answered') {
+      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+        if (modalDepositStatus === 'Not Deposit') {
+          setModalDepositStatus('Deposit');
+          setLeadResponseStatus('Deposit');
+        }
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+        if (modalDepositStatus === 'Deposit') {
+          setModalDepositStatus('Not Deposit');
+          setLeadResponseStatus('Not Deposit');
+        }
+      } else if (kioskStatus === 'Demo') {
+        if (modalHotLeadType !== 'Demo') {
+          setModalHotLeadType('Demo');
+          setLeadResponseStatus('Demo');
+          setModalDepositStatus('');
+        }
+      } else if (currentStatus === 'Warm') {
+        if (modalLeadType !== 'Warm' || leadResponseStatus !== 'Warm') {
+          setModalLeadType('Warm');
+          setLeadResponseStatus('Warm');
+          setModalHotLeadType('');
+          setModalDepositStatus('');
+        }
+      }
+    }
+  }, [answeredStatus, selectedLead]);
 
   // Reset closing state when modal opens
   useEffect(() => {
@@ -145,44 +213,31 @@ const AssignLeadModal = ({
   const validateModalForm = () => {
     const errors = {};
     
-    // NEW: Answered Status is mandatory
     if (!answeredStatus) {
       errors.answeredStatus = 'Please select Answered or Not Answered';
     }
 
-    // NEW: When "Not Answered" is selected, task must be marked as "Completed"
     if (answeredStatus === 'Not Answered' && taskStatus !== 'Completed') {
       errors.taskStatus = 'Task must be marked as Completed when selecting "Not Answered"';
     }
 
-    // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
     if (answeredStatus === 'Answered') {
-      // Validate that a response status is selected
-      if (!leadResponseStatus) {
-        errors.answered = 'Please complete the status selection';
-      }
-      
-      // If "Answered" is selected, must select Interested/Not Interested
       if (modalAnswered === 'Answered' && !modalInterested) {
         errors.interested = 'Please select Interested or Not Interested';
       }
       
-      // If "Interested" is selected, must select Warm/Hot
       if (modalInterested === 'Interested' && !modalLeadType) {
         errors.leadType = 'Please select Warm Lead or Hot Lead';
       }
       
-      // If "Hot" is selected, must select Demo/Real
       if (modalLeadType === 'Hot' && !modalHotLeadType) {
         errors.hotLeadType = 'Please select Demo or Real';
       }
       
-      // If "Real" is selected, must select Deposit/Not Deposit
       if (modalHotLeadType === 'Real' && !modalDepositStatus) {
         errors.depositStatus = 'Please select Deposit or Not Deposit';
       }
 
-      // If Demo is selected, first two checkboxes must be checked
       if (modalHotLeadType === 'Demo') {
         if (!demoInstallApp || !demoEducationVideo) {
           errors.demoCheckboxes = 'Please complete the first two required demo steps';
@@ -190,7 +245,6 @@ const AssignLeadModal = ({
       }
     }
     
-    // Validate remarks length (max 500 characters)
     if (modalRemarks && modalRemarks.length > 500) {
       errors.remarks = 'Remarks must not exceed 500 characters';
     }
@@ -199,7 +253,6 @@ const AssignLeadModal = ({
   };
 
   const handleModalSubmit = async () => {
-    // Validate form
     const errors = validateModalForm();
     
     if (Object.keys(errors).length > 0) {
@@ -208,7 +261,6 @@ const AssignLeadModal = ({
     }
 
     try {
-      // Initialize all flags as false
       const payload = {
         contacted: false,
         answered: false,
@@ -221,18 +273,15 @@ const AssignLeadModal = ({
         currentStatus: leadResponseStatus
       };
 
-      setLeadResponseStatusCurrent(leadResponseStatus)
+      setLeadResponseStatusCurrent(leadResponseStatus);
 
-      // Add demo checkboxes data if Demo is selected
       if (modalHotLeadType === 'Demo') {
         payload.applicationInstalled = demoInstallApp;
         payload.educationalVideosSent = demoEducationVideo;
         payload.socialMediaLinksSent = demoAnalyzeChannel;
       }
 
-      // Set flags based on the user's selections
       if (modalAnswered === 'Not Answered') {
-        // Only contacted is true, everything else stays false
         payload.contacted = true;
         payload.answered = false;
       } else if (modalAnswered === 'Answered') {
@@ -240,21 +289,18 @@ const AssignLeadModal = ({
         payload.answered = true;
         
         if (modalInterested === 'Not Interested') {
-          // Contacted, answered, but not interested (cold lead)
           payload.interested = false;
           payload.cold = true;
         } else if (modalInterested === 'Interested') {
           payload.interested = true;
           
           if (modalLeadType === 'Warm') {
-            // Warm lead - interested but not hot
             payload.hot = false;
             payload.cold = false;
           } else if (modalLeadType === 'Hot') {
             payload.hot = true;
             
             if (modalHotLeadType === 'Demo') {
-              // Hot lead with demo account
               payload.real = false;
             } else if (modalHotLeadType === 'Real') {
               payload.real = true;
@@ -269,17 +315,11 @@ const AssignLeadModal = ({
         }
       }
       
-      // Call API to update lead task
-      const result = await updateLeadTask(
-        selectedLead.id,
-        payload
-      );
+      const result = await updateLeadTask(selectedLead.id, payload);
       
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
         
-        // After successful lead update, create task based on reminder date and status
-        // Only create new task if lead response status is between Warm and Deposit
         const shouldCreateNewTask = ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
         
         if (shouldCreateNewTask) {
@@ -287,10 +327,8 @@ const AssignLeadModal = ({
             let taskResult;
             
             if (reminderDateTime) {
-              // Convert to ISO string for backend - this ensures proper timezone handling
               const scheduledDateISO = reminderDateTime.toISOString();
               
-              // If reminder date is set, use createTask API
               const newTaskData = {
                 agentId: selectedLead.agentId,
                 leadId: selectedLead.id,
@@ -300,7 +338,7 @@ const AssignLeadModal = ({
                 taskPriority: 'Normal',
                 taskScheduledDate: scheduledDateISO,
                 taskStatus: 'Open',
-                answerStatus: answeredStatus, // NEW: Include answered status
+                answerStatus: answeredStatus,
                 leadRemarks: modalRemarks || '',
                 leadResponseStatus: leadResponseStatus || '',
                 leadStatus: leadResponseStatus || '',
@@ -308,7 +346,6 @@ const AssignLeadModal = ({
               
               taskResult = await createTask(newTaskData);
             } else {
-              // If no reminder date, use createAutoTask API
               const autoTaskData = {
                 leadId: selectedLead.id,
                 leadStatus: leadResponseStatus || '',
@@ -323,14 +360,12 @@ const AssignLeadModal = ({
             if (taskResult.success) {
               toast.success(taskResult.message || 'Task created successfully!');
             } else {
-              // Don't show error for task creation failure, just log it
               console.error('Failed to create task:', taskResult.message);
             }
           } catch (taskError) {
             console.error('Error creating task:', taskError);
           }
         } else {
-          // For statuses below Warm, create completed auto task
           try {
             const taskData = {
               leadId: selectedLead?.id,
@@ -352,10 +387,7 @@ const AssignLeadModal = ({
           }
         }
         
-        // Close this modal with animation
         handleClose();
-        
-        // Refresh leads
         fetchLeads(currentPage, itemsPerPage);
       } else {
         if (result.requiresAuth) {
@@ -374,6 +406,7 @@ const AssignLeadModal = ({
     setIsClosing(true);
     setTimeout(() => {
       handleCloseModal();
+      setModalErrors({});
     }, 300);
   };
 
@@ -384,29 +417,31 @@ const AssignLeadModal = ({
 
   const getStatusColor = (status) => {
     const colors = {
+      'Open': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      'In Progress': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      'Completed': 'bg-green-500/20 text-green-400 border-green-500/30',
+      'Pending': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       'Lead': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       'Demo': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       'Real': 'bg-green-500/20 text-green-400 border-green-500/30',
       'Deposit': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'Not Deposit': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'Warm': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+      'Hot': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'Not Answered': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      'Not Interested': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      '-': 'bg-gray-500/20 text-gray-400 border-gray-500/30'
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
 
-  // Check if the form is valid for submission
   const isFormValid = () => {
-    // NEW: Answered Status is mandatory
     if (!answeredStatus) return false;
-
-    // When "Not Answered" is selected, task must be marked as "Completed" to enable submit
     if (answeredStatus === 'Not Answered' && taskStatus !== 'Completed') return false;
 
-    // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
     if (answeredStatus === 'Answered') {
-      // Must have a base selection
       if (!modalAnswered) return false;
       
-      // If "Answered" is selected, must complete the rest of the hierarchy
       if (modalAnswered === 'Answered') {
         if (!modalInterested) return false;
         
@@ -416,7 +451,6 @@ const AssignLeadModal = ({
           if (modalLeadType === 'Hot') {
             if (!modalHotLeadType) return false;
             
-            // If Demo is selected, first two checkboxes must be checked
             if (modalHotLeadType === 'Demo') {
               if (!demoInstallApp || !demoEducationVideo) return false;
             }
@@ -432,55 +466,141 @@ const AssignLeadModal = ({
     return true;
   };
 
-  // Helper function to check if a status option should be disabled
-  // Status hierarchy: Not Answered < Not Interested < Warm < Hot < Demo < Real < Not Deposit < Deposit
   const isStatusDisabled = (statusToCheck) => {
     if (!selectedLead) return false;
-    
+
+    const currentStatus = selectedLead.status || '';
+    const kioskStatus = selectedLead.kioskLeadStatus || '';
+
+    // NEW REQUIREMENT: Check Answered Status-based disabling first (for Kiosk Lead Status "Lead")
+    if (isUpdateStatusOptionDisabled(statusToCheck)) {
+      return true;
+    }
+
+    if (currentStatus === 'Lead' || currentStatus === 'lead' || 
+        kioskStatus === 'Lead' || kioskStatus === 'lead' || 
+        currentStatus === '-' || kioskStatus === '-') {
+      return false;
+    }
+
+    if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modalAnswered === 'Answered') {
+      return false;
+    }
+
     const statusHierarchy = [
+      '',
       'Not Answered',
-      'Not Interested', 
+      'Not Interested',
       'Warm',
       'Hot',
       'Demo',
-      'Real',
       'Not Deposit',
       'Deposit'
     ];
-    
-    const currentStatusIndex = statusHierarchy.indexOf(selectedLead.status);
+
+    const currentStatusIndex = statusHierarchy.indexOf(currentStatus);
+    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+
+    if (answeredStatus === 'Not Answered' && allowedKioskStatuses.includes(kioskStatus)) {
+      let kioskHierarchyLevel = -1;
+      if (kioskStatus === 'Demo') {
+        kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
+      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+        kioskHierarchyLevel = statusHierarchy.indexOf('Deposit');
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+        kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
+      }
+
+      const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
+
+      if (checkStatusIndex !== -1 && kioskHierarchyLevel !== -1) {
+        return checkStatusIndex < kioskHierarchyLevel;
+      }
+    }
+
+    let effectiveStatusIndex = currentStatusIndex;
+
+    if (kioskStatus === 'Demo') {
+      const kioskIndex = statusHierarchy.indexOf('Demo');
+      effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
+    } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+      const kioskIndex = statusHierarchy.indexOf('Deposit');
+      effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
+    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+      const kioskIndex = statusHierarchy.indexOf('Not Deposit');
+      effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
+    }
+
     const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
-    
-    // If current status not found or checking status not found, don't disable
-    if (currentStatusIndex === -1 || checkStatusIndex === -1) return false;
-    
-    // Disable if the status to check is before or equal to current status
-    return checkStatusIndex <= currentStatusIndex;
+
+    if (checkStatusIndex === -1) return false;
+    if (effectiveStatusIndex === -1) return false;
+
+    const currentEffectiveStatus = statusHierarchy[effectiveStatusIndex];
+
+    if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') && 
+        (currentEffectiveStatus === 'Deposit' || currentEffectiveStatus === 'Deposit')) {
+      return false;
+    }
+
+    return checkStatusIndex <= effectiveStatusIndex;
   };
 
-  // Check if task status "Completed" should be disabled
   const isTaskStatusCompletedDisabled = () => {
-    // Task status can only be completed if lead response status is Demo or higher
+    const kioskStatus = selectedLead?.kioskLeadStatus || '';
+    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      return false;
+    }
+
+    if (answeredStatus === 'Not Answered') {
+      return false;
+    }
+
     const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
     return !allowedStatuses.includes(leadResponseStatus);
   };
 
-  // Check if reminder date should be enabled (Warm to Deposit only)
   const isReminderDateEnabled = () => {
     return ['Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'].includes(leadResponseStatus);
   };
 
-  // MODIFIED: Update Status section should be disabled if "Not Answered" is selected
   const isUpdateStatusDisabled = () => {
-    return answeredStatus === 'Not Answered';
+    return false;
   };
 
-  // Helper function to check if a status is the final selected status
+  // NEW: Helper function to check if Update Status options should be disabled based on Answered Status
+  const isUpdateStatusOptionDisabled = (statusToCheck) => {
+    if (!selectedLead) return false;
+
+    const currentStatus = selectedLead.status || '';
+    const kioskStatus = selectedLead.kioskLeadStatus || '';
+
+    // Only apply this logic when Kiosk Lead Status is "Lead"
+    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      // If user selected "Answered" in Answered Status section
+      if (answeredStatus === 'Answered') {
+        // Disable "Not Answered" option in Update Status
+        if (statusToCheck === 'Not Answered') {
+          return true;
+        }
+      }
+      
+      // If user selected "Not Answered" in Answered Status section
+      if (answeredStatus === 'Not Answered') {
+        // Disable "Answered" option in Update Status, only enable "Not Answered"
+        if (statusToCheck === 'Answered') {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
   const isFinalSelectedStatus = (statusValue) => {
     return leadResponseStatus === statusValue && leadResponseStatus !== '';
   };
 
-  // Helper component for the selected status indicator
   const SelectedStatusIndicator = () => (
     <div className="flex items-center gap-1 ml-auto">
       <span className="relative flex h-2 w-2">
@@ -489,6 +609,17 @@ const AssignLeadModal = ({
       </span>
     </div>
   );
+
+  const shouldShowNotInterestedAvailable = () => {
+    if (answeredStatus !== 'Answered' || modalAnswered !== 'Answered') return false;
+    
+    const currentStatus = selectedLead?.status || '';
+    const kioskStatus = selectedLead?.kioskLeadStatus || '';
+    
+    const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+    
+    return advancedStatuses.includes(currentStatus) || advancedStatuses.includes(kioskStatus);
+  };
 
   if (!showDetailsModal || !selectedLead) return null;
 
@@ -554,35 +685,48 @@ const AssignLeadModal = ({
                 <label className="text-sm text-[#E8D5A3] font-medium">Source</label>
                 <p className="text-white">{selectedLead.source}</p>
               </div>
-              {/* All Status Fields */}
+              
+              {/* Status Badges Section */}
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
-                <p className="text-white">{selectedLead.status || 'N/A'}</p>
+                <label className="text-sm text-[#E8D5A3] font-medium">Lead Task Status</label>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(selectedLead.status)}`}>
+                  {selectedLead.status === 'Deposit' || selectedLead.status === 'Not Deposit' 
+                    ? `Real - ${selectedLead.status}` 
+                    : selectedLead.status || 'N/A'}
+                </span>
               </div>
+
               <div className="space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
-                <p className="text-white">{selectedLead.kioskLeadStatus || 'N/A'}</p>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(selectedLead.kioskLeadStatus)}`}>
+                  {selectedLead.depositStatus === 'Deposit' || selectedLead.depositStatus === 'Not Deposit' || selectedLead.depositStatus === 'No Deposit'
+                    ? `Real - ${selectedLead.depositStatus}` 
+                    : selectedLead.kioskLeadStatus || 'N/A'}
+                </span>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Deposit Status</label>
-                <p className="text-white">{selectedLead.depositStatus || 'N/A'}</p>
-              </div>
-              {selectedLead.remarks ? (<div className="space-y-2 col-span-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">{selectedLead.chatbotMessage.length ? 'Chatbot Message' : 'Kiosk Remarks'}</label>
-                {selectedLead.chatbotMessage.length ? selectedLead.chatbotMessage.map((item, _index) => (
-                  <>
-                    <p className="text-white mb-0.5">{item}</p>
-                  </>
-                )) : ''}
-                {!selectedLead.chatbotMessage.length && <p className="text-white">{selectedLead.remarks || 'No remarks'}</p>}              </div>) : ''}
+
+              {selectedLead.remarks && (
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium">
+                    {selectedLead.chatbotMessage?.length ? 'Chatbot Message' : 'Kiosk Remarks'}
+                  </label>
+                  {selectedLead.chatbotMessage?.length ? (
+                    selectedLead.chatbotMessage.map((item, index) => (
+                      <p key={index} className="text-white mb-0.5">{item}</p>
+                    ))
+                  ) : (
+                    <p className="text-white">{selectedLead.remarks || 'No remarks'}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Status Options */}
             <div className="border-t border-[#BBA473]/30 pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Status</h3>
+                <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Task</h3>
                 
-                {/* Date Time Picker - Only enabled for Warm to Deposit */}
+                {/* Date Time Picker */}
                 <div className="flex items-center gap-2">
                   <div className="relative flex">
                     <DatePicker
@@ -609,8 +753,8 @@ const AssignLeadModal = ({
                 </div>
               </div>
 
-                {/* Task Status Toggle Switch */}
-                <div className="space-y-4 mb-6">
+              {/* Task Status Toggle Switch */}
+              <div className="space-y-4 mb-6">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
@@ -683,7 +827,6 @@ const AssignLeadModal = ({
                   </button>
                 </div>
                 
-                {/* Info message when Completed is disabled */}
                 {isTaskStatusCompletedDisabled() && (
                   <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
@@ -705,7 +848,7 @@ const AssignLeadModal = ({
                 )}
               </div>
 
-              {/* NEW: Answered Status Section */}
+              {/* Answered Status Section */}
               <div className="space-y-4 mb-6">
                 <label className="text-sm text-[#E8D5A3] font-medium block">
                   Answered Status <span className="text-red-400">*</span>
@@ -751,7 +894,6 @@ const AssignLeadModal = ({
                   </label>
                 </div>
                 
-                {/* Show error for Answered Status */}
                 {modalErrors.answeredStatus && (
                   <div className="text-red-400 text-sm animate-pulse flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -759,31 +901,46 @@ const AssignLeadModal = ({
                   </div>
                 )}
                 
-                {/* MODIFIED: Updated info message when "Not Answered" is selected */}
                 {answeredStatus === 'Not Answered' && (
                   <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
                       <AlertCircle className="w-5 h-5 text-orange-400" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-orange-400 text-sm font-medium">Update Status Disabled</p>
+                      <p className="text-orange-400 text-sm font-medium">
+                        {selectedLead && (selectedLead.kioskLeadStatus === 'Lead' || selectedLead.kioskLeadStatus === 'lead' || selectedLead.kioskLeadStatus === '-' || selectedLead.status === 'Lead' || selectedLead.status === 'lead' || selectedLead.status === '-')
+                          ? 'All Status Options Enabled'
+                          : selectedLead && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(selectedLead.kioskLeadStatus || '')
+                            ? 'Sibling Status Selection Enabled'
+                            : 'Update Status Disabled'}
+                      </p>
                       <p className="text-orange-300 text-xs mt-1">
-                        {taskStatus === 'Completed' 
-                          ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'
-                          : 'To save with "Not Answered", please enable the Task Completion toggle above first.'}
+                        {selectedLead && (selectedLead.kioskLeadStatus === 'Lead' || selectedLead.kioskLeadStatus === 'lead' || selectedLead.kioskLeadStatus === '-' || selectedLead.status === 'Lead' || selectedLead.status === 'lead' || selectedLead.status === '-')
+                          ? `Since the status is "Lead", you can select any status without restrictions in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
+                          : selectedLead && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(selectedLead.kioskLeadStatus || '')
+                            ? `Since the Kiosk Lead Status is "${selectedLead.kioskLeadStatus}", you can select statuses at the same level or higher in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
+                            : taskStatus === 'Completed'
+                              ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'
+                              : 'To save with "Not Answered", please enable the Task Completion toggle above first.'}
                       </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Level 1: Answered / Not Answered */}
+              {/* Update Status Section */}
               <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-50 pointer-events-none' : ''}`}>
-              <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#E8D5A3] font-medium block">
                   Update Status
                 </label>
+
+                {/* Level 1: Answered / Not Answered */}
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                    isStatusDisabled('Answered') || isUpdateStatusDisabled()
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                  }`}>
                     <input
                       type="radio"
                       name="answered"
@@ -791,31 +948,31 @@ const AssignLeadModal = ({
                       checked={modalAnswered === 'Answered'}
                       onChange={(e) => {
                         setModalAnswered(e.target.value);
-                        setLeadResponseStatus('');
+                        setLeadResponseStatus(leadResponseStatus === 'Not Interested' || leadResponseStatus === 'Warm' || leadResponseStatus === 'Hot' || leadResponseStatus === 'Demo' || leadResponseStatus === 'Deposit' || leadResponseStatus === 'Not Deposit' ? leadResponseStatus : '');
                         setModalInterested('');
                         setModalLeadType('');
                         setModalHotLeadType('');
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                      disabled={isStatusDisabled('Answered') || isUpdateStatusDisabled()}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
-                  
-                  <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
-                    isStatusDisabled('Not Answered')
-                      ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+
+                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                    isStatusDisabled('Not Answered') || isUpdateStatusDisabled()
+                      ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                       : isFinalSelectedStatus('Not Answered')
                         ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                   }`}>
                     <input
                       type="radio"
                       name="answered"
                       value="Not Answered"
-                      checked={modalAnswered === 'Not Answered'}
-                      disabled={isStatusDisabled('Not Answered')}
+                      checked={modalAnswered === 'Not Answered' && leadResponseStatus === 'Not Answered'}
                       onChange={(e) => {
                         setModalAnswered(e.target.value);
                         setLeadResponseStatus(e.target.value);
@@ -825,21 +982,23 @@ const AssignLeadModal = ({
                         setModalDepositStatus('');
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isStatusDisabled('Not Answered') || isUpdateStatusDisabled()}
+                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className={`font-medium ${isFinalSelectedStatus('Not Answered') ? 'text-green-400' : 'text-white'}`}>Not Answered</span>
                     {isFinalSelectedStatus('Not Answered') && <SelectedStatusIndicator />}
                   </label>
                 </div>
-                {modalErrors.answered && (
-                  <div className="text-red-400 text-sm animate-pulse">{modalErrors.answered}</div>
-                )}
-                
-                {/* Level 2: Interested / Not Interested (shown if Answered) */}
+
+                {/* Level 2: Interested / Not Interested */}
                 {modalAnswered === 'Answered' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                        isStatusDisabled('Interested')
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      }`}>
                         <input
                           type="radio"
                           name="interested"
@@ -847,30 +1006,32 @@ const AssignLeadModal = ({
                           checked={modalInterested === 'Interested'}
                           onChange={(e) => {
                             setModalInterested(e.target.value);
-                            setLeadResponseStatus('');
+                            setLeadResponseStatus(leadResponseStatus === 'Warm' || leadResponseStatus === 'Hot' || leadResponseStatus === 'Demo' || leadResponseStatus === 'Deposit' || leadResponseStatus === 'Not Deposit' ? leadResponseStatus : '');
                             setModalLeadType('');
                             setModalHotLeadType('');
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2"
+                          disabled={isStatusDisabled('Interested')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Interested</span>
                       </label>
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Not Interested')
-                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : isFinalSelectedStatus('Not Interested')
                             ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            : shouldShowNotInterestedAvailable()
+                              ? 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50 animate-pulse-border-subtle'
+                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
                           name="interested"
                           value="Not Interested"
-                          checked={modalInterested === 'Not Interested'}
-                          disabled={isStatusDisabled('Not Interested')}
+                          checked={modalInterested === 'Not Interested' && leadResponseStatus === 'Not Interested'}
                           onChange={(e) => {
                             setModalInterested(e.target.value);
                             setLeadResponseStatus(e.target.value);
@@ -879,7 +1040,8 @@ const AssignLeadModal = ({
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isStatusDisabled('Not Interested')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Not Interested') ? 'text-green-400' : 'text-white'}`}>Not Interested</span>
                         {isFinalSelectedStatus('Not Interested') && <SelectedStatusIndicator />}
@@ -890,26 +1052,24 @@ const AssignLeadModal = ({
                     )}
                   </div>
                 )}
-                
-                {/* Level 3: Warm Lead / Hot Lead (shown if Interested) */}
+
+                {/* Level 3: Warm Lead / Hot Lead */}
                 {modalInterested === 'Interested' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                    {!isLeadsSelectedId && (
-                      <>
-                        <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                      {!isLeadsSelectedId && (
+                        <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                           isStatusDisabled('Warm')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                             : isFinalSelectedStatus('Warm')
                               ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                         }`}>
                           <input
                             type="radio"
                             name="leadType"
                             value="Warm"
-                            checked={modalLeadType === 'Warm'}
-                            disabled={isStatusDisabled('Warm')}
+                            checked={modalLeadType === 'Warm' && leadResponseStatus === 'Warm'}
                             onChange={(e) => {
                               setModalLeadType(e.target.value);
                               setLeadResponseStatus(e.target.value);
@@ -917,35 +1077,35 @@ const AssignLeadModal = ({
                               setModalDepositStatus('');
                               setModalErrors({});
                             }}
-                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isStatusDisabled('Warm')}
+                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                           />
                           <span className={`font-medium ${isFinalSelectedStatus('Warm') ? 'text-green-400' : 'text-white'}`}>Warm Lead</span>
                           {isFinalSelectedStatus('Warm') && <SelectedStatusIndicator />}
                         </label>
-                      </>
-                    )}
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                      )}
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Hot')
-                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : isFinalSelectedStatus('Hot')
                             ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
                           name="leadType"
                           value="Hot"
                           checked={modalLeadType === 'Hot'}
-                          disabled={isStatusDisabled('Hot')}
                           onChange={(e) => {
                             setModalLeadType(e.target.value);
-                            setLeadResponseStatus('');
+                            setLeadResponseStatus(leadResponseStatus === 'Hot' ? 'Hot' : '');
                             setModalHotLeadType('');
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isStatusDisabled('Hot')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Hot') ? 'text-green-400' : 'text-white'}`}>Hot Lead</span>
                         {isFinalSelectedStatus('Hot') && <SelectedStatusIndicator />}
@@ -956,54 +1116,54 @@ const AssignLeadModal = ({
                     )}
                   </div>
                 )}
-                
-                {/* Level 4: Demo / Real (shown if Hot Lead) */}
+
+                {/* Level 4: Demo / Real */}
                 {modalLeadType === 'Hot' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Demo')
-                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : isFinalSelectedStatus('Demo')
                             ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
                           value="Demo"
-                          checked={modalHotLeadType === 'Demo'}
-                          disabled={isStatusDisabled('Demo')}
+                          checked={modalHotLeadType === 'Demo' && leadResponseStatus === 'Demo'}
                           onChange={(e) => {
                             setModalHotLeadType(e.target.value);
                             setLeadResponseStatus(e.target.value);
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isStatusDisabled('Demo')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Demo') ? 'text-green-400' : 'text-white'}`}>Demo</span>
                         {isFinalSelectedStatus('Demo') && <SelectedStatusIndicator />}
                       </label>
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Real')
-                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
                           name="hotLeadType"
                           value="Real"
                           checked={modalHotLeadType === 'Real'}
-                          disabled={isStatusDisabled('Real')}
                           onChange={(e) => {
                             setModalHotLeadType(e.target.value);
-                            setLeadResponseStatus('');
+                            setLeadResponseStatus(leadResponseStatus === 'Deposit' || leadResponseStatus === 'Not Deposit' ? leadResponseStatus : '');
                             setModalDepositStatus('');
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isStatusDisabled('Real')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Real</span>
                       </label>
@@ -1013,17 +1173,16 @@ const AssignLeadModal = ({
                     )}
                   </div>
                 )}
-                
-                {/* Demo Checkboxes - Show only when Demo is selected */}
+
+                {/* Demo Checkboxes */}
                 {modalHotLeadType === 'Demo' && (
                   <div className="mt-4 p-4 bg-[#1A1A1A] rounded-lg border-2 border-[#BBA473]/30 animate-fadeIn">
                     <h4 className="text-[#BBA473] font-semibold mb-3 flex items-center gap-2">
                       <span className="text-sm">Demo Steps</span>
                       <span className="text-xs text-gray-400">(First 2 are required)</span>
                     </h4>
-                    
+
                     <div className="space-y-3">
-                      {/* Install App - Required */}
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="checkbox"
@@ -1040,7 +1199,6 @@ const AssignLeadModal = ({
                         </span>
                       </label>
 
-                      {/* Education Video - Required */}
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="checkbox"
@@ -1057,7 +1215,6 @@ const AssignLeadModal = ({
                         </span>
                       </label>
 
-                      {/* Analyze Channel - Optional */}
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="checkbox"
@@ -1072,7 +1229,6 @@ const AssignLeadModal = ({
                       </label>
                     </div>
 
-                    {/* Error message for demo checkboxes */}
                     {modalErrors.demoCheckboxes && (
                       <p className="text-red-400 text-sm mt-3 flex items-center gap-2 animate-pulse">
                         <span className="inline-block w-1.5 h-1.5 bg-red-400 rounded-full"></span>
@@ -1081,54 +1237,54 @@ const AssignLeadModal = ({
                     )}
                   </div>
                 )}
-                
-                {/* Level 5: Deposited / Not Deposited (shown if Real) */}
+
+                {/* Level 5: Deposit / Not Deposit */}
                 {modalHotLeadType === 'Real' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Deposit')
-                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : isFinalSelectedStatus('Deposit')
                             ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
                           name="depositStatus"
                           value="Deposit"
-                          checked={modalDepositStatus === 'Deposit'}
-                          disabled={isStatusDisabled('Deposit')}
+                          checked={modalDepositStatus === 'Deposit' && leadResponseStatus === 'Deposit'}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isStatusDisabled('Deposit')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Deposit') ? 'text-green-400' : 'text-white'}`}>Deposit</span>
                         {isFinalSelectedStatus('Deposit') && <SelectedStatusIndicator />}
                       </label>
-                      
-                      <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+
+                      <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Not Deposit')
-                          ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                          ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
                           : isFinalSelectedStatus('Not Deposit')
                             ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
                       }`}>
                         <input
                           type="radio"
                           name="depositStatus"
                           value="Not Deposit"
-                          checked={modalDepositStatus === 'Not Deposit'}
-                          disabled={isStatusDisabled('Not Deposit')}
+                          checked={modalDepositStatus === 'Not Deposit' && leadResponseStatus === 'Not Deposit'}
                           onChange={(e) => {
                             setModalDepositStatus(e.target.value);
                             setLeadResponseStatus(e.target.value);
                             setModalErrors({});
                           }}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isStatusDisabled('Not Deposit')}
+                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Not Deposit') ? 'text-green-400' : 'text-white'}`}>Not Deposit</span>
                         {isFinalSelectedStatus('Not Deposit') && <SelectedStatusIndicator />}
@@ -1139,15 +1295,15 @@ const AssignLeadModal = ({
                     )}
                   </div>
                 )}
-                
-                {/* Remarks / Notes */}
+
+                {/* Remarks */}
                 <div className="space-y-2 pt-4">
                   <label className="text-sm text-[#E8D5A3] font-medium block">
                     Notes / Remarks
                   </label>
                   <textarea
                     name="modalRemarks"
-                    placeholder="Add any additional notes or comments about this status update..."
+                    placeholder="Add any additional notes or comments about this update..."
                     rows="4"
                     value={modalRemarks}
                     onChange={(e) => {
@@ -1238,6 +1394,21 @@ const AssignLeadModal = ({
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes pulse-border-subtle {
+          0%, 100% {
+            border-color: rgba(187, 164, 115, 0.3);
+            box-shadow: 0 0 0 0 rgba(187, 164, 115, 0);
+          }
+          50% {
+            border-color: rgba(187, 164, 115, 0.6);
+            box-shadow: 0 0 8px 2px rgba(187, 164, 115, 0.2);
+          }
+        }
+        
+        .animate-pulse-border-subtle {
+          animation: pulse-border-subtle 2.5s ease-in-out infinite;
         }
 
         /* Custom DatePicker Styling */
