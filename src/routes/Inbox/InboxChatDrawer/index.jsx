@@ -6,6 +6,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import EmojiPicker from 'emoji-picker-react';
 import { sendWatiMessage, getWatiMessages, createWatiContact, getWatiTemplates, sendWatiTemplateMessage, fetchWatiImage } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
+import InboxLeadStatus from '../Inboxleadstatus';
 
 // ✨ Notification sound
 const notificationSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -1687,38 +1688,49 @@ if (type === 'image') {
                 </div>
               )}
 
-              {/* Chat/Notes Tab Switcher */}
-              <div className="bg-[#1A1A1A] border-b border-[#BBA473]/20 px-5 flex-shrink-0">
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setActiveTab('chat')}
-                    className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
-                      activeTab === 'chat'
-                        ? 'text-[#BBA473] border-[#BBA473]'
-                        : 'text-gray-400 border-transparent hover:text-gray-300'
-                    }`}
-                  >
-                    <MessageSquare className="w-4 h-4 inline-block mr-2" />
-                    Messages
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('notes')}
-                    className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 relative ${
-                      activeTab === 'notes'
-                        ? 'text-[#BBA473] border-[#BBA473]'
-                        : 'text-gray-400 border-transparent hover:text-gray-300'
-                    }`}
-                  >
-                    <StickyNote className="w-4 h-4 inline-block mr-2" />
-                    Notes
-                    {notes.length > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#BBA473] text-black rounded-full text-xs flex items-center justify-center font-bold">
-                        {notes.length}
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
+{/* Chat/Notes/Status Tab Switcher */}
+<div className="bg-[#1A1A1A] border-b border-[#BBA473]/20 px-5 flex-shrink-0">
+  <div className="flex gap-1">
+    <button
+      onClick={() => setActiveTab('chat')}
+      className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
+        activeTab === 'chat'
+          ? 'text-[#BBA473] border-[#BBA473]'
+          : 'text-gray-400 border-transparent hover:text-gray-300'
+      }`}
+    >
+      <MessageSquare className="w-4 h-4 inline-block mr-2" />
+      Messages
+    </button>
+    <button
+      onClick={() => setActiveTab('notes')}
+      className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 relative ${
+        activeTab === 'notes'
+          ? 'text-[#BBA473] border-[#BBA473]'
+          : 'text-gray-400 border-transparent hover:text-gray-300'
+      }`}
+    >
+      <StickyNote className="w-4 h-4 inline-block mr-2" />
+      Notes
+      {notes.length > 0 && (
+        <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#BBA473] text-black rounded-full text-xs flex items-center justify-center font-bold">
+          {notes.length}
+        </span>
+      )}
+    </button>
+    <button
+      onClick={() => setActiveTab('status')}
+      className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
+        activeTab === 'status'
+          ? 'text-[#BBA473] border-[#BBA473]'
+          : 'text-gray-400 border-transparent hover:text-gray-300'
+      }`}
+    >
+      <Info className="w-4 h-4 inline-block mr-2" />
+      Status
+    </button>
+  </div>
+</div>
 
               {/* Messages/Notes Area */}
               <div className="flex-1 overflow-y-auto bg-[#1A1A1A] custom-scrollbar">
@@ -1835,8 +1847,8 @@ if (type === 'image') {
                       </>
                     )}
                   </div>
-                ) : (
-                  // Notes View
+  ) : activeTab === 'notes' ? (
+    // Notes View
                   <div className="p-6 space-y-4">
                     {/* Add Note Form */}
                     <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/20">
@@ -1894,7 +1906,10 @@ if (type === 'image') {
                       </div>
                     )}
                   </div>
-                )}
+                  ) : (
+                        // Status View
+                        <InboxLeadStatus contact={contact} refreshContacts={refreshContacts} />
+                      )                  }
               </div>
 
 {/* Message Input */}
