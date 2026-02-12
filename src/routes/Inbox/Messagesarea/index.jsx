@@ -1,0 +1,391 @@
+import React, { useEffect } from 'react';
+import { Check, CheckCheck, Clock, AlertTriangle, RefreshCw, FileText, Mic } from 'lucide-react';
+import { fetchWatiImage } from '../../../services/inboxService';
+
+const MessagesArea = ({
+  messages,
+  isLoading,
+  contact,
+  isConnected,
+  messagesEndRef,
+  retryingMessageId,
+  handleRetryMessage,
+  downloadedImages,
+  setDownloadedImages,
+  setMessages,
+}) => {
+  
+  // ✅ Auto-download incoming images and audio
+  useEffect(() => {
+    messages.forEach(async (msg) => {
+      // Only download if it's media, has a URL, not local, and not already downloaded
+      if ((msg.type === 'image' || msg.type === 'audio') && 
+          msg.mediaUrl && 
+          !msg.localFile && 
+          !downloadedImages.has(msg.id) &&
+          !msg.mediaUrl.startsWith('blob:')) {
+        
+        console.log('⬇️ Auto-downloading media:', msg.id, msg.type);
+        
+        try {
+          const result = await fetchWatiImage(msg.mediaUrl);
+          
+          if (result.success && result.blobUrl) {
+            console.log('✅ Media downloaded successfully:', msg.id);
+            
+            // Mark as downloaded
+            setDownloadedImages(prev => new Set(prev).add(msg.id));
+            
+            // Update message with downloaded URL
+            setMessages(prev => prev.map(m => 
+              m.id === msg.id 
+                ? { 
+                    ...m, 
+                    mediaUrl: result.blobUrl,
+                    downloadedImageUrl: result.blobUrl 
+                  }
+                : m
+            ));
+          }
+        } catch (error) {
+          console.error('❌ Failed to auto-download media:', msg.id, error);
+        }
+      }
+    });
+  }, [messages]);
+
+  const getMessageStatusIcon = (status, failed) => {
+    if (failed) {
+      return <AlertTriangle className="w-4 h-4 text-red-500" />;
+    }
+
+    switch (status) {
+      case 'sending':
+        return <Clock className="w-4 h-4 text-gray-400 animate-spin" />;
+      case 'sent':
+        return <Check className="w-4 h-4 text-gray-600" />;
+      case 'delivered':
+        return <CheckCheck className="w-4 h-4 text-gray-600" />;
+      case 'read':
+        return <CheckCheck className="w-4 h-4 text-[#BBA473]" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const groupMessagesByDate = (messages) => {
+    const groups = {};
+    
+    messages.forEach(msg => {
+      const date = new Date(msg.sortTimestamp);
+      const dateKey = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(msg);
+    });
+
+    return groups;
+  };
+
+  const renderMessageContent = (message) => {
+
+    console.log(message,'message....')
+
+    // IMAGE DISPLAY
+    if (message.type === 'text' && message.mediaUrl) {
+      const imageUrl = message.downloadedImageUrl || message.mediaUrl;
+      const isDownloaded = downloadedImages.has(message.id) || message.localFile;
+      
+      return (
+        <div className="space-y-2">
+          <div 
+            className="relative rounded-xl overflow-hidden bg-black/20 cursor-pointer group"
+            onClick={() => {
+              // Only open in new tab if it's not a local file
+              if (!message.localFile && isDownloaded) {
+                window.open(imageUrl, '_blank');
+              }
+            }}
+            style={{ maxWidth: '300px' }}
+          >
+            {/* Image with conditional blur */}
+            <img
+              src={imageUrl}
+              alt="Shared image"
+              className={`w-full h-auto object-cover transition-all duration-300 ${
+                isDownloaded ? 'group-hover:scale-105' : 'blur-md'
+              }`}
+              style={{ 
+                maxHeight: '400px',
+                minHeight: '150px'
+              }}
+              onError={(e) => {
+                console.error('❌ Image failed to load');
+                e.target.parentElement.innerHTML = `
+                  <div class="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px]">
+                    <svg class="w-12 h-12 text-[#BBA473]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p class="text-[#BBA473]/70 text-sm">Image unavailable</p>
+                  </div>
+                `;
+              }}
+            />
+            
+            {/* Hover overlay for downloaded images */}
+            {isDownloaded && !message.localFile && (
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="bg-white/90 rounded-full p-2 shadow-lg">
+                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Download button overlay for non-downloaded images */}
+            {!isDownloaded && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    console.log('⬇️ Manual download triggered:', message.id);
+                    
+                    try {
+                      const result = await fetchWatiImage(message.mediaUrl);
+                      
+                      if (result.success && result.blobUrl) {
+                        setDownloadedImages(prev => new Set(prev).add(message.id));
+                        setMessages(prev => prev.map(m => 
+                          m.id === message.id 
+                            ? { 
+                                ...m, 
+                                mediaUrl: result.blobUrl,
+                                downloadedImageUrl: result.blobUrl 
+                              }
+                            : m
+                        ));
+                      }
+                    } catch (error) {
+                      console.error('❌ Download failed:', error);
+                    }
+                  }}
+                  className="px-4 py-2 bg-white/90 hover:bg-white rounded-lg text-gray-800 font-medium text-sm flex items-center gap-2 transition-all hover:scale-105"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download to view
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {message.text && message.text !== '📷 Image' && (
+            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+        </div>
+      );
+    }
+
+    // AUDIO/VOICE NOTE DISPLAY
+    if (message.type === 'audio' && message.mediaUrl) {
+      const audioUrl = message.downloadedImageUrl || message.mediaUrl;
+      const isDownloaded = downloadedImages.has(message.id) || message.localFile;
+      
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
+              <Mic className="w-5 h-5 text-[#BBA473]" />
+            </div>
+            
+            <div className="flex-1">
+              {isDownloaded ? (
+                <audio 
+                  controls 
+                  className="w-full"
+                  style={{ height: '36px' }}
+                >
+                  <source src={audioUrl} type="audio/ogg" />
+                  <source src={audioUrl} type="audio/mpeg" />
+                  <source src={audioUrl} type="audio/mp4" />
+                  <source src={audioUrl} type="audio/wav" />
+                  <source src={audioUrl} type="audio/webm" />
+                  Your browser does not support the audio element.
+                </audio>
+              ) : (
+                <button
+                  onClick={async () => {
+                    console.log('⬇️ Manual audio download triggered:', message.id);
+                    
+                    try {
+                      const result = await fetchWatiImage(message.mediaUrl);
+                      
+                      if (result.success && result.blobUrl) {
+                        setDownloadedImages(prev => new Set(prev).add(message.id));
+                        setMessages(prev => prev.map(m => 
+                          m.id === message.id 
+                            ? { 
+                                ...m, 
+                                mediaUrl: result.blobUrl,
+                                downloadedImageUrl: result.blobUrl 
+                              }
+                            : m
+                        ));
+                      }
+                    } catch (error) {
+                      console.error('❌ Audio download failed:', error);
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-sm flex items-center gap-2 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download to play
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
+            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+        </div>
+      );
+    }
+
+    // TEXT MESSAGE
+    return <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-[#BBA473]/20 border-t-[#BBA473]"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A]"></div>
+          </div>
+        </div>
+        <span className="text-gray-400 mt-4 font-medium">Loading messages...</span>
+      </div>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center animate-fadeIn p-6">
+        <div className="relative mb-6">
+          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#BBA473]/20 to-[#8E7D5A]/20 flex items-center justify-center animate-pulse-slow">
+            <svg className="w-14 h-14 text-[#BBA473]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-3">Start a Conversation</h3>
+        <p className="text-gray-400 text-sm max-w-xs mb-6 leading-relaxed">
+          No messages yet. Send a message below to start chatting with {contact.name.split(' ')[0]}
+        </p>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'} animate-ping`}></div>
+          <span>{isConnected ? 'Real-time updates active' : 'Ready to chat'}</span>
+        </div>
+      </div>
+    );
+  }
+
+  const messageGroups = groupMessagesByDate(messages);
+
+  return (
+    <div className="p-6 space-y-3">
+      {Object.keys(messageGroups).map((dateKey) => (
+        <div key={dateKey} className="space-y-3">
+          {/* Sticky Date Separator */}
+          <div className="sticky top-0 z-10 flex items-center justify-center py-2">
+            <div className="bg-[#2A2A2A] px-4 py-1.5 rounded-full text-xs font-semibold text-gray-400 border border-[#BBA473]/20 shadow-lg backdrop-blur-sm">
+              {dateKey}
+            </div>
+          </div>
+
+          {/* Messages for this date */}
+          {messageGroups[dateKey].map((message) => (
+            <div
+              key={message.id}
+              id={`message-${message.id}`}
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} message-item transition-all duration-300`}
+            >
+              <div className={`max-w-[80%] group ${message.sender === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
+                {message.isTemplate && (
+                  <div className={`flex items-center gap-1 mb-1 text-xs ${message.sender === 'user' ? 'text-[#BBA473]' : 'text-gray-400'}`}>
+                    <FileText className="w-3 h-3" />
+                    <span>Template</span>
+                  </div>
+                )}
+                <div
+                  className={`rounded-2xl px-4 py-3 shadow-md ${message.sender === 'user'
+                    ? message.failed
+                      ? 'bg-red-500/20 text-white border border-red-500/30'
+                      : message.isTemplate
+                        ? 'bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30'
+                        : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
+                    : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
+                    } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
+                >
+                  {renderMessageContent(message)}
+                  <div className="flex items-center justify-end gap-1.5 mt-2">
+                    <span className={`text-xs font-medium ${message.sender === 'user'
+                      ? message.failed
+                        ? 'text-red-300'
+                        : message.isTemplate
+                          ? 'text-white/70'
+                          : 'text-black/70'
+                      : 'text-gray-400'
+                      }`}>
+                      {message.timestamp}
+                    </span>
+                    {message.sender === 'user' && (
+                      <span className="ml-1">{getMessageStatusIcon(message.status, message.failed)}</span>
+                    )}
+                  </div>
+                </div>
+
+                {message.failed && message.sender === 'user' && handleRetryMessage && (
+                  <button
+                    onClick={() => handleRetryMessage(message.id, message.text)}
+                    disabled={retryingMessageId === message.id}
+                    className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-all duration-300 opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {retryingMessageId === message.id ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-3 h-3" />
+                        Retry
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+      <div ref={messagesEndRef} />
+    </div>
+  );
+};
+
+export default MessagesArea;
