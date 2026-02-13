@@ -329,73 +329,75 @@ const MessagesArea = ({
       });
       
       return (
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
-              <Mic className="w-5 h-5 text-[#BBA473]" />
-            </div>
-            
-            <div className="flex-1">
-              {hasFailed ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-red-400">Failed to load audio</span>
+        <>
+          <div className="space-y-2 opacity-50 pointer-events-none">
+            <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
+                <Mic className="w-5 h-5 text-[#BBA473]" />
+              </div>
+              
+              {/* <div className="flex-1">
+                {hasFailed ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-red-400">Failed to load audio</span>
+                    <button
+                      onClick={() => handleMediaDownload(message)}
+                      disabled={isLoadingMedia}
+                      className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 font-medium text-xs transition-all disabled:opacity-50"
+                    >
+                      {isLoadingMedia ? 'Loading...' : 'Retry'}
+                    </button>
+                  </div>
+                ) : isLoadingMedia ? (
+                  <div className="flex items-center gap-2 text-[#BBA473]">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Loading audio...</span>
+                  </div>
+                ) : isDownloaded ? (
+                  <audio 
+                    controls 
+                    className="w-full"
+                    style={{ height: '36px' }}
+                    preload="metadata"
+                    onLoadedMetadata={() => {
+                      console.log('✅ Audio loaded successfully:', message.id);
+                    }}
+                    onError={(e) => {
+                      console.error('❌ Audio failed to load:', message.id, audioUrl);
+                      setFailedImages(prev => {
+                        const newSet = new Set(prev);
+                        newSet.add(message.id);
+                        return newSet;
+                      });
+                    }}
+                  >
+                    <source src={audioUrl} type="audio/ogg" />
+                    <source src={audioUrl} type="audio/mpeg" />
+                    <source src={audioUrl} type="audio/mp4" />
+                    <source src={audioUrl} type="audio/wav" />
+                    <source src={audioUrl} type="audio/webm" />
+                    Your browser does not support the audio element.
+                  </audio>
+                ) : (
                   <button
                     onClick={() => handleMediaDownload(message)}
                     disabled={isLoadingMedia}
-                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 font-medium text-xs transition-all disabled:opacity-50"
+                    className="px-4 py-2 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoadingMedia ? 'Loading...' : 'Retry'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download to play
                   </button>
-                </div>
-              ) : isLoadingMedia ? (
-                <div className="flex items-center gap-2 text-[#BBA473]">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">Loading audio...</span>
-                </div>
-              ) : isDownloaded ? (
-                <audio 
-                  controls 
-                  className="w-full"
-                  style={{ height: '36px' }}
-                  preload="metadata"
-                  onLoadedMetadata={() => {
-                    console.log('✅ Audio loaded successfully:', message.id);
-                  }}
-                  onError={(e) => {
-                    console.error('❌ Audio failed to load:', message.id, audioUrl);
-                    setFailedImages(prev => {
-                      const newSet = new Set(prev);
-                      newSet.add(message.id);
-                      return newSet;
-                    });
-                  }}
-                >
-                  <source src={audioUrl} type="audio/ogg" />
-                  <source src={audioUrl} type="audio/mpeg" />
-                  <source src={audioUrl} type="audio/mp4" />
-                  <source src={audioUrl} type="audio/wav" />
-                  <source src={audioUrl} type="audio/webm" />
-                  Your browser does not support the audio element.
-                </audio>
-              ) : (
-                <button
-                  onClick={() => handleMediaDownload(message)}
-                  disabled={isLoadingMedia}
-                  className="px-4 py-2 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download to play
-                </button>
-              )}
+                )}
+              </div> */}
             </div>
+            
+            {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
+              <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+            )}
           </div>
-          
-          {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
-            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
-          )}
-        </div>
+        </>
       );
     }
 
