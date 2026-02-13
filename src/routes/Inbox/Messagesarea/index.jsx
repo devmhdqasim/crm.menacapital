@@ -199,7 +199,22 @@ const MessagesArea = ({
   };
 
   const renderMessageContent = (message) => {
-    console.log(message,'message....')
+    // DEBUG: Log all messages with their types, especially non-text ones
+    if (message.type !== 'text') {
+      console.log('🔍 NON-TEXT MESSAGE DEBUG:', {
+        id: message.id,
+        type: message.type,
+        mediaUrl: message.mediaUrl,
+        downloadedImageUrl: message.downloadedImageUrl,
+        text: message.text,
+        localFile: message.localFile,
+        isInDownloadedSet: downloadedImages.has(message.id),
+        isInFailedSet: failedImages.has(message.id),
+        isInLoadingSet: loadingMedia.has(message.id),
+        mediaUrlStartsWithBlob: message.mediaUrl?.startsWith('blob:'),
+        fullMessage: message
+      });
+    }
 
     // IMAGE DISPLAY
     if ((message.type === 'image' || (message.type === 'text' && message.mediaUrl)) && message.mediaUrl) {
@@ -330,13 +345,13 @@ const MessagesArea = ({
       
       return (
         <>
-          <div className="space-y-2 opacity-50 pointer-events-none">
+          <div className="space-y-2">
             <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
                 <Mic className="w-5 h-5 text-[#BBA473]" />
               </div>
               
-              {/* <div className="flex-1">
+              <div className="flex-1">
                 {hasFailed ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-red-400">Failed to load audio</span>
@@ -354,30 +369,24 @@ const MessagesArea = ({
                     <span className="text-sm">Loading audio...</span>
                   </div>
                 ) : isDownloaded ? (
-                  <audio 
-                    controls 
+                  <audio
+                    controls
+                    src={audioUrl}
                     className="w-full"
-                    style={{ height: '36px' }}
-                    preload="metadata"
+                    style={{ height: '36px', minWidth: '200px' }}
+                    preload="auto"
                     onLoadedMetadata={() => {
                       console.log('✅ Audio loaded successfully:', message.id);
                     }}
                     onError={(e) => {
-                      console.error('❌ Audio failed to load:', message.id, audioUrl);
+                      console.error('❌ Audio failed to load:', message.id, audioUrl, e.target.error);
                       setFailedImages(prev => {
                         const newSet = new Set(prev);
                         newSet.add(message.id);
                         return newSet;
                       });
                     }}
-                  >
-                    <source src={audioUrl} type="audio/ogg" />
-                    <source src={audioUrl} type="audio/mpeg" />
-                    <source src={audioUrl} type="audio/mp4" />
-                    <source src={audioUrl} type="audio/wav" />
-                    <source src={audioUrl} type="audio/webm" />
-                    Your browser does not support the audio element.
-                  </audio>
+                  />
                 ) : (
                   <button
                     onClick={() => handleMediaDownload(message)}
@@ -390,7 +399,7 @@ const MessagesArea = ({
                     Download to play
                   </button>
                 )}
-              </div> */}
+              </div>
             </div>
             
             {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
