@@ -602,6 +602,63 @@ export const fetchWatiImage = async (imageUrl) => {
   }
 };
 
+/**
+ * Get previous messages from backend API
+ * @param {string} waId - WhatsApp ID (phone number digits only, e.g. "971503045327")
+ * @param {number} pageSize - Number of messages per page (default: 20)
+ * @param {number} pageNumber - Page number for pagination (default: 1)
+ * @returns {Promise} API response with messages
+ */
+export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) => {
+  const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+  const authToken = localStorage.getItem('refreshToken');
+
+  try {
+    if (!authToken) {
+      throw new Error('No auth token available. Please login first.');
+    }
+
+    const cleanWaId = waId.replace(/\D/g, '');
+    console.log('📬 Fetching previous messages from backend for:', cleanWaId);
+
+    const response = await axios.get(`${API_BASE_URL}/messages/getMessage/en`, {
+      params: {
+        waId: cleanWaId,
+        pageSize,
+        pageNumber,
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+      timeout: 30000,
+    });
+
+    console.log('📥 Previous messages response:', response.data);
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error('❌ Error fetching previous messages:', error.response?.data || error.message);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: 'Session expired. Please login again.',
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || 'Failed to fetch previous messages',
+    };
+  }
+};
+
 export default {
   sendWatiMessage,
   getWatiMessages,
@@ -613,5 +670,6 @@ export default {
   setupWatiWebhook,
   createWatiContact,
   checkWatiContactExists,
-  fetchWatiImage, // ✨ NEW
+  fetchWatiImage,
+  getPreviousMessages,
 };

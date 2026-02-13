@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Check, CheckCheck, Clock, AlertTriangle, RefreshCw, FileText, Mic } from 'lucide-react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { Check, CheckCheck, Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2 } from 'lucide-react';
 import { fetchWatiImage } from '../../../services/inboxService';
 
 const MessagesArea = ({
@@ -14,44 +14,83 @@ const MessagesArea = ({
   setDownloadedImages,
   setMessages,
 }) => {
-  
-  // ✅ Auto-download incoming images and audio
+
+  // Track failed images and loading states
+  const [failedImages, setFailedImages] = useState(new Set());
+  const [loadingMedia, setLoadingMedia] = useState(new Set());
+
+  // Track which messages are currently being processed (ref to avoid re-renders)
+  const processingRef = useRef(new Set());
+  const isDownloadingRef = useRef(false);
+
+  // Calculate media download progress
+  const mediaProgress = useMemo(() => {
+    const mediaMessages = messages.filter(
+      msg => (msg.type === 'image' || msg.type === 'audio') && msg.mediaUrl && !msg.localFile
+    );
+    const total = mediaMessages.length;
+    const downloaded = mediaMessages.filter(
+      msg => downloadedImages.has(msg.id) || msg.mediaUrl?.startsWith('blob:') || failedImages.has(msg.id)
+    ).length;
+    return { total, downloaded, isComplete: total === 0 || downloaded >= total };
+  }, [messages, downloadedImages, failedImages]);
+
+  // Auto-download incoming images and audio - only depends on messages
   useEffect(() => {
-    messages.forEach(async (msg) => {
-      // Only download if it's media, has a URL, not local, and not already downloaded
-      if ((msg.type === 'image' || msg.type === 'audio') && 
-          msg.mediaUrl && 
-          !msg.localFile && 
-          !downloadedImages.has(msg.id) &&
-          !msg.mediaUrl.startsWith('blob:')) {
-        
-        console.log('⬇️ Auto-downloading media:', msg.id, msg.type);
-        
+    if (isDownloadingRef.current) return;
+
+    const mediaToDownload = messages.filter(msg =>
+      (msg.type === 'image' || msg.type === 'audio') &&
+      msg.mediaUrl &&
+      !msg.localFile &&
+      !msg.mediaUrl.startsWith('blob:') &&
+      !downloadedImages.has(msg.id) &&
+      !failedImages.has(msg.id) &&
+      !processingRef.current.has(msg.id)
+    );
+
+    if (mediaToDownload.length === 0) return;
+
+    isDownloadingRef.current = true;
+
+    const downloadAll = async () => {
+      for (const msg of mediaToDownload) {
+        if (processingRef.current.has(msg.id)) continue;
+
+        processingRef.current.add(msg.id);
+        setLoadingMedia(prev => new Set(prev).add(msg.id));
+
         try {
           const result = await fetchWatiImage(msg.mediaUrl);
-          
+
           if (result.success && result.blobUrl) {
-            console.log('✅ Media downloaded successfully:', msg.id);
-            
-            // Mark as downloaded
             setDownloadedImages(prev => new Set(prev).add(msg.id));
-            
-            // Update message with downloaded URL
-            setMessages(prev => prev.map(m => 
-              m.id === msg.id 
-                ? { 
-                    ...m, 
-                    mediaUrl: result.blobUrl,
-                    downloadedImageUrl: result.blobUrl 
-                  }
+            setMessages(prev => prev.map(m =>
+              m.id === msg.id
+                ? { ...m, mediaUrl: result.blobUrl, downloadedImageUrl: result.blobUrl }
                 : m
             ));
+          } else {
+            setFailedImages(prev => new Set(prev).add(msg.id));
           }
         } catch (error) {
-          console.error('❌ Failed to auto-download media:', msg.id, error);
+          console.error('Failed to download media:', msg.id, error);
+          setFailedImages(prev => new Set(prev).add(msg.id));
+        } finally {
+          setLoadingMedia(prev => {
+            const s = new Set(prev);
+            s.delete(msg.id);
+            return s;
+          });
         }
+
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
-    });
+      isDownloadingRef.current = false;
+    };
+
+    downloadAll();
   }, [messages]);
 
   const getMessageStatusIcon = (status, failed) => {
@@ -93,101 +132,179 @@ const MessagesArea = ({
     return groups;
   };
 
-  const renderMessageContent = (message) => {
+  const handleMediaDownload = async (message, e) => {
+    if (e) e.stopPropagation();
+    
+    console.log('⬇️ Manual download triggered:', message.id, message.type);
+    
+    // Clear failed state if retrying
+    setFailedImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(message.id);
+      return newSet;
+    });
+    
+    // Clear processing ref for retry
+    processingRef.current.delete(message.id);
+    
+    // Mark as loading
+    setLoadingMedia(prev => {
+      const newSet = new Set(prev);
+      newSet.add(message.id);
+      return newSet;
+    });
+    
+    try {
+      const result = await fetchWatiImage(message.mediaUrl);
+      
+      if (result.success && result.blobUrl) {
+        console.log('✅ Download successful:', message.id);
+        setDownloadedImages(prev => {
+          const newSet = new Set(prev);
+          newSet.add(message.id);
+          return newSet;
+        });
+        setMessages(prev => prev.map(m => 
+          m.id === message.id 
+            ? { 
+                ...m, 
+                mediaUrl: result.blobUrl,
+                downloadedImageUrl: result.blobUrl 
+              }
+            : m
+        ));
+      } else {
+        console.error('❌ Download failed:', message.id);
+        setFailedImages(prev => {
+          const newSet = new Set(prev);
+          newSet.add(message.id);
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error('❌ Download error:', error);
+      setFailedImages(prev => {
+        const newSet = new Set(prev);
+        newSet.add(message.id);
+        return newSet;
+      });
+    } finally {
+      // Remove from loading state
+      setLoadingMedia(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(message.id);
+        return newSet;
+      });
+    }
+  };
 
+  const renderMessageContent = (message) => {
     console.log(message,'message....')
 
     // IMAGE DISPLAY
-    if (message.type === 'text' && message.mediaUrl) {
+    if ((message.type === 'image' || (message.type === 'text' && message.mediaUrl)) && message.mediaUrl) {
       const imageUrl = message.downloadedImageUrl || message.mediaUrl;
-      const isDownloaded = downloadedImages.has(message.id) || message.localFile;
+      const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
+      const hasFailed = failedImages.has(message.id);
+      const isLoadingMedia = loadingMedia.has(message.id);
+      
+      // Debug logging
+      console.log(`Image ${message.id}:`, {
+        isDownloaded,
+        hasFailed,
+        isLoadingMedia,
+        imageUrl: imageUrl?.substring(0, 50)
+      });
       
       return (
         <div className="space-y-2">
-          <div 
-            className="relative rounded-xl overflow-hidden bg-black/20 cursor-pointer group"
-            onClick={() => {
-              // Only open in new tab if it's not a local file
-              if (!message.localFile && isDownloaded) {
-                window.open(imageUrl, '_blank');
-              }
-            }}
-            style={{ maxWidth: '300px' }}
-          >
-            {/* Image with conditional blur */}
-            <img
-              src={imageUrl}
-              alt="Shared image"
-              className={`w-full h-auto object-cover transition-all duration-300 ${
-                isDownloaded ? 'group-hover:scale-105' : 'blur-md'
-              }`}
-              style={{ 
-                maxHeight: '400px',
-                minHeight: '150px'
+          {hasFailed ? (
+            // Show error state when image fails to load
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <svg className="w-12 h-12 text-[#BBA473]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-[#BBA473]/70 text-sm">Image preview</p>
+              <button
+                onClick={() => handleMediaDownload(message)}
+                disabled={isLoadingMedia}
+                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingMedia ? 'Loading...' : 'Download'}
+              </button>
+            </div>
+          ) : isLoadingMedia ? (
+            // Show loading state
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <Loader2 className="w-12 h-12 text-[#BBA473] animate-spin mb-2" />
+              <p className="text-[#BBA473]/70 text-sm">Loading image...</p>
+            </div>
+          ) : (
+            <div 
+              className="relative rounded-xl overflow-hidden bg-black/20 cursor-pointer group"
+              onClick={() => {
+                if (!message.localFile && isDownloaded && !isLoadingMedia) {
+                  window.open(imageUrl, '_blank');
+                }
               }}
-              onError={(e) => {
-                console.error('❌ Image failed to load');
-                e.target.parentElement.innerHTML = `
-                  <div class="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px]">
-                    <svg class="w-12 h-12 text-[#BBA473]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p class="text-[#BBA473]/70 text-sm">Image unavailable</p>
-                  </div>
-                `;
-              }}
-            />
-            
-            {/* Hover overlay for downloaded images */}
-            {isDownloaded && !message.localFile && (
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-white/90 rounded-full p-2 shadow-lg">
-                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
+              style={{ maxWidth: '300px' }}
+            >
+              <img
+                src={imageUrl}
+                alt="Shared image"
+                className={`w-full h-auto object-cover transition-all duration-300 ${
+                  isDownloaded && !isLoadingMedia ? 'group-hover:scale-105' : 'blur-md'
+                }`}
+                style={{ 
+                  maxHeight: '400px',
+                  minHeight: '150px'
+                }}
+                onLoad={() => {
+                  console.log('✅ Image loaded successfully:', message.id);
+                }}
+                onError={(e) => {
+                  console.error('❌ Image failed to load:', message.id, imageUrl);
+                  setFailedImages(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(message.id);
+                    return newSet;
+                  });
+                  setLoadingMedia(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(message.id);
+                    return newSet;
+                  });
+                }}
+              />
+              
+              {isDownloaded && !message.localFile && !isLoadingMedia && (
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="bg-white/90 rounded-full p-2 shadow-lg">
+                      <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Download button overlay for non-downloaded images */}
-            {!isDownloaded && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <button
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    console.log('⬇️ Manual download triggered:', message.id);
-                    
-                    try {
-                      const result = await fetchWatiImage(message.mediaUrl);
-                      
-                      if (result.success && result.blobUrl) {
-                        setDownloadedImages(prev => new Set(prev).add(message.id));
-                        setMessages(prev => prev.map(m => 
-                          m.id === message.id 
-                            ? { 
-                                ...m, 
-                                mediaUrl: result.blobUrl,
-                                downloadedImageUrl: result.blobUrl 
-                              }
-                            : m
-                        ));
-                      }
-                    } catch (error) {
-                      console.error('❌ Download failed:', error);
-                    }
-                  }}
-                  className="px-4 py-2 bg-white/90 hover:bg-white rounded-lg text-gray-800 font-medium text-sm flex items-center gap-2 transition-all hover:scale-105"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download to view
-                </button>
-              </div>
-            )}
-          </div>
+              {!isDownloaded && !isLoadingMedia && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <button
+                    onClick={(e) => handleMediaDownload(message, e)}
+                    disabled={isLoadingMedia}
+                    className="px-4 py-2 bg-white/90 hover:bg-white rounded-lg text-gray-800 font-medium text-sm flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download to view
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           
           {message.text && message.text !== '📷 Image' && (
             <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
@@ -199,7 +316,17 @@ const MessagesArea = ({
     // AUDIO/VOICE NOTE DISPLAY
     if (message.type === 'audio' && message.mediaUrl) {
       const audioUrl = message.downloadedImageUrl || message.mediaUrl;
-      const isDownloaded = downloadedImages.has(message.id) || message.localFile;
+      const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
+      const hasFailed = failedImages.has(message.id);
+      const isLoadingMedia = loadingMedia.has(message.id);
+      
+      // Debug logging
+      console.log(`Audio ${message.id}:`, {
+        isDownloaded,
+        hasFailed,
+        isLoadingMedia,
+        audioUrl: audioUrl?.substring(0, 50)
+      });
       
       return (
         <div className="space-y-2">
@@ -209,11 +336,39 @@ const MessagesArea = ({
             </div>
             
             <div className="flex-1">
-              {isDownloaded ? (
+              {hasFailed ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-red-400">Failed to load audio</span>
+                  <button
+                    onClick={() => handleMediaDownload(message)}
+                    disabled={isLoadingMedia}
+                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 font-medium text-xs transition-all disabled:opacity-50"
+                  >
+                    {isLoadingMedia ? 'Loading...' : 'Retry'}
+                  </button>
+                </div>
+              ) : isLoadingMedia ? (
+                <div className="flex items-center gap-2 text-[#BBA473]">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Loading audio...</span>
+                </div>
+              ) : isDownloaded ? (
                 <audio 
                   controls 
                   className="w-full"
                   style={{ height: '36px' }}
+                  preload="metadata"
+                  onLoadedMetadata={() => {
+                    console.log('✅ Audio loaded successfully:', message.id);
+                  }}
+                  onError={(e) => {
+                    console.error('❌ Audio failed to load:', message.id, audioUrl);
+                    setFailedImages(prev => {
+                      const newSet = new Set(prev);
+                      newSet.add(message.id);
+                      return newSet;
+                    });
+                  }}
                 >
                   <source src={audioUrl} type="audio/ogg" />
                   <source src={audioUrl} type="audio/mpeg" />
@@ -224,29 +379,9 @@ const MessagesArea = ({
                 </audio>
               ) : (
                 <button
-                  onClick={async () => {
-                    console.log('⬇️ Manual audio download triggered:', message.id);
-                    
-                    try {
-                      const result = await fetchWatiImage(message.mediaUrl);
-                      
-                      if (result.success && result.blobUrl) {
-                        setDownloadedImages(prev => new Set(prev).add(message.id));
-                        setMessages(prev => prev.map(m => 
-                          m.id === message.id 
-                            ? { 
-                                ...m, 
-                                mediaUrl: result.blobUrl,
-                                downloadedImageUrl: result.blobUrl 
-                              }
-                            : m
-                        ));
-                      }
-                    } catch (error) {
-                      console.error('❌ Audio download failed:', error);
-                    }
-                  }}
-                  className="px-4 py-2 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-sm flex items-center gap-2 transition-all"
+                  onClick={() => handleMediaDownload(message)}
+                  disabled={isLoadingMedia}
+                  className="px-4 py-2 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -307,7 +442,25 @@ const MessagesArea = ({
   const messageGroups = groupMessagesByDate(messages);
 
   return (
-    <div className="p-6 space-y-3">
+    <div className="relative p-6 space-y-3">
+      {/* Loading overlay while media is downloading */}
+      {!mediaProgress.isComplete && (
+        <div className="sticky top-0 z-20 flex justify-center mb-2">
+          <div className="bg-[#2A2A2A]/95 backdrop-blur-sm px-5 py-2.5 rounded-full border border-[#BBA473]/30 shadow-xl flex items-center gap-3">
+            <Loader2 className="w-4 h-4 text-[#BBA473] animate-spin" />
+            <span className="text-sm text-gray-300">
+              Loading media {mediaProgress.downloaded}/{mediaProgress.total}
+            </span>
+            <div className="w-20 h-1.5 bg-[#1A1A1A] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] rounded-full transition-all duration-300"
+                style={{ width: `${(mediaProgress.downloaded / mediaProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {Object.keys(messageGroups).map((dateKey) => (
         <div key={dateKey} className="space-y-3">
           {/* Sticky Date Separator */}
@@ -388,4 +541,4 @@ const MessagesArea = ({
   );
 };
 
-export default MessagesArea;
+export default MessagesArea; 

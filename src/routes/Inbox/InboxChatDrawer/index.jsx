@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getWatiMessages, sendWatiMessage } from '../../../services/inboxService';
+import { getPreviousMessages, sendWatiMessage } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
 import ChatHeader from '../Chatheader';
 import ChatTabs from '../Chattabs';
@@ -111,7 +111,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       setShowMessageSearch(false);
       setDownloadedImages(new Set()); // ✅ Reset on contact change
       
-      fetchWatiMessages();
+      fetchPreviousMessages();
       loadContactNotes();
       loadContactTags();
       
@@ -213,26 +213,40 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     };
   }, [contact, isConnected, addMessageListener, refreshContacts]);
 
-  // Fetch Wati messages
-  const fetchWatiMessages = async () => {
+  // Fetch previous messages from backend API
+  const fetchPreviousMessages = async () => {
     if (!contact || !contact.phone) return;
 
     setIsLoading(true);
     setContactNotFound(false);
     try {
-      const result = await getWatiMessages(contact.phone, 100, 0);
+      const cleanWaId = contact.phone.replace(/\D/g, '');
+      const result = await getPreviousMessages(cleanWaId, 100, 1);
 
-      if (result.success && result.data && result.data.messages && result.data.messages.items) {
-        const watiMessages = result.data.messages.items;
+      if (result.success && result.data) {
+        const responseData = result.data;
+        // Handle multiple response structures:
+        // 1. Direct: { data: [...messages], pagination: {...} }
+        // 2. Wrapped: { data: { data: [...messages], pagination: {...} } }
+        // 3. Nested: { data: { data: { data: [...messages] } } }
+        let rawMessages = [];
+        if (Array.isArray(responseData.data)) {
+          rawMessages = responseData.data;
+        } else if (Array.isArray(responseData.data?.data)) {
+          rawMessages = responseData.data.data;
+        } else if (Array.isArray(responseData)) {
+          rawMessages = responseData;
+        }
 
-        const transformedMessages = watiMessages
-          .filter(msg =>
-            msg.eventType === 'message' ||
-            msg.type === 'template' ||
-            msg.eventType === 'broadcastMessage'
-          )
-          .map((msg) => {
-            const timestamp = msg.timestamp ? parseInt(msg.timestamp) * 1000 : new Date(msg.created).getTime();
+        console.log('Messages found:', rawMessages.length, 'from response:', responseData);
+
+        if (rawMessages.length > 0) {
+          const transformedMessages = rawMessages.map((msg) => {
+            // Timestamp: use rawPayload.timestamp (Unix seconds) or createdAt
+            const rawTs = msg.rawPayload?.timestamp;
+            const timestamp = rawTs
+              ? parseInt(rawTs) * 1000
+              : new Date(msg.createdAt || msg.created).getTime();
             const date = new Date(timestamp);
 
             const timeString = date.toLocaleTimeString('en-US', {
@@ -241,67 +255,48 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               hour12: true
             });
 
-            let messageText = msg.text;
-            let isTemplate = msg.type === 'template' || msg.eventType === 'broadcastMessage';
-            let messageType = msg.type || 'text';
-            let mediaUrl = msg.data?.url || null;
+            // Message type from messageType field
+            const messageType = msg.messageType || msg.rawPayload?.type || 'text';
 
-            if (msg.eventType === 'broadcastMessage' && msg.finalText) {
-              messageText = msg.finalText;
-            } else if (msg.type === 'template') {
-              const templateData = msg.data || {};
-              messageText = templateData.body || templateData.text || msg.text || '📋 Template Message';
-            } else if (!messageText) {
-              if (msg.type === 'image') {
-                messageText = '';
-                messageType = 'image';
-              } else if (msg.type === 'audio') {
-                messageText = '';
-                messageType = 'audio';
-              }
-            }
+            // Text content
+            let messageText = msg.text || msg.rawPayload?.text || '';
+
+            // Media URL: from media object or rawPayload.data
+            const mediaUrl = msg.media?.url || msg.rawPayload?.data || null;
+
+            // Template detection
+            const isTemplate = messageType === 'template' || msg.rawPayload?.eventType === 'broadcastMessage';
+
+            // Sender: direction "inbound" = contact, "outbound" = user
+            // Also check rawPayload.owner for outgoing messages
+            const isOutgoing = msg.direction === 'outbound' || msg.rawPayload?.owner === true;
 
             return {
-              id: msg.id,
+              id: msg._id || msg.whatsappMessageId || `api-${timestamp}-${Math.random()}`,
               text: messageText,
-              sender: (msg.owner || msg.eventType === 'broadcastMessage') ? 'user' : 'contact',
+              sender: isOutgoing ? 'user' : 'contact',
               timestamp: timeString,
               sortTimestamp: timestamp,
-              status: msg.statusString ? msg.statusString.toLowerCase() : 'sent',
+              status: msg.status || 'sent',
               type: messageType,
-              mediaUrl: mediaUrl || msg.data?.url || null,
+              mediaUrl: mediaUrl,
               isTemplate: isTemplate,
             };
           });
 
-        transformedMessages.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
-        setMessages(transformedMessages);
-      } else if (result.info && result.info.includes('Contact not found')) {
-        setContactNotFound(true);
-        if (contact.remarks || contact.latestRemarks) {
-          setMessages([
-            {
-              id: 1,
-              text: contact.remarks || contact.latestRemarks,
-              sender: 'contact',
-              timestamp: new Date(contact.createdAt).toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              }),
-              sortTimestamp: new Date(contact.createdAt).getTime(),
-              status: 'read',
-              type: 'text',
-            },
-          ]);
+          transformedMessages.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
+          setMessages(transformedMessages);
         } else {
           setMessages([]);
         }
       } else {
         setMessages([]);
+        if (result.message) {
+          console.warn('Failed to load messages:', result.message);
+        }
       }
     } catch (error) {
-      console.error('❌ Error fetching Wati messages:', error);
+      console.error('Error fetching previous messages:', error);
       toast.error('Failed to load conversation history');
       setMessages([]);
     } finally {
