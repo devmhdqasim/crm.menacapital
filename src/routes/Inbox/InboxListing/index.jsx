@@ -1,7 +1,59 @@
-import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import InboxTemplateManager from '../InboxTemplateManager';
+
+// Generate a deterministic random timer (in seconds) from a contact id, max 24hrs
+const getSeededTimer = (id) => {
+  let hash = 0;
+  const str = String(id);
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) % (24 * 60 * 60);
+};
+
+const formatCountdown = (totalSeconds) => {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
+const getTimerColor = (totalSeconds) => {
+  const hours = totalSeconds / 3600;
+  if (hours < 1) return { text: 'text-red-400', bg: 'from-red-500/20 to-red-600/20', border: 'border-red-500/40', dot: 'bg-red-500' };
+  if (hours < 6) return { text: 'text-orange-400', bg: 'from-orange-500/20 to-orange-600/20', border: 'border-orange-500/40', dot: 'bg-orange-500' };
+  return { text: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-600/20', border: 'border-emerald-500/40', dot: 'bg-emerald-500' };
+};
+
+const ContactTimer = ({ contactId }) => {
+  const initialSeconds = useMemo(() => getSeededTimer(contactId), [contactId]);
+  const [seconds, setSeconds] = useState(initialSeconds);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const colors = getTimerColor(seconds);
+
+  return (
+    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r ${colors.bg} border ${colors.border} backdrop-blur-sm`}>
+      <span className={`relative flex h-1.5 w-1.5`}>
+        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colors.dot} opacity-75`}></span>
+        <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${colors.dot}`}></span>
+      </span>
+      <Timer className={`w-3 h-3 ${colors.text}`} />
+      <span className={`text-xs font-mono font-bold ${colors.text} tabular-nums`}>
+        {formatCountdown(seconds)}
+      </span>
+    </div>
+  );
+};
 
 const InboxListing = ({
   contacts,
@@ -238,9 +290,12 @@ const InboxListing = ({
                       <h3 className="text-lg font-semibold text-white truncate group-hover:text-[#BBA473] transition-colors duration-300">
                         {capitalizeWords(contact.name)}
                       </h3>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 flex-shrink-0 ml-3 bg-[#1A1A1A] px-2 py-1 rounded-md">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                        <ContactTimer contactId={contact.id} />
+                        <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-[#1A1A1A] px-2 py-1 rounded-md">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
+                        </div>
                       </div>
                     </div>
 

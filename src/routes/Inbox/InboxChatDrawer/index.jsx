@@ -659,6 +659,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 notesCount={notes.length}
+                isLeadUnassigned={!contact.agentId}
+                contactId={contact.id}
               />
 
               {/* Content Area */}
