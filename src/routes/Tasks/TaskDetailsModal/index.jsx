@@ -683,8 +683,23 @@ if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modal
 // This fixes both issues where users couldn't switch between these sibling statuses
 if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') && 
     (currentEffectiveStatus === 'Deposit' || currentEffectiveStatus === 'Not Deposit')) {
-  return false; // Always enable both Deposit and Not Deposit options when at Real level
+  return false;
 }
+
+    // ✅ FIX: Warm/Hot selection - ensure at least one is always enabled
+    if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && modalInterested === 'Interested') {
+      const warmIndex = statusHierarchy.indexOf('Warm');
+      const hotIndex = statusHierarchy.indexOf('Hot');
+      
+      if (effectiveStatusIndex === warmIndex || effectiveStatusIndex === hotIndex) {
+        if (effectiveStatusIndex === warmIndex) { 
+          return statusToCheck === 'Warm';
+        }
+        if (effectiveStatusIndex === hotIndex) {
+          return false;
+        }
+      }
+    }
 
     // Disable if the status to check is before or equal to effective status
     return checkStatusIndex <= effectiveStatusIndex;
