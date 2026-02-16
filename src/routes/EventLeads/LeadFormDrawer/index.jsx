@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { X, ChevronDown, Search } from 'lucide-react';
+import { X, ChevronDown, Search, Plus, Check } from 'lucide-react';
 import { createEventLead, updateEventLead } from '../../../services/leadService'
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -39,17 +39,85 @@ const leadValidationSchema = Yup.object({
   remarks: Yup.string().max(500, 'Remarks must not exceed 500 characters'),
 });
 
-const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSuccess }) => {
+const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, leadSources = [], onClose, onSuccess }) => {
   const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
   const [countries, setCountries] = useState([]);
   const [nationalitySearch, setNationalitySearch] = useState('');
   const [hasFormChanged, setHasFormChanged] = useState(false);
   const [initialFormValues, setInitialFormValues] = useState(null);
+  const [showSourceDropdown, setShowSourceDropdown] = useState(false);
+  const [isCreatingNewSource, setIsCreatingNewSource] = useState(false);
+  const [newSourceValue, setNewSourceValue] = useState('');
+  const [newSourceError, setNewSourceError] = useState('');
+  const [localLeadSources, setLocalLeadSources] = useState([]);
 
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
-  const sources = ['Exhibition'];
   const statusOptions = ['Lead', 'Demo', 'Real'];
   const depositStatusOptions = ['Deposit', 'No Deposit'];
+
+  // Initialize local lead sources
+  useEffect(() => {
+    if (leadSources && leadSources.length > 0) {
+      setLocalLeadSources(['Exhibition', ...leadSources.filter(s => s !== 'Exhibition')]);
+    } else {
+      setLocalLeadSources(['Exhibition']);
+    }
+  }, [leadSources]);
+
+  // Validate new source input
+  const validateNewSource = (value) => {
+    if (!value || value.trim().length === 0) {
+      return 'Source name is required';
+    }
+    if (value.trim().length < 3) {
+      return 'Source name must be at least 3 characters';
+    }
+    if (value.trim().length > 50) {
+      return 'Source name must not exceed 50 characters';
+    }
+    // Check for special characters (allow only letters, numbers, spaces, hyphens, and underscores)
+    if (!/^[a-zA-Z0-9\s\-_]+$/.test(value)) {
+      return 'Source name can only contain letters, numbers, spaces, hyphens, and underscores';
+    }
+    // Check if source already exists (case-insensitive)
+    if (localLeadSources.some(source => source.toLowerCase() === value.trim().toLowerCase())) {
+      return 'This source already exists';
+    }
+    return '';
+  };
+
+  // Handle new source input change
+  const handleNewSourceChange = (e) => {
+    const value = e.target.value;
+    setNewSourceValue(value);
+    const error = validateNewSource(value);
+    setNewSourceError(error);
+  };
+
+  // Handle creating new source
+  const handleCreateNewSource = () => {
+    const error = validateNewSource(newSourceValue);
+    if (error) {
+      setNewSourceError(error);
+      return;
+    }
+
+    const trimmedSource = newSourceValue.trim();
+    setLocalLeadSources(prev => [...prev, trimmedSource]);
+    formik.setFieldValue('source', trimmedSource);
+    setNewSourceValue('');
+    setNewSourceError('');
+    setIsCreatingNewSource(false);
+    setShowSourceDropdown(false);
+    toast.success('New lead source added successfully!');
+  };
+
+  // Cancel creating new source
+  const handleCancelNewSource = () => {
+    setNewSourceValue('');
+    setNewSourceError('');
+    setIsCreatingNewSource(false);
+  };
 
   // Fetch countries from REST Countries API
   const fetchCountries = async () => {
@@ -93,7 +161,7 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
       phone: '',
       nationality: '',
       language: '',
-      source: 'Kiosk',
+      source: 'Exhibition',
       status: '',
       depositStatus: '',
       remarks: '',
@@ -145,7 +213,7 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
         phone: editingLead.phone || '',
         nationality: editingLead.nationality || '',
         language: editingLead.language || '',
-        source: editingLead.source || 'Kiosk',
+        source: editingLead.source || 'Exhibition',
         status: editingLead.kioskLeadStatus || '',
         depositStatus: editingLead.depositStatus || '',
         kioskMember: editingLead.leadSourceId ? editingLead.leadSourceId._id : '',
@@ -177,6 +245,10 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
     formik.resetForm();
     setNationalitySearch('');
     setShowNationalityDropdown(false);
+    setShowSourceDropdown(false);
+    setIsCreatingNewSource(false);
+    setNewSourceValue('');
+    setNewSourceError('');
     setHasFormChanged(false);
     setInitialFormValues(null);
     onClose();
@@ -195,16 +267,35 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
     return 'Select Nationality';
   };
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showSourceDropdown && !e.target.closest('.source-dropdown-container')) {
+        setShowSourceDropdown(false);
+        setIsCreatingNewSource(false);
+        setNewSourceValue('');
+        setNewSourceError('');
+      }
+      if (showNationalityDropdown && !e.target.closest('.nationality-dropdown-container')) {
+        setShowNationalityDropdown(false);
+        setNationalitySearch('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSourceDropdown, showNationalityDropdown]);
+
   return (
     <>
       <div
         className={`fixed inset-y-0 right-0 w-full lg:w-2/5 bg-[#1A1A1A] shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
           drawerOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        } overflow-hidden flex flex-col`}
       >
         <div className="h-full flex flex-col">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
+          <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent flex-shrink-0">
             <div>
               <h2 className="text-2xl font-bold text-[#BBA473]">
                 {editingLead ? 'Edit Lead' : 'Add New Lead'}
@@ -223,7 +314,7 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
 
           {/* Drawer Form */}
           <form onSubmit={formik.handleSubmit} className="flex-1 flex flex-col overflow-y-auto p-6">
-            <div className="space-y-6">
+            <div className="space-y-6 flex-1">
               <div className="grid space-y-4">
                 <h3 className="text-lg font-semibold text-[#E8D5A3] border-b border-[#BBA473]/30 pb-2">
                   Lead Information
@@ -349,7 +440,7 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
                   )}
 
                   {/* Nationality */}
-                  <div className="relative space-y-2">
+                  <div className="relative space-y-2 nationality-dropdown-container">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
                       Nationality
                     </label>
@@ -434,28 +525,110 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
                   </div>
 
                   {/* Source */}
-                  <div className="relative col-span-2 space-y-2">
+                  <div className="relative col-span-2 space-y-2 source-dropdown-container">
                     <label className="text-sm text-[#E8D5A3] font-medium block">
-                      Lead Source
+                      Lead Source <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <select
-                        name="source"
-                        value={formik.values.source}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                      <div
+                        onClick={() => !isCreatingNewSource && setShowSourceDropdown(!showSourceDropdown)}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 cursor-pointer flex items-center justify-between ${
                           formik.touched.source && formik.errors.source
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#BBA473]/30 hover:border-[#BBA473]'
                         }`}
                       >
-                        <option value="">Select Source</option>
-                        {sources.map((source) => (
-                          <option key={source} value={source}>{source}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
+                        <span className={formik.values.source ? 'text-white' : 'text-gray-400'}>
+                          {formik.values.source || 'Select Source'}
+                        </span>
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      </div>
+
+                      {showSourceDropdown && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#2A2A2A] border-2 border-[#BBA473]/30 rounded-lg shadow-xl max-h-72 overflow-hidden">
+                          {!isCreatingNewSource ? (
+                            <>
+                              <div className="overflow-y-auto max-h-52">
+                                {localLeadSources.map((source) => (
+                                  <div
+                                    key={source}
+                                    onClick={() => {
+                                      formik.setFieldValue('source', source);
+                                      setShowSourceDropdown(false);
+                                    }}
+                                    className={`px-4 py-2 cursor-pointer transition-colors ${
+                                      formik.values.source === source
+                                        ? 'bg-[#BBA473]/20 text-[#BBA473]'
+                                        : 'text-white hover:bg-[#3A3A3A]'
+                                    }`}
+                                  >
+                                    {source}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="border-t border-[#BBA473]/30 p-2">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsCreatingNewSource(true);
+                                  }}
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473]/30 rounded-lg transition-all duration-300"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  <span className="text-sm font-medium">Create New Source</span>
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="p-4">
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-sm text-[#E8D5A3] font-medium block mb-2">
+                                    New Source Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={newSourceValue}
+                                    onChange={handleNewSourceChange}
+                                    placeholder="Enter source name (min 3 chars)"
+                                    className={`w-full px-3 py-2 bg-[#1A1A1A] border-2 rounded-lg text-white text-sm focus:outline-none focus:ring-2 ${
+                                      newSourceError
+                                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50'
+                                    }`}
+                                    autoFocus
+                                  />
+                                  {newSourceError && (
+                                    <div className="text-red-400 text-xs mt-1 animate-pulse">{newSourceError}</div>
+                                  )}
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    Only letters, numbers, spaces, hyphens, and underscores allowed
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={handleCreateNewSource}
+                                    disabled={!!newSourceError || !newSourceValue.trim()}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg transition-all duration-300 hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-[#BBA473] disabled:hover:to-[#8E7D5A] text-sm font-medium"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                    Add Source
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleCancelNewSource}
+                                    className="px-3 py-2 bg-[#3A3A3A] text-white rounded-lg transition-all duration-300 hover:bg-[#4A4A4A] text-sm font-medium"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {formik.touched.source && formik.errors.source && (
                       <div className="text-red-400 text-sm animate-pulse">{formik.errors.source}</div>
@@ -518,7 +691,7 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-auto">
+            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-auto flex-shrink-0">
               <button
                 type="button"
                 onClick={handleCloseDrawer}

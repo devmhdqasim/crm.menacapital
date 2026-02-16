@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, AlertTriangle, X } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import { deleteLead } from '../../../services/leadService';
-import { getSalesEventLeads } from '../../../services/leadService';
+import { getSalesEventLeads, getAllSalesManagerLeads } from '../../../services/leadService';
 import toast from 'react-hot-toast';
 import { useCRM } from '../../../context/CRMContext';
 
@@ -45,6 +45,10 @@ const SalesManagerLeadsListing = ({
   debouncedSearchQuery,
   eventLeadsCount,
   setEventLeadsCount,
+  mobileLeadsCount,
+  setMobileLeadsCount,
+  ramadanLeadsCount,
+  setRamadanLeadsCount,
 }) => {
   const { crmCategorySummary } = useCRM();
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
@@ -53,13 +57,17 @@ const SalesManagerLeadsListing = ({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
 
-  const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads', 'Social Sources Leads'];
+  const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads', 'Mobile Leads', 'Ramadan Leads', 'Social Sources Leads'];
   const perPageOptions = [10, 20, 30, 50, 100];
 
-  // Fetch Event Leads when Event Leads tab is active
+  // Fetch leads based on active tab
   useEffect(() => {
     if (activeTab === 'Event Leads') {
       fetchEventLeads();
+    } else if (activeTab === 'Mobile Leads') {
+      fetchMobileLeads();
+    } else if (activeTab === 'Ramadan Leads') {
+      fetchRamadanLeads();
     }
   }, [activeTab, currentPage, itemsPerPage, startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
 
@@ -128,6 +136,150 @@ const SalesManagerLeadsListing = ({
     } catch (error) {
       console.error('Error fetching event leads:', error);
       toast.error('Failed to fetch event leads. Please try again');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMobileLeads = async () => {
+    setLoading(true);
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const agentId = selectedAgentFilter || '';
+      
+      const result = await getAllSalesManagerLeads(
+        currentPage,
+        itemsPerPage,
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        '',
+        agentId,
+        'Mobile'
+      );
+      
+      if (result.success && result.data) {
+        const transformedLeads = result.data.map((lead) => ({
+          id: lead._id,
+          leadId: lead.leadId,
+          name: lead.leadName,
+          email: lead.leadEmail,
+          phone: lead.leadPhoneNumber,
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+            : 'Not Assigned',
+          agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
+          dateOfBirth: lead.leadDateOfBirth,
+          nationality: lead.leadNationality ?? '-',
+          residency: lead.leadResidency,
+          language: lead.leadPreferredLanguage,
+          source: lead.leadSource,
+          remarks: lead.leadDescription || '',
+          depositStatus: lead.depositStatus || '',
+          status: lead.leadStatus,
+          lastTaskStatus: lead.lastTaskStatus,
+          createdAt: lead.createdAt,
+          leadSourceId: lead?.leadSourceId?.[0],
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+          chatbotMessage: lead.chatbotMessage,
+          contacted: lead.contacted || false,
+          answered: lead.answered || false,
+          interested: lead.interested || false,
+          hot: lead.hot || false,
+          cold: lead.cold || false,
+          real: lead.real || false,
+          demo: lead.demo || false,
+          deposited: lead.deposited || false,
+          latestRemarks: lead.latestRemarks || '',
+        }));
+        
+        setLeads(transformedLeads);
+        setTotalLeads(result.metadata?.total || 0);
+        setMobileLeadsCount(result.metadata?.total || 0);
+      } else {
+        console.error('Failed to fetch mobile leads:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.error?.payload?.message || 'Failed to fetch mobile leads');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching mobile leads:', error);
+      toast.error('Failed to fetch mobile leads. Please try again');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRamadanLeads = async () => {
+    setLoading(true);
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const agentId = selectedAgentFilter || '';
+      
+      const result = await getAllSalesManagerLeads(
+        currentPage,
+        itemsPerPage,
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        '',
+        agentId,
+        'Ramadan'
+      );
+      
+      if (result.success && result.data) {
+        const transformedLeads = result.data.map((lead) => ({
+          id: lead._id,
+          leadId: lead.leadId,
+          name: lead.leadName,
+          email: lead.leadEmail,
+          phone: lead.leadPhoneNumber,
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+            : 'Not Assigned',
+          agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
+          dateOfBirth: lead.leadDateOfBirth,
+          nationality: lead.leadNationality ?? '-',
+          residency: lead.leadResidency,
+          language: lead.leadPreferredLanguage,
+          source: lead.leadSource,
+          remarks: lead.leadDescription || '',
+          depositStatus: lead.depositStatus || '',
+          status: lead.leadStatus,
+          lastTaskStatus: lead.lastTaskStatus,
+          createdAt: lead.createdAt,
+          leadSourceId: lead?.leadSourceId?.[0],
+          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+          chatbotMessage: lead.chatbotMessage,
+          contacted: lead.contacted || false,
+          answered: lead.answered || false,
+          interested: lead.interested || false,
+          hot: lead.hot || false,
+          cold: lead.cold || false,
+          real: lead.real || false,
+          demo: lead.demo || false,
+          deposited: lead.deposited || false,
+          latestRemarks: lead.latestRemarks || '',
+        }));
+        
+        setLeads(transformedLeads);
+        setTotalLeads(result.metadata?.total || 0);
+        setRamadanLeadsCount(result.metadata?.total || 0);
+      } else {
+        console.error('Failed to fetch ramadan leads:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.error?.payload?.message || 'Failed to fetch ramadan leads');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching ramadan leads:', error);
+      toast.error('Failed to fetch ramadan leads. Please try again');
     } finally {
       setLoading(false);
     }
@@ -214,13 +366,6 @@ const SalesManagerLeadsListing = ({
   };
 
   const handleDelete = (lead) => {
-    // FIXED: Allow delete for Event Leads even if assigned
-    // if (activeTab !== 'Event Leads' && isLeadAssigned(lead)) {
-    //   const agentName = getAgentName(lead);
-    //   setAssignedLeadMessage(`This lead is currently assigned to ${agentName} and cannot be deleted.`);
-    //   setShowAssignedLeadModal(true);
-    //   return;
-    // }
     setLeadToDelete(lead);
     setShowDeleteConfirmModal(true);
   };
@@ -236,9 +381,13 @@ const SalesManagerLeadsListing = ({
         setShowDeleteConfirmModal(false);
         setLeadToDelete(null);
         
-        // FIXED: Refresh event leads if on that tab
+        // Refresh the appropriate tab
         if (activeTab === 'Event Leads') {
           fetchEventLeads();
+        } else if (activeTab === 'Mobile Leads') {
+          fetchMobileLeads();
+        } else if (activeTab === 'Ramadan Leads') {
+          fetchRamadanLeads();
         } else {
           window.location.reload();
         }
@@ -323,9 +472,7 @@ const SalesManagerLeadsListing = ({
                   }
                 }}
                 className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
-                // className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
               >
-                {/* <UserPlus className="w-5 h-5 inline-block mr-2 transition-transform duration-300" /> */}
                 <span className="inline-block">Add New Lead</span>
               </button>
 
@@ -370,6 +517,10 @@ const SalesManagerLeadsListing = ({
               let tabCount = null;
               if (tab === 'Event Leads') {
                 tabCount = eventLeadsCount;
+              } else if (tab === 'Mobile Leads') {
+                tabCount = mobileLeadsCount;
+              } else if (tab === 'Ramadan Leads') {
+                tabCount = ramadanLeadsCount;
               } else {
                 tabCount = leadsCount?.[tab?.replace(/\s+/g, '')];
               }
@@ -396,8 +547,8 @@ const SalesManagerLeadsListing = ({
           </div>
         </div>
 
-        {/* Sub Tabs (Level 2) - Hide for Event Leads */}
-        {activeTab !== 'Event Leads' && getSubTabs().length > 0 && (
+        {/* Sub Tabs (Level 2) - Hide for special tabs */}
+        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-4">
               {getSubTabs().map((subTab) => (
@@ -422,8 +573,8 @@ const SalesManagerLeadsListing = ({
           </div>
         )}
 
-        {/* Sub Sub Tabs (Level 3) - Hide for Event Leads */}
-        {activeTab !== 'Event Leads' && getSubSubTabs().length > 0 && (
+        {/* Sub Sub Tabs (Level 3) - Hide for special tabs */}
+        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-8">
               {getSubSubTabs().map((subSubTab) => (
@@ -448,8 +599,8 @@ const SalesManagerLeadsListing = ({
           </div>
         )}
 
-        {/* Sub Sub Sub Tabs (Level 4) - Hide for Event Leads */}
-        {activeTab !== 'Event Leads' && getSubSubSubTabs().length > 0 && (
+        {/* Sub Sub Sub Tabs (Level 4) - Hide for special tabs */}
+        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubSubSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-12">
               {getSubSubSubTabs().map((subSubSubTab) => (
@@ -474,8 +625,8 @@ const SalesManagerLeadsListing = ({
           </div>
         )}
 
-        {/* Sub Sub Sub Sub Tabs (Level 5) - Hide for Event Leads */}
-        {activeTab !== 'Event Leads' && getSubSubSubSubTabs().length > 0 && (
+        {/* Sub Sub Sub Sub Tabs (Level 5) - Hide for special tabs */}
+        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubSubSubSubTabs().length > 0 && (
           <div className="mb-6 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-16">
               {getSubSubSubSubTabs().map((subSubSubSubTab) => (
@@ -528,7 +679,6 @@ const SalesManagerLeadsListing = ({
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Kiosk - Lead - Task</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  {/* FIXED: Show actions column for Event Leads */}
                   <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -579,7 +729,6 @@ const SalesManagerLeadsListing = ({
                         </span>: ''}
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
-                      {/* FIXED: Show actions for Event Leads */}
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
                           <button

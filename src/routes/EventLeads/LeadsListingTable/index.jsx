@@ -17,6 +17,9 @@ const LeadsListingTable = ({
   selectedEventMemberFilter,  // For event leads
   setSelectedKioskMemberFilter,
   setSelectedEventMemberFilter,  // For event leads
+  leadSources = [],    // For lead sources filter
+  selectedLeadSourceFilter,
+  setSelectedLeadSourceFilter,
   currentPage,
   setCurrentPage,
   itemsPerPage,
@@ -40,7 +43,7 @@ const LeadsListingTable = ({
   const selectedMemberFilter = isEventLeads ? selectedEventMemberFilter : selectedKioskMemberFilter;
   const setSelectedMemberFilter = isEventLeads ? setSelectedEventMemberFilter : setSelectedKioskMemberFilter;
   const memberLabel = isEventLeads ? 'Event Member' : 'Kiosk Member';
-  const membersLabel = isEventLeads ? 'Event Members' : 'Kiosk Members';
+  const membersLabel = isEventLeads ? 'Exhibition Lead' : 'Kiosk Members';
 
   // Check if lead is assigned to an agent
   const isLeadAssigned = (lead) => {
@@ -92,12 +95,10 @@ const LeadsListingTable = ({
   const showingFrom = totalLeads > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const showingTo = Math.min((currentPage - 1) * itemsPerPage + leads.length, totalLeads);
 
-
   const isUserAuthRefresh = (startDate) => {
     const start = new Date(startDate);
     const now = new Date();
     
-
     const isAPIReturning404 = new Date(start);
     isAPIReturning404.setMonth(isAPIReturning404.getMonth() + 1);
     
@@ -113,7 +114,6 @@ const LeadsListingTable = ({
     };
     
     callRefreshAuthAgain();
-    
     
     const interval = setInterval(callRefreshAuthAgain, 60 * 60 * 1000);
     
@@ -438,6 +438,30 @@ const LeadsListingTable = ({
                 ))}
               </select>
             )}
+              <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lead Sources Filter */}
+      {activeTab === 'Lead Sources' && (
+        <div className="mb-6 animate-fadeIn">
+          <div className="flex items-center gap-4">
+            <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+              Filter by Lead Source:
+            </label>
+            <div className="relative w-full max-w-xs">
+              <select
+                value={selectedLeadSourceFilter}
+                onChange={(e) => setSelectedLeadSourceFilter(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+              >
+                <option value="">All Lead Sources</option>
+                {leadSources && leadSources.map((source) => (
+                  <option key={source} value={source}>{source}</option>
+                ))}
+              </select>
               <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
           </div>

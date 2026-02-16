@@ -24,8 +24,10 @@ const EventLeadsManagement = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [leadSources, setLeadSources] = useState([]);
+  const [selectedLeadSourceFilter, setSelectedLeadSourceFilter] = useState('');
 
-  const tabs = ['All', 'Event Members'];
+  const tabs = ['All', 'Exhibition Lead',];
 
   // Debouncing effect for search query
   useEffect(() => {
@@ -65,8 +67,11 @@ const EventLeadsManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       
-      // Only pass eventMemberId if on Event Members tab and a filter is selected
-      const eventMemberId = (activeTab === 'Event Members' && selectedEventMemberFilter) ? selectedEventMemberFilter : '';
+      // Only pass eventMemberId if on Exhibition Lead tab and a filter is selected
+      const eventMemberId = (activeTab === 'Exhibition Lead' && selectedEventMemberFilter) ? selectedEventMemberFilter : '';
+      
+      // Only pass leadSource if on Lead Sources tab and a filter is selected
+      const leadSource = (activeTab === 'Lead Sources' && selectedLeadSourceFilter) ? selectedLeadSourceFilter : '';
       
       const result = await getAllEventLeads(
         page, 
@@ -75,7 +80,8 @@ const EventLeadsManagement = () => {
         endDateStr, 
         debouncedSearchQuery,
         statusFilter,
-        eventMemberId
+        eventMemberId,
+        leadSource
       );
       
       if (result.success && result.data) {
@@ -101,6 +107,10 @@ const EventLeadsManagement = () => {
         
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
+        
+        // Extract unique lead sources from the leads
+        const uniqueSources = [...new Set(transformedLeads.map(lead => lead.source).filter(Boolean))];
+        setLeadSources(uniqueSources);
       } else { 
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
@@ -156,11 +166,11 @@ const EventLeadsManagement = () => {
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, statusFilter, selectedEventMemberFilter, activeTab]);
+  }, [debouncedSearchQuery, statusFilter, selectedEventMemberFilter, selectedLeadSourceFilter, activeTab]);
 
   useEffect(() => {
     fetchLeads(currentPage, itemsPerPage);
-  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, selectedEventMemberFilter, activeTab]);
+  }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, statusFilter, selectedEventMemberFilter, selectedLeadSourceFilter, activeTab]);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -169,6 +179,14 @@ const EventLeadsManagement = () => {
 
   return (
     <>
+      {/* Overlay */}
+      {drawerOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={handleCloseDrawer}
+        />
+      )}
+
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {/* Header */}
         <div className="mb-8 animate-fadeIn">
@@ -187,10 +205,8 @@ const EventLeadsManagement = () => {
                 }}
                 className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
               >
-                {/* <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" /> */}
                 <span className="inline-block">Add New Lead</span>
-                </button>
+              </button>
               
               <DateRangePicker
                 startDate={startDate}
@@ -203,7 +219,6 @@ const EventLeadsManagement = () => {
             </div>
           </div>
         </div>
-
 
         {/* Leads Listing Table Component */}
         <LeadsListingTable
@@ -219,6 +234,9 @@ const EventLeadsManagement = () => {
           eventMembers={eventMembers}
           selectedEventMemberFilter={selectedEventMemberFilter}
           setSelectedEventMemberFilter={setSelectedEventMemberFilter}
+          leadSources={leadSources}
+          selectedLeadSourceFilter={selectedLeadSourceFilter}
+          setSelectedLeadSourceFilter={setSelectedLeadSourceFilter}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           itemsPerPage={itemsPerPage}
@@ -230,12 +248,12 @@ const EventLeadsManagement = () => {
         />
       </div>
       
-
       {/* Lead Form Drawer Component */}
       <LeadFormDrawer
         drawerOpen={drawerOpen}
         editingLead={editingLead}
         eventMembers={eventMembers}
+        leadSources={leadSources}
         onClose={handleCloseDrawer}
         onSuccess={handleFormSuccess}
         isEventLead={true}
@@ -248,6 +266,7 @@ const EventLeadsManagement = () => {
         }
         body{
           background-color: #000;
+          ${drawerOpen ? 'overflow: hidden;' : ''}
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;

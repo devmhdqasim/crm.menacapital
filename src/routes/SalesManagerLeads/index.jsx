@@ -39,7 +39,9 @@ const SalesManagerLeadManagement = () => {
   const [kioskMembers, setKioskMembers] = useState([]);
   const [activeModalTab, setActiveModalTab] = useState('assign');
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
-  const [eventLeadsCount, setEventLeadsCount] = useState(0); // NEW: Track event leads count
+  const [eventLeadsCount, setEventLeadsCount] = useState(0);
+  const [mobileLeadsCount, setMobileLeadsCount] = useState(0);
+  const [ramadanLeadsCount, setRamadanLeadsCount] = useState(0);
   
   // Status update states
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
@@ -107,7 +109,7 @@ const SalesManagerLeadManagement = () => {
     return '';
   };
 
-  // FIXED: Fetch event leads count on initial load
+  // Fetch event leads count on initial load
   const fetchEventLeadsCount = async () => {
     try {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
@@ -116,7 +118,7 @@ const SalesManagerLeadManagement = () => {
       
       const result = await getSalesEventLeads(
         1,
-        1, // Just fetch 1 item to get the count
+        1,
         startDateStr,
         endDateStr,
         debouncedSearchQuery,
@@ -129,6 +131,58 @@ const SalesManagerLeadManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching event leads count:', error);
+    }
+  };
+
+  // Fetch mobile leads count
+  const fetchMobileLeadsCount = async () => {
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const agentId = selectedAgentFilter || '';
+      
+      const result = await getAllSalesManagerLeads(
+        1,
+        1,
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        '',
+        agentId,
+        'Mobile'
+      );
+      
+      if (result.success && result.metadata) {
+        setMobileLeadsCount(result.metadata.total || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching mobile leads count:', error);
+    }
+  };
+
+  // Fetch ramadan leads count
+  const fetchRamadanLeadsCount = async () => {
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+      const agentId = selectedAgentFilter || '';
+      
+      const result = await getAllSalesManagerLeads(
+        1,
+        1,
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        '',
+        agentId,
+        'Ramadan'
+      );
+      
+      if (result.success && result.metadata) {
+        setRamadanLeadsCount(result.metadata.total || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching ramadan leads count:', error);
     }
   };
 
@@ -175,6 +229,14 @@ const SalesManagerLeadManagement = () => {
       const statusParam = getStatusParam();
       const agentId = selectedAgentFilter || '';
       
+      // Determine lead source based on active tab
+      let leadSource = '';
+      if (activeTab === 'Mobile Leads') {
+        leadSource = 'Mobile';
+      } else if (activeTab === 'Ramadan Leads') {
+        leadSource = 'Ramadan';
+      }
+      
       const result = await getAllSalesManagerLeads(
         page, 
         limit, 
@@ -182,7 +244,8 @@ const SalesManagerLeadManagement = () => {
         endDateStr,
         debouncedSearchQuery,
         statusParam,
-        agentId
+        agentId,
+        leadSource
       );
       
       if (result.success && result.data) {
@@ -239,12 +302,17 @@ const SalesManagerLeadManagement = () => {
     }
   };
 
-  // FIXED: Function to refresh current tab data including Event Leads
+  // Function to refresh current tab data
   const refreshCurrentTab = () => {
     if (activeTab === 'Event Leads') {
-      // Fetch event leads and update count
       fetchLeads(currentPage, itemsPerPage);
       fetchEventLeadsCount();
+    } else if (activeTab === 'Mobile Leads') {
+      fetchLeads(currentPage, itemsPerPage);
+      fetchMobileLeadsCount();
+    } else if (activeTab === 'Ramadan Leads') {
+      fetchLeads(currentPage, itemsPerPage);
+      fetchRamadanLeadsCount();
     } else {
       fetchLeads(currentPage, itemsPerPage);
     }
@@ -312,9 +380,11 @@ const SalesManagerLeadManagement = () => {
     setIsLoaded(true);
   }, []);
 
-  // FIXED: Fetch event leads count on initial load and when filters change
+  // Fetch counts on initial load and when filters change
   useEffect(() => {
     fetchEventLeadsCount();
+    fetchMobileLeadsCount();
+    fetchRamadanLeadsCount();
   }, [startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
 
   // Reset to page 1 when search or filters change
@@ -324,8 +394,8 @@ const SalesManagerLeadManagement = () => {
 
   // Fetch leads when page, filters, or dates change
   useEffect(() => {
-    if (activeTab === 'Event Leads') {
-      // Event Leads tab uses its own fetch in the listing component
+    if (activeTab === 'Event Leads' || activeTab === 'Mobile Leads' || activeTab === 'Ramadan Leads') {
+      // These tabs use their own fetch in the listing component
       return;
     }
     fetchLeads(currentPage, itemsPerPage);
@@ -569,7 +639,6 @@ const SalesManagerLeadManagement = () => {
         
         handleCloseModal();
         
-        // FIXED: Refresh current tab including Event Leads
         refreshCurrentTab();
       } else {
         if (result.requiresAuth) {
@@ -664,6 +733,10 @@ const SalesManagerLeadManagement = () => {
         debouncedSearchQuery={debouncedSearchQuery}
         eventLeadsCount={eventLeadsCount}
         setEventLeadsCount={setEventLeadsCount}
+        mobileLeadsCount={mobileLeadsCount}
+        setMobileLeadsCount={setMobileLeadsCount}
+        ramadanLeadsCount={ramadanLeadsCount}
+        setRamadanLeadsCount={setRamadanLeadsCount}
       />
 
       <SalesManagerLeadFormDrawer
