@@ -1,0 +1,58 @@
+{
+  "notifications": {
+    "trigger": false,
+    "general": {
+      "test_lead_1": {
+        "title": "New Lead Assigned",
+        "message": "Lead John Doe has been assigned to you",
+        "type": "lead",
+        "priority": "high",
+        "targetRoles": ["Admin", "Sales Manager", "Agent"],
+        "targetUserIds": [],
+        "createdAt": 1771200000000
+      },
+      "test_deposit_2": {
+        "title": "New Deposit Received",
+        "message": "Customer Ahmed deposited 5,000 AED",
+        "type": "deposit",
+        "priority": "high",
+        "targetRoles": ["Admin", "Sales Manager"],
+        "targetUserIds": [],
+        "createdAt": 1771196400000
+      },
+      "test_target_3": {
+        "title": "Monthly Target Updated",
+        "message": "Your sales target for February has been updated to 50,000 AED",
+        "type": "general",
+        "priority": "medium",
+        "targetRoles": [],
+        "targetUserIds": [],
+        "createdAt": 1771192800000
+      }
+    },
+    "inbox": {
+      "test_whatsapp_1": {
+        "title": "New WhatsApp Message",
+        "message": "Hello, I'm interested in buying gold",
+        "type": "whatsapp",
+        "priority": "high",
+        "senderName": "Ahmed Al Maktoum",
+        "senderPhone": "+971501234567",
+        "targetRoles": ["Admin", "Sales Manager", "Agent"],
+        "targetUserIds": [],
+        "createdAt": 1771200000000
+      },
+      "test_whatsapp_2": {
+        "title": "New WhatsApp Message",
+        "message": "Can you send me the latest gold prices?",
+        "type": "whatsapp",
+        "priority": "medium",
+        "senderName": "Sara Khan",
+        "senderPhone": "+971559876543",
+        "targetRoles": ["Admin", "Sales Manager", "Agent"],
+        "targetUserIds": [],
+        "createdAt": 1771196400000
+      }
+    }
+  }
+}

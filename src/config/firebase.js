@@ -26,13 +26,14 @@ const getEnvVar = (key) => {
 
 // Your web app's Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: getEnvVar('FIREBASE_API_KEY'),
-  authDomain: getEnvVar('FIREBASE_AUTH_DOMAIN'),
-  projectId: getEnvVar('FIREBASE_PROJECT_ID'),
-  storageBucket: getEnvVar('FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: getEnvVar('FIREBASE_MESSAGING_SENDER_ID'),
-  appId: getEnvVar('FIREBASE_APP_ID'),
-  measurementId: getEnvVar('FIREBASE_MEASUREMENT_ID')
+  apiKey: getEnvVar('FIREBASE_API_KEY') || "AIzaSyAybyk9PwDpJtPwoqVAE0T7kkrqEq4ZWXo",
+  authDomain: getEnvVar('FIREBASE_AUTH_DOMAIN') || "crm-sig.firebaseapp.com",
+  projectId: getEnvVar('FIREBASE_PROJECT_ID') || "crm-sig",
+  storageBucket: getEnvVar('FIREBASE_STORAGE_BUCKET') || "crm-sig.firebasestorage.app",
+  messagingSenderId: getEnvVar('FIREBASE_MESSAGING_SENDER_ID') || "707006356857",
+  appId: getEnvVar('FIREBASE_APP_ID') || "1:707006356857:web:e0aefcbb186eb7d064a3a8",
+  measurementId: getEnvVar('FIREBASE_MEASUREMENT_ID') || "G-TQD9E1YR3Y",
+  databaseURL: getEnvVar('FIREBASE_DATABASE_URL') || "https://crm-sig-default-rtdb.firebaseio.com"
 };
 
 // Validate that all required config values are present

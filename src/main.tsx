@@ -9,6 +9,7 @@ import { Toaster } from 'react-hot-toast';
 import { CRMProvider } from './context/CRMContext';
 import { AppWrapper } from './Appwrapper';
 import { WebSocketProvider } from './context/WebSocketContext';
+import { FirebaseNotificationProvider } from './context/FirebaseNotificationContext';
 
 // Register Service Worker for Firebase Cloud Messaging
 if ('serviceWorker' in navigator) {
@@ -53,9 +54,11 @@ initMocks().then(() => {
     <WebSocketProvider>
       <CRMProvider>
         <AppProvider>
+          <FirebaseNotificationProvider>
           <AppWrapper>
             <AppRoutes />
           </AppWrapper>
+          </FirebaseNotificationProvider>
           <Toaster
             position="top-right"
             toastOptions={{

@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Menu, Bell, LogOut, Key, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from '../../services/authService';
 import { getNotifications, markAllNotificationsAsRead } from '../../services/notificationRESTservice';
 import toast from 'react-hot-toast';
+import { useFirebaseNotifications } from '../../context/FirebaseNotificationContext';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -12,9 +13,16 @@ export default function Header() {
   const [userRole, setUserRole] = useState('');
   const [userDetails, setUserDetails] = useState('');
   const [branchDetails, setBranchDetails] = useState('');
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [restNotifications, setRestNotifications] = useState([]);
+  const [restUnreadCount, setRestUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const {
+    firebaseNotifications,
+    unreadFirebaseCount,
+    markAllFirebaseAsRead,
+    isFirebaseNotificationRead,
+  } = useFirebaseNotifications();
 
   const getUserInfo = () => {
     const userInfo = localStorage.getItem('userInfo');
@@ -57,12 +65,10 @@ export default function Header() {
   // Fetch only unread count (lightweight)
   const fetchUnreadCount = async () => {
     try {
-      // Fetch only unread notifications to get count
       const data = await getNotifications('Unread');
-      setUnreadCount(data.length);
+      setRestUnreadCount(data.length);
     } catch (error) {
       console.error('Error fetching unread count:', error);
-      // Keep existing count on error
     }
   };
 
@@ -92,12 +98,10 @@ export default function Header() {
         };
       });
       
-      console.log('✅ Transformed notifications in Header:', transformedData);
-      setNotifications(transformedData);
-      
-      // Update unread count from fetched notifications
+      setRestNotifications(transformedData);
+
       const newUnreadCount = transformedData.filter(n => n.unread).length;
-      setUnreadCount(newUnreadCount);
+      setRestUnreadCount(newUnreadCount);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       // Keep existing notifications on error
@@ -179,13 +183,38 @@ export default function Header() {
   const markAllAsRead = async () => {
     try {
       await markAllNotificationsAsRead();
-      setNotifications(notifications.map(n => ({ ...n, unread: false })));
-      setUnreadCount(0);
+      setRestNotifications(restNotifications.map(n => ({ ...n, unread: false })));
+      setRestUnreadCount(0);
+      markAllFirebaseAsRead();
       toast.success('All notifications marked as read');
     } catch (error) {
       toast.error('Failed to mark all as read');
     }
   };
+
+  // Merge REST + Firebase notifications, sorted by time descending
+  const notifications = useMemo(() => {
+    const firebaseMapped = firebaseNotifications.map((n) => ({
+      id: n.id,
+      title: n.title,
+      message: n.message,
+      type: n.type,
+      time: formatTime(n.createdAt),
+      unread: !isFirebaseNotificationRead(n.id),
+      icon: getIconByType(n.type),
+      priority: n.priority,
+      source: 'firebase',
+      createdAt: n.createdAt,
+    }));
+    const restMapped = restNotifications.map((n) => ({
+      ...n,
+      source: 'rest',
+      createdAt: n.originalData?.createdAt ? new Date(n.originalData.createdAt).getTime() : 0,
+    }));
+    return [...firebaseMapped, ...restMapped].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }, [firebaseNotifications, restNotifications, isFirebaseNotificationRead]);
+
+  const unreadCount = restUnreadCount + unreadFirebaseCount;
 
   const getNotificationTypeColor = (type) => {
     const colors = {
