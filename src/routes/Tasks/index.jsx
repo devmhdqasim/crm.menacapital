@@ -465,7 +465,18 @@ const Tasks = () => {
         console.log('✅ Transformed tasks:', transformedTasks);
         setTasks(!clearFilter && transformedTasks);
         setTotalTasks(result.metadata?.total || transformedTasks.length);
-        fetchDashboardData()
+        
+        // ✅ Extract counter data from summary field
+        if (result.summary && result.summary.length > 0) {
+          const summaryData = result.summary[0];
+          console.log('📊 Counter data from summary:', summaryData);
+          
+          if (userRole === 'Agent') {
+            setCrmAgentTaskSummary(summaryData);
+          } else if (userRole === 'Sales Manager') {
+            setCrmManagerTaskSummary(summaryData);
+          }
+        }
       } else {
         console.error('❌ Failed to fetch tasks:', result.message);
         toast.error(result.error.payload.message || 'Failed to fetch tasks');

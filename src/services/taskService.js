@@ -644,15 +644,18 @@ export const getAllTasks = async (page = 1, limit = 10, startDate = '', endDate 
     if (data.status === 'success' && data.payload?.allTasks?.[0]?.data) {
       const tasksData = data.payload.allTasks[0].data;
       const metadata = data.payload.allTasks[0].metadata?.[0] || {};
+      const summary = data.payload.allTasks[0].summary || []; // ✅ ADD THIS LINE
       
       console.log('📊 Retrieved', tasksData.length, 'tasks');
       console.log('📊 Total tasks:', metadata.total);
       console.log('📊 Current page:', metadata.page);
+      console.log('📊 Summary data:', summary); // ✅ ADD THIS LINE
       
       return {
         success: true,
         data: tasksData,
         metadata: metadata,
+        summary: summary, // ✅ ADD THIS LINE
         message: data.message,
       };
     } else {
