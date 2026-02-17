@@ -720,7 +720,7 @@ export const createEventLead = async (leadData) => {
       leadDescription: leadData.leadDescription || '',
       leadSource: leadData.leadSource,
       leadSourceId: leadData.leadSourceId,
-      eventLeadStatus: leadData.eventLeadStatus || 'Lead',
+      leadStatus: leadData.eventLeadStatus || 'Lead',
       depositStatus: leadData.depositStatus || '',
     };
 

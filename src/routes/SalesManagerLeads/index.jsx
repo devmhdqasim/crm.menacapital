@@ -8,9 +8,13 @@ import SalesManagerAssignLeadModal from './SalesManagerAssignLeadModal';
 import ReminderModal from './TaskManagementModal';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 
+// Source tabs that have their own dedicated API (handled inside Listing)
+const SELF_FETCHING_SOURCES = ['Event']; // 'Event' maps to 'Event Leads' tab
+
 const SalesManagerLeadManagement = () => {
   const [leads, setLeads] = useState([]);
   const [crmCategorySummary, setCrmCategorySummary] = useState({});
+  const [crmLeadSourceSummary, setCrmLeadSourceSummary] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -42,7 +46,7 @@ const SalesManagerLeadManagement = () => {
   const [eventLeadsCount, setEventLeadsCount] = useState(0);
   const [mobileLeadsCount, setMobileLeadsCount] = useState(0);
   const [ramadanLeadsCount, setRamadanLeadsCount] = useState(0);
-  
+
   // Status update states
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
   const [modalRemarks, setModalRemarks] = useState('');
@@ -67,43 +71,37 @@ const SalesManagerLeadManagement = () => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
     }, 500);
-
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Helper: is the active tab a dynamic source tab that fetches in the Listing?
+  // Dynamic source tabs (everything after Event Leads) self-fetch inside Listing.
+  const isDynamicSourceTab = () => {
+    const staticTabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
+    return !staticTabs.includes(activeTab);
+  };
 
   // Helper function to build status parameter based on active tabs
   const getStatusParam = () => {
-    if (activeTab === 'Assigned') {
-      return 'Assigned';
-    } else if (activeTab === 'Not Assigned') {
-      return 'Not-Assigned';
-    } else if (activeTab === 'Contacted') {
+    if (activeTab === 'Assigned') return 'Assigned';
+    if (activeTab === 'Not Assigned') return 'Not-Assigned';
+    if (activeTab === 'Contacted') {
       if (activeSubTab === 'Interested') {
-        if (activeSubSubTab === 'Warm') {
-          return 'Warm';
-        } else if (activeSubSubTab === 'Hot') {
-          if (activeSubSubSubTab === 'Demo') {
-            return 'Demo';
-          } else if (activeSubSubSubTab === 'Real') {
-            if (activeSubSubSubSubTab === 'Deposit') {
-              return 'Deposit';
-            } else if (activeSubSubSubSubTab === 'Not Deposit') {
-              return 'Not-Deposit';
-            }
+        if (activeSubSubTab === 'Warm') return 'Warm';
+        if (activeSubSubTab === 'Hot') {
+          if (activeSubSubSubTab === 'Demo') return 'Demo';
+          if (activeSubSubSubTab === 'Real') {
+            if (activeSubSubSubSubTab === 'Deposit') return 'Deposit';
+            if (activeSubSubSubSubTab === 'Not Deposit') return 'Not-Deposit';
             return 'Real';
           }
           return 'Hot';
         }
         return 'Interested';
-      } else if (activeSubTab === 'Not Interested') {
-        return 'Not-Interested';
-      } else if (activeSubTab === 'Not Answered') {
-        return 'Not-Answered';
-      }  else if (activeSubTab === 'Answered') {
-        return 'Answered';
       }
+      if (activeSubTab === 'Not Interested') return 'Not-Interested';
+      if (activeSubTab === 'Not Answered') return 'Not-Answered';
+      if (activeSubTab === 'Answered') return 'Answered';
       return 'Contacted';
     }
     return '';
@@ -115,17 +113,8 @@ const SalesManagerLeadManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const agentId = selectedAgentFilter || '';
-      
-      const result = await getSalesEventLeads(
-        1,
-        1,
-        startDateStr,
-        endDateStr,
-        debouncedSearchQuery,
-        '',
-        agentId
-      );
-      
+
+      const result = await getSalesEventLeads(1, 1, startDateStr, endDateStr, debouncedSearchQuery, '', agentId);
       if (result.success && result.metadata) {
         setEventLeadsCount(result.metadata.total || 0);
       }
@@ -140,18 +129,8 @@ const SalesManagerLeadManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const agentId = selectedAgentFilter || '';
-      
-      const result = await getAllSalesManagerLeads(
-        1,
-        1,
-        startDateStr,
-        endDateStr,
-        debouncedSearchQuery,
-        '',
-        agentId,
-        'Mobile'
-      );
-      
+
+      const result = await getAllSalesManagerLeads(1, 1, startDateStr, endDateStr, debouncedSearchQuery, 'Mobile', agentId);
       if (result.success && result.metadata) {
         setMobileLeadsCount(result.metadata.total || 0);
       }
@@ -166,18 +145,8 @@ const SalesManagerLeadManagement = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const agentId = selectedAgentFilter || '';
-      
-      const result = await getAllSalesManagerLeads(
-        1,
-        1,
-        startDateStr,
-        endDateStr,
-        debouncedSearchQuery,
-        '',
-        agentId,
-        'Ramadan'
-      );
-      
+
+      const result = await getAllSalesManagerLeads(1, 1, startDateStr, endDateStr, debouncedSearchQuery, 'Ramadan', agentId);
       if (result.success && result.metadata) {
         setRamadanLeadsCount(result.metadata.total || 0);
       }
@@ -186,30 +155,31 @@ const SalesManagerLeadManagement = () => {
     }
   };
 
-  // Fetch dashboard data
+  // Fetch dashboard data — also stores crmLeadSourceSummary for dynamic tabs
   const fetchDashboardData = async () => {
     setLoading(true);
     const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
     const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
     const agentId = selectedAgentFilter || '';
-    
+
     try {
       const result = await getDashboardStatsByFilter(startDateStr, endDateStr, debouncedSearchQuery, agentId);
-      
+
       if (result.success && result.data) {
         if (result.data.crmCategorySummary) {
-          setCrmCategorySummary(result.data.crmCategorySummary)
-          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary))
-          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary))
+          setCrmCategorySummary(result.data.crmCategorySummary);
+          localStorage.setItem('leadsCount', JSON.stringify(result.data.crmCategorySummary));
+          localStorage.setItem('leadsAgentCount', JSON.stringify(result.data.crmAgentCategorySummary));
         }
-        
-        console.log('✅ Dashboard data loaded:', result.data);
+        // Store source summary for dynamic tabs
+        if (Array.isArray(result.data.crmLeadSourceSummary)) {
+          setCrmLeadSourceSummary(result.data.crmLeadSourceSummary);
+        }
       } else {
-        console.error('Failed to fetch dashboard data:', result.message);
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
         } else {
-          toast.error(result.error.payload.message || 'Failed to fetch dashboard data');
+          toast.error(result.error?.payload?.message || 'Failed to fetch dashboard data');
         }
       }
     } catch (error) {
@@ -225,29 +195,19 @@ const SalesManagerLeadManagement = () => {
     try {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
-      
       const statusParam = getStatusParam();
       const agentId = selectedAgentFilter || '';
-      
-      // Determine lead source based on active tab
-      let leadSource = '';
-      if (activeTab === 'Mobile Leads') {
-        leadSource = 'Mobile';
-      } else if (activeTab === 'Ramadan Leads') {
-        leadSource = 'Ramadan';
-      }
-      
+
       const result = await getAllSalesManagerLeads(
-        page, 
-        limit, 
-        startDateStr, 
+        page,
+        limit,
+        startDateStr,
         endDateStr,
         debouncedSearchQuery,
         statusParam,
-        agentId,
-        leadSource
+        agentId
       );
-      
+
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
           id: lead._id,
@@ -255,8 +215,8 @@ const SalesManagerLeadManagement = () => {
           name: lead.leadName,
           email: lead.leadEmail,
           phone: lead.leadPhoneNumber,
-          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
-            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}`
             : 'Not Assigned',
           agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
           dateOfBirth: lead.leadDateOfBirth,
@@ -282,12 +242,11 @@ const SalesManagerLeadManagement = () => {
           deposited: lead.deposited || false,
           latestRemarks: lead.latestRemarks || '',
         }));
-        
+
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
-        fetchDashboardData()
+        fetchDashboardData();
       } else {
-        console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
@@ -304,15 +263,12 @@ const SalesManagerLeadManagement = () => {
 
   // Function to refresh current tab data
   const refreshCurrentTab = () => {
-    if (activeTab === 'Event Leads') {
-      fetchLeads(currentPage, itemsPerPage);
+    if (activeTab === 'Event Leads' || isDynamicSourceTab()) {
+      // Listing component handles its own fetch via its own useEffect trigger
+      // We trigger it by forcing a state update — simplest: call fetchDashboardData
+      // and let the Listing re-fetch on its own dependency change.
+      // For Event Leads the Listing already watches the deps.
       fetchEventLeadsCount();
-    } else if (activeTab === 'Mobile Leads') {
-      fetchLeads(currentPage, itemsPerPage);
-      fetchMobileLeadsCount();
-    } else if (activeTab === 'Ramadan Leads') {
-      fetchLeads(currentPage, itemsPerPage);
-      fetchRamadanLeadsCount();
     } else {
       fetchLeads(currentPage, itemsPerPage);
     }
@@ -321,13 +277,11 @@ const SalesManagerLeadManagement = () => {
   const fetchAgents = async () => {
     try {
       const result = await getAllUsers(1, 100);
-      
       if (result.success && result.data) {
-        const agentsData = result.data.filter(user => 
-          user.roleName === 'Agent' || user.role === 'Agent' || 
+        const agentsData = result.data.filter(user =>
+          user.roleName === 'Agent' || user.role === 'Agent' ||
           user.roleName === 'Sales Manager' || user.role === 'Sales Manager'
         );
-        
         const transformedAgents = agentsData.map((user) => ({
           id: user._id,
           username: user.username,
@@ -339,13 +293,10 @@ const SalesManagerLeadManagement = () => {
           department: user.department || 'Sales',
           role: user.roleName || 'Agent',
         }));
-        
         setAgents(transformedAgents);
-        
+
         const userData = JSON.parse(localStorage.getItem('userInfo') || '{}');
         setCurrentUserId(userData._id || userData.id);
-      } else {
-        console.error('Failed to fetch agents:', result.message);
       }
     } catch (error) {
       console.error('Error fetching agents:', error);
@@ -356,9 +307,7 @@ const SalesManagerLeadManagement = () => {
     try {
       const result = await getAllUsers(1, 100);
       if (result.success && result.data) {
-        const kioskMembersData = result.data.filter(user => 
-          user.roleName === 'Kiosk Member'
-        );
+        const kioskMembersData = result.data.filter(user => user.roleName === 'Kiosk Member');
         const transformedKioskMembers = kioskMembersData.map((user) => ({
           id: user._id,
           name: `${user.firstName} ${user.lastName}`,
@@ -392,14 +341,18 @@ const SalesManagerLeadManagement = () => {
     setCurrentPage(1);
   }, [debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab, selectedAgentFilter]);
 
-  // Fetch leads when page, filters, or dates change
+  // Fetch leads when page, filters, or dates change — skip for self-fetching tabs
   useEffect(() => {
-    if (activeTab === 'Event Leads' || activeTab === 'Mobile Leads' || activeTab === 'Ramadan Leads') {
-      // These tabs use their own fetch in the listing component
+    if (activeTab === 'Event Leads' || isDynamicSourceTab()) {
       return;
     }
     fetchLeads(currentPage, itemsPerPage);
   }, [startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, activeTab, activeSubTab, activeSubSubTab, activeSubSubSubTab, activeSubSubSubSubTab, selectedAgentFilter]);
+
+  // Also fetch dashboard on initial mount
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -434,24 +387,21 @@ const SalesManagerLeadManagement = () => {
   };
 
   const handleRowClick = (lead, e) => {
-    if (e.target.closest('button')) {
-      return;
-    }
-    
+    if (e.target.closest('button')) return;
+
     setSelectedLead(lead);
     setOriginalAssignedAgent(lead.agentId || '');
     setSelectedAgentForLead(lead.agentId || '');
     setAssignToSelf(lead.agentId === currentUserId);
-    
+
     setDemoInstallApp(false);
     setDemoEducationVideo(false);
     setDemoAnalyzeChannel(false);
-    
+
     if (lead.agentId === currentUserId) {
       setActiveModalTab('status');
-      
       setModalRemarks(lead.latestRemarks || '');
-      
+
       if (!lead.contacted) {
         setModalAnswered('');
         setModalInterested('');
@@ -476,15 +426,14 @@ const SalesManagerLeadManagement = () => {
       } else if (lead.contacted && lead.answered && lead.interested) {
         setModalAnswered('Answered');
         setModalInterested('Interested');
-        
+
         if (!lead.hot) {
           setModalLeadType('Warm');
           setLeadResponseStatus('Warm');
           setModalHotLeadType('');
           setModalDepositStatus('');
-        } else if (lead.hot) {
+        } else {
           setModalLeadType('Hot');
-          
           if (lead.demo && !lead.real) {
             setModalHotLeadType('Demo');
             setLeadResponseStatus('Demo');
@@ -492,7 +441,6 @@ const SalesManagerLeadManagement = () => {
           } else if (lead.real) {
             setModalHotLeadType('Real');
             setLeadResponseStatus('Real');
-            
             if (lead.deposited) {
               setModalDepositStatus('Deposit');
               setLeadResponseStatus('Deposit');
@@ -510,23 +458,23 @@ const SalesManagerLeadManagement = () => {
     } else {
       setActiveModalTab('assign');
     }
-    
+
     setShowRowModal(true);
   };
 
   const handleAssignAgent = async () => {
     const agentToAssign = assignToSelf ? currentUserId : selectedAgentForLead;
-    
+
     if (!agentToAssign) {
       toast.error('Please select an agent');
       return;
     }
-    
+
     setAssigningLead(true);
-    
+
     try {
       const result = await assignLeadToAgent(selectedLead.id, agentToAssign);
-      
+
       if (result.success) {
         toast.success(result.message || 'Lead assigned to agent successfully!');
         setShowRowModal(false);
@@ -534,7 +482,6 @@ const SalesManagerLeadManagement = () => {
         setSelectedAgentForLead('');
         setAssignToSelf(false);
         setOriginalAssignedAgent('');
-        
         refreshCurrentTab();
       } else {
         if (result.requiresAuth) {
@@ -553,32 +500,27 @@ const SalesManagerLeadManagement = () => {
 
   const validateModalForm = () => {
     const errors = {};
-    
     if (!leadResponseStatus) {
       errors.answered = 'Please complete the status selection';
     }
-    
     if (modalHotLeadType === 'Demo') {
       if (!demoInstallApp || !demoEducationVideo) {
         errors.demoCheckboxes = 'Please complete the first two required demo steps';
       }
     }
-    
     if (modalRemarks && modalRemarks.length > 500) {
       errors.remarks = 'Remarks must not exceed 500 characters';
     }
-    
     return errors;
   };
 
   const handleStatusUpdate = async () => {
     const errors = validateModalForm();
-    
     if (Object.keys(errors).length > 0) {
       setModalErrors(errors);
       return;
     }
-    
+
     try {
       const payload = {
         contacted: false,
@@ -589,7 +531,7 @@ const SalesManagerLeadManagement = () => {
         real: false,
         deposited: false,
         latestRemarks: modalRemarks,
-        currentStatus: leadResponseStatus
+        currentStatus: leadResponseStatus,
       };
 
       if (modalHotLeadType === 'Demo') {
@@ -604,41 +546,34 @@ const SalesManagerLeadManagement = () => {
       } else if (modalAnswered === 'Answered') {
         payload.contacted = true;
         payload.answered = true;
-        
+
         if (modalInterested === 'Not Interested') {
           payload.interested = false;
           payload.cold = true;
         } else if (modalInterested === 'Interested') {
           payload.interested = true;
-          
+
           if (modalLeadType === 'Warm') {
             payload.hot = false;
             payload.cold = false;
           } else if (modalLeadType === 'Hot') {
             payload.hot = true;
-            
+
             if (modalHotLeadType === 'Demo') {
               payload.real = false;
             } else if (modalHotLeadType === 'Real') {
               payload.real = true;
-              
-              if (modalDepositStatus === 'Deposit') {
-                payload.deposited = true;
-              } else if (modalDepositStatus === 'Not Deposit') {
-                payload.deposited = false;
-              }
+              payload.deposited = modalDepositStatus === 'Deposit';
             }
           }
         }
       }
-      
+
       const result = await updateLeadTask(selectedLead.id, payload);
-      
+
       if (result.success) {
         toast.success(result?.message || 'Lead status updated successfully!');
-        
         handleCloseModal();
-        
         refreshCurrentTab();
       } else {
         if (result.requiresAuth) {
@@ -692,6 +627,12 @@ const SalesManagerLeadManagement = () => {
     setTaskLead(null);
   };
 
+  // Build leadsCount prop: merge crmCategorySummary + leadSourceSummary array
+  const leadsCountProp = {
+    ...crmCategorySummary,
+    leadSourceSummary: crmLeadSourceSummary,
+  };
+
   return (
     <>
       <SalesManagerLeadsListing
@@ -724,7 +665,7 @@ const SalesManagerLeadManagement = () => {
         setEditingLead={setEditingLead}
         drawerOpen={drawerOpen}
         agents={agents}
-        leadsCount={crmCategorySummary}
+        leadsCount={leadsCountProp}
         selectedAgentFilter={selectedAgentFilter}
         setSelectedAgentFilter={setSelectedAgentFilter}
         setLeads={setLeads}
@@ -749,7 +690,7 @@ const SalesManagerLeadManagement = () => {
         kioskMembers={kioskMembers}
         currentUserId={currentUserId}
       />
-      
+
       <SalesManagerAssignLeadModal
         showRowModal={showRowModal}
         selectedLead={selectedLead}

@@ -57,17 +57,61 @@ const SalesManagerLeadsListing = ({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
 
-  const tabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads', 'Mobile Leads', 'Ramadan Leads', 'Social Sources Leads'];
+  // Static tabs — Event Leads onwards will be appended dynamically
+  const staticTabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
   const perPageOptions = [10, 20, 30, 50, 100];
 
-  // Fetch leads based on active tab
+  // ─── Dynamic source tabs from crmLeadSourceSummary ───────────────────────────
+  // leadsCount comes from the parent (crmCategorySummary from dashboard API).
+  // The dashboard API also exposes crmLeadSourceSummary which the parent stores.
+  // We receive it as `leadsCount` prop that mirrors crmCategorySummary.
+  // The parent should pass crmLeadSourceSummary separately; for now we derive
+  // dynamic tabs from a `sourceLeadsSummary` prop — see note below.
+  // Because the parent only passes `leadsCount` (crmCategorySummary), we also
+  // need the source summary. We'll read it from props if provided, else fall back
+  // to an empty array so nothing breaks.
+  // The parent passes `leadsCount` as crmCategorySummary. To support source tabs
+  // we accept an additional optional prop `leadSourceSummary` (array).
+  // Since the parent component isn't changed here, we read it from leadsCount
+  // if it happens to be there, otherwise we show no extra tabs (safe fallback).
+
+  // NOTE: The parent (SalesManagerLeadManagement) stores dashboard data in
+  // crmCategorySummary state and passes it as `leadsCount`. The raw
+  // crmLeadSourceSummary array is part of the same dashboard response but not
+  // currently forwarded. The parent needs to forward it as `leadSourceSummary`.
+  // We read it from props with a safe default so nothing breaks today.
+  const leadSourceSummary = (typeof leadsCount === 'object' && Array.isArray(leadsCount?.leadSourceSummary))
+    ? leadsCount.leadSourceSummary
+    : [];
+
+  // Build dynamic source tabs: exclude null _id, skip sources already covered or not wanted
+  // 'Event' is already the 'Event Leads' static tab.
+  // 'Kiosk' and 'Goldie' are excluded per product requirement.
+  const excludedSources = ['Event', 'Kiosk', 'Goldie'];
+  const dynamicSourceTabs = leadSourceSummary
+    .filter(s => s._id && !excludedSources.map(e => e.toLowerCase()).includes(s._id.toLowerCase()))
+    .map(s => ({ name: s._id, count: s.total }));
+
+  const allTabs = [
+    ...staticTabs,
+    ...dynamicSourceTabs.map(t => t.name),
+  ];
+
+  // Special tabs that have their own fetch logic inside this component
+  const selfFetchingTabs = ['Event Leads', ...dynamicSourceTabs.map(t => t.name)];
+
+  // ─── Critical tabs that get a red badge (high priority) ───────────────────
+  const criticalTabs = ['Not Assigned'];
+
+  // ─── Fetch leads based on active tab ─────────────────────────────────────
   useEffect(() => {
     if (activeTab === 'Event Leads') {
       fetchEventLeads();
-    } else if (activeTab === 'Mobile Leads') {
-      fetchMobileLeads();
-    } else if (activeTab === 'Ramadan Leads') {
-      fetchRamadanLeads();
+    } else {
+      const dynTab = dynamicSourceTabs.find(t => t.name === activeTab);
+      if (dynTab) {
+        fetchSourceLeads(activeTab);
+      }
     }
   }, [activeTab, currentPage, itemsPerPage, startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
 
@@ -77,7 +121,7 @@ const SalesManagerLeadsListing = ({
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const agentId = selectedAgentFilter || '';
-      
+
       const result = await getSalesEventLeads(
         currentPage,
         itemsPerPage,
@@ -87,7 +131,7 @@ const SalesManagerLeadsListing = ({
         '',
         agentId
       );
-      
+
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
           id: lead._id,
@@ -95,8 +139,8 @@ const SalesManagerLeadsListing = ({
           name: lead.leadName,
           email: lead.leadEmail || '-',
           phone: lead.leadPhoneNumber,
-          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
-            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}`
             : 'Not Assigned',
           agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
           dateOfBirth: lead.leadDateOfBirth || '-',
@@ -121,12 +165,11 @@ const SalesManagerLeadsListing = ({
           deposited: lead.deposited || false,
           latestRemarks: lead.latestRemarks || '',
         }));
-        
+
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
         setEventLeadsCount(result.metadata?.total || 0);
       } else {
-        console.error('Failed to fetch event leads:', result.message);
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
@@ -141,24 +184,31 @@ const SalesManagerLeadsListing = ({
     }
   };
 
-  const fetchMobileLeads = async () => {
+  // Generic source-based fetch for dynamic tabs.
+  // The leadService.getAllSalesManagerLeads API accepts `status` as the filter param.
+  // For source tabs (e.g. MobileApp, Ramdhan, Social Media/WhatsApp) we pass the
+  // source _id value directly as the `status` query param — this is how the backend
+  // differentiates source-filtered requests.
+  const fetchSourceLeads = async (source) => {
     setLoading(true);
     try {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const agentId = selectedAgentFilter || '';
-      
+
+      // Pass source as the `status` param — getAllSalesManagerLeads signature:
+      // (page, limit, fromDate, toDate, keyword, status, agentId)
+      // Sanitize to strip special chars like "/" before building the URL.
       const result = await getAllSalesManagerLeads(
         currentPage,
         itemsPerPage,
         startDateStr,
         endDateStr,
         debouncedSearchQuery,
-        '',
-        agentId,
-        'Mobile'
+        sanitizeStatusParam(source),   // ← e.g. "Social MediaWhatsApp", "MobileApp"
+        agentId
       );
-      
+
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
           id: lead._id,
@@ -166,8 +216,8 @@ const SalesManagerLeadsListing = ({
           name: lead.leadName,
           email: lead.leadEmail,
           phone: lead.leadPhoneNumber,
-          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
-            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
+          agent: lead.leadAgentId && lead.leadAgentId.length > 0
+            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}`
             : 'Not Assigned',
           agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
           dateOfBirth: lead.leadDateOfBirth,
@@ -193,97 +243,27 @@ const SalesManagerLeadsListing = ({
           deposited: lead.deposited || false,
           latestRemarks: lead.latestRemarks || '',
         }));
-        
+
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
-        setMobileLeadsCount(result.metadata?.total || 0);
       } else {
-        console.error('Failed to fetch mobile leads:', result.message);
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
-          toast.error(result.error?.payload?.message || 'Failed to fetch mobile leads');
+          toast.error(result.error?.payload?.message || `Failed to fetch ${source} leads`);
         }
       }
     } catch (error) {
-      console.error('Error fetching mobile leads:', error);
-      toast.error('Failed to fetch mobile leads. Please try again');
+      console.error(`Error fetching ${source} leads:`, error);
+      toast.error(`Failed to fetch ${source} leads. Please try again`);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchRamadanLeads = async () => {
-    setLoading(true);
-    try {
-      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
-      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
-      const agentId = selectedAgentFilter || '';
-      
-      const result = await getAllSalesManagerLeads(
-        currentPage,
-        itemsPerPage,
-        startDateStr,
-        endDateStr,
-        debouncedSearchQuery,
-        '',
-        agentId,
-        'Ramadan'
-      );
-      
-      if (result.success && result.data) {
-        const transformedLeads = result.data.map((lead) => ({
-          id: lead._id,
-          leadId: lead.leadId,
-          name: lead.leadName,
-          email: lead.leadEmail,
-          phone: lead.leadPhoneNumber,
-          agent: lead.leadAgentId && lead.leadAgentId.length > 0 
-            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}` 
-            : 'Not Assigned',
-          agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
-          dateOfBirth: lead.leadDateOfBirth,
-          nationality: lead.leadNationality ?? '-',
-          residency: lead.leadResidency,
-          language: lead.leadPreferredLanguage,
-          source: lead.leadSource,
-          remarks: lead.leadDescription || '',
-          depositStatus: lead.depositStatus || '',
-          status: lead.leadStatus,
-          lastTaskStatus: lead.lastTaskStatus,
-          createdAt: lead.createdAt,
-          leadSourceId: lead?.leadSourceId?.[0],
-          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
-          chatbotMessage: lead.chatbotMessage,
-          contacted: lead.contacted || false,
-          answered: lead.answered || false,
-          interested: lead.interested || false,
-          hot: lead.hot || false,
-          cold: lead.cold || false,
-          real: lead.real || false,
-          demo: lead.demo || false,
-          deposited: lead.deposited || false,
-          latestRemarks: lead.latestRemarks || '',
-        }));
-        
-        setLeads(transformedLeads);
-        setTotalLeads(result.metadata?.total || 0);
-        setRamadanLeadsCount(result.metadata?.total || 0);
-      } else {
-        console.error('Failed to fetch ramadan leads:', result.message);
-        if (result.requiresAuth) {
-          toast.error('Session expired. Please login again');
-        } else {
-          toast.error(result.error?.payload?.message || 'Failed to fetch ramadan leads');
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching ramadan leads:', error);
-      toast.error('Failed to fetch ramadan leads. Please try again');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ─── Keep legacy separate fetchers for backward compat (Mobile / Ramadan) ─
+  const fetchMobileLeads = async () => fetchSourceLeads('Mobile');
+  const fetchRamadanLeads = async () => fetchSourceLeads('Ramadan');
 
   const getSubTabs = () => {
     if (activeTab === 'Contacted') {
@@ -314,8 +294,6 @@ const SalesManagerLeadsListing = ({
   };
 
   const filteredLeads = leads;
-
-  const unassignedCount = leads.filter(lead => lead.agentId === null || lead.agent === 'Not Assigned').length;
 
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
   const currentLeads = filteredLeads;
@@ -354,17 +332,6 @@ const SalesManagerLeadsListing = ({
     setDrawerOpen(true);
   };
 
-  const isLeadAssigned = (lead) => {
-    return lead.agentId && lead.agentId !== null && lead.agentId !== undefined && lead.agentId !== '';
-  };
-
-  const getAgentName = (lead) => {
-    if (lead.agent && lead.agent !== 'Not Assigned') {
-      return lead.agent;
-    }
-    return 'an agent';
-  };
-
   const handleDelete = (lead) => {
     setLeadToDelete(lead);
     setShowDeleteConfirmModal(true);
@@ -372,7 +339,7 @@ const SalesManagerLeadsListing = ({
 
   const confirmDelete = async () => {
     if (!leadToDelete) return;
-    
+
     try {
       const result = await deleteLead(leadToDelete.id);
 
@@ -380,19 +347,19 @@ const SalesManagerLeadsListing = ({
         toast.success(result.message || 'Lead deleted successfully!');
         setShowDeleteConfirmModal(false);
         setLeadToDelete(null);
-        
-        // Refresh the appropriate tab
+
         if (activeTab === 'Event Leads') {
           fetchEventLeads();
-        } else if (activeTab === 'Mobile Leads') {
-          fetchMobileLeads();
-        } else if (activeTab === 'Ramadan Leads') {
-          fetchRamadanLeads();
         } else {
-          window.location.reload();
+          const dynTab = dynamicSourceTabs.find(t => t.name === activeTab);
+          if (dynTab) {
+            fetchSourceLeads(activeTab);
+          } else {
+            window.location.reload();
+          }
         }
       } else {
-        if (result.requiresAuth) { 
+        if (result.requiresAuth) {
           toast.error('Session expired. Please login again');
         } else {
           toast.error(result.error?.payload?.message || 'Failed to delete lead');
@@ -425,34 +392,71 @@ const SalesManagerLeadsListing = ({
       'Qualified': 'bg-green-500/20 text-green-400 border-green-500/30',
       'Unqualified': 'bg-red-500/20 text-red-400 border-red-500/30',
       'Deposit': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      'No Deposit': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'No Deposit': 'bg-red-500/20 text-red-400 border-red-500/30',
     };
     return colors[status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
 
   function convertToDubaiTime(utcDateString) {
     const date = new Date(utcDateString);
-  
     if (isNaN(date)) return false;
-  
     const options = {
-      timeZone: "Asia/Dubai",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      timeZone: 'Asia/Dubai',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: true,
     };
-  
-    const formatted = new Intl.DateTimeFormat("en-GB", options).format(date);
-  
-    return formatted.replace(",", "");
+    const formatted = new Intl.DateTimeFormat('en-GB', options).format(date);
+    return formatted.replace(',', '');
   }
+
+  // Helper: strip special characters (/, \, @, etc.) from source value before
+  // sending as the ?status= query param so the URL stays clean.
+  // e.g. "Social Media/WhatsApp" → "Social MediaWhatsApp"
+  const sanitizeStatusParam = (source) =>
+    source.replace(/[^a-zA-Z0-9\-_]/g, '').trim();
+
+  // Helper: capitalize first letter of every word for tab display labels.
+  // e.g. "social media/whatsapp" → "Social Media/Whatsapp"
+  const capitalizeWords = (str) =>
+    str.replace(/\b\w/g, (char) => char.toUpperCase());
+
+  // Helper: resolve tab count
+  const getTabCount = (tab) => {
+    if (tab === 'Event Leads') return eventLeadsCount;
+    if (tab === 'Mobile Leads') return mobileLeadsCount;
+    if (tab === 'Ramadan Leads') return ramadanLeadsCount;
+    // dynamic source tab
+    const dynTab = dynamicSourceTabs.find(t => t.name === tab);
+    if (dynTab) return dynTab.count;
+    // static crm summary tabs
+    return leadsCount?.[tab?.replace(/\s+/g, '')];
+  };
+
+  // Helper: is this tab "critical" (shows red badge)
+  const isCriticalTab = (tab) => criticalTabs.includes(tab);
+
+  // Determine if active tab hides sub-tabs (source tabs & event leads)
+  const isDynamicSourceTab = dynamicSourceTabs.some(t => t.name === activeTab);
 
   return (
     <>
       <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+
+        {/* ── Drawer backdrop overlay ──────────────────────────────────────── */}
+        {drawerOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300"
+            onClick={() => {
+              setDrawerOpen(false);
+              setEditingLead(null);
+            }}
+          />
+        )}
+
         {/* Header */}
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -466,7 +470,7 @@ const SalesManagerLeadsListing = ({
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
-                  if(!drawerOpen) {
+                  if (!drawerOpen) {
                     setEditingLead(null);
                     setDrawerOpen(true);
                   }
@@ -478,24 +482,24 @@ const SalesManagerLeadsListing = ({
 
               {/* Agent Filter */}
               <div className="flex items-center gap-4 ml-auto">
-              <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
-                Filter by Agent:
-              </label>
-              <div className="relative w-full max-w-xs min-w-64">
-                <select
-                  value={selectedAgentFilter}
-                  onChange={(e) => setSelectedAgentFilter(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
-                >
-                  <option value="">All Agents</option>
-                  {agents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.fullName}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
+                <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+                  Filter by Agent:
+                </label>
+                <div className="relative w-full max-w-xs min-w-64">
+                  <select
+                    value={selectedAgentFilter}
+                    onChange={(e) => setSelectedAgentFilter(e.target.value)}
+                    className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                  >
+                    <option value="">All Agents</option>
+                    {agents.map((agent) => (
+                      <option key={agent.id} value={agent.id}>
+                        {agent.fullName}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-1 top-1/2 bg-[#1a1a1a] transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
               </div>
 
               <DateRangePicker
@@ -510,143 +514,174 @@ const SalesManagerLeadsListing = ({
           </div>
         </div>
 
-        {/* Main Tabs (Level 1) */}
-        <div className="mb-4 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
-            {tabs.map((tab) => {
-              let tabCount = null;
-              if (tab === 'Event Leads') {
-                tabCount = eventLeadsCount;
-              } else if (tab === 'Mobile Leads') {
-                tabCount = mobileLeadsCount;
-              } else if (tab === 'Ramadan Leads') {
-                tabCount = ramadanLeadsCount;
-              } else {
-                tabCount = leadsCount?.[tab?.replace(/\s+/g, '')];
-              }
+        {/* ── Main Tabs (Level 1) ─────────────────────────────────────────── */}
+        <div className="mb-4 animate-fadeIn">
+          <div className="overflow-x-auto tabs-scroll-container">
+            <div className="flex gap-1 border-b border-[#BBA473]/30 min-w-max">
+              {allTabs.map((tab) => {
+                const tabCount = getTabCount(tab);
+                const critical = isCriticalTab(tab);
+                const isActive = activeTab === tab;
 
-              return (
-                <button
-                  key={tab}
-                  onClick={() => handleTabChange(tab)}
-                  className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${
-                    activeTab === tab
-                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                  }`}
-                >
-                  <span>{tab}</span>
-                  {tabCount ? (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {tabCount}
-                    </span>
-                  ) : ''}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => handleTabChange(tab)}
+                    className={`
+                      px-5 py-3 font-medium transition-all duration-200 border-b-2 whitespace-nowrap
+                      flex items-center gap-2 rounded-t-md
+                      ${isActive
+                        ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                        : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#2A2A2A]'
+                      }
+                    `}
+                  >
+                    <span className="text-sm">{capitalizeWords(tab)}</span>
+                    {tabCount ? (
+                      <span
+                        className={`
+                          inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold
+                          leading-none rounded-full
+                          ${critical
+                            ? 'text-white bg-red-500 animate-pulse'
+                            : 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
+                          }
+                        `}
+                      >
+                        {tabCount}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Sub Tabs (Level 2) - Hide for special tabs */}
-        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubTabs().length > 0 && (
+        {/* ── Sub Tabs (Level 2) — hidden for source/event tabs ───────────── */}
+        {!isDynamicSourceTab && activeTab !== 'Event Leads' && getSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-4">
-              {getSubTabs().map((subTab) => (
-                <button
-                  key={subTab}
-                  onClick={() => handleSubTabChange(subTab)}
-                  className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                    activeSubTab === subTab
-                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                  }`}
-                >
-                  {subTab}
-                  {leadsCount?.[subTab?.replace(/\s+/g, '')] ? (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {leadsCount?.[subTab?.replace(/\s+/g, '')]}
-                    </span>
-                  ) : ''}
-                </button>
-              ))}
+              {getSubTabs().map((subTab) => {
+                const count = leadsCount?.[subTab?.replace(/\s+/g, '')];
+                const isActiveSub = activeSubTab === subTab;
+                // 'Not Answered' and 'Not Interested' are critical sub-tabs
+                const subCritical = ['Not Answered', 'Not Interested'].includes(subTab);
+                return (
+                  <button
+                    key={subTab}
+                    onClick={() => handleSubTabChange(subTab)}
+                    className={`px-5 py-2.5 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
+                      isActiveSub
+                        ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                        : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                    }`}
+                  >
+                    <span className="capitalize">{subTab}</span>
+                    {count ? (
+                      <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none rounded-full ${
+                        subCritical
+                          ? 'text-white bg-red-500 animate-pulse'
+                          : 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
+                      }`}>
+                        {count}
+                      </span>
+                    ) : ''}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Sub Sub Tabs (Level 3) - Hide for special tabs */}
-        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubSubTabs().length > 0 && (
+        {/* Sub Sub Tabs (Level 3) */}
+        {!isDynamicSourceTab && activeTab !== 'Event Leads' && getSubSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-8">
-              {getSubSubTabs().map((subSubTab) => (
-                <button
-                  key={subSubTab}
-                  onClick={() => handleSubSubTabChange(subSubTab)}
-                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                    activeSubSubTab === subSubTab
-                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                  }`}
-                >
-                  {subSubTab}
-                  {leadsCount?.[subSubTab?.replace(/\s+/g, '')] ? (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {leadsCount?.[subSubTab?.replace(/\s+/g, '')]}
-                    </span>
-                  ) : ''}
-                </button>
-              ))}
+              {getSubSubTabs().map((subSubTab) => {
+                const count = leadsCount?.[subSubTab?.replace(/\s+/g, '')];
+                return (
+                  <button
+                    key={subSubTab}
+                    onClick={() => handleSubSubTabChange(subSubTab)}
+                    className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
+                      activeSubSubTab === subSubTab
+                        ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                        : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                    }`}
+                  >
+                    <span className="capitalize">{subSubTab}</span>
+                    {count ? (
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none rounded-full text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30">
+                        {count}
+                      </span>
+                    ) : ''}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Sub Sub Sub Tabs (Level 4) - Hide for special tabs */}
-        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubSubSubTabs().length > 0 && (
+        {/* Sub Sub Sub Tabs (Level 4) */}
+        {!isDynamicSourceTab && activeTab !== 'Event Leads' && getSubSubSubTabs().length > 0 && (
           <div className="mb-4 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-12">
-              {getSubSubSubTabs().map((subSubSubTab) => (
-                <button
-                  key={subSubSubTab}
-                  onClick={() => handleSubSubSubTabChange(subSubSubTab)}
-                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                    activeSubSubSubTab === subSubSubTab
-                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                  }`}
-                >
-                  {subSubSubTab}
-                  {leadsCount?.[subSubSubTab?.replace(/\s+/g, '')] ? (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {leadsCount?.[subSubSubTab?.replace(/\s+/g, '')]}
-                    </span>
-                  ) : ''}
-                </button>
-              ))}
+              {getSubSubSubTabs().map((subSubSubTab) => {
+                const count = leadsCount?.[subSubSubTab?.replace(/\s+/g, '')];
+                return (
+                  <button
+                    key={subSubSubTab}
+                    onClick={() => handleSubSubSubTabChange(subSubSubTab)}
+                    className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
+                      activeSubSubSubTab === subSubSubTab
+                        ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                        : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                    }`}
+                  >
+                    <span className="capitalize">{subSubSubTab}</span>
+                    {count ? (
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none rounded-full text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30">
+                        {count}
+                      </span>
+                    ) : ''}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Sub Sub Sub Sub Tabs (Level 5) - Hide for special tabs */}
-        {!['Event Leads', 'Mobile Leads', 'Ramadan Leads'].includes(activeTab) && getSubSubSubSubTabs().length > 0 && (
+        {/* Sub Sub Sub Sub Tabs (Level 5) */}
+        {!isDynamicSourceTab && activeTab !== 'Event Leads' && getSubSubSubSubTabs().length > 0 && (
           <div className="mb-6 overflow-x-auto animate-fadeIn">
             <div className="flex gap-2 border-b border-[#BBA473]/20 min-w-max pl-16">
-              {getSubSubSubSubTabs().map((subSubSubSubTab) => (
-                <button
-                  key={subSubSubSubTab}
-                  onClick={() => handleSubSubSubSubTabChange(subSubSubSubTab)}
-                  className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
-                    activeSubSubSubSubTab === subSubSubSubTab
-                      ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
-                      : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
-                  }`}
-                >
-                  {subSubSubSubTab}
-                  {leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')] ? (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
-                      {leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')]}
-                    </span>
-                  ) : ''}
-                </button>
-              ))}
+              {getSubSubSubSubTabs().map((subSubSubSubTab) => {
+                const count = leadsCount?.[subSubSubSubTab?.replace(/\s+/g, '')];
+                const isDepositCritical = subSubSubSubTab === 'Deposit';
+                return (
+                  <button
+                    key={subSubSubSubTab}
+                    onClick={() => handleSubSubSubSubTabChange(subSubSubSubTab)}
+                    className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 whitespace-nowrap text-sm flex items-center gap-2 ${
+                      activeSubSubSubSubTab === subSubSubSubTab
+                        ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                        : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
+                    }`}
+                  >
+                    <span className="capitalize">{subSubSubSubTab}</span>
+                    {count ? (
+                      <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none rounded-full ${
+                        isDepositCritical
+                          ? 'text-white bg-green-500 animate-pulse'
+                          : 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
+                      }`}>
+                        {count}
+                      </span>
+                    ) : ''}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -668,7 +703,7 @@ const SalesManagerLeadsListing = ({
         {/* Table Container */}
         <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
           <div className="overflow-x-auto">
-            <table className="w-full ">
+            <table className="w-full">
               <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
                 <tr>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
@@ -716,17 +751,25 @@ const SalesManagerLeadsListing = ({
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{formatPhoneDisplay(lead.phone)}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.nationality}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.agent}</td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{lead.source ?? 'Kiosk'} {lead?.leadSourceId?.firstName ? ` - ${lead?.leadSourceId?.firstName} ${lead?.leadSourceId?.lastName}` : '' }</td>
+                      <td className="px-6 py-4 text-gray-300 text-sm">
+                        {lead.source ?? 'Kiosk'}{lead?.leadSourceId?.firstName ? ` - ${lead?.leadSourceId?.firstName} ${lead?.leadSourceId?.lastName}` : ''}
+                      </td>
                       <td className="px-6 py-4 flex items-center gap-2">
-                        {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                          {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
-                        </span> : ''}
-                        {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                          {lead.status}
-                        </span>: ''}
-                        {lead.lastTaskStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.lastTaskStatus)}`}>
-                          {lead.lastTaskStatus}
-                        </span>: ''}
+                        {lead?.kioskLeadStatus ? (
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
+                            {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
+                          </span>
+                        ) : ''}
+                        {lead.status ? (
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                            {lead.status}
+                          </span>
+                        ) : ''}
+                        {lead.lastTaskStatus ? (
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.lastTaskStatus)}`}>
+                            {lead.lastTaskStatus}
+                          </span>
+                        ) : ''}
                       </td>
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
                       <td className="px-6 py-4">
@@ -854,6 +897,21 @@ const SalesManagerLeadsListing = ({
           .animate-fadeIn {
             animation: fadeIn 0.3s ease-out;
           }
+          /* Fix horizontal scroll hover bg */
+          .tabs-scroll-container {
+            scrollbar-width: thin;
+            scrollbar-color: #BBA473 #1a1a1a;
+          }
+          .tabs-scroll-container::-webkit-scrollbar {
+            height: 4px;
+          }
+          .tabs-scroll-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+          }
+          .tabs-scroll-container::-webkit-scrollbar-thumb {
+            background-color: #BBA473;
+            border-radius: 2px;
+          }
         `}</style>
       </div>
 
@@ -866,12 +924,8 @@ const SalesManagerLeadsListing = ({
                 <AlertTriangle className="w-6 h-6 text-yellow-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-[#BBA473] mb-2">
-                  Cannot Modify Assigned Lead
-                </h3>
-                <p className="text-gray-300 leading-relaxed">
-                  {assignedLeadMessage}
-                </p>
+                <h3 className="text-xl font-bold text-[#BBA473] mb-2">Cannot Modify Assigned Lead</h3>
+                <p className="text-gray-300 leading-relaxed">{assignedLeadMessage}</p>
               </div>
             </div>
             <div className="mt-6 flex justify-end">
@@ -895,12 +949,8 @@ const SalesManagerLeadsListing = ({
                 <Trash2 className="w-6 h-6 text-red-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-[#BBA473] mb-2">
-                  Delete Lead
-                </h3>
-                <p className="text-gray-300 leading-relaxed mb-1">
-                  Are you sure you want to delete this lead?
-                </p>
+                <h3 className="text-xl font-bold text-[#BBA473] mb-2">Delete Lead</h3>
+                <p className="text-gray-300 leading-relaxed mb-1">Are you sure you want to delete this lead?</p>
                 {leadToDelete && (
                   <div className="mt-3 p-3 bg-[#1A1A1A] rounded-lg border border-[#BBA473]/20">
                     <p className="text-white capitalize font-semibold">{leadToDelete.name}</p>
