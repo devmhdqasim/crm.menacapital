@@ -66,6 +66,21 @@ const branchValidationSchema = Yup.object({
     .required('Longitude is required')
     .min(-180, 'Longitude must be between -180 and 180')
     .max(180, 'Longitude must be between -180 and 180'),
+  // ── NEW: eventSource – optional field ──────────────────────────────────────
+  eventSource: Yup.string()
+    .optional()
+    .test('no-leading-digit', 'First character cannot be a number', (value) => {
+      if (!value || value.length === 0) return true; // optional – skip if empty
+      return !/^\d/.test(value);
+    })
+    .test('no-special-chars', 'No special characters allowed', (value) => {
+      if (!value || value.length === 0) return true;
+      return /^[a-zA-Z0-9\s]+$/.test(value);
+    })
+    .test('min-length', 'Event source must be at least 3 characters', (value) => {
+      if (!value || value.length === 0) return true;
+      return value.length >= 3;
+    }),
 });
 
 const BranchManagement = () => {
@@ -176,6 +191,8 @@ const BranchManagement = () => {
               : "-",
           branchMembers: event.eventMembers || event.branchMembers || [], // Keep original members array
           branchCoordinates: event.eventCoordinates || event.branchCoordinates || [0, 0],
+          // ── NEW: preserve eventSource from API ────────────────────────────
+          eventSource: event.eventSource || '',
           createdAt: event.createdAt || new Date().toISOString(),
         }));
         
@@ -308,6 +325,8 @@ const BranchManagement = () => {
       ...event,
       branchMembers: branchMemberIds,
       salesManager: salesManagerId,
+      // ── NEW: carry eventSource into the edit form ──────────────────────
+      eventSource: event.eventSource || '',
     });
     setDrawerOpen(true);
   };
@@ -372,6 +391,8 @@ const BranchManagement = () => {
         salesManager: existingBranch.salesManager || '',
         latitude: existingBranch.branchCoordinates?.[0] || 0,
         longitude: existingBranch.branchCoordinates?.[1] || 0,
+        // ── NEW ───────────────────────────────────────────────────────────
+        eventSource: existingBranch.eventSource || '',
       };
     }
     return {
@@ -384,6 +405,8 @@ const BranchManagement = () => {
       salesManager: '',
       latitude: 24.8607,
       longitude: 67.0011,
+      // ── NEW ───────────────────────────────────────────────────────────
+      eventSource: '',
     };
   };
 
@@ -424,6 +447,11 @@ const BranchManagement = () => {
         // Only include password if it's provided (for edit, it's optional)
         if (values.branchPassword) {
           branchData.branchPassword = values.branchPassword;
+        }
+
+        // ── NEW: only send eventSource if the user filled it in ───────────
+        if (values.eventSource && values.eventSource.trim().length > 0) {
+          branchData.eventSource = values.eventSource.trim();
         }
 
         console.log('Sending event data to API:', branchData);
@@ -847,6 +875,14 @@ const BranchManagement = () => {
         </div>
       </div>
 
+      {/* ── Drawer backdrop overlay ─────────────────────────────────────────── */}
+      <div
+        className={`fixed inset-0 bg-black transition-opacity duration-300 z-40 ${
+          drawerOpen ? 'opacity-40 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={handleCloseDrawer}
+      />
+
       {/* Drawer */}
       <div
         className={`fixed inset-y-0 right-0 w-full lg:w-2/5 bg-[#1A1A1A] shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
@@ -1050,6 +1086,31 @@ const BranchManagement = () => {
                     <div className="text-red-400 text-sm animate-pulse">{formik.errors.salesManager}</div>
                   )}
                 </div>
+
+                {/* ── NEW: Event Source (optional) ──────────────────────────────── */}
+                <div className="space-y-2">
+                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                    Event Source
+                    <span className="text-gray-500 text-xs ml-2">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="eventSource"
+                    placeholder="Save In Gold Event(WTC)"
+                    value={formik.values.eventSource}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                      formik.touched.eventSource && formik.errors.eventSource
+                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                    }`}
+                  />
+                  {formik.touched.eventSource && formik.errors.eventSource && (
+                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.eventSource}</div>
+                  )}
+                </div>
+                {/* ── END NEW ───────────────────────────────────────────────────── */}
               </div>
             </div>
 

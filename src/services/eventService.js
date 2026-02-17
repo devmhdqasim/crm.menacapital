@@ -127,6 +127,7 @@ export const getAllBranches = async (page = 1, limit = 10, startDate = '', endDa
  * @param {Array<string>} eventData.branchMembers - Array of event member IDs
  * @param {Array<number>} eventData.branchCoordinates - Event coordinates [latitude, longitude]
  * @param {boolean} eventData.isAvailable - Event availability status
+ * @param {string} [eventData.eventSource] - Optional event source name
  * @returns {Promise} - Returns created event info
  */
 export const createBranch = async (eventData) => {
@@ -154,6 +155,11 @@ export const createBranch = async (eventData) => {
       eventMembers: eventData.branchMembers || [],
       isAvailable: eventData.isAvailable !== undefined ? eventData.isAvailable : true,
     };
+
+    // ── NEW: only include eventSource when provided ────────────────────────
+    if (eventData.eventSource) {
+      payload.eventSource = eventData.eventSource;
+    }
 
     console.log('📤 Sending payload to API:', payload);
 
@@ -243,6 +249,7 @@ export const createBranch = async (eventData) => {
  * Update an existing event
  * @param {string} branchId - Event's ID
  * @param {Object} eventData - Event data to update
+ * @param {string} [eventData.eventSource] - Optional event source name
  * @returns {Promise} - Returns updated event info
  */
 export const updateBranch = async (branchId, eventData) => {
@@ -276,6 +283,11 @@ export const updateBranch = async (branchId, eventData) => {
     // Only include password if provided (optional for updates)
     if (eventData.branchPassword) {
       payload.eventPassword = eventData.branchPassword;
+    }
+
+    // ── NEW: only include eventSource when provided ────────────────────────
+    if (eventData.eventSource) {
+      payload.eventSource = eventData.eventSource;
     }
 
     console.log('📤 Sending payload to API:', payload);
