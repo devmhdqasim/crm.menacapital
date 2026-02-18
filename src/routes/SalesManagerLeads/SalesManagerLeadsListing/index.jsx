@@ -199,15 +199,41 @@ const SalesManagerLeadsListing = ({
       // Pass source as the `status` param — getAllSalesManagerLeads signature:
       // (page, limit, fromDate, toDate, keyword, status, agentId)
       // Sanitize to strip special chars like "/" before building the URL.
-      const result = await getAllSalesManagerLeads(
-        currentPage,
-        itemsPerPage,
-        startDateStr,
-        endDateStr,
-        debouncedSearchQuery,
-        sanitizeStatusParam(source),   // ← e.g. "Social MediaWhatsApp", "MobileApp"
-        agentId
-      );
+// Build URL manually to send `source=` instead of `status=`
+const axios = (await import('axios')).default;
+const authToken = localStorage.getItem('refreshToken');
+const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+
+const queryParams = new URLSearchParams({
+  paramPage: currentPage,
+  paramLimit: itemsPerPage,
+  fromDate: startDateStr,
+  toDate: endDateStr,
+  keyword: debouncedSearchQuery || '',
+  source: source,  // ← source param, not status
+});
+
+if (agentId) queryParams.append('agent', agentId);
+
+const response = await axios.get(
+  `${API_BASE_URL}/lead/sales/en?${queryParams.toString()}`,
+  {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`,
+    },
+    timeout: 30000,
+  }
+);
+
+const data = response.data;
+const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.data
+  ? {
+      success: true,
+      data: data.payload.allBranchLeads[0].data,
+      metadata: data.payload.allBranchLeads[0].metadata?.[0] || {},
+    }
+  : { success: false, data: [], metadata: {}, error: { payload: { message: data.message } } };
 
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
