@@ -777,7 +777,6 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                       <td className="px-6 py-4 text-gray-300">{lead.nationality}</td>
                       <td className="px-6 py-4 text-gray-300">{lead.agent}</td>
                       <td className="px-6 py-4 text-gray-300 text-sm">
-                        // AFTER
 {activeTab.toLowerCase() === 'ramadan'
   ? 'Ramadan'
   : (lead.source ?? 'Kiosk') + (lead?.leadSourceId?.firstName ? ` - ${lead?.leadSourceId?.firstName} ${lead?.leadSourceId?.lastName}` : '')
