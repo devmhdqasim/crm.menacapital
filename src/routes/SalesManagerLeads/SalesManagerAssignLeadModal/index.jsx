@@ -522,19 +522,27 @@ const SalesManagerAssignLeadModal = ({
                 <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
                 <p className="text-white">{selectedLead.status || 'N/A'}</p>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
-                <p className="text-white">{selectedLead.kioskLeadStatus || 'N/A'}</p>
-              </div>
+              // AFTER
+<div className="space-y-2">
+  <label className="text-sm text-[#E8D5A3] font-medium">
+    {selectedLead.source?.toLowerCase() === 'ramadan' ? 'Ramadan Event Lead Status' : 'Kiosk Lead Status'}
+  </label>
+  <p className="text-white">{selectedLead.kioskLeadStatus || 'N/A'}</p>
+</div>
               <div className="space-y-2">
                 <label className="text-sm text-[#E8D5A3] font-medium">Deposit Status</label>
                 <p className="text-white">{selectedLead.depositStatus || 'N/A'}</p>
               </div>
               
               <div className="space-y-2 col-span-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">
-                  {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length ? 'Chatbot Message' : 'Kiosk Remarks'}
-                </label>
+              // AFTER
+<label className="text-sm text-[#E8D5A3] font-medium">
+  {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length
+    ? 'Chatbot Message'
+    : selectedLead.source?.toLowerCase() === 'ramadan'
+      ? 'Ramadan Event Remarks'
+      : 'Kiosk Remarks'}
+</label>
                 {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length ? (
                   selectedLead.chatbotMessage.map((item, _index) => (
                     <p key={_index} className="text-white mb-0.5">{item}</p>
