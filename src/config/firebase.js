@@ -1,6 +1,8 @@
 // src/config/firebase.js
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getMessaging, isSupported } from "firebase/messaging";
+// Add this import at the top with the other firebase imports
+import { getDatabase } from "firebase/database";
 
 // Helper function to safely get environment variables for Next.js
 const getEnvVar = (key) => {
@@ -27,13 +29,13 @@ const getEnvVar = (key) => {
 // Your web app's Firebase configuration from environment variables
 const firebaseConfig = {
   apiKey: getEnvVar('FIREBASE_API_KEY') || "AIzaSyAybyk9PwDpJtPwoqVAE0T7kkrqEq4ZWXo",
-  authDomain: getEnvVar('FIREBASE_AUTH_DOMAIN') || "crm-sig.firebaseapp.com",
-  projectId: getEnvVar('FIREBASE_PROJECT_ID') || "crm-sig",
-  storageBucket: getEnvVar('FIREBASE_STORAGE_BUCKET') || "crm-sig.firebasestorage.app",
+  authDomain: getEnvVar('FIREBASE_AUTH_DOMAIN') || "saveingold-crm.firebaseapp.com",
+  projectId: getEnvVar('FIREBASE_PROJECT_ID') || "saveingold-crm",
+  storageBucket: getEnvVar('FIREBASE_STORAGE_BUCKET') || "saveingold-crm.firebasestorage.app",
   messagingSenderId: getEnvVar('FIREBASE_MESSAGING_SENDER_ID') || "707006356857",
   appId: getEnvVar('FIREBASE_APP_ID') || "1:707006356857:web:e0aefcbb186eb7d064a3a8",
   measurementId: getEnvVar('FIREBASE_MEASUREMENT_ID') || "G-TQD9E1YR3Y",
-  databaseURL: getEnvVar('FIREBASE_DATABASE_URL') || "https://crm-sig-default-rtdb.firebaseio.com"
+  databaseURL: getEnvVar('FIREBASE_DATABASE_URL') || "https://saveingold-crm-default-rtdb.firebaseio.com"
 };
 
 // Validate that all required config values are present
@@ -72,6 +74,18 @@ try {
 // Initialize Firebase Cloud Messaging (only in browser and if supported)
 let messaging = null;
 
+// Add this after the messaging initialization block (near the bottom, before exports)
+let db = null;
+
+if (app && isFirebaseEnabled) {
+  try {
+    db = getDatabase(app);
+    console.log('✅ Firebase Realtime Database initialized');
+  } catch (error) {
+    console.error('❌ Firebase Database initialization error:', error);
+  }
+}
+
 if (typeof window !== 'undefined' && app && isFirebaseEnabled) {
   isSupported()
     .then((supported) => {
@@ -95,5 +109,5 @@ if (typeof window !== 'undefined' && app && isFirebaseEnabled) {
 // Export helper to check if Firebase is available
 export const isFirebaseAvailable = () => isFirebaseEnabled && app !== null;
 
-export { app, messaging };
+export { app, messaging, db };
 export default app;

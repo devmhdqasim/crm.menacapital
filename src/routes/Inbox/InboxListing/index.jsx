@@ -1,55 +1,23 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import InboxTemplateManager from '../InboxTemplateManager';
+import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
 
-// Generate a deterministic random timer (in seconds) from a contact id, max 24hrs
-const getSeededTimer = (id) => {
-  let hash = 0;
-  const str = String(id);
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash) % (24 * 60 * 60);
-};
+const ContactTimer = ({ phone }) => {
+  const { isSessionOpen, formattedTimeLeft, colors } = useWhatsAppSession(phone);
 
-const formatCountdown = (totalSeconds) => {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-};
-
-const getTimerColor = (totalSeconds) => {
-  const hours = totalSeconds / 3600;
-  if (hours < 1) return { text: 'text-red-400', bg: 'from-red-500/20 to-red-600/20', border: 'border-red-500/40', dot: 'bg-red-500' };
-  if (hours < 6) return { text: 'text-orange-400', bg: 'from-orange-500/20 to-orange-600/20', border: 'border-orange-500/40', dot: 'bg-orange-500' };
-  return { text: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-600/20', border: 'border-emerald-500/40', dot: 'bg-emerald-500' };
-};
-
-const ContactTimer = ({ contactId }) => {
-  const initialSeconds = useMemo(() => getSeededTimer(contactId), [contactId]);
-  const [seconds, setSeconds] = useState(initialSeconds);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSeconds(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const colors = getTimerColor(seconds);
+  if (!isSessionOpen || !formattedTimeLeft) return null;
 
   return (
     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r ${colors.bg} border ${colors.border} backdrop-blur-sm`}>
-      <span className={`relative flex h-1.5 w-1.5`}>
+      <span className="relative flex h-1.5 w-1.5">
         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colors.dot} opacity-75`}></span>
         <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${colors.dot}`}></span>
       </span>
       <Timer className={`w-3 h-3 ${colors.text}`} />
       <span className={`text-xs font-mono font-bold ${colors.text} tabular-nums`}>
-        {formatCountdown(seconds)}
+        {formattedTimeLeft}
       </span>
     </div>
   );
@@ -158,7 +126,6 @@ const InboxListing = ({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Manage Templates Button */}
             <button
               onClick={() => setShowTemplateManager(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg font-semibold transition-all duration-300 hover:from-[#d4bc89] hover:to-[#a69363] shadow-lg hover:shadow-xl hover:scale-105"
@@ -170,7 +137,6 @@ const InboxListing = ({
         </div>
 
         <div className="flex flex-col gap-3 mt-4">
-          {/* Agent Filter - Only show for Sales Manager */}
           {userRole === 'Sales Manager' && (
             <div className="flex items-center gap-4 ml-auto">
               <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
@@ -194,7 +160,6 @@ const InboxListing = ({
             </div>
           )}
 
-          {/* Date Range Filter */}
           <DateRangePicker
             startDate={startDate}
             endDate={endDate}
@@ -243,7 +208,6 @@ const InboxListing = ({
                 onClick={() => handleContactClick(contact)}
                 className="p-5 hover:bg-gradient-to-r hover:from-[#2A2A2A] hover:to-[#252525] transition-all duration-300 cursor-pointer group relative"
               >
-                {/* Hover indicator line */}
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                 <div className="flex items-start gap-4 pl-1">
@@ -291,7 +255,8 @@ const InboxListing = ({
                         {capitalizeWords(contact.name)}
                       </h3>
                       <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                        <ContactTimer contactId={contact.id} />
+                        {/* ✅ Real Firebase timer - only shows if session isOpen */}
+                        <ContactTimer phone={contact.phone} />
                         <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-[#1A1A1A] px-2 py-1 rounded-md">
                           <Clock className="w-3.5 h-3.5" />
                           <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
@@ -432,7 +397,6 @@ const InboxListing = ({
         </div>
       </div>
 
-      {/* Template Manager Modal */}
       <InboxTemplateManager
         isOpen={showTemplateManager}
         onClose={() => setShowTemplateManager(false)}

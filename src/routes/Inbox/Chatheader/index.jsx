@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Search, Bell, Info, Phone, ChevronLeft } from 'lucide-react';
+import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession'; // adjust path as needed
 
 const ChatHeader = ({
   contact,
@@ -18,6 +19,8 @@ const ChatHeader = ({
   handleMessageSearch,
   navigateSearch,
 }) => {
+  const { isSessionOpen, formattedTimeLeft } = useWhatsAppSession(contact?.phone);
+  
   const capitalizeWords = (str) => {
     if (!str) return '';
     return str.split(' ').map(word =>
