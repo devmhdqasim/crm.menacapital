@@ -590,7 +590,7 @@ const ChatInput = ({
         // Normal Message Input
         <div className="space-y-2">
           {/* Main input row */}
-          <div className="flex items-end gap-2">
+          <div className="flex items-start gap-2">
             <div className="flex-1 relative">
               <textarea
                 ref={inputRef}

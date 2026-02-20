@@ -1,6 +1,7 @@
-import React from 'react';
-import { X, Search, Bell, Info, Phone, ChevronLeft } from 'lucide-react';
-import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession'; // adjust path as needed
+import React, { useState } from 'react';
+import { X, Search, Bell, Info, Phone, ChevronLeft, Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
 
 const ChatHeader = ({
   contact,
@@ -18,9 +19,159 @@ const ChatHeader = ({
   activeTab,
   handleMessageSearch,
   navigateSearch,
+  messages = [],
 }) => {
   const { isSessionOpen, formattedTimeLeft } = useWhatsAppSession(contact?.phone);
-  
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Detect if text contains Arabic/RTL characters
+  const hasArabic = (text) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+
+  const handleDownloadPdf = () => {
+    if (!messages.length || isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+
+    try {
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - margin * 2;
+      let y = margin;
+
+      const addNewPageIfNeeded = (neededHeight = 12) => {
+        if (y + neededHeight > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+      };
+
+      // Filter: only text messages (skip media, templates, etc.)
+      const textMessages = messages.filter((msg) => {
+        const type = (msg.type || 'text').toLowerCase();
+        if (type !== 'text' && type !== 'template') return false;
+        if (msg.isTemplate) return false;
+        if (msg.mediaUrl && !msg.text) return false;
+        return true;
+      });
+
+      // Header background
+      doc.setFillColor(26, 26, 26);
+      doc.rect(0, 0, pageWidth, 40, 'F');
+
+      // Gold accent line
+      doc.setFillColor(187, 164, 115);
+      doc.rect(0, 40, pageWidth, 1.5, 'F');
+
+      // Title
+      doc.setTextColor(187, 164, 115);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Chat Export', margin, 18);
+
+      // Contact info
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${contact.name || 'Unknown'}  |  ${contact.phone || ''}`, margin, 28);
+
+      // Date + count
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Exported: ${new Date().toLocaleString()}  |  ${textMessages.length} text messages`, margin, 35);
+
+      y = 48;
+
+      // Messages
+      let lastDate = '';
+
+      textMessages.forEach((msg) => {
+        // Date separator
+        const msgDate = msg.sortTimestamp
+          ? new Date(msg.sortTimestamp).toLocaleDateString('en-US', {
+              weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+            })
+          : '';
+
+        if (msgDate && msgDate !== lastDate) {
+          lastDate = msgDate;
+          addNewPageIfNeeded(14);
+          doc.setFontSize(8);
+          doc.setTextColor(130, 130, 130);
+          const dateWidth = doc.getTextWidth(msgDate);
+          doc.text(msgDate, (pageWidth - dateWidth) / 2, y);
+          y += 8;
+        }
+
+        const isUser = msg.sender === 'user';
+        const senderLabel = isUser ? 'You' : (contact.name || 'Contact');
+        const timeStr = msg.timestamp || '';
+
+        // Replace actual message text with language placeholders
+        let text = msg.text || '';
+        if (hasArabic(text)) {
+          text = '[Arabic message]';
+        } else {
+          text = '[English message]';
+        }
+
+        // Wrap text
+        doc.setFontSize(9);
+        const lines = doc.splitTextToSize(text, contentWidth - 30);
+        const blockHeight = 6 + lines.length * 4 + 6;
+
+        addNewPageIfNeeded(blockHeight);
+
+        // Message bubble background
+        const bubbleX = isUser ? pageWidth - margin - (contentWidth * 0.7) : margin;
+        const bubbleWidth = contentWidth * 0.7;
+
+        if (isUser) {
+          doc.setFillColor(42, 42, 42);
+        } else {
+          doc.setFillColor(35, 35, 35);
+        }
+        doc.roundedRect(bubbleX, y - 2, bubbleWidth, blockHeight, 2, 2, 'F');
+
+        // Sender + time
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(isUser ? 187 : 140, isUser ? 164 : 180, isUser ? 115 : 140);
+        doc.text(senderLabel, bubbleX + 4, y + 4);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(120, 120, 120);
+        doc.text(timeStr, bubbleX + bubbleWidth - 4 - doc.getTextWidth(timeStr), y + 4);
+
+        // Message text (all shown as placeholders)
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.setFont('helvetica', 'italic');
+        lines.forEach((line, i) => {
+          doc.text(line, bubbleX + 4, y + 10 + i * 4);
+        });
+
+        y += blockHeight + 3;
+      });
+
+      // Footer on last page
+      const footerY = pageHeight - 8;
+      doc.setFillColor(187, 164, 115);
+      doc.rect(0, footerY - 3, pageWidth, 0.5, 'F');
+      doc.setFontSize(7);
+      doc.setTextColor(130, 130, 130);
+      doc.text('SaveInGold CRM - Chat Export', margin, footerY);
+      doc.text(`${textMessages.length} messages`, pageWidth - margin - doc.getTextWidth(`${textMessages.length} messages`), footerY);
+
+      const safeName = (contact.name || 'chat').replace(/[^a-zA-Z0-9]/g, '_');
+      doc.save(`chat_.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   const capitalizeWords = (str) => {
     if (!str) return '';
     return str.split(' ').map(word =>
@@ -88,6 +239,19 @@ const ChatHeader = ({
             title="Search Messages"
           >
             <Search className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf || !messages.length}
+            className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-110 ${
+              isGeneratingPdf
+                ? 'bg-[#BBA473]/30 text-[#BBA473] cursor-wait'
+                : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
+            } ${!messages.length ? 'opacity-40 cursor-not-allowed' : ''}`}
+            title="Download Chat as PDF"
+          >
+            <Download className={`w-5 h-5 ${isGeneratingPdf ? 'animate-pulse' : ''}`} />
           </button>
 
           <button

@@ -101,7 +101,7 @@ const SalesManagerLeadsListing = ({
   const selfFetchingTabs = ['Event Leads', ...dynamicSourceTabs.map(t => t.name)];
 
   // ─── Critical tabs that get a red badge (high priority) ───────────────────
-  const criticalTabs = ['Not Assigned', 'Contacted'];
+  const criticalTabs = ['Not Assigned'];
 
   // ─── Fetch leads based on active tab ─────────────────────────────────────
   useEffect(() => {

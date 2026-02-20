@@ -4,6 +4,7 @@ import { getAllSalesManagerLeads } from '../../services/leadService';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import { getAllUsers } from '../../services/teamService';
 import toast from 'react-hot-toast';
+import { useWebSocket } from '../../context/WebSocketContext';
 import InboxListing from './InboxListing';
 import InboxChatDrawer from './InboxChatDrawer';
 
@@ -26,6 +27,12 @@ const InboxPage = () => {
   // Chat drawer state
   const [selectedContact, setSelectedContact] = useState(null);
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+
+  // Reset unread count when inbox page is visible
+  const { resetUnreadCount } = useWebSocket();
+  useEffect(() => {
+    resetUnreadCount();
+  }, [resetUnreadCount]);
 
   // Debouncing effect for search query
   useEffect(() => {

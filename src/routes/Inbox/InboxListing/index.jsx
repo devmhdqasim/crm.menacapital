@@ -23,6 +23,124 @@ const ContactTimer = ({ phone }) => {
   );
 };
 
+// Wrapper to check session and apply row styling
+const useContactSession = (phone) => {
+  const { isSessionOpen } = useWhatsAppSession(phone);
+  return isSessionOpen;
+};
+
+const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneDisplay, formatTimeAgo, userRole }) => {
+  const hasActiveSession = useContactSession(contact.phone);
+
+  return (
+    <div
+      onClick={() => handleContactClick(contact)}
+      className={`p-5 transition-all duration-300 cursor-pointer group relative ${
+        hasActiveSession
+          ? 'bg-[#BBA473]/[0.04] hover:bg-[#BBA473]/[0.09] border-l-2 border-l-[#BBA473]/40'
+          : 'hover:bg-gradient-to-r hover:from-[#2A2A2A] hover:to-[#252525]'
+      }`}
+    >
+      {!hasActiveSession && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      )}
+
+      <div className="flex items-start gap-4 pl-1">
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          {contact.avatar ? (
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 p-0.5">
+              <img
+                src={contact.avatar}
+                alt={contact.name}
+                className="w-full h-full rounded-2xl object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="hidden w-full h-full rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
+                <span className="text-2xl font-bold text-white">
+                  {contact.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+              <span className="text-2xl font-bold text-white">
+                {contact.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          {contact.isOnline && (
+            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse"></div>
+          )}
+          {contact.unreadCount > 0 && (
+            <div className="absolute -top-1 -right-1 min-w-[24px] h-6 bg-red-500 rounded-full flex items-center justify-center px-1.5 shadow-lg">
+              <span className="text-xs font-bold text-white">{contact.unreadCount}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Contact Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-white truncate group-hover:text-[#BBA473] transition-colors duration-300">
+              {capitalizeWords(contact.name)}
+            </h3>
+            <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+              {/* Real Firebase timer - only shows if session isOpen */}
+              <ContactTimer phone={contact.phone} />
+              <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-[#1A1A1A] px-2 py-1 rounded-md">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-300 truncate mb-2 leading-relaxed">
+            {contact.lastMessage}
+          </p>
+
+          <div className="flex items-center gap-4 text-xs">
+            <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
+              <span className="text-base">📱</span>
+              <span className="font-medium">{formatPhoneDisplay(contact.phone)}</span>
+            </span>
+            {userRole === 'Sales Manager' && contact.agent !== 'Not Assigned' && (
+              <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
+                <span className="text-base">👤</span>
+                <span className="font-medium">{capitalizeWords(contact.agent)}</span>
+              </span>
+            )}
+            {contact.nationality && (
+              <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
+                <span className="text-base">🌍</span>
+                <span className="font-medium">{contact.nationality}</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Status Badge */}
+        {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
+          <div className="flex-shrink-0">
+            <span className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border shadow-sm ${contact.kioskLeadStatus === 'Demo'
+                ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-400 border-yellow-500/30'
+                : contact.kioskLeadStatus === 'Real'
+                  ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-400 border-green-500/30'
+                  : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border-blue-500/30'
+              }`}>
+              {contact.kioskLeadStatus}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const InboxListing = ({
   contacts,
   searchQuery,
@@ -203,106 +321,15 @@ const InboxListing = ({
         ) : (
           <div className="divide-y divide-[#BBA473]/10">
             {contacts.map((contact) => (
-              <div
+              <ContactRow
                 key={contact.id}
-                onClick={() => handleContactClick(contact)}
-                className="p-5 hover:bg-gradient-to-r hover:from-[#2A2A2A] hover:to-[#252525] transition-all duration-300 cursor-pointer group relative"
-              >
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                <div className="flex items-start gap-4 pl-1">
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0">
-                    {contact.avatar ? (
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 p-0.5">
-                        <img
-                          src={contact.avatar}
-                          alt={contact.name}
-                          className="w-full h-full rounded-2xl object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                        <div className="hidden w-full h-full rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
-                          <span className="text-2xl font-bold text-white">
-                            {contact.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                        <span className="text-2xl font-bold text-white">
-                          {contact.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    {contact.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse"></div>
-                    )}
-                    {contact.unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 min-w-[24px] h-6 bg-red-500 rounded-full flex items-center justify-center px-1.5 shadow-lg">
-                        <span className="text-xs font-bold text-white">{contact.unreadCount}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Contact Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white truncate group-hover:text-[#BBA473] transition-colors duration-300">
-                        {capitalizeWords(contact.name)}
-                      </h3>
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                        {/* ✅ Real Firebase timer - only shows if session isOpen */}
-                        <ContactTimer phone={contact.phone} />
-                        <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-[#1A1A1A] px-2 py-1 rounded-md">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-gray-300 truncate mb-2 leading-relaxed">
-                      {contact.lastMessage}
-                    </p>
-
-                    <div className="flex items-center gap-4 text-xs">
-                      <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
-                        <span className="text-base">📱</span>
-                        <span className="font-medium">{formatPhoneDisplay(contact.phone)}</span>
-                      </span>
-                      {userRole === 'Sales Manager' && contact.agent !== 'Not Assigned' && (
-                        <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
-                          <span className="text-base">👤</span>
-                          <span className="font-medium">{capitalizeWords(contact.agent)}</span>
-                        </span>
-                      )}
-                      {contact.nationality && (
-                        <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
-                          <span className="text-base">🌍</span>
-                          <span className="font-medium">{contact.nationality}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
-                    <div className="flex-shrink-0">
-                      <span className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border shadow-sm ${contact.kioskLeadStatus === 'Demo'
-                          ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-400 border-yellow-500/30'
-                          : contact.kioskLeadStatus === 'Real'
-                            ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-400 border-green-500/30'
-                            : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border-blue-500/30'
-                        }`}>
-                        {contact.kioskLeadStatus}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+                contact={contact}
+                handleContactClick={handleContactClick}
+                capitalizeWords={capitalizeWords}
+                formatPhoneDisplay={formatPhoneDisplay}
+                formatTimeAgo={formatTimeAgo}
+                userRole={userRole}
+              />
             ))}
           </div>
         )}

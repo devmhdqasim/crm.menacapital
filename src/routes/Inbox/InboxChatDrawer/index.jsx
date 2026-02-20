@@ -703,6 +703,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 activeTab={activeTab}
                 handleMessageSearch={handleMessageSearch}
                 navigateSearch={navigateSearch}
+                messages={messages}
               />
 
               {/* 24-Hour Window Warning */}
