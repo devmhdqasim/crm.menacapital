@@ -60,18 +60,7 @@ const ChatInput = ({
           type: 'text',
         };
 
-        // Send via WebSocket if connected
-        if (isConnected) {
-          const cleanPhone = contact.phone.replace(/\D/g, '');
-          sendWsMessage({
-            waId: cleanPhone,
-            text: textToSend,
-            type: 'text',
-            name: 'Agent',
-          });
-        }
-
-        setMessages([...messages, newMessage]);
+        setMessages(prev => [...prev, newMessage]);
         setMessageInput('');
         setContactNotFound(false);
 

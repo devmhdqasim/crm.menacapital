@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
+import toast from 'react-hot-toast';
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -47,9 +48,29 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       // Listen for customer messages from WhatsApp
       socket.on('customer_message', (data) => {
         console.log('📩 Customer message received:', data);
-        
+
         setLastMessage(data);
-        
+
+        // Show global toast notification for new incoming messages
+        const senderPhone = data.from || data.waId || 'Unknown';
+        const messagePreview = data.text || data.message || '';
+        const previewText = messagePreview.length > 60
+          ? messagePreview.substring(0, 60) + '...'
+          : messagePreview;
+
+        toast(
+          `${previewText || 'New media message'}`,
+          {
+            icon: '💬',
+            duration: 4000,
+            style: {
+              background: '#2A2A2A',
+              color: '#fff',
+              border: '1px solid #BBA473',
+            },
+          }
+        );
+
         // Notify all listeners
         messageListenersRef.current.forEach((listener) => {
           listener(data);
@@ -91,16 +112,16 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     }
   };
 
-  const addMessageListener = (callback: (data: any) => void) => {
+  const addMessageListener = useCallback((callback: (data: any) => void) => {
     messageListenersRef.current.add(callback);
-    
+
     // Return unsubscribe function
     return () => {
       messageListenersRef.current.delete(callback);
     };
-  };
+  }, []);
 
-  const sendMessage = (data: any) => {
+  const sendMessage = useCallback((data: any) => {
     if (socketRef.current && socketRef.current.connected) {
       // Emit to backend using the 'send_message' event
       socketRef.current.emit('send_message', data);
@@ -108,7 +129,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     } else {
       console.warn('⚠️ Socket.IO not connected. Message not sent:', data);
     }
-  };
+  }, []);
 
   useEffect(() => {
     connect();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getAllLeads } from '../../services/leadService';
 import { getAllSalesManagerLeads } from '../../services/leadService';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
@@ -237,9 +237,9 @@ const InboxPage = () => {
     setSelectedContact(null);
   };
 
-  const refreshContacts = () => {
+  const refreshContacts = useCallback(() => {
     fetchContacts(currentPage, itemsPerPage);
-  };
+  }, [currentPage, itemsPerPage, userRole, startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
 
   return (
     <>

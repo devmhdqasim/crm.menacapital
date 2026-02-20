@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 
 // Try multiple phone formats since Firebase keys vary
@@ -36,7 +36,7 @@ export const useWhatsAppSession = (phone) => {
 
     const unsubscribes = [];
     let countdownInterval = null;
-    let foundSession = false;
+    let activeVariant = null;
 
     const startCountdown = (expiresAt) => {
       if (countdownInterval) clearInterval(countdownInterval);
@@ -46,6 +46,8 @@ export const useWhatsAppSession = (phone) => {
           setTimeLeft(0);
           setIsSessionOpen(false);
           clearInterval(countdownInterval);
+          countdownInterval = null;
+          activeVariant = null;
         } else {
           setTimeLeft(diff);
         }
@@ -55,41 +57,37 @@ export const useWhatsAppSession = (phone) => {
     };
 
     phoneVariants.forEach((variant) => {
-      // ✅ FIXED: correct Firebase path is whatsappSessions (no underscores)
       const sessionRef = ref(db, `whatsappSessions/${variant}`);
 
       const unsub = onValue(sessionRef, (snapshot) => {
         const data = snapshot.val();
-        console.log(`📡 Firebase whatsappSessions/${variant}:`, data);
 
         if (data && data.isOpen === true && data.sessionExpiresAt) {
           const diff = Math.floor((new Date(data.sessionExpiresAt).getTime() - Date.now()) / 1000);
           if (diff > 0) {
-            foundSession = true;
+            activeVariant = variant;
             setIsSessionOpen(true);
             startCountdown(data.sessionExpiresAt);
-          } else {
-            if (!foundSession) {
-              setIsSessionOpen(false);
-              setTimeLeft(null);
-            }
-          }
-        } else {
-          if (!foundSession) {
+          } else if (activeVariant === variant || activeVariant === null) {
             setIsSessionOpen(false);
             setTimeLeft(null);
-            if (countdownInterval) clearInterval(countdownInterval);
+            activeVariant = null;
           }
+        } else if (activeVariant === variant || activeVariant === null) {
+          setIsSessionOpen(false);
+          setTimeLeft(null);
+          if (countdownInterval) clearInterval(countdownInterval);
+          countdownInterval = null;
+          activeVariant = null;
         }
       });
 
-      unsubscribes.push({ ref: sessionRef, unsub });
+      unsubscribes.push(unsub);
     });
 
     return () => {
-      unsubscribes.forEach(({ ref: r, unsub }) => off(r, 'value', unsub));
+      unsubscribes.forEach(unsub => unsub());
       if (countdownInterval) clearInterval(countdownInterval);
-      foundSession = false;
     };
   }, [phone]);
 

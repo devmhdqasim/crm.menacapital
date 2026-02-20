@@ -13,9 +13,6 @@ import TemplatePicker from '../Templatepicker';
 import ReminderModal from '../Remindermodal';
 import InboxLeadStatus from '../Inboxleadstatus';
 
-import { ref, get } from 'firebase/database';
-import { db } from '../../../config/firebase';
-
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // State management
@@ -66,18 +63,6 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const audioChunksRef = useRef([]);
   const emojiPickerRef = useRef(null);
   
-
-// Paste this in any useEffect temporarily
-useEffect(() => {
-  const checkFirebase = async () => {
-    const snapshot = await get(ref(db, 'whatsappSessions'));
-    const data = snapshot.val();
-    console.log('🔥 ALL whatsappSessions keys:', data ? Object.keys(data) : 'EMPTY or NO ACCESS');
-  };
-  checkFirebase();
-}, []);
-
-
   // WebSocket integration
   const { isConnected, addMessageListener, sendMessage: sendWsMessage } = useWebSocket();
   
@@ -761,6 +746,8 @@ useEffect(() => {
           <TemplatePicker
             contact={contact}
             onClose={() => setShowTemplatePicker(false)}
+            setMessages={setMessages}
+            refreshContacts={refreshContacts}
           />
         )}
 
