@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, FileText, Search, Send, Loader2, ChevronDown, ChevronUp, RefreshCw, CheckCircle, AlertCircle, Filter } from 'lucide-react';
+import { X, FileText, Search, Send, Loader2, ChevronDown, ChevronUp, ChevronRight, RefreshCw, CheckCircle, AlertCircle, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getWatiTemplates, sendWatiTemplateMessage } from '../../../services/inboxService';
 
@@ -9,8 +9,10 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [paramValues, setParamValues] = useState({});
+  const [variableGroups, setVariableGroups] = useState({ header: [], body: [], buttons: [] });
   const [isSending, setIsSending] = useState(false);
   const [expandedTemplate, setExpandedTemplate] = useState(null);
+  const [selectingIndex, setSelectingIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categories, setCategories] = useState([]);
 
@@ -41,11 +43,55 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
     }
   };
 
-  const extractVariables = (text) => {
+  const extractVariablesFromText = (text) => {
     if (!text) return [];
     const regex = /\{\{(\d+)\}\}/g;
     const matches = [...text.matchAll(regex)];
     return matches.map(match => match[1]);
+  };
+
+  const extractAllVariables = (template) => {
+    const result = { header: [], body: [], buttons: [] };
+
+    if (template.components && Array.isArray(template.components)) {
+      template.components.forEach(component => {
+        const type = (component.type || '').toUpperCase();
+        const text = component.text || '';
+        const vars = extractVariablesFromText(text);
+
+        if (type === 'HEADER') {
+          result.header = vars;
+        } else if (type === 'BODY') {
+          result.body = vars;
+        } else if (type === 'BUTTONS') {
+          if (component.buttons && Array.isArray(component.buttons)) {
+            component.buttons.forEach(btn => {
+              const btnUrl = btn.url || '';
+              const btnText = btn.text || '';
+              result.buttons.push(...extractVariablesFromText(btnUrl));
+              result.buttons.push(...extractVariablesFromText(btnText));
+            });
+          }
+          result.buttons.push(...vars);
+        }
+      });
+    } else {
+      const body = template.body || template.text || '';
+      result.body = extractVariablesFromText(body);
+    }
+
+    // Deduplicate within each group
+    result.header = [...new Set(result.header)];
+    result.body = [...new Set(result.body)];
+    result.buttons = [...new Set(result.buttons)];
+
+    return result;
+  };
+
+  const getAllVariablesList = (template) => {
+    const all = extractAllVariables(template);
+    const allVars = [...all.header, ...all.body, ...all.buttons];
+    return [...new Set(allVars)].sort((a, b) => parseInt(a) - parseInt(b));
   };
 
   const getTemplateBody = (template) => {
@@ -59,11 +105,14 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);
-    const body = getTemplateBody(template);
-    const vars = extractVariables(body);
+    const groups = extractAllVariables(template);
+    // Use component-prefixed keys to avoid deduplication across groups
     const initialParams = {};
-    vars.forEach(v => { initialParams[v] = ''; });
+    groups.header.forEach(v => { initialParams[`header_${v}`] = ''; });
+    groups.body.forEach(v => { initialParams[`body_${v}`] = ''; });
+    groups.buttons.forEach(v => { initialParams[`button_${v}`] = ''; });
     setParamValues(initialParams);
+    setVariableGroups(groups);
   };
 
   const handleSendTemplate = async () => {
@@ -78,8 +127,15 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
 
     setIsSending(true);
     try {
-      const parameters = varKeys.map(key => ({
-        name: key,
+      // Build sequential parameters in order: header → body → buttons
+      // Wati API expects customParams numbered 1..N across all components
+      const orderedKeys = [
+        ...variableGroups.header.map(v => `header_${v}`),
+        ...variableGroups.body.map(v => `body_${v}`),
+        ...variableGroups.buttons.map(v => `button_${v}`),
+      ];
+      const parameters = orderedKeys.map((key, idx) => ({
+        name: String(idx + 1),
         value: paramValues[key],
       }));
 
@@ -126,8 +182,9 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
 
   const getPreviewText = (template) => {
     let body = getTemplateBody(template);
-    Object.keys(paramValues).forEach(key => {
-      const value = paramValues[key] || `{{${key}}}`;
+    // Body variables use body_ prefix in paramValues
+    variableGroups.body.forEach(key => {
+      const value = paramValues[`body_${key}`] || `{{${key}}}`;
       body = body.replace(`{{${key}}}`, value);
     });
     return body;
@@ -248,7 +305,7 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
           <div className="space-y-4">
             {/* Back button */}
             <button
-              onClick={() => { setSelectedTemplate(null); setParamValues({}); }}
+              onClick={() => { setSelectedTemplate(null); setParamValues({}); setVariableGroups({ header: [], body: [], buttons: [] }); }}
               className="text-sm text-[#BBA473] hover:text-[#d4bc89] transition-colors"
             >
               &larr; Back to templates
@@ -267,20 +324,61 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
 
             {/* Parameter inputs */}
             {Object.keys(paramValues).length > 0 && (
-              <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/20 space-y-3">
+              <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/20 space-y-4">
                 <p className="text-sm font-semibold text-white">Fill in variables</p>
-                {Object.keys(paramValues).sort((a, b) => parseInt(a) - parseInt(b)).map(key => (
-                  <div key={key}>
-                    <label className="block text-xs text-gray-400 mb-1">Variable {`{{${key}}}`}</label>
-                    <input
-                      type="text"
-                      value={paramValues[key]}
-                      onChange={(e) => setParamValues(prev => ({ ...prev, [key]: e.target.value }))}
-                      placeholder={`Enter value for {{${key}}}`}
-                      className="w-full px-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473] transition-all"
-                    />
+                {variableGroups.header.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-[#BBA473] font-medium">Header Variables</p>
+                    {variableGroups.header.map(key => (
+                      <div key={`header-${key}`}>
+                        <label className="block text-xs text-gray-400 mb-1">Header {`{{${key}}}`}</label>
+                        <input
+                          type="text"
+                          value={paramValues[`header_${key}`] || ''}
+                          onChange={(e) => setParamValues(prev => ({ ...prev, [`header_${key}`]: e.target.value }))}
+                          placeholder={`Enter value for header {{${key}}}`}
+                          className="w-full px-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473] transition-all"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+                {variableGroups.body.length > 0 && (
+                  <div className="space-y-2">
+                    {(variableGroups.header.length > 0 || variableGroups.buttons.length > 0) && (
+                      <p className="text-xs text-[#BBA473] font-medium">Body Variables</p>
+                    )}
+                    {variableGroups.body.map(key => (
+                      <div key={`body-${key}`}>
+                        <label className="block text-xs text-gray-400 mb-1">Body {`{{${key}}}`}</label>
+                        <input
+                          type="text"
+                          value={paramValues[`body_${key}`] || ''}
+                          onChange={(e) => setParamValues(prev => ({ ...prev, [`body_${key}`]: e.target.value }))}
+                          placeholder={`Enter value for body {{${key}}}`}
+                          className="w-full px-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473] transition-all"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {variableGroups.buttons.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-[#BBA473] font-medium">Button Variables</p>
+                    {variableGroups.buttons.map(key => (
+                      <div key={`btn-${key}`}>
+                        <label className="block text-xs text-gray-400 mb-1">Button {`{{${key}}}`}</label>
+                        <input
+                          type="text"
+                          value={paramValues[`button_${key}`] || ''}
+                          onChange={(e) => setParamValues(prev => ({ ...prev, [`button_${key}`]: e.target.value }))}
+                          placeholder={`Enter value for button {{${key}}}`}
+                          className="w-full px-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473] transition-all"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -311,20 +409,35 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
           <div className="space-y-2">
             {filteredTemplates.map((template, index) => {
               const body = getTemplateBody(template);
-              const vars = extractVariables(body);
+              const vars = getAllVariablesList(template);
               const isExpanded = expandedTemplate === index;
               const isApproved = (template.status || '').toUpperCase() === 'APPROVED';
+              const isSelecting = selectingIndex === index;
 
               return (
                 <div
                   key={template.id || template.elementName || index}
-                  className="bg-[#2A2A2A] rounded-xl border border-[#BBA473]/20 overflow-hidden hover:border-[#BBA473]/40 transition-all"
+                  className={`bg-[#2A2A2A] rounded-xl border overflow-hidden transition-all duration-300 cursor-pointer
+                    ${isSelecting
+                      ? 'ring-2 ring-[#BBA473] scale-[0.98] bg-[#BBA473]/10 border-[#BBA473]'
+                      : isApproved
+                        ? 'border-[#BBA473]/20 hover:border-[#BBA473]/50 hover:shadow-lg hover:shadow-[#BBA473]/10 active:scale-[0.99]'
+                        : 'border-gray-600/30 hover:border-gray-500/40'
+                    }`}
+                  onClick={() => {
+                    if (isApproved) {
+                      setSelectingIndex(index);
+                      setTimeout(() => {
+                        handleSelectTemplate(template);
+                        setSelectingIndex(null);
+                      }, 300);
+                    } else {
+                      setExpandedTemplate(isExpanded ? null : index);
+                    }
+                  }}
                 >
                   {/* Template header row */}
-                  <div
-                    className="flex items-center justify-between p-4 cursor-pointer"
-                    onClick={() => setExpandedTemplate(isExpanded ? null : index)}
-                  >
+                  <div className="flex items-center justify-between p-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <p className="text-white font-semibold text-sm truncate">
@@ -337,28 +450,20 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                      {isApproved && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectTemplate(template);
-                          }}
-                          className="px-3 py-1.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg text-xs font-semibold hover:from-[#d4bc89] hover:to-[#a69363] transition-all flex items-center gap-1.5"
-                        >
-                          <Send className="w-3 h-3" />
-                          Send
-                        </button>
-                      )}
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                      {isApproved ? (
+                        <ChevronRight className={`w-4 h-4 text-[#BBA473] transition-transform duration-300 ${isSelecting ? 'translate-x-1' : ''}`} />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                        isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )
                       )}
                     </div>
                   </div>
 
-                  {/* Expanded preview */}
-                  {isExpanded && (
+                  {/* Expanded preview (only for non-approved templates) */}
+                  {isExpanded && !isApproved && (
                     <div className="px-4 pb-4 border-t border-[#BBA473]/10 pt-3">
                       <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{body}</p>
                     </div>
@@ -375,7 +480,7 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
         {selectedTemplate ? (
           <div className="flex gap-3">
             <button
-              onClick={() => { setSelectedTemplate(null); setParamValues({}); }}
+              onClick={() => { setSelectedTemplate(null); setParamValues({}); setVariableGroups({ header: [], body: [], buttons: [] }); }}
               className="flex-1 px-4 py-3 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-xl transition-all font-semibold"
             >
               Cancel

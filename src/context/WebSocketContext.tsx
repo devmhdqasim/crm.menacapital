@@ -8,6 +8,7 @@ interface WebSocketContextType {
   sendMessage: (data: any) => void;
   addMessageListener: (callback: (data: any) => void) => () => void;
   reconnect: () => void;
+  trackSentMessage: (text: string) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
@@ -29,6 +30,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [lastMessage, setLastMessage] = useState<any>(null);
   const socketRef = useRef<Socket | null>(null);
   const messageListenersRef = useRef<Set<(data: any) => void>>(new Set());
+  const recentlySentTextsRef = useRef<Set<string>>(new Set());
 
   const connect = () => {
     try {
@@ -51,25 +53,39 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
         setLastMessage(data);
 
-        // Show global toast notification for new incoming messages
-        const senderPhone = data.from || data.waId || 'Unknown';
-        const messagePreview = data.text || data.message || '';
-        const previewText = messagePreview.length > 60
-          ? messagePreview.substring(0, 60) + '...'
-          : messagePreview;
+        // Check if this is our own echoed message (agent-sent)
+        const isOwnMessage =
+          data.owner === true ||
+          data.eventType === 'sentMessage' ||
+          data.direction === 'outbound';
 
-        toast(
-          `${previewText || 'New media message'}`,
-          {
-            icon: '💬',
-            duration: 4000,
-            style: {
-              background: '#2A2A2A',
-              color: '#fff',
-              border: '1px solid #BBA473',
-            },
-          }
-        );
+        const messageText = data.text || data.message || '';
+        const isRecentlySent = messageText && recentlySentTextsRef.current.has(messageText.trim());
+
+        // Only show toast for genuine incoming customer messages
+        if (!isOwnMessage && !isRecentlySent) {
+          const previewText = messageText.length > 60
+            ? messageText.substring(0, 60) + '...'
+            : messageText;
+
+          toast(
+            `${previewText || 'New media message'}`,
+            {
+              icon: '💬',
+              duration: 4000,
+              style: {
+                background: '#2A2A2A',
+                color: '#fff',
+                border: '1px solid #BBA473',
+              },
+            }
+          );
+        }
+
+        // Clean up matched sent text
+        if (isRecentlySent) {
+          recentlySentTextsRef.current.delete(messageText.trim());
+        }
 
         // Notify all listeners
         messageListenersRef.current.forEach((listener) => {
@@ -131,6 +147,16 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     }
   }, []);
 
+  const trackSentMessage = useCallback((text: string) => {
+    if (!text) return;
+    const trimmed = text.trim();
+    recentlySentTextsRef.current.add(trimmed);
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+      recentlySentTextsRef.current.delete(trimmed);
+    }, 10000);
+  }, []);
+
   useEffect(() => {
     connect();
 
@@ -145,6 +171,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     sendMessage,
     addMessageListener,
     reconnect: connect,
+    trackSentMessage,
   };
 
   return (

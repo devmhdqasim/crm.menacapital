@@ -1,5 +1,5 @@
-import React from 'react';
-import { Send, FileText, Paperclip, Mic, Smile, RefreshCw, X } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Send, FileText, Paperclip, Mic, Smile, RefreshCw, X, Camera, Video, SwitchCamera, Circle } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import toast from 'react-hot-toast';
 import { sendWatiMessage } from '../../../services/inboxService';
@@ -32,6 +32,8 @@ const ChatInput = ({
   emojiPickerRef,
   downloadedImages,
   setDownloadedImages,
+  trackSentMessage,
+  onCameraCapture,
 }) => {
   
   // Handle send text message
@@ -45,6 +47,9 @@ const ChatInput = ({
       const result = await sendWatiMessage(contact.phone, textToSend);
 
       if (result.success) {
+        // Track sent text to suppress self-notification toast
+        if (trackSentMessage) trackSentMessage(textToSend);
+
         const newMessage = {
           id: Date.now(),
           text: textToSend,
@@ -85,6 +90,160 @@ const ChatInput = ({
   const handleFileAttachment = () => {
     fileInputRef.current?.click();
   };
+
+  // Camera state
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState('environment');
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
+  const [videoRecordingDuration, setVideoRecordingDuration] = useState(0);
+  const cameraVideoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+  const cameraCanvasRef = useRef(null);
+  const videoRecorderRef = useRef(null);
+  const videoChunksRef = useRef([]);
+  const videoTimerRef = useRef(null);
+
+  // Open camera with getUserMedia
+  const handleCameraCapture = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: cameraFacing, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: true,
+      });
+      cameraStreamRef.current = stream;
+      setShowCamera(true);
+      // Attach stream to video element after render
+      setTimeout(() => {
+        if (cameraVideoRef.current) {
+          cameraVideoRef.current.srcObject = stream;
+        }
+      }, 50);
+    } catch (err) {
+      console.error('Camera access error:', err);
+      if (err.name === 'NotAllowedError') {
+        toast.error('Camera access denied. Please allow camera permissions.');
+      } else {
+        toast.error('Failed to open camera. Check your device camera.');
+      }
+    }
+  }, [cameraFacing]);
+
+  // Close camera and stop stream
+  const closeCamera = useCallback(() => {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach(track => track.stop());
+      cameraStreamRef.current = null;
+    }
+    if (videoTimerRef.current) {
+      clearInterval(videoTimerRef.current);
+      videoTimerRef.current = null;
+    }
+    setShowCamera(false);
+    setIsVideoRecording(false);
+    setVideoRecordingDuration(0);
+    videoChunksRef.current = [];
+  }, []);
+
+  // Switch front/back camera
+  const switchCamera = useCallback(async () => {
+    const newFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+    // Stop current stream
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach(track => track.stop());
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacing, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: true,
+      });
+      cameraStreamRef.current = stream;
+      setCameraFacing(newFacing);
+      if (cameraVideoRef.current) {
+        cameraVideoRef.current.srcObject = stream;
+      }
+    } catch {
+      toast.error('Failed to switch camera');
+    }
+  }, [cameraFacing]);
+
+  // Take photo - canvas snapshot
+  const takePhoto = useCallback(() => {
+    const video = cameraVideoRef.current;
+    const canvas = cameraCanvasRef.current;
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob && onCameraCapture) {
+          onCameraCapture(blob, 'image');
+          closeCamera();
+        }
+      },
+      'image/jpeg',
+      0.92
+    );
+  }, [onCameraCapture, closeCamera]);
+
+  // Start video recording
+  const startVideoRecording = useCallback(() => {
+    if (!cameraStreamRef.current) return;
+
+    videoChunksRef.current = [];
+    const recorder = new MediaRecorder(cameraStreamRef.current, {
+      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+    });
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) videoChunksRef.current.push(e.data);
+    };
+
+    recorder.onstop = () => {
+      if (videoChunksRef.current.length > 0 && videoRecordingDuration > 0) {
+        const blob = new Blob(videoChunksRef.current, { type: 'video/mp4' });
+        if (onCameraCapture) {
+          onCameraCapture(blob, 'video');
+        }
+      }
+      closeCamera();
+    };
+
+    recorder.start();
+    videoRecorderRef.current = recorder;
+    setIsVideoRecording(true);
+    setVideoRecordingDuration(0);
+
+    videoTimerRef.current = setInterval(() => {
+      setVideoRecordingDuration(prev => prev + 1);
+    }, 1000);
+  }, [onCameraCapture, closeCamera, videoRecordingDuration]);
+
+  // Stop video recording
+  const stopVideoRecording = useCallback(() => {
+    if (videoRecorderRef.current && videoRecorderRef.current.state !== 'inactive') {
+      videoRecorderRef.current.stop();
+    }
+    if (videoTimerRef.current) {
+      clearInterval(videoTimerRef.current);
+      videoTimerRef.current = null;
+    }
+  }, []);
+
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStreamRef.current) {
+        cameraStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (videoTimerRef.current) {
+        clearInterval(videoTimerRef.current);
+      }
+    };
+  }, []);
 
   // ✅ FIXED: Start voice recording
   const startVoiceRecording = async () => {
@@ -305,7 +464,7 @@ const ChatInput = ({
     inputRef.current?.focus();
   };
 
-  // Handle key press
+  // Handle key down
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -314,151 +473,238 @@ const ChatInput = ({
   };
 
   return (
-    <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-t border-[#BBA473]/30 p-5 shadow-lg flex-shrink-0">
+    <>
+    {/* Camera Overlay */}
+    {showCamera && (
+      <div className="fixed inset-0 z-[60] bg-black flex flex-col">
+        {/* Camera header */}
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent">
+          <button
+            onClick={closeCamera}
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <span className="text-white text-sm font-medium">
+            {isVideoRecording ? (
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                {formatRecordingTime(videoRecordingDuration)}
+              </span>
+            ) : 'Camera'}
+          </span>
+          <button
+            onClick={switchCamera}
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            <SwitchCamera className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Video preview */}
+        <video
+          ref={cameraVideoRef}
+          autoPlay
+          playsInline
+          muted
+          className="flex-1 object-cover w-full"
+        />
+
+        {/* Hidden canvas for photo capture */}
+        <canvas ref={cameraCanvasRef} className="hidden" />
+
+        {/* Camera controls */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 pt-6 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="flex items-center justify-center gap-8">
+            {/* Video record button */}
+            {!isVideoRecording ? (
+              <>
+                <button
+                  onClick={startVideoRecording}
+                  className="w-14 h-14 rounded-full border-2 border-white/40 flex items-center justify-center text-white hover:border-red-400 hover:text-red-400 transition-colors"
+                  title="Record Video"
+                >
+                  <Video className="w-6 h-6" />
+                </button>
+
+                {/* Photo capture - main button */}
+                <button
+                  onClick={takePhoto}
+                  className="w-[72px] h-[72px] rounded-full border-4 border-white flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                  title="Take Photo"
+                >
+                  <div className="w-[60px] h-[60px] rounded-full bg-white" />
+                </button>
+
+                {/* Placeholder for symmetry */}
+                <div className="w-14 h-14" />
+              </>
+            ) : (
+              <>
+                <div className="w-14 h-14" />
+
+                {/* Stop recording - main button */}
+                <button
+                  onClick={stopVideoRecording}
+                  className="w-[72px] h-[72px] rounded-full border-4 border-red-500 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                  title="Stop Recording"
+                >
+                  <div className="w-8 h-8 rounded-md bg-red-500" />
+                </button>
+
+                <div className="w-14 h-14" />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
+    <div className="bg-[#1e1e1e] border-t border-[#333] px-4 py-3 flex-shrink-0">
       {isRecording ? (
         // Voice Recording UI
-        <div className="space-y-3">
-          <div className="flex items-center gap-4 bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
-            <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center animate-pulse">
-              <Mic className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-semibold">Recording voice message...</p>
-              <p className="text-2xl font-mono text-red-400 mt-1">
-                {formatRecordingTime(recordingDuration)}
-              </p>
-            </div>
-            <button
-              onClick={cancelVoiceRecording}
-              className="p-3 rounded-full bg-gray-600 hover:bg-gray-700 text-white transition-all duration-300"
-              title="Cancel"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <button
-              onClick={stopVoiceRecording}
-              className="p-4 rounded-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black transition-all duration-300 shadow-lg hover:scale-110"
-              title="Send"
-            >
-              <Send className="w-6 h-6" />
-            </button>
+        <div className="flex items-center gap-3 bg-red-500/8 border border-red-500/20 rounded-2xl px-4 py-3">
+          <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center animate-pulse flex-shrink-0">
+            <Mic className="w-5 h-5 text-white" />
           </div>
-          <p className="text-xs text-gray-400 text-center">
-            Tap X to cancel • Tap Send arrow to send voice note
-          </p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-white font-medium">Recording...</p>
+            <p className="text-lg font-mono text-red-400">{formatRecordingTime(recordingDuration)}</p>
+          </div>
+          <button
+            onClick={cancelVoiceRecording}
+            className="w-9 h-9 rounded-full bg-[#333] hover:bg-[#444] text-gray-300 flex items-center justify-center transition-colors flex-shrink-0"
+            title="Cancel"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <button
+            onClick={stopVoiceRecording}
+            className="w-11 h-11 rounded-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-lg flex-shrink-0"
+            title="Send"
+          >
+            <Send className="w-5 h-5" />
+          </button>
         </div>
       ) : (
         // Normal Message Input
-        <>
-          <div className="flex items-start gap-3">
-            <button
-              onClick={() => setShowTemplatePicker(true)}
-              className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group"
-              title="Send Template"
-            >
-              <FileText className="w-5 h-5 group-hover:rotate-6 transition-transform" />
-            </button>
-
-            <button
-              onClick={handleFileAttachment}
-              disabled={isSending}
-              className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] hover:scale-110 active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Send Image or Audio"
-            >
-              <Paperclip className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            </button>
-
-            {/* Emoji Picker Button */}
-            <div className="relative" ref={emojiPickerRef}>
-              <button
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform hover:scale-110 active:scale-95 group ${
-                  showEmojiPicker 
-                    ? 'bg-[#BBA473] text-black' 
-                    : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
-                }`}
-                title="Add Emoji"
-              >
-                <Smile className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              </button>
-
-              {/* Emoji Picker Popup */}
-              {showEmojiPicker && (
-                <div className="absolute bottom-full left-0 mb-2 z-50 animate-scaleIn">
-                  <EmojiPicker
-                    onEmojiClick={handleEmojiClick}
-                    theme="dark"
-                    searchPlaceholder="Search emoji..."
-                    width={350}
-                    height={400}
-                    emojiStyle="native"
-                    previewConfig={{
-                      showPreview: false
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-
+        <div className="space-y-2">
+          {/* Main input row */}
+          <div className="flex items-end gap-2">
             <div className="flex-1 relative">
               <textarea
                 ref={inputRef}
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                onKeyDown={handleKeyPress}
+                placeholder="Type a message..."
                 rows="1"
                 disabled={isSending}
-                className="w-full px-5 py-3.5 pr-12 border-2 border-[#BBA473]/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white placeholder-gray-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ minHeight: '52px', maxHeight: '120px' }}
+                className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#3a3a3a] rounded-xl text-white text-sm placeholder-gray-500 resize-none transition-all duration-200 focus:outline-none focus:border-[#BBA473]/60 disabled:opacity-50"
+                style={{ minHeight: '44px', maxHeight: '120px' }}
               />
-              {messageInput.length > 0 && (
-                <div className="absolute right-4 bottom-4 text-xs text-gray-500">
-                  {messageInput.length} chars
-                </div>
-              )}
             </div>
-            
-            {/* Voice/Send Button (WhatsApp style) */}
+
+            {/* Send / Mic button */}
             {messageInput.trim() ? (
               <button
                 onClick={() => handleSendMessage()}
                 disabled={!messageInput.trim() || isSending}
-                className={`p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform ${messageInput.trim() && !isSending
-                  ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 shadow-lg hover:shadow-xl active:scale-95'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  }`}
+                className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSending ? (
-                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <RefreshCw className="w-4.5 h-4.5 animate-spin" />
                 ) : (
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4.5 h-4.5" />
                 )}
               </button>
             ) : (
               <button
                 onClick={startVoiceRecording}
                 disabled={isSending}
-                className="p-4 rounded-2xl flex-shrink-0 transition-all duration-300 transform bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:scale-110 shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
+                className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Record Voice Message"
               >
-                <Mic className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <Mic className="w-4.5 h-4.5" />
               </button>
             )}
           </div>
 
-          <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
-            <span>
-              Press Enter to send • Shift+Enter for new line • 😊 for emoji • 📎 for media • 🎤 for voice
-            </span>
-            <span className="flex items-center gap-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-              {isConnected ? 'Live' : 'Offline'}
-            </span>
+          {/* Action bar */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              {/* Emoji */}
+              <div className="relative" ref={emojiPickerRef}>
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                    showEmojiPicker
+                      ? 'bg-[#BBA473] text-black'
+                      : 'text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10'
+                  }`}
+                  title="Emoji"
+                >
+                  <Smile className="w-4 h-4" />
+                </button>
+                {showEmojiPicker && (
+                  <div className="absolute bottom-full left-0 mb-2 z-50">
+                    <EmojiPicker
+                      onEmojiClick={handleEmojiClick}
+                      theme="dark"
+                      searchPlaceholder="Search emoji..."
+                      width={320}
+                      height={380}
+                      emojiStyle="native"
+                      previewConfig={{ showPreview: false }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Attach */}
+              <button
+                onClick={handleFileAttachment}
+                disabled={isSending}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Attach file"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
+
+              {/* Camera */}
+              <button
+                onClick={handleCameraCapture}
+                disabled={isSending}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Camera"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+
+              {/* Divider */}
+              <div className="w-px h-4 bg-[#333] mx-1" />
+
+              {/* Template */}
+              <button
+                onClick={() => setShowTemplatePicker(true)}
+                className="h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 text-xs"
+                title="Send Template"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Template</span>
+              </button>
+            </div>
+
+            {/* Connection status */}
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-gray-500'}`} />
+              {isConnected ? 'Connected' : 'Offline'}
+            </div>
           </div>
-        </>
+        </div>
       )}
     </div>
+    </>
   );
 };
 

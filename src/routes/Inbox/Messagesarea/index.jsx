@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { Check, CheckCheck, Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2 } from 'lucide-react';
+import { Check, CheckCheck, Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download } from 'lucide-react';
 import { fetchWatiImage } from '../../../services/inboxService';
 
 const MessagesArea = ({
@@ -18,10 +18,19 @@ const MessagesArea = ({
   // Track failed images and loading states
   const [failedImages, setFailedImages] = useState(new Set());
   const [loadingMedia, setLoadingMedia] = useState(new Set());
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   // Track which messages are currently being processed (ref to avoid re-renders)
   const processingRef = useRef(new Set());
   const isDownloadingRef = useRef(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handleClickOutside = () => setOpenDropdownId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [openDropdownId]);
 
   // Calculate media download progress
   const mediaProgress = useMemo(() => {
@@ -221,20 +230,10 @@ const MessagesArea = ({
       const imageUrl = message.downloadedImageUrl || message.mediaUrl;
       const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
       const hasFailed = failedImages.has(message.id);
-      const isLoadingMedia = loadingMedia.has(message.id);
-      
-      // Debug logging
-      console.log(`Image ${message.id}:`, {
-        isDownloaded,
-        hasFailed,
-        isLoadingMedia,
-        imageUrl: imageUrl?.substring(0, 50)
-      });
-      
+
       return (
         <div className="space-y-2">
           {hasFailed ? (
-            // Show error state when image fails to load
             <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
               <svg className="w-12 h-12 text-[#BBA473]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -242,85 +241,65 @@ const MessagesArea = ({
               <p className="text-[#BBA473]/70 text-sm">Image preview</p>
               <button
                 onClick={() => handleMediaDownload(message)}
-                disabled={isLoadingMedia}
-                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all"
               >
-                {isLoadingMedia ? 'Loading...' : 'Download'}
+                Retry
               </button>
             </div>
-          ) : isLoadingMedia ? (
-            // Show loading state
-            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
-              <Loader2 className="w-12 h-12 text-[#BBA473] animate-spin mb-2" />
-              <p className="text-[#BBA473]/70 text-sm">Loading image...</p>
-            </div>
-          ) : (
-            <div 
-              className="relative rounded-xl overflow-hidden bg-black/20 cursor-pointer group"
-              onClick={() => {
-                if (!message.localFile && isDownloaded && !isLoadingMedia) {
-                  window.open(imageUrl, '_blank');
-                }
-              }}
+          ) : isDownloaded ? (
+            <div
+              className="relative rounded-xl overflow-hidden bg-black/20 group"
               style={{ maxWidth: '300px' }}
             >
               <img
                 src={imageUrl}
                 alt="Shared image"
-                className={`w-full h-auto object-cover transition-all duration-300 ${
-                  isDownloaded && !isLoadingMedia ? 'group-hover:scale-105' : 'blur-md'
-                }`}
-                style={{ 
-                  maxHeight: '400px',
-                  minHeight: '150px'
-                }}
-                onLoad={() => {
-                  console.log('✅ Image loaded successfully:', message.id);
-                }}
-                onError={(e) => {
-                  console.error('❌ Image failed to load:', message.id, imageUrl);
-                  setFailedImages(prev => {
-                    const newSet = new Set(prev);
-                    newSet.add(message.id);
-                    return newSet;
-                  });
-                  setLoadingMedia(prev => {
-                    const newSet = new Set(prev);
-                    newSet.delete(message.id);
-                    return newSet;
-                  });
+                className="w-full h-auto object-cover transition-all duration-300"
+                style={{ maxHeight: '400px', minHeight: '150px' }}
+                onError={() => {
+                  setFailedImages(prev => new Set(prev).add(message.id));
                 }}
               />
-              
-              {isDownloaded && !message.localFile && !isLoadingMedia && (
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="bg-white/90 rounded-full p-2 shadow-lg">
-                      <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {!isDownloaded && !isLoadingMedia && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <button
-                    onClick={(e) => handleMediaDownload(message, e)}
-                    disabled={isLoadingMedia}
-                    className="px-4 py-2 bg-white/90 hover:bg-white rounded-lg text-gray-800 font-medium text-sm flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download to view
-                  </button>
-                </div>
-              )}
+              {/* Dropdown menu button */}
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenDropdownId(openDropdownId === message.id ? null : message.id);
+                  }}
+                  className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-all"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+
+                {openDropdownId === message.id && (
+                  <div className="absolute right-0 top-10 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-xl shadow-2xl z-30 min-w-[160px] py-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = `image-${message.id}.jpg`;
+                        link.click();
+                        setOpenDropdownId(null);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#BBA473]/20 flex items-center gap-2 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <Loader2 className="w-12 h-12 text-[#BBA473] animate-spin mb-2" />
+              <p className="text-[#BBA473]/70 text-sm">Loading image...</p>
             </div>
           )}
-          
+
           {message.text && message.text !== '📷 Image' && (
             <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
           )}
@@ -333,80 +312,83 @@ const MessagesArea = ({
       const audioUrl = message.downloadedImageUrl || message.mediaUrl;
       const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
       const hasFailed = failedImages.has(message.id);
-      const isLoadingMedia = loadingMedia.has(message.id);
-      
-      // Debug logging
-      console.log(`Audio ${message.id}:`, {
-        isDownloaded,
-        hasFailed,
-        isLoadingMedia,
-        audioUrl: audioUrl?.substring(0, 50)
-      });
-      
+
       return (
-        <>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
-                <Mic className="w-5 h-5 text-[#BBA473]" />
-              </div>
-              
-              <div className="flex-1">
-                {hasFailed ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-red-400">Failed to load audio</span>
-                    <button
-                      onClick={() => handleMediaDownload(message)}
-                      disabled={isLoadingMedia}
-                      className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 font-medium text-xs transition-all disabled:opacity-50"
-                    >
-                      {isLoadingMedia ? 'Loading...' : 'Retry'}
-                    </button>
-                  </div>
-                ) : isLoadingMedia ? (
-                  <div className="flex items-center gap-2 text-[#BBA473]">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Loading audio...</span>
-                  </div>
-                ) : isDownloaded ? (
-                  <audio
-                    controls
-                    src={audioUrl}
-                    className="w-full"
-                    style={{ height: '36px', minWidth: '200px' }}
-                    preload="auto"
-                    onLoadedMetadata={() => {
-                      console.log('✅ Audio loaded successfully:', message.id);
-                    }}
-                    onError={(e) => {
-                      console.error('❌ Audio failed to load:', message.id, audioUrl, e.target.error);
-                      setFailedImages(prev => {
-                        const newSet = new Set(prev);
-                        newSet.add(message.id);
-                        return newSet;
-                      });
-                    }}
-                  />
-                ) : (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20 relative group">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
+              <Mic className="w-5 h-5 text-[#BBA473]" />
+            </div>
+
+            <div className="flex-1">
+              {hasFailed ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-red-400">Failed to load audio</span>
                   <button
                     onClick={() => handleMediaDownload(message)}
-                    disabled={isLoadingMedia}
-                    className="px-4 py-2 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-sm flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 font-medium text-xs transition-all"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download to play
+                    Retry
                   </button>
+                </div>
+              ) : isDownloaded ? (
+                <audio
+                  controls
+                  src={audioUrl}
+                  className="w-full"
+                  style={{ height: '36px', minWidth: '200px' }}
+                  preload="auto"
+                  onError={() => {
+                    setFailedImages(prev => new Set(prev).add(message.id));
+                  }}
+                />
+              ) : (
+                <div className="flex items-center gap-2 text-[#BBA473]">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Loading audio...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Dropdown menu for audio */}
+            {isDownloaded && !hasFailed && (
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenDropdownId(openDropdownId === message.id ? null : message.id);
+                  }}
+                  className="w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white transition-all"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {openDropdownId === message.id && (
+                  <div className="absolute right-0 top-9 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-xl shadow-2xl z-30 min-w-[160px] py-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const link = document.createElement('a');
+                        link.href = audioUrl;
+                        link.download = `audio-${message.id}.ogg`;
+                        link.click();
+                        setOpenDropdownId(null);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#BBA473]/20 flex items-center gap-2 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </button>
+                  </div>
                 )}
               </div>
-            </div>
-            
-            {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
-              <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
             )}
           </div>
-        </>
+
+          {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
+            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+        </div>
       );
     }
 
