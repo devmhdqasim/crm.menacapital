@@ -13,7 +13,6 @@ import TemplatePicker from '../Templatepicker';
 import ReminderModal from '../Remindermodal';
 import InboxLeadStatus from '../Inboxleadstatus';
 
-
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // State management
   const [messages, setMessages] = useState([]);
