@@ -5,7 +5,7 @@ import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
 
 const ChatHeader = ({
   contact,
-  isConnected,
+  isConnected, 
   showMessageSearch,
   setShowMessageSearch,
   setShowReminderModal,
