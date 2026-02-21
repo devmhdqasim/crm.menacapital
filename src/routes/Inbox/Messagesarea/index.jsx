@@ -465,6 +465,17 @@ const MessagesArea = ({
 
           {/* Messages for this date */}
           {messageGroups[dateKey].map((message) => (
+            message.isReadReceipt ? (
+              <>
+              {/* <div key={message.id} className="flex justify-center message-item my-1">
+                <div className="flex items-center gap-1.5 bg-red-500/20 border border-red-500/40 rounded-full px-3 py-1">
+                  <CheckCheck className="w-3.5 h-3.5 text-red-400" />
+                  <span className="text-xs font-medium text-red-400">Message read</span>
+                  <span className="text-[10px] text-red-400/60 ml-1">{message.timestamp}</span>
+                </div>
+              </div> */}
+              </>
+            ) : (
             <div
               key={message.id}
               id={`message-${message.id}`}
@@ -526,6 +537,7 @@ const MessagesArea = ({
                 )}
               </div>
             </div>
+            )
           ))}
         </div>
       ))}

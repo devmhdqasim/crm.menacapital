@@ -130,33 +130,107 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     const unsubscribe = addMessageListener((data) => {
       console.log('📨 Socket.IO data received:', data);
 
-      // Handle message status updates
+      // Handle message status updates (delivered / read)
       if (data.type === 'status_update') {
-        const { messageId, status, waId } = data;
+        const { messageId, status } = data;
+        // waId may be a string (already extracted in WebSocketContext) or object
+        const rawWaId = data.waId || '';
+        const waId = typeof rawWaId === 'object' && rawWaId !== null
+          ? String(rawWaId.phoneNumber || '')
+          : String(rawWaId);
         const contactWaId = contact.phone.replace(/\D/g, '');
-        
+
         if (!waId || (!waId.includes(contactWaId) && !contactWaId.includes(waId))) {
           return;
         }
 
-        console.log('📊 Updating message status:', messageId, status);
+        const newStatus = (status || '').toLowerCase();
+        const statusPriority = { sending: 0, sent: 1, delivered: 2, read: 3 };
 
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === messageId || 
-              (msg.sender === 'user' && Math.abs(msg.sortTimestamp - Date.now()) < 10000)) {
-            return { ...msg, status: status.toLowerCase() };
+        console.log('📊 Updating message status:', messageId, '->', newStatus);
+
+        setMessages(prev => {
+          // Find the index of the matched message
+          const matchedIndex = prev.findIndex(msg =>
+            msg.sender === 'user' &&
+            messageId && (msg.id === messageId || msg.whatsappMessageId === messageId)
+          );
+
+          // If no match found, just update by messageId alone
+          if (matchedIndex === -1) {
+            return prev.map(msg => {
+              if (msg.sender === 'user' && messageId && (msg.id === messageId || msg.whatsappMessageId === messageId)) {
+                const currentPriority = statusPriority[msg.status] ?? -1;
+                const newPriority = statusPriority[newStatus] ?? -1;
+                if (newPriority > currentPriority) return { ...msg, status: newStatus };
+              }
+              return msg;
+            });
           }
-          return msg;
-        }));
-        
+
+          // WhatsApp rule: a status applies to the matched message AND all earlier user messages
+          return prev.map((msg, i) => {
+            if (msg.sender !== 'user') return msg;
+            if (i <= matchedIndex) {
+              const currentPriority = statusPriority[msg.status] ?? -1;
+              const newPriority = statusPriority[newStatus] ?? -1;
+              if (newPriority > currentPriority) return { ...msg, status: newStatus };
+            }
+            return msg;
+          });
+        });
+
         return;
       }
 
       // Handle regular incoming messages
-      const messageWaId = data.from || data.waId;
+      const rawFrom = data.from || data.waId || '';
+      const messageWaId = typeof rawFrom === 'object' && rawFrom !== null
+        ? String(rawFrom.phoneNumber || '')
+        : String(rawFrom);
       const contactWaId = contact.phone.replace(/\D/g, '');
       
       if (!messageWaId || (!messageWaId.includes(contactWaId) && !contactWaId.includes(messageWaId))) {
+        return;
+      }
+
+      // Handle "Read type" messages — show red badge + mark all previous user msgs as read
+      if (data.name === 'Read type') {
+        console.log('📖 Read type received, marking previous messages as read');
+        const statusPriority = { sending: 0, sent: 1, delivered: 2, read: 3 };
+
+        setMessages(prev => {
+          // Find last user message to mark everything up to it as read
+          let lastUserIndex = -1;
+          for (let i = prev.length - 1; i >= 0; i--) {
+            if (prev[i].sender === 'user') { lastUserIndex = i; break; }
+          }
+
+          const updated = prev.map((msg, i) => {
+            if (msg.sender === 'user' && i <= lastUserIndex) {
+              const currentPriority = statusPriority[msg.status] ?? -1;
+              if (3 > currentPriority) return { ...msg, status: 'read' };
+            }
+            return msg;
+          });
+
+          // Add read receipt badge
+          const badge = {
+            id: `read-receipt-${Date.now()}`,
+            text: 'Message read',
+            sender: 'system',
+            isReadReceipt: true,
+            timestamp: new Date().toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }),
+            sortTimestamp: Date.now(),
+          };
+          return [...updated, badge];
+        });
+
+        setTimeout(() => scrollToBottom(), 100);
         return;
       }
 
@@ -273,6 +347,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
             return {
               id: msg._id || msg.whatsappMessageId || `api-${timestamp}-${Math.random()}`,
+              whatsappMessageId: msg.whatsappMessageId || null,
               text: messageText,
               sender: isOutgoing ? 'user' : 'contact',
               timestamp: timeString,

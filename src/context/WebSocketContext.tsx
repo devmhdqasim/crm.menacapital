@@ -56,6 +56,34 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
         setLastMessage(data);
 
+        // Detect DELIVERED / READ status events from backend
+        // Backend sends these via customer_message with eventType like:
+        //   "sentMessageDELIVERED_v2" or "sentMessageREAD_v2"
+        const eventType = data.eventType || '';
+        if (eventType.includes('DELIVERED') || eventType.includes('READ')) {
+          const status = eventType.includes('READ') ? 'read' : 'delivered';
+          const rawWaId = data.waId || data.from || '';
+          const waId = typeof rawWaId === 'object' && rawWaId !== null
+            ? (rawWaId.phoneNumber || '')
+            : rawWaId;
+          const messageId = data.whatsappMessageId || data.messageId || '';
+
+          console.log(`📊 Status update via customer_message: ${status}`, { messageId, waId });
+
+          const statusUpdate = {
+            type: 'status_update',
+            status,
+            messageId,
+            waId,
+          };
+
+          // Notify all listeners with the status update
+          messageListenersRef.current.forEach((listener) => {
+            listener(statusUpdate);
+          });
+          return; // Don't process as a regular message
+        }
+
         // Check if this is our own echoed message (agent-sent)
         const isOwnMessage =
           data.owner === true ||
@@ -65,8 +93,8 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         const messageText = data.text || data.message || '';
         const isRecentlySent = messageText && recentlySentTextsRef.current.has(messageText.trim());
 
-        // Only show notification for genuine incoming customer messages
-        if (!isOwnMessage && !isRecentlySent) {
+        // Only show notification for genuine incoming customer messages (skip read receipts)
+        if (!isOwnMessage && !isRecentlySent && data.name !== 'Read type') {
           const previewText = messageText.length > 60
             ? messageText.substring(0, 60) + '...'
             : messageText;
@@ -235,6 +263,11 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         // Clean up matched sent text
         if (isRecentlySent) {
           recentlySentTextsRef.current.delete(messageText.trim());
+        }
+
+        // Skip forwarding our own echoed messages to listeners (prevents duplicate images/media)
+        if (isOwnMessage || isRecentlySent) {
+          return;
         }
 
         // Notify all listeners

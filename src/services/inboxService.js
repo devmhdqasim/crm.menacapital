@@ -583,7 +583,7 @@ export const fetchWatiImage = async (imageUrl) => {
       // Remove baseURL for this request since imageUrl is already complete
       baseURL: '',
     });
-
+    
     // Create blob URL
     const blobUrl = URL.createObjectURL(response.data);
     
