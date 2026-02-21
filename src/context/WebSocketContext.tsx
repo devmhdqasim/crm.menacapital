@@ -71,7 +71,10 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
             ? messageText.substring(0, 60) + '...'
             : messageText;
 
-          const senderPhone = data.from || data.waId || 'Unknown';
+          const rawPhone = data.from || data.waId || 'Unknown';
+          const senderPhone = typeof rawPhone === 'object' && rawPhone !== null
+            ? (rawPhone.phoneNumber || JSON.stringify(rawPhone))
+            : rawPhone;
 
           // Increment unread count
           setUnreadCount(prev => prev + 1);

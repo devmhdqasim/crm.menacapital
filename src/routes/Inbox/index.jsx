@@ -165,7 +165,9 @@ const InboxPage = () => {
           leadId: lead.leadId,
           name: lead.leadName,
           email: lead.leadEmail,
-          phone: lead.leadPhoneNumber,
+          phone: typeof lead.leadPhoneNumber === 'object' && lead.leadPhoneNumber !== null
+            ? (lead.leadPhoneNumber.phoneNumber || '')
+            : (lead.leadPhoneNumber || ''),
           agent: lead.leadAgentId && lead.leadAgentId.length > 0
             ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}`
             : 'Not Assigned',
