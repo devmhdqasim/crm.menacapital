@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { logoutUser } from '../../services/authService';
 import { filterMenuByRole, SIDEBAR_MENU_CONFIG, ROUTES } from '@/config/roleConfig';
+import { useWebSocket } from '../../context/WebSocketContext';
 import logo from '@/assets/images/logo.svg';
 
 const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) => {
@@ -28,6 +29,9 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
   const [openMenus, setOpenMenus] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Unread message count from WebSocket
+  const { unreadCount } = useWebSocket();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -248,14 +252,37 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
                     title={isCollapsed ? item.label : ''}
                   >
                     <div className="flex items-center gap-3 relative z-10">
-                      <item.icon
-                        size={20}
-                        className="flex-shrink-0"
-                      />
+                      <div className="relative flex-shrink-0">
+                        <item.icon
+                          size={20}
+                          className="flex-shrink-0"
+                        />
+                        {/* Unread badge on icon (visible when collapsed) */}
+                        {item.label === 'Inbox' && isCollapsed && (
+                          <span className={`absolute -top-2 -right-2 min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 text-[10px] font-bold shadow-[0_2px_8px_rgba(0,0,0,0.4),0_0_6px_rgba(187,164,115,0.2)] ${
+                            unreadCount > 0
+                              ? 'bg-[#BBA473] text-[#1A1A1A] border border-[#BBA473]'
+                              : 'bg-[#2A2A2A] text-[#BBA473] border border-[#BBA473]/50'
+                          }`}>
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </div>
                       <span className={`font-medium transition-all duration-500 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100'}`}>
                         {item.label}
                       </span>
                     </div>
+
+                    {/* Unread badge (visible when expanded) */}
+                    {item.label === 'Inbox' && !isCollapsed && (
+                      <span className={`ml-auto min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-1.5 text-[11px] font-bold shadow-[0_2px_8px_rgba(0,0,0,0.4),0_0_6px_rgba(187,164,115,0.2)] relative z-10 ${
+                        unreadCount > 0
+                          ? 'bg-[#BBA473] text-[#1A1A1A] border border-[#BBA473]'
+                          : 'bg-[#2A2A2A] text-[#BBA473] border border-[#BBA473]/50'
+                      }`}>
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
 
                     {/* Active Indicator */}
                     {isLinkActive(item.href) && (

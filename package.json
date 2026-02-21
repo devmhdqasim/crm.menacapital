@@ -50,6 +50,7 @@
     "firebase": "^12.7.0",
     "formik": "^2.4.6",
     "js-cookies": "^1.0.4",
+    "jspdf": "^4.2.0",
     "libphonenumber-js": "^1.12.25",
     "lucide-react": "^0.545.0",
     "ramda": "0.31.3",

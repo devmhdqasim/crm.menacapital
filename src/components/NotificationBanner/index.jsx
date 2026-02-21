@@ -5,57 +5,57 @@ import { useFirebaseNotifications } from '../../context/FirebaseNotificationCont
 // Theme config per notification type
 const typeThemes = {
   whatsapp: {
-    bg: 'from-[#075E54] via-[#128C7E] to-[#25D366]',
-    iconBg: 'bg-[#25D366]',
+    bg: 'from-[#0a2e24] via-[#0f3d30] to-[#0a2e24]',
+    iconBg: 'bg-[#1a6b4a]',
     iconRing: 'ring-[#25D366]/30',
     textColor: 'text-white',
-    subtextColor: 'text-white/80',
-    tagBg: 'bg-white/20',
-    tagText: 'text-white',
+    subtextColor: 'text-white/90',
+    tagBg: 'bg-[#25D366]/25',
+    tagText: 'text-[#5afa9e]',
     closeBg: 'bg-white/10 hover:bg-white/20',
     closeIcon: 'text-white',
-    shadow: 'shadow-[#25D366]/25',
+    shadow: 'shadow-[#25D366]/20',
     label: 'WhatsApp',
     Icon: MessageCircle,
   },
   lead: {
-    bg: 'from-[#1A1A1A] via-[#2A2A2A] to-[#1A1A1A]',
+    bg: 'from-[#141414] via-[#1e1e1e] to-[#141414]',
     iconBg: 'bg-gradient-to-br from-[#BBA473] to-[#8E7D5A]',
     iconRing: 'ring-[#BBA473]/30',
     textColor: 'text-white',
-    subtextColor: 'text-gray-300',
-    tagBg: 'bg-[#BBA473]/20',
-    tagText: 'text-[#BBA473]',
+    subtextColor: 'text-gray-200',
+    tagBg: 'bg-[#BBA473]/25',
+    tagText: 'text-[#d4bc89]',
     closeBg: 'bg-white/5 hover:bg-white/10',
-    closeIcon: 'text-gray-400',
+    closeIcon: 'text-gray-300',
     shadow: 'shadow-[#BBA473]/20',
     label: 'Lead',
     Icon: Bell,
   },
   deposit: {
-    bg: 'from-[#1A1A1A] via-[#2A2A2A] to-[#1A1A1A]',
+    bg: 'from-[#141414] via-[#1e1e1e] to-[#141414]',
     iconBg: 'bg-gradient-to-br from-[#a855f7] to-[#7c3aed]',
     iconRing: 'ring-purple-500/30',
     textColor: 'text-white',
-    subtextColor: 'text-gray-300',
-    tagBg: 'bg-purple-500/20',
+    subtextColor: 'text-gray-200',
+    tagBg: 'bg-purple-500/25',
     tagText: 'text-purple-300',
     closeBg: 'bg-white/5 hover:bg-white/10',
-    closeIcon: 'text-gray-400',
+    closeIcon: 'text-gray-300',
     shadow: 'shadow-purple-500/20',
     label: 'Deposit',
     Icon: Bell,
   },
   general: {
-    bg: 'from-[#1A1A1A] via-[#2A2A2A] to-[#1A1A1A]',
+    bg: 'from-[#141414] via-[#1e1e1e] to-[#141414]',
     iconBg: 'bg-gradient-to-br from-[#BBA473] to-[#8E7D5A]',
     iconRing: 'ring-[#BBA473]/30',
     textColor: 'text-white',
-    subtextColor: 'text-gray-300',
-    tagBg: 'bg-[#BBA473]/20',
-    tagText: 'text-[#BBA473]',
+    subtextColor: 'text-gray-200',
+    tagBg: 'bg-[#BBA473]/25',
+    tagText: 'text-[#d4bc89]',
     closeBg: 'bg-white/5 hover:bg-white/10',
-    closeIcon: 'text-gray-400',
+    closeIcon: 'text-gray-300',
     shadow: 'shadow-[#BBA473]/20',
     label: 'Notification',
     Icon: Bell,
@@ -87,7 +87,7 @@ export default function NotificationBanner() {
 
   return (
     <div
-      className={`fixed top-4 right-4 left-4 md:left-auto md:w-[420px] z-[99999] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+      className={`fixed top-4 right-4 left-4 md:left-auto md:w-[440px] z-[99999] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
         isVisible ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-8 opacity-0 scale-95'
       }`}
     >
@@ -143,26 +143,37 @@ export default function NotificationBanner() {
               </div>
 
               {/* Title */}
-              <h4 className={`text-sm font-bold ${theme.textColor} truncate leading-tight`}>
+              <h4 className={`text-sm font-bold ${theme.textColor} leading-tight`}>
                 {latestNotification.title}
               </h4>
 
-              {/* Message */}
-              <p className={`text-xs ${theme.subtextColor} truncate mt-0.5 leading-relaxed`}>
+              {/* Message - show up to 2 lines */}
+              <p className={`text-xs ${theme.subtextColor} mt-0.5 leading-relaxed line-clamp-2`}>
                 {latestNotification.message}
               </p>
 
               {/* WhatsApp sender info */}
               {isWhatsApp && latestNotification.senderName && (
                 <div className="flex items-center gap-1.5 mt-1.5">
-                  <Phone className="w-3 h-3 text-[#25D366]/70" />
-                  <span className="text-[11px] text-[#25D366]/80 font-medium">
+                  <Phone className="w-3 h-3 text-[#5afa9e]/70" />
+                  <span className="text-[11px] text-[#5afa9e]/80 font-medium">
                     {latestNotification.senderName}
                     {latestNotification.senderPhone && (
-                      <span className="text-white/40 ml-1.5">{latestNotification.senderPhone}</span>
+                      <span className="text-white/50 ml-1.5">{latestNotification.senderPhone}</span>
                     )}
                   </span>
                 </div>
+              )}
+
+              {/* Timestamp */}
+              {latestNotification.createdAt && (
+                <span className="text-[10px] text-white/40 mt-1 block">
+                  {new Date(latestNotification.createdAt).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                  })}
+                </span>
               )}
             </div>
 

@@ -13,9 +13,6 @@ import TemplatePicker from '../Templatepicker';
 import ReminderModal from '../Remindermodal';
 import InboxLeadStatus from '../Inboxleadstatus';
 
-import { ref, get } from 'firebase/database';
-import { db } from '../../../config/firebase';
-
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // State management
@@ -66,20 +63,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const audioChunksRef = useRef([]);
   const emojiPickerRef = useRef(null);
   
-
-// Paste this in any useEffect temporarily
-useEffect(() => {
-  const checkFirebase = async () => {
-    const snapshot = await get(ref(db, 'whatsappSessions'));
-    const data = snapshot.val();
-    console.log('🔥 ALL whatsappSessions keys:', data ? Object.keys(data) : 'EMPTY or NO ACCESS');
-  };
-  checkFirebase();
-}, []);
-
-
   // WebSocket integration
-  const { isConnected, addMessageListener, sendMessage: sendWsMessage } = useWebSocket();
+  const { isConnected, addMessageListener, sendMessage: sendWsMessage, trackSentMessage } = useWebSocket();
   
   // Notification sound
   const notificationSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -576,6 +561,90 @@ useEffect(() => {
     }
   };
 
+  // Handle camera captured blob (photo or video)
+  const handleCameraFile = async (blob, type) => {
+    if (!blob || !contact) return;
+
+    const mimeType = blob.type || (type === 'image' ? 'image/jpeg' : 'video/mp4');
+    const ext = type === 'image' ? 'jpg' : 'mp4';
+    const fileName = `camera-${type}-${Date.now()}.${ext}`;
+
+    setIsSending(true);
+
+    try {
+      const localUrl = URL.createObjectURL(blob);
+      const optimisticMessageId = `camera-${Date.now()}`;
+      const optimisticMessage = {
+        id: optimisticMessageId,
+        text: '',
+        sender: 'user',
+        timestamp: new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }),
+        sortTimestamp: Date.now(),
+        status: 'sending',
+        type,
+        mediaUrl: localUrl,
+        downloadedImageUrl: localUrl,
+        localFile: true,
+      };
+
+      setMessages(prev => [...prev, optimisticMessage]);
+      setDownloadedImages(prev => new Set(prev).add(optimisticMessageId));
+
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        if (!isConnected) {
+          toast.error('Not connected to server. Please try again.');
+          setMessages(prev => prev.filter(msg => msg.id !== optimisticMessageId));
+          setIsSending(false);
+          return;
+        }
+
+        const cleanPhone = contact.phone.replace(/\D/g, '');
+
+        sendWsMessage({
+          waId: cleanPhone,
+          type,
+          file: {
+            buffer: reader.result,
+            originalName: fileName,
+            mimeType,
+            size: blob.size,
+          },
+          name: 'Agent',
+        });
+
+        setTimeout(() => {
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === optimisticMessageId ? { ...msg, status: 'sent' } : msg
+            )
+          );
+        }, 500);
+
+        toast.success(`${type === 'image' ? 'Photo' : 'Video'} sent!`);
+        if (refreshContacts) refreshContacts();
+        setIsSending(false);
+      };
+
+      reader.onerror = () => {
+        toast.error('Failed to process captured media');
+        setMessages(prev => prev.filter(msg => msg.id !== optimisticMessageId));
+        setIsSending(false);
+      };
+
+      reader.readAsArrayBuffer(blob);
+    } catch (error) {
+      console.error('Error sending camera capture:', error);
+      toast.error('Failed to send captured media');
+      setIsSending(false);
+    }
+  };
+
   // Cleanup recording on unmount
   useEffect(() => {
     return () => {
@@ -600,7 +669,7 @@ useEffect(() => {
         onClick={onClose}
       />
 
-      {/* Hidden file input - ✅ NOW WITH onChange HANDLER */}
+      {/* Hidden file input for attachments */}
       <input
         ref={fileInputRef}
         type="file"
@@ -634,6 +703,7 @@ useEffect(() => {
                 activeTab={activeTab}
                 handleMessageSearch={handleMessageSearch}
                 navigateSearch={navigateSearch}
+                messages={messages}
               />
 
               {/* 24-Hour Window Warning */}
@@ -737,6 +807,8 @@ useEffect(() => {
                 emojiPickerRef={emojiPickerRef}
                 downloadedImages={downloadedImages}
                 setDownloadedImages={setDownloadedImages}
+                trackSentMessage={trackSentMessage}
+                onCameraCapture={handleCameraFile}
               />
             </div>
 
@@ -761,6 +833,8 @@ useEffect(() => {
           <TemplatePicker
             contact={contact}
             onClose={() => setShowTemplatePicker(false)}
+            setMessages={setMessages}
+            refreshContacts={refreshContacts}
           />
         )}
 

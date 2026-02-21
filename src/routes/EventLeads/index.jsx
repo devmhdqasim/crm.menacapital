@@ -27,7 +27,7 @@ const EventLeadsManagement = () => {
   const [leadSources, setLeadSources] = useState([]);
   const [selectedLeadSourceFilter, setSelectedLeadSourceFilter] = useState('');
 
-  const tabs = ['All', 'Exhibition Lead',];
+  const tabs = ['All']; //'Exhibition Lead',
 
   // Debouncing effect for search query
   useEffect(() => {
