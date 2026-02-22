@@ -1,6 +1,133 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { Check, CheckCheck, Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download } from 'lucide-react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download, Play, Pause } from 'lucide-react';
 import { fetchWatiImage } from '../../../services/inboxService';
+
+// Custom audio player matching the gold/dark theme
+const AudioPlayer = ({ src, isUserMessage, onError }) => {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [loadError, setLoadError] = useState(false);
+  const progressRef = useRef(null);
+
+  const formatTime = (secs) => {
+    if (!secs || !isFinite(secs)) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const togglePlay = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch(() => setLoadError(true));
+    }
+  }, [isPlaying]);
+
+  const handleSeek = useCallback((e) => {
+    const audio = audioRef.current;
+    const bar = progressRef.current;
+    if (!audio || !bar || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = ratio * duration;
+  }, [duration]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onEnded = () => { setIsPlaying(false); setCurrentTime(0); };
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoaded = () => { if (audio.duration && isFinite(audio.duration)) setDuration(audio.duration); };
+    const onErr = () => { setLoadError(true); onError?.(); };
+
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.addEventListener('durationchange', onLoaded);
+    audio.addEventListener('error', onErr);
+
+    return () => {
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('pause', onPause);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('loadedmetadata', onLoaded);
+      audio.removeEventListener('durationchange', onLoaded);
+      audio.removeEventListener('error', onErr);
+    };
+  }, [onError]);
+
+  if (loadError) return null; // let parent handle error state
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Waveform bars (static visual)
+  const bars = [3, 5, 8, 12, 7, 14, 10, 6, 11, 8, 13, 5, 9, 7, 12, 6, 10, 14, 8, 5];
+
+  return (
+    <div className="flex items-center gap-2.5 min-w-[220px]">
+      <audio ref={audioRef} src={src} preload="auto" className="hidden" />
+
+      {/* Play/Pause button */}
+      <button
+        onClick={togglePlay}
+        className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 active:scale-90 ${
+          isUserMessage
+            ? 'bg-black/20 hover:bg-black/30 text-black'
+            : 'bg-[#BBA473]/20 hover:bg-[#BBA473]/30 text-[#BBA473]'
+        }`}
+      >
+        {isPlaying
+          ? <Pause className="w-4 h-4" />
+          : <Play className="w-4 h-4 ml-0.5" />
+        }
+      </button>
+
+      {/* Waveform + progress */}
+      <div className="flex-1 flex flex-col gap-1.5">
+        <div
+          ref={progressRef}
+          className="flex items-end gap-[2px] h-[22px] cursor-pointer"
+          onClick={handleSeek}
+        >
+          {bars.map((h, i) => {
+            const barProgress = (i / bars.length) * 100;
+            const isFilled = barProgress < progress;
+            return (
+              <div
+                key={i}
+                className={`flex-1 rounded-full transition-colors duration-150 ${
+                  isFilled
+                    ? isUserMessage ? 'bg-black/60' : 'bg-[#BBA473]'
+                    : isUserMessage ? 'bg-black/15' : 'bg-[#BBA473]/25'
+                }`}
+                style={{ height: `${h}px` }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Time */}
+        <div className={`flex justify-between text-[10px] leading-none font-medium ${
+          isUserMessage ? 'text-black/50' : 'text-gray-500'
+        }`}>
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const MessagesArea = ({
   messages,
@@ -102,22 +229,37 @@ const MessagesArea = ({
     downloadAll();
   }, [messages]);
 
+  // Single tick SVG
+  const SingleTick = ({ className, style }) => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={className} style={style}>
+      <path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+
+  // Double tick SVG
+  const DoubleTick = ({ className, style }) => (
+    <svg width="20" height="16" viewBox="0 0 20 16" fill="none" className={className} style={style}>
+      <path d="M1.5 8.5L4.5 11.5L10.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.5 8.5L9.5 11.5L15.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+
   const getMessageStatusIcon = (status, failed) => {
     if (failed) {
-      return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      return <AlertTriangle className="w-3.5 h-3.5 text-red-500" />;
     }
 
     switch (status) {
       case 'sending':
-        return <Clock className="w-4 h-4 text-gray-400 animate-spin" />;
+        return <Clock className="w-3.5 h-3.5 text-black/40 animate-pulse" />;
       case 'sent':
-        return <Check className="w-4 h-4 text-gray-600" />;
+        return <SingleTick className="text-black/50" />;
       case 'delivered':
-        return <CheckCheck className="w-4 h-4 text-gray-600" />;
+        return <DoubleTick className="text-[#26369c]" style={{ filter: 'drop-shadow(0 1px 2px rgba(83, 189, 235, 0.45))' }} />;
       case 'read':
-        return <CheckCheck className="w-4 h-4 text-[#BBA473]" />;
+        return <DoubleTick className="text-[#26369c]" style={{ filter: 'drop-shadow(0 1px 3px rgba(83, 189, 235, 0.6))' }} />;
       default:
-        return <Clock className="w-4 h-4 text-gray-400" />;
+        return <Clock className="w-3.5 h-3.5 text-black/40" />;
     }
   };
 
@@ -312,77 +454,36 @@ const MessagesArea = ({
       const audioUrl = message.downloadedImageUrl || message.mediaUrl;
       const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
       const hasFailed = failedImages.has(message.id);
+      const isUser = message.sender === 'user';
 
       return (
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl p-3 border border-[#BBA473]/20 relative group">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473]/30 to-[#8E7D5A]/30 flex items-center justify-center border border-[#BBA473]/20">
-              <Mic className="w-5 h-5 text-[#BBA473]" />
-            </div>
-
-            <div className="flex-1">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <Mic className={`w-4 h-4 flex-shrink-0 ${isUser ? 'text-black/50' : 'text-[#BBA473]'}`} />
+            <div className="flex-1 min-w-0">
               {hasFailed ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-red-400">Failed to load audio</span>
+                  <span className={`text-sm ${isUser ? 'text-black/60' : 'text-red-400'}`}>Failed to load audio</span>
                   <button
                     onClick={() => handleMediaDownload(message)}
-                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 font-medium text-xs transition-all"
+                    className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 font-medium text-xs transition-all"
                   >
                     Retry
                   </button>
                 </div>
               ) : isDownloaded ? (
-                <audio
-                  controls
+                <AudioPlayer
                   src={audioUrl}
-                  className="w-full"
-                  style={{ height: '36px', minWidth: '200px' }}
-                  preload="auto"
-                  onError={() => {
-                    setFailedImages(prev => new Set(prev).add(message.id));
-                  }}
+                  isUserMessage={isUser && !message.failed}
+                  onError={() => setFailedImages(prev => new Set(prev).add(message.id))}
                 />
               ) : (
-                <div className="flex items-center gap-2 text-[#BBA473]">
+                <div className={`flex items-center gap-2 ${isUser ? 'text-black/50' : 'text-[#BBA473]'}`}>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">Loading audio...</span>
                 </div>
               )}
             </div>
-
-            {/* Dropdown menu for audio */}
-            {isDownloaded && !hasFailed && (
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenDropdownId(openDropdownId === message.id ? null : message.id);
-                  }}
-                  className="w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white transition-all"
-                >
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-
-                {openDropdownId === message.id && (
-                  <div className="absolute right-0 top-9 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-xl shadow-2xl z-30 min-w-[160px] py-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const link = document.createElement('a');
-                        link.href = audioUrl;
-                        link.download = `audio-${message.id}.ogg`;
-                        link.click();
-                        setOpenDropdownId(null);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#BBA473]/20 flex items-center gap-2 transition-colors"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
@@ -511,12 +612,12 @@ const MessagesArea = ({
                       {message.timestamp}
                     </span>
                     {message.sender === 'user' && (
-                      <span className="ml-1">{getMessageStatusIcon(message.status, message.failed)}</span>
+                      <span className="ml-0.5 inline-flex items-center">{getMessageStatusIcon(message.status, message.failed)}</span>
                     )}
                   </div>
                 </div>
 
-                {message.failed && message.sender === 'user' && handleRetryMessage && (
+                {message.failed && message.sender === 'user' && handleRetryMessage && message.type === 'text' && (
                   <button
                     onClick={() => handleRetryMessage(message.id, message.text)}
                     disabled={retryingMessageId === message.id}
@@ -534,6 +635,12 @@ const MessagesArea = ({
                       </>
                     )}
                   </button>
+                )}
+                {message.failed && message.sender === 'user' && message.type !== 'text' && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-red-400">
+                    <AlertTriangle className="w-3 h-3" />
+                    <span className="text-xs">Failed to send</span>
+                  </div>
                 )}
               </div>
             </div>

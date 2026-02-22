@@ -265,9 +265,9 @@ const ChatInput = ({
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/ogg' });
-        
-        // ✅ Only send if recording has content and duration > 0
-        if (audioChunksRef.current.length > 0 && recordingDuration > 0) {
+
+        // Only send if recording has actual audio chunks (cancel clears the array)
+        if (audioChunksRef.current.length > 0) {
           await sendVoiceNote(audioBlob);
         }
         
@@ -339,11 +339,6 @@ const ChatInput = ({
       return;
     }
 
-    if (!isConnected) {
-      toast.error('Not connected to server. Please try again.');
-      return;
-    }
-
     if (audioBlob.size === 0) {
       toast.error('Recording is empty');
       return;
@@ -356,51 +351,67 @@ const ChatInput = ({
     });
 
     setIsSending(true);
-    
+
+    // Create local URL for immediate display
+    const localUrl = URL.createObjectURL(audioBlob);
+
+    // Create optimistic message FIRST so it shows in chat immediately
+    const optimisticMessageId = `voice-${Date.now()}`;
+    const optimisticMessage = {
+      id: optimisticMessageId,
+      text: '',
+      sender: 'user',
+      timestamp: new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }),
+      sortTimestamp: Date.now(),
+      status: 'sending',
+      type: 'audio',
+      mediaUrl: localUrl,
+      downloadedImageUrl: localUrl,
+      localFile: true,
+    };
+
+    console.log('✅ Adding voice note to messages:', optimisticMessageId);
+
+    // Add to messages immediately — always show in chat
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    // Mark as downloaded so it displays without blur
+    setDownloadedImages(prev => new Set(prev).add(optimisticMessageId));
+
+    // Helper to mark the message as failed (keeps it visible in chat)
+    const markFailed = () => {
+      setMessages(prev => prev.map(msg =>
+        msg.id === optimisticMessageId
+          ? { ...msg, status: 'failed', failed: true }
+          : msg
+      ));
+      setIsSending(false);
+    };
+
+    if (!isConnected) {
+      toast.error('Not connected to server. Voice note saved in chat.');
+      markFailed();
+      return;
+    }
+
     try {
-      // ✅ Create local URL for immediate display
-      const localUrl = URL.createObjectURL(audioBlob);
-      
-      // ✅ CRITICAL: Create optimistic message FIRST so it shows in chat immediately
-      const optimisticMessageId = `voice-${Date.now()}`;
-      const optimisticMessage = {
-        id: optimisticMessageId,
-        text: '',
-        sender: 'user',
-        timestamp: new Date().toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        }),
-        sortTimestamp: Date.now(),
-        status: 'sending',
-        type: 'audio',
-        mediaUrl: localUrl,
-        downloadedImageUrl: localUrl,
-        localFile: true,
-      };
-
-      console.log('✅ Adding voice note to messages:', optimisticMessageId);
-
-      // ✅ Add to messages immediately
-      setMessages(prev => [...prev, optimisticMessage]);
-      
-      // ✅ Mark as downloaded so it displays without blur
-      setDownloadedImages(prev => new Set(prev).add(optimisticMessageId));
-
-      // ✅ Read file as ArrayBuffer for sending
+      // Read file as ArrayBuffer for sending
       const reader = new FileReader();
-      
+
       reader.onload = () => {
         const cleanPhone = contact.phone.replace(/\D/g, '');
-        
+
         console.log('📤 Sending voice note via WebSocket:', {
           waId: cleanPhone,
           size: audioBlob.size,
           bufferSize: reader.result.byteLength
         });
-        
-        // ✅ CRITICAL: Send the voice note via Socket.IO with proper structure
+
+        // Send the voice note via Socket.IO with proper structure
         sendWsMessage({
           waId: cleanPhone,
           type: 'audio',
@@ -415,39 +426,37 @@ const ChatInput = ({
 
         console.log('✅ Voice note sent via WebSocket');
 
-        // ✅ Update message status to 'sent' after successful send
+        // Update message status to 'sent' after successful send
         setTimeout(() => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === optimisticMessageId 
+          setMessages(prev => prev.map(msg =>
+            msg.id === optimisticMessageId
               ? { ...msg, status: 'sent' }
               : msg
           ));
         }, 500);
 
         toast.success('Voice message sent!', { icon: '🎤' });
-        
+
         if (refreshContacts) {
           refreshContacts();
         }
-        
+
         setIsSending(false);
       };
 
       reader.onerror = (error) => {
         console.error('❌ Failed to read voice note:', error);
         toast.error('Failed to send voice message');
-        // Remove the optimistic message if sending failed
-        setMessages(prev => prev.filter(msg => msg.id !== optimisticMessageId));
-        setIsSending(false);
+        markFailed();
       };
 
-      // ✅ CRITICAL: Read as ArrayBuffer (same as image)
+      // Read as ArrayBuffer (same as image)
       reader.readAsArrayBuffer(audioBlob);
-      
+
     } catch (error) {
       console.error('❌ Error sending voice note:', error);
       toast.error('Failed to send voice message');
-      setIsSending(false);
+      markFailed();
     }
   };
 

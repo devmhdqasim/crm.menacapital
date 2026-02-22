@@ -531,7 +531,39 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     }
   };
 
-  // ✅ NEW: Handle file selection and send
+  // File size limits (in bytes)
+  const FILE_SIZE_LIMITS = {
+    image: 5 * 1024 * 1024,      // 5 MB
+    audio: 16 * 1024 * 1024,     // 16 MB
+    video: 16 * 1024 * 1024,     // 16 MB
+    document: 100 * 1024 * 1024, // 100 MB
+  };
+
+  // Allowed MIME types with labels
+  const ALLOWED_FILE_TYPES = {
+    'image/jpeg': 'image',
+    'image/png': 'image',
+    'image/webp': 'image',
+    'audio/mpeg': 'audio',
+    'audio/ogg': 'audio',
+    'audio/mp4': 'audio',
+    'audio/aac': 'audio',
+    'video/mp4': 'video',
+    'video/3gpp': 'video',
+    'application/pdf': 'document',
+    'application/msword': 'document',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'document',
+    'application/vnd.ms-excel': 'document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'document',
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // ✅ Handle file selection and send
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !contact) return;
@@ -543,29 +575,36 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       contact: contact.phone
     });
 
-    // WhatsApp-safe MIME types
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'audio/mpeg',
-      'audio/ogg',
-      'audio/mp4',
-      'video/mp4'
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Unsupported file type. Only JPEG, PNG images and MP3, OGG, MP4 audio/video files are supported.');
+    // Validate file type
+    const mediaCategory = ALLOWED_FILE_TYPES[file.type];
+    if (!mediaCategory) {
+      toast.error(
+        'Unsupported file type. Allowed: JPEG, PNG, WebP images, MP3/OGG/AAC audio, MP4/3GPP video, PDF, Word & Excel documents.',
+        { duration: 5000 }
+      );
       event.target.value = '';
       return;
     }
 
-    // Determine type
-    let type = 'image';
-    if (file.type.startsWith('audio')) {
-      type = 'audio';
-    } else if (file.type.startsWith('video')) {
-      type = 'video';
+    // Validate file size
+    const sizeLimit = FILE_SIZE_LIMITS[mediaCategory];
+    if (file.size > sizeLimit) {
+      toast.error(
+        `File too large (${formatFileSize(file.size)}). Max size for ${mediaCategory} files is ${formatFileSize(sizeLimit)}.`,
+        { duration: 5000 }
+      );
+      event.target.value = '';
+      return;
     }
+
+    // Reject empty files
+    if (file.size === 0) {
+      toast.error('Cannot send an empty file.');
+      event.target.value = '';
+      return;
+    }
+
+    const type = mediaCategory === 'document' ? 'document' : mediaCategory;
 
     setIsSending(true);
     
@@ -679,6 +718,21 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     const ext = type === 'image' ? 'jpg' : 'mp4';
     const fileName = `camera-${type}-${Date.now()}.${ext}`;
 
+    // Validate captured file size
+    const sizeLimit = FILE_SIZE_LIMITS[type] || FILE_SIZE_LIMITS.video;
+    if (blob.size > sizeLimit) {
+      toast.error(
+        `Captured ${type} too large (${formatFileSize(blob.size)}). Max size is ${formatFileSize(sizeLimit)}.`,
+        { duration: 5000 }
+      );
+      return;
+    }
+
+    if (blob.size === 0) {
+      toast.error('Captured file is empty. Please try again.');
+      return;
+    }
+
     setIsSending(true);
 
     try {
@@ -783,7 +837,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,audio/mpeg,audio/ogg,audio/mp4,video/mp4"
+        accept="image/jpeg,image/png,image/webp,audio/mpeg,audio/ogg,audio/mp4,audio/aac,video/mp4,video/3gpp,application/pdf,.doc,.docx,.xls,.xlsx"
         className="hidden"
         onChange={handleFileChange}
       />
