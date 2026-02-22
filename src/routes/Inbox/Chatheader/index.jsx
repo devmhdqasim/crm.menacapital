@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Search, Bell, Info, Phone, ChevronLeft, Download } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Search, Bell, Info, Phone, ChevronLeft, Download, Maximize2, Minimize2, MoreVertical, ShieldBan, AlertOctagon, ShieldCheck, ShieldOff } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
 
@@ -20,9 +20,30 @@ const ChatHeader = ({
   handleMessageSearch,
   navigateSearch,
   messages = [],
+  isMaximized = false,
+  setIsMaximized,
+  isBlocked = false,
+  isSpam = false,
+  onToggleBlock,
+  onToggleSpam,
 }) => {
   const { isSessionOpen, formattedTimeLeft } = useWhatsAppSession(contact?.phone);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef(null);
+
+  // Close more menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+    if (showMoreMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreMenu]);
 
   // Detect if text contains Arabic/RTL characters
   const hasArabic = (text) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
@@ -219,67 +240,173 @@ const ChatHeader = ({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-white truncate text-lg">{capitalizeWords(contact.name)}</h3>
-            <p className="text-sm text-gray-400 truncate flex items-center gap-2">
-              <Phone className="w-3 h-3" />
-              {formatPhoneDisplay(contact.phone)}
-            </p>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-white truncate text-lg">{capitalizeWords(contact.name)}</h3>
+              {(isBlocked || isSpam) && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                  isBlocked ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-400'
+                }`}>
+                  {isBlocked ? 'Blocked' : 'Spam'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-gray-400 truncate flex items-center gap-1.5">
+                <Phone className="w-3 h-3" />
+                {formatPhoneDisplay(contact.phone)}
+              </p>
+              {isConnected && (
+                <span className="text-[10px] text-green-400/80 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
+                  Live
+                </span>
+              )}
+            </div>
           </div>
         </div>
         
         {/* Header Actions */}
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex gap-1.5 flex-shrink-0 items-center">
           <button
             onClick={() => setShowMessageSearch(!showMessageSearch)}
-            className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-110 ${
-              showMessageSearch 
-                ? 'bg-[#BBA473] text-black' 
+            className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+              showMessageSearch
+                ? 'bg-[#BBA473] text-black'
                 : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
             }`}
             title="Search Messages"
           >
-            <Search className="w-5 h-5" />
+            <Search className="w-4.5 h-4.5" />
           </button>
 
           <button
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf || !messages.length}
-            className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-110 ${
+            className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
               isGeneratingPdf
                 ? 'bg-[#BBA473]/30 text-[#BBA473] cursor-wait'
                 : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
             } ${!messages.length ? 'opacity-40 cursor-not-allowed' : ''}`}
             title="Download Chat as PDF"
           >
-            <Download className={`w-5 h-5 ${isGeneratingPdf ? 'animate-pulse' : ''}`} />
+            <Download className={`w-4.5 h-4.5 ${isGeneratingPdf ? 'animate-pulse' : ''}`} />
           </button>
 
           <button
             onClick={() => setShowReminderModal(true)}
-            className="p-2.5 rounded-lg bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] transition-all duration-300 hover:scale-110"
+            className="p-2 rounded-lg bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] transition-all duration-200 hover:scale-105"
             title="Set Reminder"
           >
-            <Bell className="w-5 h-5" />
+            <Bell className="w-4.5 h-4.5" />
           </button>
 
           <button
             onClick={() => setShowProfileSidebar(!showProfileSidebar)}
-            className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-110 ${
-              showProfileSidebar 
-                ? 'bg-[#BBA473] text-black' 
+            className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+              showProfileSidebar
+                ? 'bg-[#BBA473] text-black'
                 : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
             }`}
             title="Contact Info"
           >
-            <Info className="w-5 h-5" />
+            <Info className="w-4.5 h-4.5" />
           </button>
+
+          {/* Maximize/Minimize Button */}
+          {setIsMaximized && (
+            <button
+              onClick={() => setIsMaximized(!isMaximized)}
+              className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+                isMaximized
+                  ? 'bg-[#BBA473] text-black'
+                  : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
+              }`}
+              title={isMaximized ? 'Minimize' : 'Maximize'}
+            >
+              {isMaximized ? <Minimize2 className="w-4.5 h-4.5" /> : <Maximize2 className="w-4.5 h-4.5" />}
+            </button>
+          )}
+
+          {/* More Options (Block/Spam) */}
+          <div className="relative" ref={moreMenuRef}>
+            <button
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+                showMoreMenu || isBlocked || isSpam
+                  ? isBlocked || isSpam
+                    ? 'bg-red-500/20 text-red-400'
+                    : 'bg-[#BBA473] text-black'
+                  : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
+              }`}
+              title="More Options"
+            >
+              <MoreVertical className="w-4.5 h-4.5" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMoreMenu && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl overflow-hidden z-[60] animate-scaleIn">
+                <div className="p-1.5">
+                  <button
+                    onClick={() => {
+                      onToggleBlock?.();
+                      setShowMoreMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isBlocked
+                        ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                        : 'text-red-400 hover:bg-red-500/10'
+                    }`}
+                  >
+                    {isBlocked ? (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>Unblock Contact</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldBan className="w-4 h-4" />
+                        <span>Block Contact</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      onToggleSpam?.();
+                      setShowMoreMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isSpam
+                        ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                        : 'text-orange-400 hover:bg-orange-500/10'
+                    }`}
+                  >
+                    {isSpam ? (
+                      <>
+                        <ShieldOff className="w-4 h-4" />
+                        <span>Remove from Spam</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertOctagon className="w-4 h-4" />
+                        <span>Mark as Spam</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-[#BBA473]/20 mx-0.5"></div>
 
           <button
             onClick={onClose}
-            className="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-300 hover:scale-110"
+            className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-105"
             title="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4.5 h-4.5" />
           </button>
         </div>
       </div>

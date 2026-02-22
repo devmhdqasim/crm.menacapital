@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Globe, User, Calendar, Phone, Bell, Tag, X, CheckCircle } from 'lucide-react';
+import { Mail, Globe, User, Calendar, Phone, Bell, Tag, X, CheckCircle, ShieldBan, AlertOctagon, ShieldCheck, ShieldOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ProfileSidebar = ({
@@ -11,6 +11,10 @@ const ProfileSidebar = ({
   showTagInput,
   setShowTagInput,
   setShowReminderModal,
+  isBlocked = false,
+  isSpam = false,
+  onToggleBlock,
+  onToggleSpam,
 }) => {
   const capitalizeWords = (str) => {
     if (!str) return '';
@@ -218,6 +222,39 @@ const ProfileSidebar = ({
               <Bell className="w-4 h-4" />
               Set Follow-up
             </button>
+          </div>
+        </div>
+
+        {/* Block & Spam */}
+        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/10">
+          <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Contact Controls</h4>
+          <div className="space-y-2">
+            {onToggleBlock && (
+              <button
+                onClick={onToggleBlock}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105 ${
+                  isBlocked
+                    ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20'
+                    : 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20'
+                }`}
+              >
+                {isBlocked ? <ShieldCheck className="w-4 h-4" /> : <ShieldBan className="w-4 h-4" />}
+                {isBlocked ? 'Unblock Contact' : 'Block Contact'}
+              </button>
+            )}
+            {onToggleSpam && (
+              <button
+                onClick={onToggleSpam}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105 ${
+                  isSpam
+                    ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20'
+                    : 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/20'
+                }`}
+              >
+                {isSpam ? <ShieldOff className="w-4 h-4" /> : <AlertOctagon className="w-4 h-4" />}
+                {isSpam ? 'Remove from Spam' : 'Mark as Spam'}
+              </button>
+            )}
           </div>
         </div>
       </div>

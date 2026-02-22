@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPreviousMessages, sendWatiMessage } from '../../../services/inboxService';
@@ -53,6 +53,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   
   // Emoji State
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Maximize State
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  // Block/Spam State
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isSpam, setIsSpam] = useState(false);
   
   // Refs
   const messagesEndRef = useRef(null);
@@ -114,7 +121,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       fetchPreviousMessages();
       loadContactNotes();
       loadContactTags();
-      
+      loadBlockSpamStatus();
+
       setTimeout(() => {
         inputRef.current?.focus();
       }, 300);
@@ -418,6 +426,34 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       setContactTags([]);
     }
   };
+
+  // Load block/spam status
+  const loadBlockSpamStatus = () => {
+    try {
+      const blocked = localStorage.getItem(`blocked_${contact.id}`);
+      const spam = localStorage.getItem(`spam_${contact.id}`);
+      setIsBlocked(blocked === 'true');
+      setIsSpam(spam === 'true');
+    } catch (error) {
+      console.error('Error loading block/spam status:', error);
+    }
+  };
+
+  // Toggle block contact
+  const handleToggleBlock = useCallback(() => {
+    const newVal = !isBlocked;
+    setIsBlocked(newVal);
+    localStorage.setItem(`blocked_${contact.id}`, String(newVal));
+    toast.success(newVal ? 'Contact blocked' : 'Contact unblocked');
+  }, [isBlocked, contact]);
+
+  // Toggle spam contact
+  const handleToggleSpam = useCallback(() => {
+    const newVal = !isSpam;
+    setIsSpam(newVal);
+    localStorage.setItem(`spam_${contact.id}`, String(newVal));
+    toast.success(newVal ? 'Marked as spam' : 'Removed from spam');
+  }, [isSpam, contact]);
 
   // Handle retry message
   const handleRetryMessage = async (messageId, messageText) => {
@@ -755,7 +791,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       {/* Drawer */}
       <div className={`fixed right-0 top-0 h-full bg-gradient-to-br from-[#1A1A1A] to-[#252525] shadow-2xl z-50 flex transform transition-all duration-300 ease-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
-      } ${showProfileSidebar ? 'w-full lg:w-[900px]' : 'w-full md:w-[500px] lg:w-[650px]'}`}>
+      } ${isMaximized ? 'w-full' : showProfileSidebar ? 'w-full lg:w-[900px]' : 'w-full md:w-[500px] lg:w-[650px]'}`}>
         {contact && (
           <>
             {/* Main Chat Area */}
@@ -778,6 +814,12 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 handleMessageSearch={handleMessageSearch}
                 navigateSearch={navigateSearch}
                 messages={messages}
+                isMaximized={isMaximized}
+                setIsMaximized={setIsMaximized}
+                isBlocked={isBlocked}
+                isSpam={isSpam}
+                onToggleBlock={handleToggleBlock}
+                onToggleSpam={handleToggleSpam}
               />
 
               {/* 24-Hour Window Warning */}
@@ -811,6 +853,28 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Blocked/Spam Banner */}
+              {(isBlocked || isSpam) && (
+                <div className="bg-gradient-to-r from-red-500/10 to-red-900/10 border-b border-red-500/30 px-4 py-2.5 flex items-center gap-3 animate-slideDown flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm">{isBlocked ? '🚫' : '⚠️'}</span>
+                  </div>
+                  <p className="text-sm text-red-300 flex-1">
+                    {isBlocked && isSpam
+                      ? 'This contact is blocked and marked as spam'
+                      : isBlocked
+                      ? 'This contact is blocked'
+                      : 'This contact is marked as spam'}
+                  </p>
+                  <button
+                    onClick={isBlocked ? handleToggleBlock : handleToggleSpam}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors border border-red-500/30"
+                  >
+                    {isBlocked ? 'Unblock' : 'Remove Spam'}
+                  </button>
                 </div>
               )}
 
@@ -897,6 +961,10 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 showTagInput={showTagInput}
                 setShowTagInput={setShowTagInput}
                 setShowReminderModal={setShowReminderModal}
+                isBlocked={isBlocked}
+                isSpam={isSpam}
+                onToggleBlock={handleToggleBlock}
+                onToggleSpam={handleToggleSpam}
               />
             )}
           </>
