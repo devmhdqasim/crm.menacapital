@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download, Play, Pause } from 'lucide-react';
+import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download, Play, Pause, Video } from 'lucide-react';
 import { fetchWatiImage } from '../../../services/inboxService';
 
 // Custom audio player matching the gold/dark theme
@@ -162,7 +162,7 @@ const MessagesArea = ({
   // Calculate media download progress
   const mediaProgress = useMemo(() => {
     const mediaMessages = messages.filter(
-      msg => (msg.type === 'image' || msg.type === 'audio') && msg.mediaUrl && !msg.localFile
+      msg => (msg.type === 'image' || msg.type === 'audio' || msg.type === 'video') && msg.mediaUrl && !msg.localFile
     );
     const total = mediaMessages.length;
     const downloaded = mediaMessages.filter(
@@ -176,7 +176,7 @@ const MessagesArea = ({
     if (isDownloadingRef.current) return;
 
     const mediaToDownload = messages.filter(msg =>
-      (msg.type === 'image' || msg.type === 'audio') &&
+      (msg.type === 'image' || msg.type === 'audio' || msg.type === 'video') &&
       msg.mediaUrl &&
       !msg.localFile &&
       !msg.mediaUrl.startsWith('blob:') &&
@@ -487,6 +487,53 @@ const MessagesArea = ({
           </div>
 
           {message.text && message.text !== '🎵 Audio' && message.text !== '🎤 Voice Message' && (
+            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+        </div>
+      );
+    }
+
+    // VIDEO DISPLAY
+    if (message.type === 'video' && message.mediaUrl) {
+      const videoUrl = message.downloadedImageUrl || message.mediaUrl;
+      const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
+      const hasFailed = failedImages.has(message.id);
+      const isUser = message.sender === 'user';
+
+      return (
+        <div className="space-y-2">
+          {hasFailed ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <Video className={`w-12 h-12 mb-2 ${isUser ? 'text-black/30' : 'text-[#BBA473]/50'}`} />
+              <p className={`text-sm ${isUser ? 'text-black/50' : 'text-[#BBA473]/70'}`}>Failed to load video</p>
+              <button
+                onClick={() => handleMediaDownload(message)}
+                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all"
+              >
+                Retry
+              </button>
+            </div>
+          ) : isDownloaded ? (
+            <div className="relative rounded-xl overflow-hidden bg-black/20" style={{ maxWidth: '300px' }}>
+              <video
+                src={videoUrl}
+                controls
+                preload="metadata"
+                className="w-full h-auto rounded-xl"
+                style={{ maxHeight: '350px', minHeight: '120px' }}
+                onError={() => {
+                  setFailedImages(prev => new Set(prev).add(message.id));
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <Loader2 className="w-12 h-12 text-[#BBA473] animate-spin mb-2" />
+              <p className="text-[#BBA473]/70 text-sm">Loading video...</p>
+            </div>
+          )}
+
+          {message.text && message.text !== '🎥 Video' && (
             <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
           )}
         </div>

@@ -203,7 +203,7 @@ const ChatInput = ({
     };
 
     recorder.onstop = () => {
-      if (videoChunksRef.current.length > 0 && videoRecordingDuration > 0) {
+      if (videoChunksRef.current.length > 0) {
         const blob = new Blob(videoChunksRef.current, { type: 'video/mp4' });
         if (onCameraCapture) {
           onCameraCapture(blob, 'video');

@@ -640,31 +640,38 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       // ✅ CRITICAL FIX: Read file as ArrayBuffer for sending
       const reader = new FileReader();
       
+      // Helper to mark the message as failed (keeps it visible in chat)
+      const markFailed = () => {
+        setMessages(prev => prev.map(msg =>
+          msg.id === optimisticMessageId
+            ? { ...msg, status: 'failed', failed: true }
+            : msg
+        ));
+        setIsSending(false);
+        event.target.value = '';
+      };
+
       reader.onload = () => {
         if (!isConnected) {
-          toast.error('Not connected to server. Please try again.');
-          // Remove the optimistic message if not connected
-          setMessages(prev => prev.filter(msg => msg.id !== optimisticMessageId));
-          setIsSending(false);
-          event.target.value = '';
+          toast.error('Not connected to server. File saved in chat.');
+          markFailed();
           return;
         }
 
         const cleanPhone = contact.phone.replace(/\D/g, '');
-        
+
         console.log('📤 Sending media via WebSocket:', {
           waId: cleanPhone,
           type,
           fileSize: file.size,
           mimeType: file.type
         });
-        
-        // ✅ CRITICAL: Send the file via Socket.IO with proper structure
+
         sendWsMessage({
           waId: cleanPhone,
           type,
           file: {
-            buffer: reader.result, // ArrayBuffer
+            buffer: reader.result,
             originalName: file.name,
             mimeType: file.type,
             size: file.size
@@ -672,39 +679,39 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           name: 'Agent'
         });
 
-        // ✅ Update message status to 'sent' after successful send
         setTimeout(() => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === optimisticMessageId 
+          setMessages(prev => prev.map(msg =>
+            msg.id === optimisticMessageId
               ? { ...msg, status: 'sent' }
               : msg
           ));
         }, 500);
 
-        toast.success(`${type === 'image' ? 'Image' : type === 'audio' ? 'Audio' : 'Video'} sent successfully!`);
-        
+        toast.success(`${type === 'image' ? 'Image' : type === 'audio' ? 'Audio' : type === 'video' ? 'Video' : 'File'} sent successfully!`);
+
         if (refreshContacts) {
           refreshContacts();
         }
-        
+
         setIsSending(false);
         event.target.value = '';
       };
 
       reader.onerror = () => {
         toast.error('Failed to read file');
-        // Remove the optimistic message if reading failed
-        setMessages(prev => prev.filter(msg => msg.id !== optimisticMessageId));
-        setIsSending(false);
-        event.target.value = '';
+        markFailed();
       };
 
-      // ✅ CRITICAL: Read as ArrayBuffer (matches backend expectation)
       reader.readAsArrayBuffer(file);
-      
+
     } catch (error) {
       console.error('Error sending file:', error);
       toast.error(`Failed to send ${type}`);
+      setMessages(prev => prev.map(msg =>
+        msg.id === optimisticMessageId
+          ? { ...msg, status: 'failed', failed: true }
+          : msg
+      ));
       setIsSending(false);
       event.target.value = '';
     }
@@ -760,11 +767,19 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
       const reader = new FileReader();
 
+      const markFailed = () => {
+        setMessages(prev => prev.map(msg =>
+          msg.id === optimisticMessageId
+            ? { ...msg, status: 'failed', failed: true }
+            : msg
+        ));
+        setIsSending(false);
+      };
+
       reader.onload = () => {
         if (!isConnected) {
-          toast.error('Not connected to server. Please try again.');
-          setMessages(prev => prev.filter(msg => msg.id !== optimisticMessageId));
-          setIsSending(false);
+          toast.error('Not connected to server. Capture saved in chat.');
+          markFailed();
           return;
         }
 
@@ -797,8 +812,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
       reader.onerror = () => {
         toast.error('Failed to process captured media');
-        setMessages(prev => prev.filter(msg => msg.id !== optimisticMessageId));
-        setIsSending(false);
+        markFailed();
       };
 
       reader.readAsArrayBuffer(blob);
