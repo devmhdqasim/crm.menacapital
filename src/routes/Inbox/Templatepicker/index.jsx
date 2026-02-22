@@ -135,7 +135,7 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
         ...variableGroups.buttons.map(v => `button_${v}`),
       ];
       const parameters = orderedKeys.map((key, idx) => ({
-        name: String(idx + 1),
+        name: selectedTemplate.customParams?.[idx]?.paramName || String(idx + 1),
         value: paramValues[key],
       }));
 
