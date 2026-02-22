@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer, Pin, PinOff, BellOff, Bell, MoreVertical } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import InboxTemplateManager from '../InboxTemplateManager';
 import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
+import toast from 'react-hot-toast';
 
 const ContactTimer = ({ phone }) => {
   const { isSessionOpen, formattedTimeLeft, colors } = useWhatsAppSession(phone);
@@ -29,19 +30,34 @@ const useContactSession = (phone) => {
   return isSessionOpen;
 };
 
-const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneDisplay, formatTimeAgo, userRole }) => {
+const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneDisplay, formatTimeAgo, userRole, isPinned, isMuted, onTogglePin, onToggleMute }) => {
   const hasActiveSession = useContactSession(contact.phone);
+  const [showActions, setShowActions] = useState(false);
+  const actionsRef = React.useRef(null);
+
+  useEffect(() => {
+    if (!showActions) return;
+    const handleClickOutside = (e) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) {
+        setShowActions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showActions]);
 
   return (
     <div
       onClick={() => handleContactClick(contact)}
       className={`p-5 transition-all duration-300 cursor-pointer group relative ${
-        hasActiveSession
-          ? 'bg-[#BBA473]/[0.04] hover:bg-[#BBA473]/[0.09] border-l-2 border-l-[#BBA473]/40'
-          : 'hover:bg-gradient-to-r hover:from-[#2A2A2A] hover:to-[#252525]'
+        isPinned
+          ? 'bg-[#BBA473]/[0.03] border-l-2 border-l-[#BBA473]/30 hover:bg-[#BBA473]/[0.08]'
+          : hasActiveSession
+            ? 'bg-[#BBA473]/[0.04] hover:bg-[#BBA473]/[0.09] border-l-2 border-l-[#BBA473]/40'
+            : 'hover:bg-gradient-to-r hover:from-[#2A2A2A] hover:to-[#252525]'
       }`}
     >
-      {!hasActiveSession && (
+      {!hasActiveSession && !isPinned && (
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       )}
 
@@ -49,7 +65,7 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
         {/* Avatar */}
         <div className="relative flex-shrink-0">
           {contact.avatar ? (
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 p-0.5">
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 p-0.5 ${isMuted ? 'opacity-60' : ''}`}>
               <img
                 src={contact.avatar}
                 alt={contact.name}
@@ -67,7 +83,7 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
               </div>
             </div>
           ) : (
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 ${isMuted ? 'opacity-60' : ''}`}>
               <span className="text-2xl font-bold text-white">
                 {contact.name.charAt(0).toUpperCase()}
               </span>
@@ -76,9 +92,14 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
           {contact.isOnline && (
             <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2A2A2A] animate-pulse"></div>
           )}
-          {contact.unreadCount > 0 && (
+          {contact.unreadCount > 0 && !isMuted && (
             <div className="absolute -top-1 -right-1 min-w-[24px] h-6 bg-red-500 rounded-full flex items-center justify-center px-1.5 shadow-lg">
               <span className="text-xs font-bold text-white">{contact.unreadCount}</span>
+            </div>
+          )}
+          {contact.unreadCount > 0 && isMuted && (
+            <div className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-gray-600 rounded-full flex items-center justify-center px-1 shadow-lg">
+              <span className="text-[10px] font-bold text-gray-300">{contact.unreadCount}</span>
             </div>
           )}
         </div>
@@ -86,20 +107,69 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
         {/* Contact Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-white truncate group-hover:text-[#BBA473] transition-colors duration-300">
-              {capitalizeWords(contact.name)}
-            </h3>
+            <div className="flex items-center gap-2 min-w-0">
+              <h3 className={`text-lg font-semibold truncate group-hover:text-[#BBA473] transition-colors duration-300 ${isMuted ? 'text-gray-400' : 'text-white'}`}>
+                {capitalizeWords(contact.name)}
+              </h3>
+              {isPinned && (
+                <Pin className="w-3.5 h-3.5 text-[#BBA473]/60 flex-shrink-0 rotate-45" />
+              )}
+              {isMuted && (
+                <BellOff className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+              )}
+            </div>
             <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-              {/* Real Firebase timer - only shows if session isOpen */}
               <ContactTimer phone={contact.phone} />
               <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-[#1A1A1A] px-2 py-1 rounded-md">
                 <Clock className="w-3.5 h-3.5" />
                 <span className="font-medium">{formatTimeAgo(contact.lastMessageTime)}</span>
               </div>
+
+              {/* Actions Menu */}
+              <div className="relative" ref={actionsRef}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowActions(!showActions);
+                  }}
+                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+
+                {showActions && (
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl z-30 overflow-hidden" style={{ animation: 'scaleIn 0.15s ease-out' }}>
+                    <div className="p-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTogglePin(contact.id);
+                          setShowActions(false);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                      >
+                        {isPinned ? <PinOff className="w-4 h-4 text-[#BBA473]" /> : <Pin className="w-4 h-4 text-[#BBA473]" />}
+                        {isPinned ? 'Unpin' : 'Pin to Top'}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleMute(contact.id);
+                          setShowActions(false);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                      >
+                        {isMuted ? <Bell className="w-4 h-4 text-[#BBA473]" /> : <BellOff className="w-4 h-4 text-gray-400" />}
+                        {isMuted ? 'Unmute' : 'Mute'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <p className="text-sm text-gray-300 truncate mb-2 leading-relaxed">
+          <p className={`text-sm truncate mb-2 leading-relaxed ${isMuted ? 'text-gray-500' : 'text-gray-300'}`}>
             {contact.lastMessage}
           </p>
 
@@ -164,6 +234,47 @@ const InboxListing = ({
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
+
+  // Pin & Mute state (persisted in localStorage)
+  const [pinnedIds, setPinnedIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('inbox_pinned') || '[]');
+    } catch { return []; }
+  });
+  const [mutedIds, setMutedIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('inbox_muted') || '[]');
+    } catch { return []; }
+  });
+
+  const handleTogglePin = useCallback((contactId) => {
+    setPinnedIds(prev => {
+      const next = prev.includes(contactId)
+        ? prev.filter(id => id !== contactId)
+        : [...prev, contactId];
+      localStorage.setItem('inbox_pinned', JSON.stringify(next));
+      toast.success(prev.includes(contactId) ? 'Unpinned' : 'Pinned to top', { duration: 1500 });
+      return next;
+    });
+  }, []);
+
+  const handleToggleMute = useCallback((contactId) => {
+    setMutedIds(prev => {
+      const next = prev.includes(contactId)
+        ? prev.filter(id => id !== contactId)
+        : [...prev, contactId];
+      localStorage.setItem('inbox_muted', JSON.stringify(next));
+      toast.success(prev.includes(contactId) ? 'Unmuted' : 'Muted', { duration: 1500 });
+      return next;
+    });
+  }, []);
+
+  // Sort: pinned contacts first, then original order
+  const sortedContacts = useMemo(() => {
+    const pinned = contacts.filter(c => pinnedIds.includes(c.id));
+    const rest = contacts.filter(c => !pinnedIds.includes(c.id));
+    return [...pinned, ...rest];
+  }, [contacts, pinnedIds]);
 
   const perPageOptions = [10, 20, 30, 50, 100];
 
@@ -320,17 +431,40 @@ const InboxListing = ({
           </div>
         ) : (
           <div className="divide-y divide-[#BBA473]/10">
-            {contacts.map((contact) => (
-              <ContactRow
-                key={contact.id}
-                contact={contact}
-                handleContactClick={handleContactClick}
-                capitalizeWords={capitalizeWords}
-                formatPhoneDisplay={formatPhoneDisplay}
-                formatTimeAgo={formatTimeAgo}
-                userRole={userRole}
-              />
-            ))}
+            {/* Pinned section divider */}
+            {sortedContacts.some(c => pinnedIds.includes(c.id)) && sortedContacts.some(c => !pinnedIds.includes(c.id)) && (
+              <div className="sr-only">Pinned contacts above</div>
+            )}
+            {sortedContacts.map((contact, idx) => {
+              const isPinned = pinnedIds.includes(contact.id);
+              const nextIsPinned = sortedContacts[idx + 1] ? pinnedIds.includes(sortedContacts[idx + 1].id) : true;
+              return (
+                <React.Fragment key={contact.id}>
+                  <ContactRow
+                    contact={contact}
+                    handleContactClick={handleContactClick}
+                    capitalizeWords={capitalizeWords}
+                    formatPhoneDisplay={formatPhoneDisplay}
+                    formatTimeAgo={formatTimeAgo}
+                    userRole={userRole}
+                    isPinned={isPinned}
+                    isMuted={mutedIds.includes(contact.id)}
+                    onTogglePin={handleTogglePin}
+                    onToggleMute={handleToggleMute}
+                  />
+                  {/* Visual divider between pinned and unpinned sections */}
+                  {isPinned && !nextIsPinned && (
+                    <div className="flex items-center gap-3 px-6 py-1.5 bg-[#1A1A1A]">
+                      <div className="flex-1 h-px bg-[#BBA473]/15"></div>
+                      <span className="text-[10px] text-[#BBA473]/40 font-medium uppercase tracking-widest flex items-center gap-1.5">
+                        <Pin className="w-2.5 h-2.5 rotate-45" /> Pinned
+                      </span>
+                      <div className="flex-1 h-px bg-[#BBA473]/15"></div>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         )}
 
@@ -433,6 +567,10 @@ const InboxListing = ({
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
         body{
           background-color: #000;
