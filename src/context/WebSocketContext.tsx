@@ -110,16 +110,17 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           // Custom rich notification toast
           toast.custom((t) => (
             <div
-              onClick={() => {
-                toast.dismiss(t.id);
-                sessionStorage.setItem('openChatForPhone', senderPhone.replace(/\D/g, ''));
-                sessionStorage.setItem('openChatForName', senderPhone);
-                if (window.location.pathname === '/inbox') {
-                  window.location.reload();
-                } else {
-                  window.location.href = '/inbox';
-                }
-              }}
+              // onClick - redirect commented out for now
+              // onClick={() => {
+              //   toast.dismiss(t.id);
+              //   sessionStorage.setItem('openChatForPhone', senderPhone.replace(/\D/g, ''));
+              //   sessionStorage.setItem('openChatForName', senderPhone);
+              //   if (window.location.pathname === '/inbox') {
+              //     window.location.reload();
+              //   } else {
+              //     window.location.href = '/inbox';
+              //   }
+              // }}
               style={{
                 maxWidth: '400px',
                 width: '100%',
@@ -228,8 +229,35 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
                   </p>
                 </div>
 
-                {/* Arrow indicator */}
-                <div style={{
+                {/* Close button */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toast.dismiss(t.id);
+                  }}
+                  style={{
+                    flexShrink: 0,
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '10px',
+                    background: 'rgba(37,211,102,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(37,211,102,0.25)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(37,211,102,0.1)'; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25D366" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </div>
+
+                {/* Arrow indicator - commented out for now */}
+                {/* <div style={{
                   flexShrink: 0,
                   width: '32px',
                   height: '32px',
@@ -242,7 +270,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25D366" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6"/>
                   </svg>
-                </div>
+                </div> */}
               </div>
 
               {/* Bottom progress bar */}

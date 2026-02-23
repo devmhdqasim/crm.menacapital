@@ -260,22 +260,22 @@ export const FirebaseNotificationProvider = ({ children }) => {
           playSound();
           toast.custom((t) => (
             <div
-              onClick={() => {
-                toast.dismiss(t.id);
-                if (phone) {
-                  sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
-                  sessionStorage.setItem('openChatForName', phone);
-                  if (window.location.pathname === '/inbox') {
-                    window.location.reload();
-                  } else {
-                    window.location.href = '/inbox';
-                  }
-                }
-              }}
+              // onClick - redirect commented out for now
+              // onClick={() => {
+              //   toast.dismiss(t.id);
+              //   if (phone) {
+              //     sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
+              //     sessionStorage.setItem('openChatForName', phone);
+              //     if (window.location.pathname === '/inbox') {
+              //       window.location.reload();
+              //     } else {
+              //       window.location.href = '/inbox';
+              //     }
+              //   }
+              // }}
               style={{
                 maxWidth: '400px',
                 width: '100%',
-                cursor: 'pointer',
                 background: 'linear-gradient(135deg, #2d1a00 0%, #3d2400 50%, #2d1a00 100%)',
                 borderRadius: '16px',
                 padding: '0',
@@ -347,7 +347,35 @@ export const FirebaseNotificationProvider = ({ children }) => {
                     {value.notes || 'You have a pending reminder for this contact'}
                   </p>
                 </div>
-                <div style={{
+                {/* Close button */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toast.dismiss(t.id);
+                  }}
+                  style={{
+                    flexShrink: 0,
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '10px',
+                    background: 'rgba(245,158,11,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.25)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </div>
+
+                {/* Arrow indicator - commented out for now */}
+                {/* <div style={{
                   flexShrink: 0,
                   width: '32px',
                   height: '32px',
@@ -360,7 +388,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6"/>
                   </svg>
-                </div>
+                </div> */}
               </div>
               <div style={{ height: '2px', width: '100%', background: 'rgba(0,0,0,0.2)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', background: '#f59e0b', animation: 'toast-shrink 6s linear forwards' }} />
@@ -499,16 +527,17 @@ export const FirebaseNotificationProvider = ({ children }) => {
         playSound();
         toast.custom((t) => (
           <div
-            onClick={() => {
-              toast.dismiss(t.id);
-              sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
-              sessionStorage.setItem('openChatForName', phone);
-              if (window.location.pathname === '/inbox') {
-                window.location.reload();
-              } else {
-                window.location.href = '/inbox';
-              }
-            }}
+            // onClick - redirect commented out for now
+            // onClick={() => {
+            //   toast.dismiss(t.id);
+            //   sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
+            //   sessionStorage.setItem('openChatForName', phone);
+            //   if (window.location.pathname === '/inbox') {
+            //     window.location.reload();
+            //   } else {
+            //     window.location.href = '/inbox';
+            //   }
+            // }}
             style={{
               maxWidth: '400px',
               width: '100%',
@@ -598,7 +627,34 @@ export const FirebaseNotificationProvider = ({ children }) => {
                   Kindly reply to this customer
                 </p>
               </div>
-              <div style={{
+              {/* Close button */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.dismiss(t.id);
+                }}
+                style={{
+                  flexShrink: 0,
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '10px',
+                  background: 'rgba(168,85,247,0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.25)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.1)'; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </div>
+              {/* Arrow indicator - commented out for now */}
+              {/* <div style={{
                 flexShrink: 0,
                 width: '32px',
                 height: '32px',
@@ -611,7 +667,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
-              </div>
+              </div> */}
             </div>
             <div style={{ height: '2px', width: '100%', background: 'rgba(0,0,0,0.2)', overflow: 'hidden' }}>
               <div style={{ height: '100%', background: '#a855f7', animation: 'toast-shrink 7s linear forwards' }} />
