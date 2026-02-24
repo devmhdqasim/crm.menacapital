@@ -61,6 +61,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           setModalHotLeadType('Demo');
           setLeadResponseStatus('Demo');
           setModalDepositStatus('');
+          setDemoInstallApp(true);
+          setDemoEducationVideo(true);
         } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
           // Point 4: Auto-select Not Deposit
           setModalAnswered('Answered');
@@ -114,6 +116,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
+        setDemoInstallApp(true);
+        setDemoEducationVideo(true);
       } 
       else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' || 
         kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || 
@@ -648,6 +652,10 @@ if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modal
       // Allow selecting statuses at the same level (siblings) or higher
       // Disable only statuses that are strictly lower than the kiosk status level
       if (checkStatusIndex !== -1 && kioskHierarchyLevel !== -1) {
+        // FIX: Warm/Hot - only disable Warm, keep Hot enabled
+        if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && kioskHierarchyLevel >= statusHierarchy.indexOf('Warm')) {
+          return statusToCheck === 'Warm';
+        }
         return checkStatusIndex < kioskHierarchyLevel;
       }
     }
@@ -687,17 +695,13 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
 }
 
     // ✅ FIX: Warm/Hot selection - ensure at least one is always enabled
+    // When effective status is at Warm level or above, disable Warm (lower) but keep Hot enabled
     if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && modalInterested === 'Interested') {
       const warmIndex = statusHierarchy.indexOf('Warm');
-      const hotIndex = statusHierarchy.indexOf('Hot');
-      
-      if (effectiveStatusIndex === warmIndex || effectiveStatusIndex === hotIndex) {
-        if (effectiveStatusIndex === warmIndex) { 
-          return statusToCheck === 'Warm';
-        }
-        if (effectiveStatusIndex === hotIndex) {
-          return false;
-        }
+
+      if (effectiveStatusIndex >= warmIndex) {
+        // Warm is disabled (can't go back), Hot is always enabled
+        return statusToCheck === 'Warm';
       }
     }
 

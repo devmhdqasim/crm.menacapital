@@ -72,6 +72,8 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
           setModalHotLeadType('Demo');
           setLeadResponseStatus('Demo');
           setModalDepositStatus('');
+          setDemoInstallApp(true);
+          setDemoEducationVideo(true);
         } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
           setModalAnswered('Answered');
           setModalInterested('Interested');
@@ -121,6 +123,8 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
+        setDemoInstallApp(true);
+        setDemoEducationVideo(true);
       } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' || 
         kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || 
         kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
@@ -489,6 +493,10 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
       const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
 
       if (checkStatusIndex !== -1 && kioskHierarchyLevel !== -1) {
+        // FIX: Warm/Hot - only disable Warm, keep Hot enabled
+        if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && kioskHierarchyLevel >= statusHierarchy.indexOf('Warm')) {
+          return statusToCheck === 'Warm';
+        }
         return checkStatusIndex < kioskHierarchyLevel;
       }
     }
@@ -513,9 +521,19 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
 
     const currentEffectiveStatus = statusHierarchy[effectiveStatusIndex];
 
-    if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') && 
+    if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
         (currentEffectiveStatus === 'Deposit' || currentEffectiveStatus === 'Not Deposit')) {
       return false;
+    }
+
+    // FIX: Warm/Hot selection - ensure at least one is always enabled
+    // When effective status is at Warm level or above, disable Warm (lower) but keep Hot enabled
+    if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && modalInterested === 'Interested') {
+      const warmIndex = statusHierarchy.indexOf('Warm');
+
+      if (effectiveStatusIndex >= warmIndex) {
+        return statusToCheck === 'Warm';
+      }
     }
 
     return checkStatusIndex <= effectiveStatusIndex;
