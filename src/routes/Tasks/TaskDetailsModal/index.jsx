@@ -36,9 +36,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   // Check if task is unassigned
   const isTaskUnassigned = task?.assignedTo === 'Unassigned';
 
-  // Pre-populate modal when task changes
+  // Pre-populate modal when task changes or modal opens
   useEffect(() => {
-    if (task) {
+    if (task && isOpen) {
       setModalRemarks(task.leadRemarks || '');
       setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
       setReminderDateTime(null);
@@ -160,7 +160,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       // Mark that initial population is done; the answeredStatus effect should skip its first run
       isInitialMountRef.current = true;
     }
-  }, [task]);
+  }, [task, isOpen]);
 
   // Auto-enable task completion when reaching Demo or higher
   useEffect(() => {
@@ -192,9 +192,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     const currentStatus = task.taskCreationStatus || '';
     const kioskStatus = task.kioskLeadStatus || '';
 
-    // For Kiosk Lead Status "Lead", reset all selections when Answered Status changes (user action only)
+    // For Kiosk Lead Status "Lead", all options are unlocked - don't reset selections
     if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
-      resetAllSelections();
       return;
     }
 
