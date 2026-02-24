@@ -1228,7 +1228,13 @@ const getTabCounter = (tab) => {
                   <span>{!clearFilter && tab}</span>
                   {/* Hide counter when a specific lead is selected */}
                   {counter > 0 && !selectedLeadId && (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+                    <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none rounded-full ${
+                      tab === 'Today Pending' || tab === 'Not-Completed'
+                        ? 'text-white bg-red-500 animate-pulse'
+                        : tab === 'Completed'
+                          ? 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
+                          : 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
+                    }`}>
                       {counter}
                     </span>
                   )}
