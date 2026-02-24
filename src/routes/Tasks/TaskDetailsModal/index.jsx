@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Calendar, Clock, User, Phone, Mail, AlertCircle } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -29,6 +29,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
 
   // Animation state
   const [isClosing, setIsClosing] = useState(false);
+
+  // Track whether the answeredStatus useEffect is firing for initial mount vs user change
+  const isInitialMountRef = useRef(true);
 
   // Check if task is unassigned
   const isTaskUnassigned = task?.assignedTo === 'Unassigned';
@@ -154,6 +157,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
    setLeadResponseStatus('Deposit');
  }
 }
+      // Mark that initial population is done; the answeredStatus effect should skip its first run
+      isInitialMountRef.current = true;
     }
   }, [task]);
 
@@ -178,10 +183,16 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   useEffect(() => {
     if (!task) return;
 
+    // Skip the reset on initial mount (when task data is first populating)
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+
     const currentStatus = task.taskCreationStatus || '';
     const kioskStatus = task.kioskLeadStatus || '';
 
-    // NEW: For Kiosk Lead Status "Lead", reset all selections when Answered Status changes
+    // For Kiosk Lead Status "Lead", reset all selections when Answered Status changes (user action only)
     if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
       resetAllSelections();
       return;
