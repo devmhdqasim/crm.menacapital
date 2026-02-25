@@ -29,10 +29,77 @@ const InboxPage = () => {
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
 
   // Reset unread count when inbox page is visible
-  const { resetUnreadCount } = useWebSocket();
+  const { resetUnreadCount, addMessageListener } = useWebSocket();
   useEffect(() => {
     resetUnreadCount();
   }, [resetUnreadCount]);
+
+  // Listen for new incoming messages and move that contact to the top
+  useEffect(() => {
+    const unsubscribe = addMessageListener((data) => {
+      // Skip status updates
+      if (data.type === 'status_update') return;
+
+      // Extract phone number from the message
+      const rawPhone = data.from || data.waId || '';
+      const phone = typeof rawPhone === 'object' && rawPhone !== null
+        ? (rawPhone.phoneNumber || '')
+        : rawPhone;
+
+      if (!phone) return;
+
+      const messageText = data.text || data.message || '';
+      const stripNonDigits = (p) => (p || '').replace(/\D/g, '');
+      const msgDigits = stripNonDigits(phone);
+
+      // Match using last 9 digits to handle country code differences
+      const phonesMatch = (a, b) => {
+        if (!a || !b) return false;
+        if (a === b) return true;
+        const suffix = Math.min(a.length, b.length, 9);
+        return a.slice(-suffix) === b.slice(-suffix);
+      };
+
+      const senderName = data.name && data.name !== 'Read type' ? data.name : phone;
+
+      setContacts(prev => {
+        const idx = prev.findIndex(c => phonesMatch(stripNonDigits(c.phone), msgDigits));
+
+        if (idx === -1) {
+          // Contact not in current list — add a temporary entry at the top
+          const newContact = {
+            id: `ws_${msgDigits}`,
+            name: senderName,
+            phone: phone,
+            email: '',
+            agent: '',
+            nationality: '',
+            status: '',
+            kioskLeadStatus: '',
+            lastMessage: messageText || 'New message',
+            lastMessageTime: new Date().toISOString(),
+            unreadCount: 1,
+            isOnline: false,
+            avatar: null,
+            _isFromWebSocket: true,
+          };
+          return [newContact, ...prev];
+        }
+
+        const updated = [...prev];
+        const contact = { ...updated[idx] };
+        contact.lastMessage = messageText || contact.lastMessage;
+        contact.lastMessageTime = new Date().toISOString();
+        contact.unreadCount = (contact.unreadCount || 0) + 1;
+
+        updated.splice(idx, 1);
+        updated.unshift(contact);
+        return updated;
+      });
+    });
+
+    return () => unsubscribe();
+  }, [addMessageListener]);
 
   // Debouncing effect for search query
   useEffect(() => {
