@@ -707,3 +707,57 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .react-datepicker__month-container {
   background-color: #1A1A1A !important;
 }
+
+/* Time selector dark theme */
+.react-datepicker__time-container {
+  border-left: 1px solid rgba(187, 164, 115, 0.3) !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  background-color: #1A1A1A !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+  background-color: #1A1A1A !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list {
+  background-color: #1A1A1A !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
+  color: #fff !important;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item:hover {
+  background-color: rgba(187, 164, 115, 0.2) !important;
+  color: #E8D5A3 !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--selected {
+  background-color: #BBA473 !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--disabled {
+  color: #4B5563 !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list::-webkit-scrollbar-track {
+  background: #1A1A1A;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list::-webkit-scrollbar-thumb {
+  background: rgba(187, 164, 115, 0.3);
+  border-radius: 3px;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(187, 164, 115, 0.5);
+}

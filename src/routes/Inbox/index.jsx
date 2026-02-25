@@ -308,6 +308,55 @@ const InboxPage = () => {
     setChatDrawerOpen(true);
   };
 
+  // Listen for notification clicks to open chat drawer
+  useEffect(() => {
+    const handleNotificationClick = () => {
+      const phoneToOpen = sessionStorage.getItem('openChatForPhone');
+      const nameToOpen = sessionStorage.getItem('openChatForName');
+      if (!phoneToOpen) return;
+
+      sessionStorage.removeItem('openChatForPhone');
+      sessionStorage.removeItem('openChatForName');
+      sessionStorage.removeItem('openChatForLeadId');
+
+      const stripNonDigits = (p) => (p || '').replace(/\D/g, '');
+      const targetDigits = stripNonDigits(phoneToOpen);
+
+      const phonesMatch = (a, b) => {
+        if (!a || !b) return false;
+        if (a === b) return true;
+        const suffix = Math.min(a.length, b.length, 9);
+        return a.slice(-suffix) === b.slice(-suffix);
+      };
+
+      const contact = contacts.find(c => phonesMatch(stripNonDigits(c.phone), targetDigits));
+
+      if (contact) {
+        handleContactClick(contact);
+      } else {
+        // Contact not in current list — open with a minimal contact object
+        handleContactClick({
+          id: `ws_${targetDigits}`,
+          name: nameToOpen || phoneToOpen,
+          phone: phoneToOpen,
+          email: '',
+          agent: '',
+          nationality: '',
+          status: '',
+          kioskLeadStatus: '',
+          lastMessage: '',
+          lastMessageTime: new Date().toISOString(),
+          unreadCount: 0,
+          isOnline: false,
+          avatar: null,
+        });
+      }
+    };
+
+    window.addEventListener('openChatFromNotification', handleNotificationClick);
+    return () => window.removeEventListener('openChatFromNotification', handleNotificationClick);
+  }, [contacts]);
+
   const handleCloseChat = () => {
     setChatDrawerOpen(false);
     setSelectedContact(null);

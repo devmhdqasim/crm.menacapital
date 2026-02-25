@@ -1,37 +1,62 @@
 import React, { useState } from 'react';
-import { X, Bell, Calendar, Clock } from 'lucide-react';
+import { X, Bell, Calendar, Clock, Loader2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
+import { createReminder } from '../../../services/reminderService';
 
 const ReminderModal = ({ contact, onClose }) => {
   const [reminderTime, setReminderTime] = useState('');
   const [reminderNote, setReminderNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSetReminder = () => {
+  const handleSetReminder = async () => {
     if (!reminderTime) {
-      toast.error('Please select a time');
+      toast.error('Please select a date and time');
       return;
     }
 
-    const reminder = {
-      id: Date.now(),
-      contactId: contact.id,
-      contactName: contact.name,
-      contactPhone: contact.phone,
-      time: reminderTime,
-      note: reminderNote,
-      createdAt: new Date().toISOString(),
-    };
+    const selectedDate = new Date(reminderTime);
+    if (selectedDate <= new Date()) {
+      toast.error('Please select a future date and time');
+      return;
+    }
 
-    const existingReminders = JSON.parse(localStorage.getItem('reminders') || '[]');
-    existingReminders.push(reminder);
-    localStorage.setItem('reminders', JSON.stringify(existingReminders));
+    if (!contact?.phone) {
+      toast.error('Contact phone number is missing');
+      return;
+    }
 
-    toast.success(`Reminder set for ${new Date(reminderTime).toLocaleString()}`);
-    setReminderTime('');
-    setReminderNote('');
-    onClose();
+    // Calculate hours from now
+    const hoursFromNow = Math.max(1, Math.round((selectedDate.getTime() - Date.now()) / (1000 * 60 * 60)));
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await createReminder({
+        title: `Follow-up: ${contact.name || contact.phone}`,
+        notes: reminderNote,
+        remindAt: hoursFromNow,
+        phoneNumber: contact.phone.startsWith('+') ? contact.phone : `+${contact.phone}`,
+      });
+
+      if (result.success) {
+        toast.success(`Reminder set for ${selectedDate.toLocaleString()}`);
+        setReminderTime('');
+        setReminderNote('');
+        onClose();
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.message || 'Failed to set reminder');
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to set reminder. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,7 +75,8 @@ const ReminderModal = ({ contact, onClose }) => {
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300"
+              disabled={isSubmitting}
+              className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all duration-300 disabled:opacity-50"
             >
               <X className="w-5 h-5" />
             </button>
@@ -73,8 +99,10 @@ const ReminderModal = ({ contact, onClose }) => {
                 dateFormat="MMM d, yyyy h:mm aa"
                 placeholderText="Select date and time"
                 minDate={new Date()}
-                className="w-full px-4 py-3 pl-11 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 pl-11 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 wrapperClassName="w-full"
+                calendarClassName="custom-datepicker"
                 timeCaption="Time"
               />
               <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
@@ -88,7 +116,8 @@ const ReminderModal = ({ contact, onClose }) => {
               onChange={(e) => setReminderNote(e.target.value)}
               placeholder="Add a note about this follow-up..."
               rows="3"
-              className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white placeholder-gray-500 resize-none transition-all duration-300"
+              disabled={isSubmitting}
+              className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white placeholder-gray-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -104,6 +133,7 @@ const ReminderModal = ({ contact, onClose }) => {
               ].map((preset) => (
                 <button
                   key={preset.label}
+                  disabled={isSubmitting}
                   onClick={() => {
                     const date = new Date();
                     if (preset.hours) {
@@ -116,7 +146,7 @@ const ReminderModal = ({ contact, onClose }) => {
                     }
                     setReminderTime(date.toISOString());
                   }}
-                  className="px-3 py-2 bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] rounded-lg text-xs font-medium transition-all duration-300 border border-[#BBA473]/20 hover:scale-105 active:scale-95"
+                  className="px-3 py-2 bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] rounded-lg text-xs font-medium transition-all duration-300 border border-[#BBA473]/20 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {preset.label}
                 </button>
@@ -128,16 +158,24 @@ const ReminderModal = ({ contact, onClose }) => {
         <div className="p-5 border-t border-[#BBA473]/20 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-xl transition-all duration-300 font-semibold"
+            disabled={isSubmitting}
+            className="flex-1 px-4 py-3 bg-[#3A3A3A] hover:bg-[#4A4A4A] text-white rounded-xl transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={handleSetReminder}
-            disabled={!reminderTime}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-xl transition-all duration-300 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+            disabled={!reminderTime || isSubmitting}
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-xl transition-all duration-300 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
           >
-            Set Reminder
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Setting...
+              </>
+            ) : (
+              'Set Reminder'
+            )}
           </button>
         </div>
       </div>

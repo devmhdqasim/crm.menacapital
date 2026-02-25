@@ -260,22 +260,22 @@ export const FirebaseNotificationProvider = ({ children }) => {
           playSound();
           toast.custom((t) => (
             <div
-              // onClick - redirect commented out for now
-              // onClick={() => {
-              //   toast.dismiss(t.id);
-              //   if (phone) {
-              //     sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
-              //     sessionStorage.setItem('openChatForName', phone);
-              //     if (window.location.pathname === '/inbox') {
-              //       window.location.reload();
-              //     } else {
-              //       window.location.href = '/inbox';
-              //     }
-              //   }
-              // }}
+              onClick={() => {
+                toast.dismiss(t.id);
+                if (phone) {
+                  sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
+                  sessionStorage.setItem('openChatForName', phone);
+                  if (window.location.pathname === '/inbox') {
+                    window.dispatchEvent(new Event('openChatFromNotification'));
+                  } else {
+                    window.location.href = '/inbox';
+                  }
+                }
+              }}
               style={{
                 maxWidth: '400px',
                 width: '100%',
+                cursor: 'pointer',
                 background: 'linear-gradient(135deg, #2d1a00 0%, #3d2400 50%, #2d1a00 100%)',
                 borderRadius: '16px',
                 padding: '0',
@@ -527,17 +527,16 @@ export const FirebaseNotificationProvider = ({ children }) => {
         playSound();
         toast.custom((t) => (
           <div
-            // onClick - redirect commented out for now
-            // onClick={() => {
-            //   toast.dismiss(t.id);
-            //   sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
-            //   sessionStorage.setItem('openChatForName', phone);
-            //   if (window.location.pathname === '/inbox') {
-            //     window.location.reload();
-            //   } else {
-            //     window.location.href = '/inbox';
-            //   }
-            // }}
+            onClick={() => {
+              toast.dismiss(t.id);
+              sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
+              sessionStorage.setItem('openChatForName', phone);
+              if (window.location.pathname === '/inbox') {
+                window.dispatchEvent(new Event('openChatFromNotification'));
+              } else {
+                window.location.href = '/inbox';
+              }
+            }}
             style={{
               maxWidth: '400px',
               width: '100%',

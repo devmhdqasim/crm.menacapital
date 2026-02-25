@@ -110,17 +110,16 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           // Custom rich notification toast
           toast.custom((t) => (
             <div
-              // onClick - redirect commented out for now
-              // onClick={() => {
-              //   toast.dismiss(t.id);
-              //   sessionStorage.setItem('openChatForPhone', senderPhone.replace(/\D/g, ''));
-              //   sessionStorage.setItem('openChatForName', senderPhone);
-              //   if (window.location.pathname === '/inbox') {
-              //     window.location.reload();
-              //   } else {
-              //     window.location.href = '/inbox';
-              //   }
-              // }}
+              onClick={() => {
+                toast.dismiss(t.id);
+                sessionStorage.setItem('openChatForPhone', senderPhone.replace(/\D/g, ''));
+                sessionStorage.setItem('openChatForName', senderPhone);
+                if (window.location.pathname === '/inbox') {
+                  window.dispatchEvent(new Event('openChatFromNotification'));
+                } else {
+                  window.location.href = '/inbox';
+                }
+              }}
               style={{
                 maxWidth: '400px',
                 width: '100%',
