@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Send, FileText, Paperclip, Mic, Smile, RefreshCw, X, Camera, Video, SwitchCamera, Circle } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import toast from 'react-hot-toast';
+import { Mp3Encoder } from '../../../utils/mp3encoder';
 import { sendWatiMessage, sendSessionFile } from '../../../services/inboxService';
 
 const ChatInput = ({
@@ -291,7 +292,7 @@ const ChatInput = ({
         }
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(250);
       setIsRecording(true);
       setRecordingDuration(0);
 
@@ -340,7 +341,40 @@ const ChatInput = ({
     toast.success('Recording cancelled', { duration: 1500, icon: '❌' });
   };
 
-  // ✅ FIXED: Send voice note (matches image send pattern)
+  // Convert recorded audio blob to MP3 using lamejs
+  const convertToMp3 = async (audioBlob) => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    const sampleRate = audioBuffer.sampleRate;
+    const samples = audioBuffer.getChannelData(0);
+
+    // Convert Float32 PCM to Int16
+    const int16Samples = new Int16Array(samples.length);
+    for (let i = 0; i < samples.length; i++) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      int16Samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+
+    const encoder = new Mp3Encoder(1, sampleRate, 128);
+    const mp3Data = [];
+    const blockSize = 1152;
+
+    for (let i = 0; i < int16Samples.length; i += blockSize) {
+      const chunk = int16Samples.subarray(i, i + blockSize);
+      const encoded = encoder.encodeBuffer(chunk);
+      if (encoded.length > 0) mp3Data.push(encoded);
+    }
+
+    const final = encoder.flush();
+    if (final.length > 0) mp3Data.push(final);
+
+    await audioContext.close();
+    return new Blob(mp3Data, { type: 'audio/mpeg' });
+  };
+
+  // Send voice note — converts to MP3 before sending (same format as file upload)
   const sendVoiceNote = async (audioBlob) => {
     if (!contact) {
       toast.error('No contact selected');
@@ -401,18 +435,19 @@ const ChatInput = ({
     };
 
     try {
-      // Pick extension based on blob mime type
-      const mimeToExt = { 'audio/ogg': 'ogg', 'audio/ogg;codecs=opus': 'ogg', 'audio/mp4': 'mp4', 'audio/aac': 'aac', 'audio/webm': 'webm' };
-      const ext = mimeToExt[audioBlob.type] || 'ogg';
-      const filename = `voice-note-${Date.now()}.${ext}`;
+      // Convert recorded audio to MP3 (confirmed working with Wati/WhatsApp)
+      console.log('🔄 Converting voice recording to MP3...');
+      const mp3Blob = await convertToMp3(audioBlob);
+      const filename = `voice-note-${Date.now()}.mp3`;
 
       console.log('📤 Sending voice note via Wati API:', {
         phone: contact.phone,
-        size: audioBlob.size,
+        originalSize: audioBlob.size,
+        mp3Size: mp3Blob.size,
         filename,
       });
 
-      const result = await sendSessionFile(contact.phone, audioBlob, filename);
+      const result = await sendSessionFile(contact.phone, mp3Blob, filename);
 
       if (result.success) {
         console.log('✅ Voice note sent via Wati API');
