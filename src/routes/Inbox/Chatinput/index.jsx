@@ -270,6 +270,15 @@ const ChatInput = ({
       };
 
       mediaRecorder.onstop = async () => {
+        // Reset recording UI immediately — don't wait for conversion/send
+        stream.getTracks().forEach(track => track.stop());
+        setIsRecording(false);
+        setRecordingDuration(0);
+        if (recordingTimer) {
+          clearInterval(recordingTimer);
+          setRecordingTimer(null);
+        }
+
         // Strip codec params (e.g. "audio/ogg;codecs=opus" -> "audio/ogg") for API compatibility
         const rawMime = mediaRecorderRef.current?.mimeType || supportedMime;
         const cleanMime = rawMime.split(';')[0];
@@ -278,17 +287,6 @@ const ChatInput = ({
         // Only send if recording has actual audio chunks (cancel clears the array)
         if (audioChunksRef.current.length > 0) {
           await sendVoiceNote(audioBlob);
-        }
-        
-        // Clean up stream
-        stream.getTracks().forEach(track => track.stop());
-        
-        // Reset recording state
-        setIsRecording(false);
-        setRecordingDuration(0);
-        if (recordingTimer) {
-          clearInterval(recordingTimer);
-          setRecordingTimer(null);
         }
       };
 
