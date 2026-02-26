@@ -264,7 +264,7 @@ const ChatInput = ({
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/ogg' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 
         // Only send if recording has actual audio chunks (cancel clears the array)
         if (audioChunksRef.current.length > 0) {
@@ -393,7 +393,7 @@ const ChatInput = ({
     };
 
     try {
-      const filename = `voice-note-${Date.now()}.ogg`;
+      const filename = `voice-note-${Date.now()}.webm`;
 
       console.log('📤 Sending voice note via Wati API:', {
         phone: contact.phone,

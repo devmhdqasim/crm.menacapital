@@ -37,8 +37,10 @@ const InboxPage = () => {
   // Listen for new incoming messages and move that contact to the top
   useEffect(() => {
     const unsubscribe = addMessageListener((data) => {
-      // Skip status updates
+      // Skip status updates and delivery/read events
       if (data.type === 'status_update') return;
+      const evtType = data.type || data.eventType || '';
+      if (evtType.includes('DELIVERED') || evtType.includes('READ_v')) return;
 
       // Extract phone number from the message
       const rawPhone = data.from || data.waId || '';
