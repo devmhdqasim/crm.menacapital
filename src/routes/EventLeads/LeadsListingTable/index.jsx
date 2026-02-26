@@ -152,6 +152,16 @@ const LeadsListingTable = ({
     return phone.replace(/(\+\d{1,4})(\d+)/, '$1 $2').replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3');
   };
 
+  // Read eventSource from userInfo in localStorage
+  const eventSource = (() => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+      return userInfo.eventSource || '';
+    } catch {
+      return '';
+    }
+  })();
+
   const getStatusColor = (status) => {
     const colors = {
       'Lead': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -387,11 +397,11 @@ const LeadsListingTable = ({
 
   // Get the appropriate lead status based on lead type
   const getLeadStatus = (lead) => {
-    if (isEventLeads) {
-      return lead.eventLeadStatus;
-    } else {
+    // if (isEventLeads) {
+    //   return lead.eventLeadStatus;
+    // } else {
       return lead.kioskLeadStatus;
-    }
+    // }
   };
 
   return (
@@ -543,14 +553,17 @@ const LeadsListingTable = ({
                         <span className="text-gray-300">{lead.nationality || 'N/A'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-300 text-sm">{lead?.leadSourceName}</td>
+                    <td className="px-6 py-4 text-gray-300 text-sm">{eventSource == 'Ramadan' ? eventSource : lead?.leadSourceName}</td>
                     <td className="flex items-center gap-1.5 px-6 py-4">
-                      {getLeadStatus(lead) ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(getLeadStatus(lead))}`}>
-                        {getLeadStatus(lead)} {lead.depositStatus && `- ${lead.depositStatus}`}
-                      </span> : ''}
-                      {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
+                      {/* { */}
+                      {/* {getLeadStatus(lead)} */}
+                      {lead?.kioskLeadStatus
+                       ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead?.kioskLeadStatus)}`}>
+                          {lead?.kioskLeadStatus}
+                       </span> : ''}
+                      {/* {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                         {lead.status}
-                      </span>: ''}
+                      </span>: ''} */}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-gray-300">

@@ -103,6 +103,7 @@ const EventLeadsManagement = () => {
           createdAt: lead.createdAt,
           eventLeadStatus: lead.eventLeadStatus ?? '',
           leadAgentData: lead?.leadAgentData?.[0],
+          kioskLeadStatus: lead?.kioskLeadStatus,
         }));
         
         setLeads(transformedLeads);
