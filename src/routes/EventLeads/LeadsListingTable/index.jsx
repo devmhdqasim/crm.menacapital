@@ -559,7 +559,7 @@ const LeadsListingTable = ({
                       {/* {getLeadStatus(lead)} */}
                       {lead?.kioskLeadStatus
                        ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead?.kioskLeadStatus)}`}>
-                          {lead?.kioskLeadStatus}
+                          {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
                        </span> : ''}
                       {/* {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                         {lead.status}
