@@ -242,6 +242,14 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         return;
       }
 
+      // Skip delivery/read status events that weren't caught by WebSocketContext
+      // (backend sometimes sends eventType in `type` field instead of `eventType`)
+      const msgType = data.type || data.eventType || '';
+      if (msgType.includes('DELIVERED') || msgType.includes('READ_v')) {
+        console.log('📊 Skipping status event in chat:', msgType);
+        return;
+      }
+
       // Play notification sound
       notificationSound.play().catch(err => {
         console.log('Could not play notification sound:', err);
@@ -320,6 +328,9 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }
 
         console.log('Messages found:', rawMessages.length, 'from response:', responseData);
+
+        // Filter out status events (not actual messages)
+        rawMessages = rawMessages.filter(msg => msg.eventType !== 'sentMessageDELIVERED_v2');
 
         if (rawMessages.length > 0) {
           const transformedMessages = rawMessages.map((msg) => {
