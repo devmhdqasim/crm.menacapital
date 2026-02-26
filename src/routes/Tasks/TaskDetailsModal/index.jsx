@@ -990,7 +990,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                         {task && (task.kioskLeadStatus === 'Lead' || task.kioskLeadStatus === 'lead' || task.kioskLeadStatus === '-' || task.taskCreationStatus === 'Lead' || task.taskCreationStatus === 'lead' || task.taskCreationStatus === '-')
                           ? 'All Status Options Enabled'
                           : task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
-                            ? 'Sibling Status Selection Enabled'
+                            ? 'Lead Has Not Responded'
                             : 'Update Status Disabled'}
                       </p>
                       <p className="text-orange-300 text-xs mt-1">

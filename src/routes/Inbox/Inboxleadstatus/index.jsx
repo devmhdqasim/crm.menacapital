@@ -883,7 +883,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                       {contact && (contact.kioskLeadStatus === 'Lead' || contact.kioskLeadStatus === 'lead' || contact.kioskLeadStatus === '-' || contact.status === 'Lead' || contact.status === 'lead' || contact.status === '-')
                         ? 'All Status Options Enabled'
                         : contact && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(contact.kioskLeadStatus || '')
-                          ? 'Sibling Status Selection Enabled'
+                          ? 'Lead Has Not Responded'
                           : 'Update Status Disabled'}
                     </p>
                     <p className="text-orange-300 text-xs mt-1">

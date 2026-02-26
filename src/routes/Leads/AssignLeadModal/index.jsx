@@ -911,7 +911,7 @@ const AssignLeadModal = ({
                         {selectedLead && (selectedLead.kioskLeadStatus === 'Lead' || selectedLead.kioskLeadStatus === 'lead' || selectedLead.kioskLeadStatus === '-' || selectedLead.status === 'Lead' || selectedLead.status === 'lead' || selectedLead.status === '-')
                           ? 'All Status Options Enabled'
                           : selectedLead && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(selectedLead.kioskLeadStatus || '')
-                            ? 'Sibling Status Selection Enabled'
+                            ? 'Lead Has Not Responded'
                             : 'Update Status Disabled'}
                       </p>
                       <p className="text-orange-300 text-xs mt-1">
