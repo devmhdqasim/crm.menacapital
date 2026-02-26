@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getPreviousMessages, sendWatiMessage } from '../../../services/inboxService';
+import { getPreviousMessages, sendWatiMessage, sendSessionFile } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
 import ChatHeader from '../Chatheader';
 import ChatTabs from '../Chattabs';
@@ -664,58 +664,87 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         event.target.value = '';
       };
 
-      reader.onload = () => {
-        if (!isConnected) {
-          toast.error('Not connected to server. File saved in chat.');
-          markFailed();
-          return;
-        }
-
-        const cleanPhone = contact.phone.replace(/\D/g, '');
-
-        console.log('📤 Sending media via WebSocket:', {
-          waId: cleanPhone,
+      // Use Wati sendSessionFile API for audio/video, WebSocket for others
+      if (type === 'audio' || type === 'video') {
+        console.log('📤 Sending media via Wati API:', {
+          phone: contact.phone,
           type,
           fileSize: file.size,
-          mimeType: file.type
+          fileName: file.name,
         });
 
-        sendWsMessage({
-          waId: cleanPhone,
-          type,
-          file: {
-            buffer: reader.result,
-            originalName: file.name,
-            mimeType: file.type,
-            size: file.size
-          },
-          name: 'Agent'
-        });
+        const result = await sendSessionFile(contact.phone, file, file.name);
 
-        setTimeout(() => {
+        if (result.success) {
           setMessages(prev => prev.map(msg =>
             msg.id === optimisticMessageId
               ? { ...msg, status: 'sent' }
               : msg
           ));
-        }, 500);
-
-        toast.success(`${type === 'image' ? 'Image' : type === 'audio' ? 'Audio' : type === 'video' ? 'Video' : 'File'} sent successfully!`);
-
-        if (refreshContacts) {
-          refreshContacts();
+          toast.success(`${type === 'audio' ? 'Audio' : 'Video'} sent successfully!`);
+          if (refreshContacts) refreshContacts();
+        } else {
+          console.error('❌ Wati API error:', result.message);
+          toast.error(result.message || `Failed to send ${type}`);
+          markFailed();
         }
 
         setIsSending(false);
         event.target.value = '';
-      };
+      } else {
+        reader.onload = () => {
+          if (!isConnected) {
+            toast.error('Not connected to server. File saved in chat.');
+            markFailed();
+            return;
+          }
 
-      reader.onerror = () => {
-        toast.error('Failed to read file');
-        markFailed();
-      };
+          const cleanPhone = contact.phone.replace(/\D/g, '');
 
-      reader.readAsArrayBuffer(file);
+          console.log('📤 Sending media via WebSocket:', {
+            waId: cleanPhone,
+            type,
+            fileSize: file.size,
+            mimeType: file.type
+          });
+
+          sendWsMessage({
+            waId: cleanPhone,
+            type,
+            file: {
+              buffer: reader.result,
+              originalName: file.name,
+              mimeType: file.type,
+              size: file.size
+            },
+            name: 'Agent'
+          });
+
+          setTimeout(() => {
+            setMessages(prev => prev.map(msg =>
+              msg.id === optimisticMessageId
+                ? { ...msg, status: 'sent' }
+                : msg
+            ));
+          }, 500);
+
+          toast.success(`${type === 'image' ? 'Image' : 'File'} sent successfully!`);
+
+          if (refreshContacts) {
+            refreshContacts();
+          }
+
+          setIsSending(false);
+          event.target.value = '';
+        };
+
+        reader.onerror = () => {
+          toast.error('Failed to read file');
+          markFailed();
+        };
+
+        reader.readAsArrayBuffer(file);
+      }
 
     } catch (error) {
       console.error('Error sending file:', error);
@@ -778,8 +807,6 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       setMessages(prev => [...prev, optimisticMessage]);
       setDownloadedImages(prev => new Set(prev).add(optimisticMessageId));
 
-      const reader = new FileReader();
-
       const markFailed = () => {
         setMessages(prev => prev.map(msg =>
           msg.id === optimisticMessageId
@@ -789,46 +816,74 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         setIsSending(false);
       };
 
-      reader.onload = () => {
-        if (!isConnected) {
-          toast.error('Not connected to server. Capture saved in chat.');
-          markFailed();
-          return;
-        }
-
-        const cleanPhone = contact.phone.replace(/\D/g, '');
-
-        sendWsMessage({
-          waId: cleanPhone,
-          type,
-          file: {
-            buffer: reader.result,
-            originalName: fileName,
-            mimeType,
-            size: blob.size,
-          },
-          name: 'Agent',
+      // Use Wati API for video captures, WebSocket for photos
+      if (type === 'video') {
+        console.log('📤 Sending camera video via Wati API:', {
+          phone: contact.phone,
+          size: blob.size,
+          fileName,
         });
 
-        setTimeout(() => {
+        const result = await sendSessionFile(contact.phone, blob, fileName);
+
+        if (result.success) {
           setMessages(prev =>
             prev.map(msg =>
               msg.id === optimisticMessageId ? { ...msg, status: 'sent' } : msg
             )
           );
-        }, 500);
+          toast.success('Video sent!');
+          if (refreshContacts) refreshContacts();
+        } else {
+          toast.error(result.message || 'Failed to send video');
+          markFailed();
+        }
 
-        toast.success(`${type === 'image' ? 'Photo' : 'Video'} sent!`);
-        if (refreshContacts) refreshContacts();
         setIsSending(false);
-      };
+      } else {
+        const reader = new FileReader();
 
-      reader.onerror = () => {
-        toast.error('Failed to process captured media');
-        markFailed();
-      };
+        reader.onload = () => {
+          if (!isConnected) {
+            toast.error('Not connected to server. Capture saved in chat.');
+            markFailed();
+            return;
+          }
 
-      reader.readAsArrayBuffer(blob);
+          const cleanPhone = contact.phone.replace(/\D/g, '');
+
+          sendWsMessage({
+            waId: cleanPhone,
+            type,
+            file: {
+              buffer: reader.result,
+              originalName: fileName,
+              mimeType,
+              size: blob.size,
+            },
+            name: 'Agent',
+          });
+
+          setTimeout(() => {
+            setMessages(prev =>
+              prev.map(msg =>
+                msg.id === optimisticMessageId ? { ...msg, status: 'sent' } : msg
+              )
+            );
+          }, 500);
+
+          toast.success('Photo sent!');
+          if (refreshContacts) refreshContacts();
+          setIsSending(false);
+        };
+
+        reader.onerror = () => {
+          toast.error('Failed to process captured media');
+          markFailed();
+        };
+
+        reader.readAsArrayBuffer(blob);
+      }
     } catch (error) {
       console.error('Error sending camera capture:', error);
       toast.error('Failed to send captured media');

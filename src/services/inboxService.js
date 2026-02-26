@@ -495,6 +495,49 @@ export const sendWatiMediaMessage = async (phoneNumber, mediaUrl, caption = '', 
 };
 
 /**
+ * Send a file directly to Wati via sendSessionFile endpoint (multipart/form-data)
+ * Use this for voice notes, videos, and other file uploads.
+ * @param {string} phoneNumber - Recipient phone number with country code
+ * @param {File|Blob} file - The file or blob to send
+ * @param {string} filename - Filename for the upload
+ * @returns {Promise} API response
+ */
+export const sendSessionFile = async (phoneNumber, file, filename) => {
+  try {
+    const cleanPhone = formatPhoneForWati(phoneNumber);
+    // Remove leading '+' for the URL path
+    const phoneForUrl = cleanPhone.replace(/^\+/, '');
+
+    const formData = new FormData();
+    formData.append('file', file, filename);
+
+    const response = await axios.post(
+      `${WATI_API_URL}/sendSessionFile/${phoneForUrl}`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${WATI_API_TOKEN}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return {
+      success: true,
+      data: response.data,
+      message: 'File sent successfully',
+    };
+  } catch (error) {
+    console.error('❌ Error sending session file:', error.response?.data);
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || error.response?.data?.error || 'Failed to send file',
+    };
+  }
+};
+
+/**
  * Get contact info from Wati
  * @param {string} phoneNumber - Contact phone number with country code
  * @returns {Promise} API response with contact info

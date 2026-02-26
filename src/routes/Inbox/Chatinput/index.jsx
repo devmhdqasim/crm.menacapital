@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Send, FileText, Paperclip, Mic, Smile, RefreshCw, X, Camera, Video, SwitchCamera, Circle } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import toast from 'react-hot-toast';
-import { sendWatiMessage } from '../../../services/inboxService';
+import { sendWatiMessage, sendSessionFile } from '../../../services/inboxService';
 
 const ChatInput = ({
   messageInput,
@@ -392,67 +392,38 @@ const ChatInput = ({
       setIsSending(false);
     };
 
-    if (!isConnected) {
-      toast.error('Not connected to server. Voice note saved in chat.');
-      markFailed();
-      return;
-    }
-
     try {
-      // Read file as ArrayBuffer for sending
-      const reader = new FileReader();
+      const filename = `voice-note-${Date.now()}.ogg`;
 
-      reader.onload = () => {
-        const cleanPhone = contact.phone.replace(/\D/g, '');
+      console.log('📤 Sending voice note via Wati API:', {
+        phone: contact.phone,
+        size: audioBlob.size,
+        filename,
+      });
 
-        console.log('📤 Sending voice note via WebSocket:', {
-          waId: cleanPhone,
-          size: audioBlob.size,
-          bufferSize: reader.result.byteLength
-        });
+      const result = await sendSessionFile(contact.phone, audioBlob, filename);
 
-        // Send the voice note via Socket.IO with proper structure
-        sendWsMessage({
-          waId: cleanPhone,
-          type: 'audio',
-          file: {
-            buffer: reader.result, // ArrayBuffer
-            originalName: `voice-note-${Date.now()}.ogg`,
-            mimeType: 'audio/ogg',
-            size: audioBlob.size
-          },
-          name: 'Agent'
-        });
+      if (result.success) {
+        console.log('✅ Voice note sent via Wati API');
 
-        console.log('✅ Voice note sent via WebSocket');
-
-        // Update message status to 'sent' after successful send
-        setTimeout(() => {
-          setMessages(prev => prev.map(msg =>
-            msg.id === optimisticMessageId
-              ? { ...msg, status: 'sent' }
-              : msg
-          ));
-        }, 500);
+        setMessages(prev => prev.map(msg =>
+          msg.id === optimisticMessageId
+            ? { ...msg, status: 'sent' }
+            : msg
+        ));
 
         toast.success('Voice message sent!', { icon: '🎤' });
 
         if (refreshContacts) {
           refreshContacts();
         }
-
-        setIsSending(false);
-      };
-
-      reader.onerror = (error) => {
-        console.error('❌ Failed to read voice note:', error);
-        toast.error('Failed to send voice message');
+      } else {
+        console.error('❌ Wati API error:', result.message);
+        toast.error(result.message || 'Failed to send voice message');
         markFailed();
-      };
+      }
 
-      // Read as ArrayBuffer (same as image)
-      reader.readAsArrayBuffer(audioBlob);
-
+      setIsSending(false);
     } catch (error) {
       console.error('❌ Error sending voice note:', error);
       toast.error('Failed to send voice message');
