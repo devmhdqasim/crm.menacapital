@@ -250,8 +250,13 @@ const ChatInput = ({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
+      // Use a Wati-compatible format: prefer ogg/opus, fallback to mp4, then webm
+      const preferredMimes = ['audio/ogg;codecs=opus', 'audio/mp4', 'audio/ogg', 'audio/webm'];
+      const supportedMime = preferredMimes.find(m => MediaRecorder.isTypeSupported(m)) || 'audio/webm';
+      console.log('🎙️ Recording with mimeType:', supportedMime);
+
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm'
+        mimeType: supportedMime
       });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -264,7 +269,10 @@ const ChatInput = ({
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        // Strip codec params (e.g. "audio/ogg;codecs=opus" -> "audio/ogg") for API compatibility
+        const rawMime = mediaRecorderRef.current?.mimeType || supportedMime;
+        const cleanMime = rawMime.split(';')[0];
+        const audioBlob = new Blob(audioChunksRef.current, { type: cleanMime });
 
         // Only send if recording has actual audio chunks (cancel clears the array)
         if (audioChunksRef.current.length > 0) {
@@ -393,7 +401,10 @@ const ChatInput = ({
     };
 
     try {
-      const filename = `voice-note-${Date.now()}.webm`;
+      // Pick extension based on blob mime type
+      const mimeToExt = { 'audio/ogg': 'ogg', 'audio/ogg;codecs=opus': 'ogg', 'audio/mp4': 'mp4', 'audio/aac': 'aac', 'audio/webm': 'webm' };
+      const ext = mimeToExt[audioBlob.type] || 'ogg';
+      const filename = `voice-note-${Date.now()}.${ext}`;
 
       console.log('📤 Sending voice note via Wati API:', {
         phone: contact.phone,

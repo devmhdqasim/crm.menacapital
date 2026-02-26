@@ -508,8 +508,13 @@ export const sendSessionFile = async (phoneNumber, file, filename) => {
     // Remove leading '+' for the URL path
     const phoneForUrl = cleanPhone.replace(/^\+/, '');
 
+    // Wrap Blob into a File object so FormData sends it correctly
+    const fileObj = file instanceof File
+      ? file
+      : new File([file], filename, { type: file.type || 'application/octet-stream' });
+
     const formData = new FormData();
-    formData.append('file', file, filename);
+    formData.append('file', fileObj, filename);
 
     const response = await axios.post(
       `${WATI_API_URL}/sendSessionFile/${phoneForUrl}`,
@@ -517,7 +522,7 @@ export const sendSessionFile = async (phoneNumber, file, filename) => {
       {
         headers: {
           'Authorization': `Bearer ${WATI_API_TOKEN}`,
-          'Content-Type': 'multipart/form-data',
+          // Let axios set Content-Type with correct boundary
         },
       }
     );
@@ -673,11 +678,12 @@ export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) =
 
     const cleanWaId = waId.replace(/\D/g, '');
     console.log('📬 Fetching previous messages from backend for:', cleanWaId);
+    const abc = 5;
 
     const response = await axios.get(`${API_BASE_URL}/wati/getMessage/en`, {
       params: {
         waId: cleanWaId,
-        pageSize,
+        abc,
         pageNumber,
       },
       headers: {

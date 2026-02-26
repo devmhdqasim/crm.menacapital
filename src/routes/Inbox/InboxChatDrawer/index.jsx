@@ -546,7 +546,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
   // File size limits (in bytes)
   const FILE_SIZE_LIMITS = {
-    image: 5 * 1024 * 1024,      // 5 MB
+    image: 1 * 1024 * 1024,      // 1 MB
     audio: 16 * 1024 * 1024,     // 16 MB
     video: 16 * 1024 * 1024,     // 16 MB
     document: 100 * 1024 * 1024, // 100 MB
