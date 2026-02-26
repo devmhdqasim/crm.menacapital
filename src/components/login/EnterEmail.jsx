@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield, Zap, Globe } from 'lucide-react';
 import logo from '../../assets/images/logo.svg';
+
+const APP_VERSION = __APP_VERSION__ || '1.0.0';
 
 const LoginSchema = Yup.object().shape({
   login: Yup.string()
@@ -132,7 +134,7 @@ export default function EnterEmailOrUsername({
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
 
           {/* Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <img src={logo} alt="SaveInGold Logo" className="h-16 w-auto object-contain" />
           </div>
 
@@ -141,6 +143,9 @@ export default function EnterEmailOrUsername({
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
               Welcome Back
             </h1>
+            <p className="text-[#BBA473]/60 text-[10px] font-semibold uppercase tracking-[0.25em] mb-4">
+              SIG CRM Portal
+            </p>
             <p className="text-[#BBA473]/80 text-sm font-medium uppercase tracking-widest">
               Enter your email or username
             </p>
@@ -225,9 +230,30 @@ export default function EnterEmailOrUsername({
           </div>
         </div>
 
+        {/* Feature Pills */}
+        <div className="flex items-center justify-center gap-3 mt-6 flex-wrap opacity-0 animate-fadeIn" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
+          <div className="flex items-center gap-1.5 text-[#BBA473]/50 text-[10px] uppercase tracking-wider">
+            <Shield size={10} />
+            <span>Encrypted</span>
+          </div>
+          <div className="w-px h-3 bg-[#BBA473]/20"></div>
+          <div className="flex items-center gap-1.5 text-[#BBA473]/50 text-[10px] uppercase tracking-wider">
+            <Zap size={10} />
+            <span>Real-time</span>
+          </div>
+          <div className="w-px h-3 bg-[#BBA473]/20"></div>
+          <div className="flex items-center gap-1.5 text-[#BBA473]/50 text-[10px] uppercase tracking-wider">
+            <Globe size={10} />
+            <span>WhatsApp Ready</span>
+          </div>
+        </div>
+
         {/* Footer Text */}
-        <div className="text-center mt-8 opacity-50">
-          <p className="text-[#BBA473] text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+        <div className="text-center mt-6 space-y-2 opacity-0 animate-fadeIn" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
+          <p className="text-[#BBA473]/50 text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+          <p className="text-[#BBA473]/30 text-[10px] tracking-wider">
+            v{APP_VERSION} &middot; &copy; {new Date().getFullYear()} Save In Gold
+          </p>
         </div>
 
       </div>

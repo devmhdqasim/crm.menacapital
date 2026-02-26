@@ -14,6 +14,9 @@ interface VitestConfigExport extends UserConfig {
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), tailwindcss()],
   publicDir: 'public',
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
   build: {
     outDir: 'dist',
   },

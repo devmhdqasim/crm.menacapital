@@ -6,6 +6,8 @@ import { loginUser, loginBranch, loginEvent } from '../../services/authService';
 import toast from 'react-hot-toast';
 import logo from '../../assets/images/logo.svg';
 
+const APP_VERSION = __APP_VERSION__ || '1.0.0';
+
 const LoginSchema = Yup.object().shape({
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
@@ -148,7 +150,7 @@ export default function EnterPassword({
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
 
           {/* Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <img src={logo} alt="SaveInGold Logo" className="h-16 w-auto object-contain" />
           </div>
 
@@ -157,6 +159,9 @@ export default function EnterPassword({
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
               Welcome Back
             </h1>
+            <p className="text-[#BBA473]/60 text-[10px] font-semibold uppercase tracking-[0.25em] mb-4">
+              SIG CRM Portal
+            </p>
             <p className="text-[#BBA473]/80 text-sm font-medium uppercase tracking-widest">
               Enter Password
             </p>
@@ -291,8 +296,11 @@ export default function EnterPassword({
         </div>
 
         {/* Footer Text */}
-        <div className="text-center mt-8 opacity-50">
-          <p className="text-[#BBA473] text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+        <div className="text-center mt-8 space-y-2">
+          <p className="text-[#BBA473]/50 text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+          <p className="text-[#BBA473]/30 text-[10px] tracking-wider">
+            v{APP_VERSION} &middot; &copy; {new Date().getFullYear()} Save In Gold
+          </p>
         </div>
 
       </div>

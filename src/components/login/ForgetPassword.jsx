@@ -5,6 +5,8 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import logo from '../../assets/images/logo.svg';
 
+const APP_VERSION = __APP_VERSION__ || '1.0.0';
+
 const ForgotPasswordSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email address')
@@ -181,8 +183,11 @@ export default function ForgetPassword({
         </div>
 
         {/* Footer Text */}
-        <div className="text-center mt-8 opacity-50">
-          <p className="text-[#BBA473] text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+        <div className="text-center mt-8 space-y-2">
+          <p className="text-[#BBA473]/50 text-xs tracking-widest uppercase">Secured by Save In Gold</p>
+          <p className="text-[#BBA473]/30 text-[10px] tracking-wider">
+            v{APP_VERSION} &middot; &copy; {new Date().getFullYear()} Save In Gold
+          </p>
         </div>
 
       </div>
