@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, Mail, AlertCircle, CheckCircle2, FileText, Info } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, Mail, AlertCircle, CheckCircle2, FileText } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
@@ -37,7 +37,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   useEffect(() => {
     if (task) {
       setModalRemarks(task.leadRemarks || '');
-      setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
+      setTaskStatus('Completed'); // Always Completed
       setReminderDateTime(null);
 
       // NEW: Set answered status from task (if exists, otherwise empty for user to select)
@@ -160,7 +160,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     // For "Lead" status, don't auto-enable - but still allow manual control
     // For all other statuses, maintain existing auto-enable behavior
     if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
-      return; // Skip auto-enable, but toggle remains enabled via isTaskStatusCompletedDisabled
+      return; // Skip auto-enable for Lead status
     }
 
     // Original logic for all other statuses
@@ -240,15 +240,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   const validateModalForm = () => {
     const errors = {};
 
-    // Task status is required only if Completed option is enabled
-    if (!taskStatus && !isTaskStatusCompletedDisabled()) {
-      errors.taskStatus = 'Please select a task status';
-    }
-
-    // If Completed is disabled but user tries to complete without proper status
-    if (isTaskStatusCompletedDisabled() && taskStatus === 'Completed') {
-      errors.taskStatus = 'Task can only be completed when lead reaches Demo status or higher';
-    }
+    // Task status is always Completed — no validation needed
 
     // NEW: Answered Status is mandatory
     if (!answeredStatus) {
@@ -467,14 +459,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     // Task is unassigned - cannot update
     if (isTaskUnassigned) return false;
 
-    // Task status is required, but if Completed is disabled and not selected, that's okay
-    if (!taskStatus && !isTaskStatusCompletedDisabled()) return false;
-
     // NEW: Answered Status is mandatory
     if (!answeredStatus) return false;
-
-    // When "Not Answered" is selected, task must be marked as "Completed" to enable submit
-    if (answeredStatus === 'Not Answered' && taskStatus !== 'Completed') return false;
 
     // MODIFIED: Only validate Update Status if "Answered" is selected in Answered Status
     if (answeredStatus === 'Answered') {
@@ -520,22 +506,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   };
 
   // Check if task status "Completed" should be disabled
-  const isTaskStatusCompletedDisabled = () => {
-    // NEW: Always enable task complete when Kiosk Lead Status is "Lead"
-    const kioskStatus = task?.kioskLeadStatus || '';
-    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
-      return false; // Always enable completion for "Lead" status
-    }
 
-    // NEW: Also enable when "Not Answered" is selected in Answered Status (regardless of kiosk status)
-    if (answeredStatus === 'Not Answered') {
-      return false; // Enable completion when Not Answered is selected
-    }
-
-    // Task status can only be completed if lead response status is Demo or higher
-    const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
-    return !allowedStatuses.includes(leadResponseStatus);
-  };
 
   // Point 3: Check if reminder date should be enabled (Warm to Deposit only)
   const isReminderDateEnabled = () => {
@@ -925,22 +896,11 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                   Task Status <span className="text-red-400">*</span>
                 </label>
 
-                <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${isTaskStatusCompletedDisabled()
-                  ? 'bg-white/[0.02] border-gray-800 opacity-50'
-                  : taskStatus === 'Completed'
-                    ? 'bg-green-500/8 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.05)]'
-                    : 'bg-white/[0.03] border-white/[0.06] hover:border-white/10'
-                  }`}>
+                <div className="flex items-center justify-between p-4 rounded-xl border transition-all duration-300 bg-green-500/8 border-green-500/30">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${taskStatus === 'Completed'
-                      ? 'bg-green-500/20'
-                      : 'bg-gray-700/50'
-                      }`}>
+                    <div className="p-2 rounded-lg bg-green-500/20">
                       <svg
-                        className={`w-5 h-5 transition-colors ${taskStatus === 'Completed'
-                          ? 'text-green-400'
-                          : 'text-gray-500'
-                          }`}
+                        className="w-5 h-5 text-green-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -949,60 +909,16 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       </svg>
                     </div>
                     <div>
-                      <p className={`font-medium ${taskStatus === 'Completed'
-                        ? 'text-green-400'
-                        : 'text-white'
-                        }`}>
-                        Mark as Completed
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {isTaskStatusCompletedDisabled()
-                          ? 'Available at Demo status or higher'
-                          : 'Task will be marked as complete'}
-                      </p>
+                      <p className="font-medium text-green-400">Mark as Completed</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Task will be marked as complete</p>
                     </div>
                   </div>
 
-                  {/* Toggle Switch */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isTaskStatusCompletedDisabled()) {
-                        setTaskStatus(taskStatus === 'Completed' ? 'Open' : 'Completed');
-                        setModalErrors({});
-                      }
-                    }}
-                    disabled={isTaskStatusCompletedDisabled()}
-                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#2A2A2A] ${isTaskStatusCompletedDisabled()
-                      ? 'bg-gray-700 cursor-not-allowed'
-                      : taskStatus === 'Completed'
-                        ? 'bg-green-500'
-                        : 'bg-gray-600 hover:bg-gray-500'
-                      }`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
-                        }`}
-                    />
-                  </button>
+                  {/* Toggle Switch - Always ON */}
+                  <div className="relative inline-flex h-7 w-14 items-center rounded-full bg-green-500">
+                    <span className="inline-block h-5 w-5 transform rounded-full bg-white shadow-lg translate-x-8" />
+                  </div>
                 </div>
-
-                {/* Info message when Completed is disabled */}
-                {isTaskStatusCompletedDisabled() && (
-                  <div className="mt-3 p-3 bg-blue-500/8 border border-blue-500/20 rounded-xl flex items-start gap-3">
-                    <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-blue-400 text-xs font-semibold">Task Completion Locked</p>
-                      <p className="text-blue-300/70 text-xs mt-1">
-                        You can mark this task as completed once the lead reaches <span className="font-semibold text-blue-300">Demo</span> status or higher.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {modalErrors.taskStatus && (
-                  <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
-                )}
               </div>
 
               {/* NEW: Answered Status Section */}
