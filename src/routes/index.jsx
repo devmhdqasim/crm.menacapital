@@ -12,27 +12,46 @@ import GridBackground from '@/components/GridBackground'; // Import GridBackgrou
 import { getUserRole } from '@/utils/authUtils';
 import { ROUTES, getAllowedRoutes } from '@/config/roleConfig';
 
+// Auto-reload once on stale chunk errors after a new deployment
+function lazyWithRetry(importFn) {
+  return lazy(() =>
+    importFn().catch((error) => {
+      const hasReloaded = sessionStorage.getItem('chunk_reload');
+      if (!hasReloaded) {
+        sessionStorage.setItem('chunk_reload', '1');
+        window.location.reload();
+        return new Promise(() => {}); // hang while reloading
+      }
+      sessionStorage.removeItem('chunk_reload');
+      throw error; // re-throw if reload didn't fix it
+    })
+  );
+}
+
 // ⭐ Lazy load route components for better performance
-const LoginPage = lazy(() => import('@/routes/Login'));
-const UpdatePasswordPage = lazy(() => import('@/routes/UpdatePassword'));
-const DashboardPage = lazy(() => import('@/routes/Dashboard'));
-const NotificationsPage = lazy(() => import('@/routes/Notifications'));
-const BranchDashboardPage = lazy(() => import('@/routes/BranchDashboard'));
-const AgentsPage = lazy(() => import('@/routes/Agents'));
-const KioskMembersPage = lazy(() => import('@/routes/KioskMembers'));
-const LeadsPage = lazy(() => import('@/routes/Leads'));
-const AdminLeadsPage = lazy(() => import('@/routes/LeadsAdmin'));
-const BranchesPage = lazy(() => import('@/routes/Branches'));
-const ExhibitionPage = lazy(() => import('@/routes/Exhibitions'));
-const WatiInboxPage = lazy(() => import('@/routes/Inbox'));
-const BranchLeadsPage = lazy(() => import('@/routes/BranchLeads'));
-const EventLeadsPage = lazy(() => import('@/routes/EventLeads'));
-const SalesManagerLeadsPage = lazy(() => import('@/routes/SalesManagerLeads'));
-const RoleManagementPage = lazy(() => import('@/routes/RoleManagement'));
-const TasksPage = lazy(() => import('@/routes/Tasks'));  // NEW: Tasks page
-const SalesManagersPage = lazy(() => import('@/routes/SalesManagers'));  // NEW: Sales Managers page
+const LoginPage = lazyWithRetry(() => import('@/routes/Login'));
+const UpdatePasswordPage = lazyWithRetry(() => import('@/routes/UpdatePassword'));
+const DashboardPage = lazyWithRetry(() => import('@/routes/Dashboard'));
+const NotificationsPage = lazyWithRetry(() => import('@/routes/Notifications'));
+const BranchDashboardPage = lazyWithRetry(() => import('@/routes/BranchDashboard'));
+const AgentsPage = lazyWithRetry(() => import('@/routes/Agents'));
+const KioskMembersPage = lazyWithRetry(() => import('@/routes/KioskMembers'));
+const LeadsPage = lazyWithRetry(() => import('@/routes/Leads'));
+const AdminLeadsPage = lazyWithRetry(() => import('@/routes/LeadsAdmin'));
+const BranchesPage = lazyWithRetry(() => import('@/routes/Branches'));
+const ExhibitionPage = lazyWithRetry(() => import('@/routes/Exhibitions'));
+const WatiInboxPage = lazyWithRetry(() => import('@/routes/Inbox'));
+const BranchLeadsPage = lazyWithRetry(() => import('@/routes/BranchLeads'));
+const EventLeadsPage = lazyWithRetry(() => import('@/routes/EventLeads'));
+const SalesManagerLeadsPage = lazyWithRetry(() => import('@/routes/SalesManagerLeads'));
+const RoleManagementPage = lazyWithRetry(() => import('@/routes/RoleManagement'));
+const TasksPage = lazyWithRetry(() => import('@/routes/Tasks'));
+const SalesManagersPage = lazyWithRetry(() => import('@/routes/SalesManagers'));
 
 export function AppRoutes() {
+  // Clear chunk reload flag on successful render
+  sessionStorage.removeItem('chunk_reload');
+
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
