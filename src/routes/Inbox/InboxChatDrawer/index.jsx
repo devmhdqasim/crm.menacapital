@@ -549,7 +549,6 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     image: 1 * 1024 * 1024,      // 1 MB
     audio: 16 * 1024 * 1024,     // 16 MB
     video: 16 * 1024 * 1024,     // 16 MB
-    document: 100 * 1024 * 1024, // 100 MB
   };
 
   // Allowed MIME types with labels
@@ -558,16 +557,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     'image/png': 'image',
     'image/webp': 'image',
     'audio/mpeg': 'audio',
-    'audio/ogg': 'audio',
-    'audio/mp4': 'audio',
-    'audio/aac': 'audio',
     'video/mp4': 'video',
-    'video/3gpp': 'video',
-    'application/pdf': 'document',
-    'application/msword': 'document',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'document',
-    'application/vnd.ms-excel': 'document',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'document',
   };
 
   const formatFileSize = (bytes) => {
@@ -588,11 +578,21 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       contact: contact.phone
     });
 
-    // Validate file type
-    const mediaCategory = ALLOWED_FILE_TYPES[file.type];
+    // Validate file type — use browser detection, fall back to extension for audio
+    let detectedMime = file.type;
+    let mediaCategory = ALLOWED_FILE_TYPES[detectedMime];
+
+    if (!mediaCategory) {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (ext === 'mp3') {
+        detectedMime = 'audio/mpeg';
+        mediaCategory = 'audio';
+      }
+    }
+
     if (!mediaCategory) {
       toast.error(
-        'Unsupported file type. Allowed: JPEG, PNG, WebP images, MP3/OGG/AAC audio, MP4/3GPP video, PDF, Word & Excel documents.',
+        'Unsupported file type. Allowed: JPEG, PNG, WebP images, MP3 audio, MP4 video.',
         { duration: 5000 }
       );
       event.target.value = '';
@@ -666,14 +666,22 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
       // Use Wati sendSessionFile API for audio/video, WebSocket for others
       if (type === 'audio' || type === 'video') {
+        // For audio files, ensure the File object has the correct MIME type
+        // (browsers on macOS can misdetect .ogg/.mp3 MIME types)
+        let fileToSend = file;
+        if (type === 'audio' && detectedMime && file.type !== detectedMime) {
+          fileToSend = new File([file], file.name, { type: detectedMime });
+        }
+
         console.log('📤 Sending media via Wati API:', {
           phone: contact.phone,
           type,
-          fileSize: file.size,
-          fileName: file.name,
+          fileSize: fileToSend.size,
+          fileName: fileToSend.name,
+          mimeType: fileToSend.type,
         });
 
-        const result = await sendSessionFile(contact.phone, file, file.name);
+        const result = await sendSessionFile(contact.phone, fileToSend, fileToSend.name);
 
         if (result.success) {
           setMessages(prev => prev.map(msg =>
@@ -919,7 +927,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,audio/mpeg,audio/ogg,audio/mp4,audio/aac,video/mp4,video/3gpp,application/pdf,.doc,.docx,.xls,.xlsx"
+        accept="image/jpeg,image/png,image/webp,audio/mpeg,.mp3,video/mp4,.mp4"
         className="hidden"
         onChange={handleFileChange}
       />

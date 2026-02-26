@@ -527,6 +527,16 @@ export const sendSessionFile = async (phoneNumber, file, filename) => {
       }
     );
 
+    // Wati can return HTTP 200 with { result: false } in the body
+    if (response.data?.result === false || response.data?.result === 'false') {
+      console.error('❌ Wati API returned failure:', response.data);
+      return {
+        success: false,
+        error: response.data,
+        message: response.data?.message || 'Failed to send file',
+      };
+    }
+
     return {
       success: true,
       data: response.data,
