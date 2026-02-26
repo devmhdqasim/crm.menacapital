@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, Mail, AlertCircle } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, Mail, AlertCircle, CheckCircle2, FileText, Info } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
@@ -753,43 +753,58 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
     </div>
   );
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !task) return null;
 
   return (
     <div
-      className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'
+      className={`fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'
         }`}
       onClick={handleClose}
     >
       <div
-        className={`bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+        className={`bg-[#1f1f1f] rounded-2xl shadow-[0_8px_50px_rgba(0,0,0,0.8)] border border-gray-600 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
           }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header - Sticky */}
-        <div className="sticky top-0 bg-gradient-to-r from-[#BBA473]/10 to-transparent border-b border-[#BBA473]/30 p-6 flex items-center justify-between z-10">
-          <div>
-            <h2 className="text-2xl font-bold text-[#BBA473]">Task Details</h2>
-            <p className="text-gray-400 text-sm mt-1">{task.taskId}</p>
+        <div className="sticky top-0 bg-[#262626] border-b border-gray-600 px-6 py-4 flex items-center justify-between z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-[#BBA473]/10">
+              <FileText className="w-4 h-4 text-[#BBA473]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Task Details</h2>
+              <p className="text-gray-500 text-xs font-mono">{task.taskId}</p>
+            </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300 text-gray-400 hover:text-white hover:rotate-90"
+            className="p-2 rounded-lg hover:bg-white/5 transition-colors duration-200 text-gray-500 hover:text-white"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Content - Scrollable */}
-        <div className="overflow-y-auto flex-1">
-          <div className="p-6 space-y-6">
+        <div className="overflow-y-auto flex-1 modal-scrollbar">
+          <div className="p-6 space-y-5">
             {/* NEW: Unassigned Task Warning */}
             {isTaskUnassigned && (
-              <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-lg flex items-start gap-3 animate-fadeIn">
-                <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3 animate-fadeIn">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-red-400 text-sm font-semibold">Unassigned Task</p>
-                  <p className="text-red-300 text-xs mt-1">
+                  <p className="text-red-300/80 text-xs mt-1">
                     This task is currently unassigned. Please assign this task to an agent before updating the status. All status updates are disabled until the task is assigned.
                   </p>
                 </div>
@@ -797,105 +812,87 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
             )}
 
             {/* Task Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2 col-span-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Task Title</label>
-                <p className="text-white text-lg font-semibold">{task.title}</p>
+            <div className="space-y-3">
+              <div>
+                <p className="text-white text-base font-semibold">{task.title}</p>
+                <p className="text-gray-400 text-sm mt-1 leading-relaxed">{task.description}</p>
               </div>
 
-              <div className="space-y-2 col-span-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Description</label>
-                <p className="text-white">{task.description}</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Current Status</label>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.status)}`}>
-                  {task.status}
-                </span>
-              </div>
-
-              <div className="space-y-2 ">
-                <label className="text-sm text-[#E8D5A3] font-medium">Priority</label>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getPriorityColor(task.priority)}`}>
-                  {task.priority}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Scheduled Date</label>
-                <p className="text-white">{formatScheduledDate(task.taskScheduledDate)}</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Assigned To</label>
-                <div>
-                  <p className={`${isTaskUnassigned ? 'text-red-400 font-semibold' : 'text-white'}`}>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(task.status)}`}>
+                    {task.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Priority</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getPriorityColor(task.priority)}`}>
+                    {task.priority}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Scheduled</span>
+                  <span className="text-white text-xs font-medium">{formatScheduledDate(task.taskScheduledDate)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Assigned</span>
+                  <span className={`text-xs font-medium ${isTaskUnassigned ? 'text-red-400' : 'text-white'}`}>
                     {task.assignedTo}
-                  </p>
-                  {task.assignedToUsername && (
-                    <p className="text-gray-400 text-xs">@{task.assignedToUsername}</p>
-                  )}
+                    {task.assignedToUsername && <span className="text-gray-500 ml-1">@{task.assignedToUsername}</span>}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Lead Information */}
-            <div className="border-t border-[#BBA473]/30 pt-6">
-              <h3 className="text-lg font-semibold text-[#E8D5A3] mb-4">Lead Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Lead Name
-                  </label>
-                  <p className="text-white">{task.leadName}</p>
+            <div className="border-t border-white/[0.06] pt-4 space-y-3">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <User className="w-3.5 h-3.5" />
+                Lead Information
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Name</span>
+                  <span className="text-white text-xs font-medium">{task.leadName}</span>
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium">Lead ID</label>
-                  <p className="text-white font-mono">{task.leadId}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">ID</span>
+                  <span className="text-white text-xs font-mono">{task.leadId}</span>
                 </div>
-
                 {task.leadPhone && (
-                  <div className="space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Phone Number
-                    </label>
-                    <p className="text-white font-mono">{formatPhoneDisplay(task.leadPhone)}</p>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium">Lead Task Status</label>
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.taskCreationStatus)}`}>
-                    {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
-                  </span>
-
-                  <div>
-                    <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(task.kioskLeadStatus)}`}>
-                      {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
-                    </span>
-                  </div>
-                </div>
-
-                {task.leadDescription && (
-                  <div className="space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium flex items-center gap-2">
-                      Lead Description
-                    </label>
-                    <p className="text-white font-mono">{task.leadDescription}</p>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3 h-3 text-gray-500" />
+                    <span className="text-white text-xs font-mono">{formatPhoneDisplay(task.leadPhone)}</span>
                   </div>
                 )}
               </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Task Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(task.taskCreationStatus)}`}>
+                    {(task.taskCreationStatus == 'Deposit' || task.taskCreationStatus == 'Not Deposit') ? `Real - ${task.taskCreationStatus}` : task.taskCreationStatus}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Kiosk Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(task.kioskLeadStatus)}`}>
+                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
+                  </span>
+                </div>
+              </div>
+              {task.leadDescription && (
+                <p className="text-gray-400 text-sm">{task.leadDescription}</p>
+              )}
             </div>
 
             {/* Update Task Status */}
-            <div className="border-t border-[#BBA473]/30 pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Task</h3>
+            <div className="border-t border-white/[0.06] pt-4">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Update Task
+                </h3>
 
                 {/* Date Time Picker - Point 3: Only enabled for Warm to Deposit */}
                 <div className="flex items-center gap-2">
@@ -910,7 +907,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       placeholderText="Set reminder"
                       minDate={new Date()}
                       disabled={!isReminderDateEnabled()}
-                      className={`px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] ${isReminderDateEnabled() ? 'cursor-pointer border-[#BBA473]/30' : 'cursor-not-allowed border-gray-600 opacity-50'
+                      className={`px-3 py-2 pl-10 rounded-lg bg-white/[0.04] text-white border focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/30 transition-all duration-300 text-sm hover:border-[#BBA473]/50 ${isReminderDateEnabled() ? 'cursor-pointer border-white/10' : 'cursor-not-allowed border-gray-700 opacity-40'
                         }`}
                       calendarClassName="custom-datepicker"
                       wrapperClassName="w-full"
@@ -928,11 +925,11 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                   Task Status <span className="text-red-400">*</span>
                 </label>
 
-                <div className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300 ${isTaskStatusCompletedDisabled()
-                  ? 'bg-gray-900/50 border-gray-700 opacity-50'
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${isTaskStatusCompletedDisabled()
+                  ? 'bg-white/[0.02] border-gray-800 opacity-50'
                   : taskStatus === 'Completed'
-                    ? 'bg-green-500/10 border-green-500/50'
-                    : 'bg-[#1A1A1A] border-[#BBA473]/30 hover:border-[#BBA473]/50'
+                    ? 'bg-green-500/8 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.05)]'
+                    : 'bg-white/[0.03] border-white/[0.06] hover:border-white/10'
                   }`}>
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${taskStatus === 'Completed'
@@ -992,16 +989,12 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
 
                 {/* Info message when Completed is disabled */}
                 {isTaskStatusCompletedDisabled() && (
-                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                    </div>
+                  <div className="mt-3 p-3 bg-blue-500/8 border border-blue-500/20 rounded-xl flex items-start gap-3">
+                    <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-blue-400 text-sm font-medium">Task Completion Locked</p>
-                      <p className="text-blue-300 text-xs mt-1">
-                        You can mark this task as completed once the lead reaches <span className="font-semibold">Demo</span> status or higher (Demo, Not Deposit, or Deposit).
+                      <p className="text-blue-400 text-xs font-semibold">Task Completion Locked</p>
+                      <p className="text-blue-300/70 text-xs mt-1">
+                        You can mark this task as completed once the lead reaches <span className="font-semibold text-blue-300">Demo</span> status or higher.
                       </p>
                     </div>
                   </div>
@@ -1013,17 +1006,17 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
               </div>
 
               {/* NEW: Answered Status Section */}
-              <div className="space-y-4 mb-6">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+              <div className="space-y-3 mb-6">
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                   Answered Status <span className="text-red-400">*</span>
                 </label>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isTaskUnassigned
-                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                  <label className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 border ${isTaskUnassigned
+                    ? 'bg-white/[0.02] cursor-not-allowed opacity-50 border-gray-800'
                     : answeredStatus === 'Answered'
-                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
+                      ? 'bg-[#BBA473]/10 border-[#BBA473]/40 cursor-pointer'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.06] hover:border-white/10 cursor-pointer'
                     }`}>
                     <input
                       type="radio"
@@ -1041,11 +1034,11 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                     <span className="text-white font-medium">Answered</span>
                   </label>
 
-                  <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isTaskUnassigned
-                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                  <label className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 border ${isTaskUnassigned
+                    ? 'bg-white/[0.02] cursor-not-allowed opacity-50 border-gray-800'
                     : answeredStatus === 'Not Answered'
-                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
+                      ? 'bg-[#BBA473]/10 border-[#BBA473]/40 cursor-pointer'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.06] hover:border-white/10 cursor-pointer'
                     }`}>
                     <input
                       type="radio"
@@ -1074,10 +1067,8 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
 
                 {/* MODIFIED: Updated info message when "Not Answered" is selected */}
                 {answeredStatus === 'Not Answered' && (
-                  <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <AlertCircle className="w-5 h-5 text-orange-400" />
-                    </div>
+                  <div className="mt-3 p-3 bg-orange-500/8 border border-orange-500/20 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-orange-400 text-sm font-medium">
                         {task && (task.kioskLeadStatus === 'Lead' || task.kioskLeadStatus === 'lead' || task.kioskLeadStatus === '-' || task.taskCreationStatus === 'Lead' || task.taskCreationStatus === 'lead' || task.taskCreationStatus === '-')
@@ -1101,16 +1092,16 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
               </div>
 
               {/* Lead Response Status Update */}
-              <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-50 pointer-events-none' : ''}`}>
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+              <div className={`space-y-3 ${isUpdateStatusDisabled() ? 'opacity-40 pointer-events-none' : ''}`}>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                   Update Status
                 </label>
 
                 {/* Level 1: Answered / Not Answered - Point 5: Disable previous statuses */}
                 <div className="grid grid-cols-2 gap-3">
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Answered') || isUpdateStatusDisabled()
-                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                    : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                    ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
+                    : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                     <input
                       type="radio"
@@ -1133,10 +1124,10 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                   </label>
 
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Answered') || isUpdateStatusDisabled()
-                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                    ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                     : isFinalSelectedStatus('Not Answered')
-                      ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                     <input
                       type="radio"
@@ -1165,8 +1156,8 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Interested')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
+                        : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1188,12 +1179,12 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       </label>
 
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Interested')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Not Interested')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
                           : shouldShowNotInterestedAvailable()
-                            ? 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50 animate-pulse-border-subtle'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            ? 'bg-white/[0.04] hover:bg-white/[0.07] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/40 animate-pulse-border-subtle'
+                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1226,10 +1217,10 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Warm')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Warm')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1251,10 +1242,10 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       </label>
 
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Hot')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Hot')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1286,10 +1277,10 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Demo')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Demo')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1310,8 +1301,8 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       </label>
 
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Real')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
+                        : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1338,10 +1329,10 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
 
                 {/* Demo Checkboxes */}
                 {modalHotLeadType === 'Demo' && (
-                  <div className="mt-4 p-4 bg-[#1A1A1A] rounded-lg border-2 border-[#BBA473]/30 animate-fadeIn">
+                  <div className="mt-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] animate-fadeIn">
                     <h4 className="text-[#BBA473] font-semibold mb-3 flex items-center gap-2">
-                      <span className="text-sm">Demo Steps</span>
-                      <span className="text-xs text-gray-400">(First 2 are required)</span>
+                      <span className="text-xs">Demo Steps</span>
+                      <span className="text-[10px] text-gray-500">(First 2 required)</span>
                     </h4>
 
                     <div className="space-y-3">
@@ -1353,7 +1344,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                             setDemoInstallApp(e.target.checked);
                             setModalErrors({});
                           }}
-                          className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/30 cursor-pointer transition-all"
                         />
                         <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                           <span className="font-medium">1. Install the App</span>
@@ -1369,7 +1360,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                             setDemoEducationVideo(e.target.checked);
                             setModalErrors({});
                           }}
-                          className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/30 cursor-pointer transition-all"
                         />
                         <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                           <span className="font-medium">2. Education Video</span>
@@ -1382,7 +1373,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                           type="checkbox"
                           checked={demoAnalyzeChannel}
                           onChange={(e) => setDemoAnalyzeChannel(e.target.checked)}
-                          className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/30 cursor-pointer transition-all"
                         />
                         <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                           <span className="font-medium">3. Analyze Channel</span>
@@ -1405,10 +1396,10 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Deposit')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Deposit')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1428,10 +1419,10 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       </label>
 
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${isStatusDisabled('Not Deposit')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Not Deposit')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                         <input
                           type="radio"
@@ -1458,13 +1449,13 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
 
                 {/* Remarks */}
                 <div className="space-y-2 pt-4">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                     Notes / Remarks
                   </label>
                   <textarea
                     name="modalRemarks"
                     placeholder="Add any additional notes or comments about this update..."
-                    rows="4"
+                    rows="3"
                     value={modalRemarks}
                     onChange={(e) => {
                       setModalRemarks(e.target.value);
@@ -1472,9 +1463,9 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                         setModalErrors({ ...modalErrors, remarks: '' });
                       }
                     }}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${modalErrors.remarks
-                      ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white text-sm resize-none transition-all duration-300 placeholder-gray-600 ${modalErrors.remarks
+                      ? 'border-red-500/50 focus:border-red-400 focus:ring-red-500/30'
+                      : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
                       }`}
                   />
                   <div className="flex justify-between items-center">
@@ -1494,20 +1485,20 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
         </div>
 
         {/* Action Buttons - Sticky */}
-        <div className="sticky bottom-0 bg-[#2A2A2A] border-t border-[#BBA473]/30 p-6">
+        <div className="sticky bottom-0 bg-[#262626] border-t border-white/[0.06] px-6 py-4">
           <div className="flex gap-3">
             <button
               onClick={handleClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex-1 px-4 py-3 rounded-xl font-semibold bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed border border-white/5 hover:border-white/10"
             >
               Close
             </button>
             <button
               onClick={handleModalSubmit}
               disabled={!isFormValid() || isSubmitting}
-              className={`btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ${isFormValid() && !isSubmitting
-                ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
+              className={`max-w-full btn-animated btn-gold flex justify-center mx-auto !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold py-3 rounded-xl disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/10 hover:shadow-[#BBA473]/25 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ${isFormValid() && !isSubmitting
+                ? 'cursor-pointer'
                 : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
                 }`}
             >
@@ -1528,19 +1519,19 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
 
         @keyframes pulse-border-subtle {
     0%, 100% {
-      border-color: rgba(187, 164, 115, 0.3);
+      border-color: rgba(187, 164, 115, 0.15);
       box-shadow: 0 0 0 0 rgba(187, 164, 115, 0);
     }
     50% {
-      border-color: rgba(187, 164, 115, 0.6);
-      box-shadow: 0 0 8px 2px rgba(187, 164, 115, 0.2);
+      border-color: rgba(187, 164, 115, 0.4);
+      box-shadow: 0 0 12px 2px rgba(187, 164, 115, 0.1);
     }
   }
-  
+
   .animate-pulse-border-subtle {
     animation: pulse-border-subtle 2.5s ease-in-out infinite;
   }
-        
+
         @keyframes bounce-subtle {
           0%, 100% {
             transform: translateY(0);
@@ -1553,23 +1544,38 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
           animation: bounce-subtle 1s ease-in-out infinite;
         }
 
+        /* Modal Scrollbar */
+        .modal-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .modal-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .modal-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(187, 164, 115, 0.15);
+          border-radius: 10px;
+        }
+        .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(187, 164, 115, 0.3);
+        }
+
         /* Custom DatePicker Styling */
         .custom-datepicker {
-          background-color: #2A2A2A !important;
-          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          background-color: #0C0C0C !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
           border-radius: 12px !important;
           font-family: inherit !important;
         }
 
         .react-datepicker {
-          background-color: #2A2A2A !important;
-          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          background-color: #0C0C0C !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
           border-radius: 12px !important;
         }
 
         .react-datepicker__header {
-          background-color: #1A1A1A !important;
-          border-bottom: 1px solid rgba(187, 164, 115, 0.3) !important;
+          background-color: rgba(255, 255, 255, 0.03) !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
           border-top-left-radius: 12px !important;
           border-top-right-radius: 12px !important;
         }
@@ -1593,7 +1599,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
         }
 
         .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list {
-          background-color: #2a2a2a;
+          background-color: #0C0C0C;
         }
 
         .react-datepicker__navigation--next--with-time:not(.react-datepicker__navigation--next--with-today-button) {
@@ -1615,9 +1621,9 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
         .react-datepicker__time-container {
           position: absolute;
           right: 100%;
-          border: 2px solid #e8d5a33d;
+          border: 1px solid rgba(187, 164, 115, 0.2);
           border-radius: 12px;
-          border-left: 1px solid rgba(187, 164, 115, 0.3) !important;
+          border-left: 1px solid rgba(187, 164, 115, 0.15) !important;
         }
 
         .react-datepicker__time-list-item {

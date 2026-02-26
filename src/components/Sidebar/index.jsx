@@ -126,21 +126,23 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
       {/* Mobile Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-[#1A1A1A] border border-[#BBA473]/30 text-[#BBA473] rounded-md shadow-lg hover:bg-[#2A2A2A] transition-all duration-300 active:scale-95"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-[#0A0A0A] border border-[#BBA473]/20 text-[#BBA473] rounded-lg shadow-lg hover:bg-[#161616] transition-all duration-300 active:scale-95"
       >
         <Menu size={24} />
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 bg-[#1A1A1A]/90 backdrop-blur-xl text-gray-300 p-3 border-r border-[#BBA473]/20
+        className={`fixed inset-y-0 left-0 bg-[#0A0A0A]/95 backdrop-blur-xl text-gray-300 p-3 border-r border-[#BBA473]/10
         overflow-y-auto overflow-x-hidden flex flex-col h-screen transform transition-all duration-500 ease-in-out z-30
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
         ${isCollapsed ? 'w-20' : 'w-64'}
         ${isLoaded ? 'opacity-100' : 'opacity-0'}
         sidebar-custom-scrollbar shadow-2xl`}
       >
+        {/* Subtle right edge glow */}
+        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-[#BBA473]/20 via-transparent to-[#BBA473]/20 pointer-events-none"></div>
         {/* Close Button (Mobile Only) */}
         <button
           onClick={toggleSidebar}
@@ -296,7 +298,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
         </nav>
 
         {/* Bottom Menu Items (Settings & Logout) with Enhanced Styling */}
-        <div className="mt-auto pt-4 border-t border-[#BBA473]/20 space-y-2">
+        <div className="mt-auto pt-4 border-t border-[#BBA473]/10 space-y-2">
           {bottomMenuItems.map((item, index) => (
             <a
               key={index}
@@ -343,10 +345,10 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
           {/* Enhanced Collapse Button */}
           <button
             onClick={toggleCollapse}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} py-3 px-4 
-              bg-gradient-to-r from-[#BBA473]/20 to-[#8E7D5A]/20 border border-[#BBA473]/30
-              text-[#BBA473] rounded-lg transition-all duration-500 active:scale-95 
-              group cursor-pointer relative overflow-hidden hover:border-[#BBA473]/50
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} py-3 px-4
+              bg-gradient-to-r from-[#BBA473]/10 to-[#8E7D5A]/10 border border-[#BBA473]/20
+              text-[#BBA473] rounded-lg transition-all duration-500 active:scale-95
+              group cursor-pointer relative overflow-hidden hover:border-[#BBA473]/40
               ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
             style={{ transitionDelay: `${(filteredMenuItems.length + bottomMenuItems.length + 2) * 50}ms` }}
             title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
@@ -411,7 +413,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
         }
 
         .sidebar-custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(26, 26, 26, 0.5);
+          background: rgba(10, 10, 10, 0.5);
         }
 
         .sidebar-custom-scrollbar::-webkit-scrollbar-thumb {

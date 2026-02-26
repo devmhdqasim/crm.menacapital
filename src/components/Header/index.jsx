@@ -1,10 +1,28 @@
 import { useState, useEffect, useMemo } from "react";
-import { Menu, Bell, LogOut, Key, Check, X } from "lucide-react";
+import { Menu, Bell, LogOut, Key, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from '../../services/authService';
 import { getNotifications, markAllNotificationsAsRead } from '../../services/notificationRESTservice';
 import toast from 'react-hot-toast';
 import { useFirebaseNotifications } from '../../context/FirebaseNotificationContext';
+
+// Deterministic dummy avatars based on user initials
+const DUMMY_AVATARS = [
+  'https://i.pravatar.cc/150?img=11',
+  'https://i.pravatar.cc/150?img=12',
+  'https://i.pravatar.cc/150?img=32',
+  'https://i.pravatar.cc/150?img=44',
+  'https://i.pravatar.cc/150?img=53',
+  'https://i.pravatar.cc/150?img=60',
+  'https://i.pravatar.cc/150?img=68',
+  'https://i.pravatar.cc/150?img=36',
+];
+
+function getAvatarForUser(name) {
+  if (!name) return DUMMY_AVATARS[0];
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return DUMMY_AVATARS[hash % DUMMY_AVATARS.length];
+}
 
 export default function Header() {
   const navigate = useNavigate();
@@ -240,7 +258,10 @@ export default function Header() {
   };
 
   return (
-    <nav className="flex items-center justify-between py-4 px-6 bg-[#1A1A1A] border-b border-[#BBA473]/20 relative z-50">
+    <nav className="flex items-center justify-between py-3 px-6 bg-[#0C0C0C]/95 backdrop-blur-xl border-b border-[#BBA473]/10 sticky top-0 z-40">
+      {/* Subtle top shine line */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#BBA473]/20 to-transparent"></div>
+
       {/* Mobile Menu Button */}
       <button className="flex items-center space-x-2 text-white font-medium md:block lg:hidden hover:text-[#BBA473] transition-colors duration-300">
         <Menu className="w-6 h-6" />
@@ -248,7 +269,7 @@ export default function Header() {
       </button>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-4 ml-auto">
+      <div className="flex items-center space-x-3 ml-auto">
         {/* Notifications */}
         <div className="relative notifications-dropdown">
           <button
@@ -256,11 +277,11 @@ export default function Header() {
               setNotificationsOpen(!notificationsOpen);
               setProfileOpen(false);
             }}
-            className="relative p-2 rounded-lg bg-[#2A2A2A] hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50 group"
+            className="relative p-2.5 rounded-xl bg-[#161616] hover:bg-[#1E1E1E] transition-all duration-300 border border-[#BBA473]/10 hover:border-[#BBA473]/30 group"
           >
-            <Bell className="w-5 h-5 text-gray-300 group-hover:text-[#BBA473] transition-colors duration-300" />
+            <Bell className="w-5 h-5 text-gray-400 group-hover:text-[#BBA473] transition-colors duration-300" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-[8px] font-bold rounded-full aspect-square flex items-center justify-center animate-pulse p-0.5">
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-[8px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center animate-pulse px-1">
                 {unreadCount}
               </span>
             )}
@@ -268,9 +289,9 @@ export default function Header() {
 
           {/* Notifications Dropdown */}
           {notificationsOpen && (
-            <div className="absolute right-0 mt-3 w-96 bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 overflow-hidden animate-slideDown z-50">
+            <div className="absolute right-0 mt-3 w-96 bg-[#141414] rounded-xl shadow-2xl border border-[#BBA473]/15 overflow-hidden animate-slideDown z-50">
               {/* Header */}
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#BBA473]/10 to-transparent border-b border-[#BBA473]/30">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#BBA473]/8 to-transparent border-b border-[#BBA473]/15">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-bold text-[#BBA473]">Notifications</h3>
                   {unreadCount > 0 && (
@@ -306,7 +327,7 @@ export default function Header() {
                   notifications.slice(0, 8).map((notification, index) => (
                     <div
                       key={notification.id}
-                      className={`group relative px-4 py-3 hover:bg-[#3A3A3A] transition-all duration-300 cursor-pointer ${
+                      className={`group relative px-4 py-3 hover:bg-[#1E1E1E] transition-all duration-300 cursor-pointer ${
                         notification.unread ? 'bg-[#BBA473]/5' : ''
                       } ${index !== Math.min(notifications.length, 8) - 1 ? 'border-b border-[#BBA473]/10' : ''}`}
                     >
@@ -340,13 +361,13 @@ export default function Header() {
               </div>
 
               {/* Footer */}
-              <div className="p-3 bg-[#1A1A1A] border-t border-[#BBA473]/30">
+              <div className="p-3 bg-[#0C0C0C] border-t border-[#BBA473]/15">
                 <button
                   onClick={() => {
                     setNotificationsOpen(false);
                     navigate('/notifications');
                   }}
-                  className="w-full py-2 text-center text-sm font-semibold text-[#BBA473] hover:text-white hover:bg-[#2A2A2A] rounded-lg transition-all duration-300"
+                  className="w-full py-2 text-center text-sm font-semibold text-[#BBA473] hover:text-white hover:bg-[#1A1A1A] rounded-lg transition-all duration-300"
                 >
                   View All Notifications
                 </button>
@@ -355,6 +376,9 @@ export default function Header() {
           )}
         </div>
 
+        {/* Divider */}
+        <div className="w-px h-8 bg-[#BBA473]/10"></div>
+
         {/* Profile Dropdown */}
         <div className="relative profile-dropdown">
           <button
@@ -362,52 +386,65 @@ export default function Header() {
               setProfileOpen(!profileOpen);
               setNotificationsOpen(false);
             }}
-            className="hover:opacity-90 transition-all duration-300 flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-[#2A2A2A]"
+            className="transition-all duration-300 flex items-center space-x-3 cursor-pointer p-1.5 rounded-xl hover:bg-[#161616] group"
           >
-            <div className="relative inline-flex items-center justify-center w-10 h-10 overflow-hidden bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] rounded-full cursor-pointer shadow-lg">
-              <span className="font-bold text-black">
-                {userDetails ? userDetails.charAt(0).toUpperCase() : 'M'}
-                {branchDetails ? branchDetails.charAt(0).toUpperCase() : 'A'}
-              </span>
+            {/* Avatar with photo + hover initials */}
+            <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-[#BBA473]/20 group-hover:ring-[#BBA473]/50 transition-all duration-300">
+              {/* Dummy profile photo - default visible */}
+              <img
+                src={getAvatarForUser(userDetails || branchDetails)}
+                alt="Profile"
+                className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-0"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+              {/* Initials overlay - visible on hover */}
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <span className="font-bold text-black text-sm">
+                  {userDetails ? userDetails.charAt(0).toUpperCase() : 'M'}
+                  {branchDetails ? branchDetails.charAt(0).toUpperCase() : 'A'}
+                </span>
+              </div>
             </div>
             <div className="text-left hidden lg:block">
-              <h4 className="text-gray-50 font-semibold text-sm">
+              <h4 className="text-gray-200 font-semibold text-sm group-hover:text-white transition-colors duration-300">
                 {userDetails ?? branchDetails ?? 'Anonymous'}
               </h4>
               {branchDetails ? '' : (
-                <p className="text-gray-400 text-xs">{userRole ?? 'Anonymous'}</p>
+                <p className="text-gray-500 text-[11px]">{userRole ?? 'Anonymous'}</p>
               )}
             </div>
           </button>
 
           {/* Profile Dropdown Menu */}
           {profileOpen && (
-            <div className="absolute right-0 mt-3 w-56 bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 overflow-hidden animate-slideDown z-50">
-              <div className="py-2">
+            <div className="absolute right-0 mt-3 w-60 bg-[#141414] rounded-xl shadow-2xl border border-[#BBA473]/15 overflow-hidden animate-slideDown z-50">
+              {/* Profile info header */}
+
+              <div className="py-1.5">
                 <button
                   onClick={() => {
                     console.log("Update Password clicked");
                     setProfileOpen(false);
                     navigate('/update-password');
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-[#3A3A3A] transition-all duration-300 group"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-[#1E1E1E] transition-all duration-300 group"
                 >
-                  <div className="p-2 rounded-lg bg-[#BBA473]/20 group-hover:bg-[#BBA473]/30 transition-colors duration-300">
+                  <div className="p-1.5 rounded-lg bg-[#BBA473]/10 group-hover:bg-[#BBA473]/20 transition-colors duration-300">
                     <Key className="w-4 h-4 text-[#BBA473]" />
                   </div>
                   <span className="text-sm font-medium">Update Password</span>
                 </button>
-                
-                <div className="mx-4 my-1 border-t border-[#BBA473]/20"></div>
-                
+
+                <div className="mx-4 my-1 border-t border-[#BBA473]/10"></div>
+
                 <button
                   onClick={() => {
                     logoutUser();
                     navigate('/');
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-red-500/20 transition-all duration-300 group"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-red-500/10 transition-all duration-300 group"
                 >
-                  <div className="p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-colors duration-300">
+                  <div className="p-1.5 rounded-lg bg-red-500/10 group-hover:bg-red-500/20 transition-colors duration-300">
                     <LogOut className="w-4 h-4 text-red-400" />
                   </div>
                   <span className="text-sm font-medium text-red-400 group-hover:text-red-300">Logout</span>
@@ -439,17 +476,17 @@ export default function Header() {
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #1A1A1A;
+          background: #0C0C0C;
           border-radius: 3px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #BBA473;
+          background: rgba(187, 164, 115, 0.3);
           border-radius: 3px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #d4bc89;
+          background: rgba(187, 164, 115, 0.5);
         }
       `}</style>
     </nav>

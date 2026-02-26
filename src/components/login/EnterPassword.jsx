@@ -1,12 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Eye, EyeOff, Edit2, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Edit2, Loader2, ShieldAlert } from 'lucide-react';
 import { loginUser, loginBranch, loginEvent } from '../../services/authService'; // Update path as needed
 import toast from 'react-hot-toast';
 import logo from '../../assets/images/logo.svg';
 
 const APP_VERSION = __APP_VERSION__ || '1.0.0';
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+const STORAGE_KEY = 'sig_login_attempts';
+
+function getLoginAttempts(loginId) {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return data[loginId] || { count: 0, lockedUntil: null };
+  } catch {
+    return { count: 0, lockedUntil: null };
+  }
+}
+
+function setLoginAttempts(loginId, record) {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    data[loginId] = record;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
+function clearLoginAttempts(loginId) {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    delete data[loginId];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
 
 const LoginSchema = Yup.object().shape({
   password: Yup.string()
@@ -32,6 +61,51 @@ export default function EnterPassword({
   const [errorMessage, setErrorMessage] = useState('');
   const [isErrorUserPassword, setIsErrorUserPassword] = useState(false);
 
+  // Rate limiting state
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(null);
+  const [lockoutRemaining, setLockoutRemaining] = useState(0);
+
+  const isLockedOut = lockedUntil && Date.now() < lockedUntil;
+
+  // Initialize from localStorage on mount
+  useEffect(() => {
+    const record = getLoginAttempts(login);
+    setFailedAttempts(record.count);
+    if (record.lockedUntil && Date.now() < record.lockedUntil) {
+      setLockedUntil(record.lockedUntil);
+    } else if (record.lockedUntil) {
+      // Lockout expired, clear it
+      clearLoginAttempts(login);
+      setFailedAttempts(0);
+      setLockedUntil(null);
+    }
+  }, [login]);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (!lockedUntil) {
+      setLockoutRemaining(0);
+      return;
+    }
+
+    const tick = () => {
+      const remaining = lockedUntil - Date.now();
+      if (remaining <= 0) {
+        setLockedUntil(null);
+        setFailedAttempts(0);
+        setLockoutRemaining(0);
+        clearLoginAttempts(login);
+      } else {
+        setLockoutRemaining(remaining);
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [lockedUntil, login]);
+
   useEffect(() => {
     setIsLoaded(true);
   }, []);
@@ -43,6 +117,12 @@ export default function EnterPassword({
     },
     validationSchema: LoginSchema,
     onSubmit: async (values) => {
+      // Block if locked out
+      if (lockedUntil && Date.now() < lockedUntil) {
+        toast.error('Too many failed attempts. Please wait before trying again.');
+        return;
+      }
+
       setIsLoading(true);
       setErrorMessage('');
 
@@ -62,6 +142,10 @@ export default function EnterPassword({
 
         if (result?.success) {
           console.log('✅ Login successful:', result.data);
+          // Clear rate limit on success
+          clearLoginAttempts(values.login);
+          setFailedAttempts(0);
+          setLockedUntil(null);
           toast.success(result?.message || 'Login successful!');
 
           if (onLoginSuccess) {
@@ -70,8 +154,21 @@ export default function EnterPassword({
             onNext(result.data);
           }
         } else {
-          const errorMsg = result?.error?.payload?.message || 'Login failed. Please try again.';
-          toast.error(errorMsg);
+          // Track failed attempt
+          const newCount = failedAttempts + 1;
+          setFailedAttempts(newCount);
+
+          if (newCount >= MAX_ATTEMPTS) {
+            const lockTime = Date.now() + LOCKOUT_DURATION_MS;
+            setLockedUntil(lockTime);
+            setLoginAttempts(values.login, { count: newCount, lockedUntil: lockTime });
+            toast.error(`Too many failed attempts. Please wait 10 minutes.`);
+          } else {
+            setLoginAttempts(values.login, { count: newCount, lockedUntil: null });
+            const remaining = MAX_ATTEMPTS - newCount;
+            const errorMsg = result?.error?.payload?.message || 'Login failed. Please try again.';
+            toast.error(`${errorMsg} (${remaining} attempt${remaining === 1 ? '' : 's'} left)`);
+          }
           console.error('❌ Login failed:', result?.message);
         }
       } catch (error) {
@@ -120,7 +217,7 @@ export default function EnterPassword({
     }
   };
 
-  const isButtonDisabled = !formik.isValid || formik.values.password.length < 8 || isLoading;
+  const isButtonDisabled = !formik.isValid || formik.values.password.length < 8 || isLoading || isLockedOut;
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
@@ -175,6 +272,31 @@ export default function EnterPassword({
                 {errorMessage}
               </div>
             </div>
+
+            {/* Lockout Warning */}
+            {isLockedOut && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+                <ShieldAlert className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-400 text-sm font-semibold">Account temporarily locked</p>
+                  <p className="text-red-300/70 text-xs mt-1">
+                    Too many failed attempts. Try again in{' '}
+                    <span className="font-mono font-semibold text-red-400">
+                      {Math.floor(lockoutRemaining / 60000)}:{String(Math.floor((lockoutRemaining % 60000) / 1000)).padStart(2, '0')}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Failed attempts warning (not locked yet) */}
+            {!isLockedOut && failedAttempts > 0 && failedAttempts < MAX_ATTEMPTS && (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2.5 text-center">
+                <p className="text-yellow-400/90 text-xs">
+                  {MAX_ATTEMPTS - failedAttempts} attempt{MAX_ATTEMPTS - failedAttempts === 1 ? '' : 's'} remaining before temporary lockout
+                </p>
+              </div>
+            )}
 
             {/* Login (Email/Username) Field with Edit */}
             <div className="flex items-center justify-between bg-[#252525]/80 rounded-lg p-3 border border-[#BBA473]/10 hover:border-[#BBA473]/30 transition-all duration-300 group">
