@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, User, Phone, Mail, AlertCircle } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -30,15 +30,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   // Animation state
   const [isClosing, setIsClosing] = useState(false);
 
-  // Track whether the answeredStatus useEffect is firing for initial mount vs user change
-  const isInitialMountRef = useRef(true);
-
   // Check if task is unassigned
   const isTaskUnassigned = task?.assignedTo === 'Unassigned';
 
-  // Pre-populate modal when task changes or modal opens
+  // Pre-populate modal when task changes
   useEffect(() => {
-    if (task && isOpen) {
+    if (task) {
       setModalRemarks(task.leadRemarks || '');
       setTaskStatus(task.status || 'Completed'); // Default to Completed if Open
       setReminderDateTime(null);
@@ -64,8 +61,6 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           setModalHotLeadType('Demo');
           setLeadResponseStatus('Demo');
           setModalDepositStatus('');
-          setDemoInstallApp(true);
-          setDemoEducationVideo(true);
         } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
           // Point 4: Auto-select Not Deposit
           setModalAnswered('Answered');
@@ -119,8 +114,6 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
-        setDemoInstallApp(true);
-        setDemoEducationVideo(true);
       } 
       else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' || 
         kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || 
@@ -157,10 +150,8 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
    setLeadResponseStatus('Deposit');
  }
 }
-      // Mark that initial population is done; the answeredStatus effect should skip its first run
-      isInitialMountRef.current = true;
     }
-  }, [task, isOpen]);
+  }, [task]);
 
   // Auto-enable task completion when reaching Demo or higher
   useEffect(() => {
@@ -183,35 +174,27 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
   useEffect(() => {
     if (!task) return;
 
-    // Skip the reset on initial mount (when task data is first populating)
-    if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      return;
-    }
-
     const currentStatus = task.taskCreationStatus || '';
     const kioskStatus = task.kioskLeadStatus || '';
 
-    // For Kiosk Lead Status "Lead", all options are unlocked - don't reset selections
+    // For Kiosk Lead Status "Lead": only reset if taskCreationStatus has no meaningful hierarchy value
+    // If taskCreationStatus is e.g. "Warm", preserve those selections so the modal starts from Warm
     if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if (meaningfulStatuses.includes(currentStatus)) {
+        return; // Preserve existing selections
+      }
+      resetAllSelections();
       return;
     }
 
     // When answeredStatus changes to "Not Answered", check if current selections are now disabled
     if (answeredStatus === 'Not Answered') {
       // Map kiosk status to determine what should be selected
-      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        // If Not Deposit is selected but should default to Deposit
-        if (modalDepositStatus === 'Not Deposit') {
-          setModalDepositStatus('Deposit');
-          setLeadResponseStatus('Deposit');
-        }
-      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
-        // If Deposit is selected but should default to Not Deposit
-        if (modalDepositStatus === 'Deposit') {
-          setModalDepositStatus('Not Deposit');
-          setLeadResponseStatus('Not Deposit');
-        }
+      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit' ||
+          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+        // Don't force deposit status - let user keep their current selection
+        // Both Deposit and Not Deposit should remain selectable
       } else if (kioskStatus === 'Demo') {
         // Demo level - ensure Demo is selected
         if (modalHotLeadType !== 'Demo') {
@@ -614,12 +597,25 @@ const isUpdateStatusOptionDisabled = (statusToCheck) => {
       return true;
     }
 
-    // NEW REQUIREMENT: If Lead Task Status or Kiosk Lead Status is "Lead", remove all validations
-    // User can select any status without restrictions (except Answered Status based restrictions above)
-    if (currentStatus === 'Lead' || currentStatus === 'lead' || 
-        kioskStatus === 'Lead' || kioskStatus === 'lead' || 
+    // If Lead Task Status or Kiosk Lead Status is "Lead", check if taskCreationStatus has a real hierarchy value
+    if (currentStatus === 'Lead' || currentStatus === 'lead' ||
+        kioskStatus === 'Lead' || kioskStatus === 'lead' ||
         currentStatus === '-' || kioskStatus === '-') {
-      return false; // Don't disable any status options
+      // When kioskStatus is "Lead" but taskCreationStatus has a meaningful hierarchy value,
+      // disable statuses strictly below it (current and above stay enabled)
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if ((kioskStatus === 'Lead' || kioskStatus === 'lead') && meaningfulStatuses.includes(currentStatus)) {
+        const hierarchy = ['', 'Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+        const currentIdx = hierarchy.indexOf(currentStatus);
+        const checkIdx = hierarchy.indexOf(statusToCheck);
+        if (checkIdx === -1) return false; // Unknown status, don't disable
+        // Allow "Not Interested" at any point when Answered is selected
+        if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modalAnswered === 'Answered') {
+          return false;
+        }
+        return checkIdx < currentIdx; // Disable only strictly below current
+      }
+      return false; // No meaningful status — don't disable anything
     }
 
     // SPECIAL RULE: "Not Interested" is always available when "Answered" is selected in Answered Status
@@ -648,11 +644,12 @@ if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modal
     // allow selecting sibling statuses at the same level
     if (answeredStatus === 'Not Answered' && allowedKioskStatuses.includes(kioskStatus)) {
       // Map kiosk status to its hierarchy level
+      // Use 'Not Deposit' index for all Real/Deposit variants so both Deposit and Not Deposit are enabled as siblings
       let kioskHierarchyLevel = -1;
       if (kioskStatus === 'Demo') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
       } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        kioskHierarchyLevel = statusHierarchy.indexOf('Deposit');
+        kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       }
@@ -662,10 +659,6 @@ if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modal
       // Allow selecting statuses at the same level (siblings) or higher
       // Disable only statuses that are strictly lower than the kiosk status level
       if (checkStatusIndex !== -1 && kioskHierarchyLevel !== -1) {
-        // FIX: Warm/Hot - only disable Warm, keep Hot enabled
-        if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && kioskHierarchyLevel >= statusHierarchy.indexOf('Warm')) {
-          return statusToCheck === 'Warm';
-        }
         return checkStatusIndex < kioskHierarchyLevel;
       }
     }
@@ -705,13 +698,17 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
 }
 
     // ✅ FIX: Warm/Hot selection - ensure at least one is always enabled
-    // When effective status is at Warm level or above, disable Warm (lower) but keep Hot enabled
     if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && modalInterested === 'Interested') {
       const warmIndex = statusHierarchy.indexOf('Warm');
-
-      if (effectiveStatusIndex >= warmIndex) {
-        // Warm is disabled (can't go back), Hot is always enabled
-        return statusToCheck === 'Warm';
+      const hotIndex = statusHierarchy.indexOf('Hot');
+      
+      if (effectiveStatusIndex === warmIndex || effectiveStatusIndex === hotIndex) {
+        if (effectiveStatusIndex === warmIndex) { 
+          return statusToCheck === 'Warm';
+        }
+        if (effectiveStatusIndex === hotIndex) {
+          return false;
+        }
       }
     }
 
@@ -725,9 +722,19 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
     // Disable if task is unassigned
     if (isTaskUnassigned) return true;
 
-    // NEW: Don't disable the entire Update Status section if "Not Answered" is selected
-    // because we now allow sibling selections when kiosk status is at certain levels
-    // The individual status options will be controlled by isStatusDisabled() instead
+    // Disable the entire Update Status section when "Not Answered" is selected
+    // EXCEPT: when kioskStatus is "Lead" and taskCreationStatus has no meaningful hierarchy value
+    // (e.g. "Assigned") — in that case keep the section enabled so the user can select "Not Answered"
+    if (answeredStatus === 'Not Answered') {
+      const kioskStatus = task?.kioskLeadStatus || '';
+      const currentStatus = task?.taskCreationStatus || '';
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if ((kioskStatus === 'Lead' || kioskStatus === 'lead') && !meaningfulStatuses.includes(currentStatus)) {
+        return false; // Keep section enabled — individual options handled by isUpdateStatusOptionDisabled
+      }
+      return true;
+    }
+
     return false;
   };
 
