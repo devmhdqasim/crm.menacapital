@@ -61,6 +61,7 @@ initMocks().then(() => {
           </FirebaseNotificationProvider>
           <Toaster
             position="top-right"
+            containerStyle={{ top: 12, right: 12 }}
             toastOptions={{
               duration: 3000,
               style: {

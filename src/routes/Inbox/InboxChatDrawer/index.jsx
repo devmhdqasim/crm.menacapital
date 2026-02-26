@@ -307,15 +307,14 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
       if (result.success && result.data) {
         const responseData = result.data;
-        // Handle multiple response structures:
-        // 1. Direct: { data: [...messages], pagination: {...} }
-        // 2. Wrapped: { data: { data: [...messages], pagination: {...} } }
-        // 3. Nested: { data: { data: { data: [...messages] } } }
+        // Handle response structure: { result: "success", messages: { items: [...] } }
         let rawMessages = [];
-        if (Array.isArray(responseData.data)) {
+        if (Array.isArray(responseData.messages?.items)) {
+          rawMessages = responseData.messages.items;
+        } else if (Array.isArray(responseData.data?.messages?.items)) {
+          rawMessages = responseData.data.messages.items;
+        } else if (Array.isArray(responseData.data)) {
           rawMessages = responseData.data;
-        } else if (Array.isArray(responseData.data?.data)) {
-          rawMessages = responseData.data.data;
         } else if (Array.isArray(responseData)) {
           rawMessages = responseData;
         }
@@ -324,11 +323,11 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
         if (rawMessages.length > 0) {
           const transformedMessages = rawMessages.map((msg) => {
-            // Timestamp: use rawPayload.timestamp (Unix seconds) or createdAt
-            const rawTs = msg.rawPayload?.timestamp;
+            // Timestamp: use timestamp field (Unix seconds string) or created ISO date
+            const rawTs = msg.timestamp;
             const timestamp = rawTs
               ? parseInt(rawTs) * 1000
-              : new Date(msg.createdAt || msg.created).getTime();
+              : new Date(msg.created || msg.createdAt).getTime();
             const date = new Date(timestamp);
 
             const timeString = date.toLocaleTimeString('en-US', {
@@ -337,30 +336,33 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               hour12: true
             });
 
-            // Message type from messageType field
-            const messageType = msg.messageType || msg.rawPayload?.type || 'text';
+            // Message type directly from type field
+            const messageType = msg.type || 'text';
 
             // Text content
-            let messageText = msg.text || msg.rawPayload?.text || '';
+            let messageText = msg.text || '';
 
-            // Media URL: from media object or rawPayload.data
-            const mediaUrl = msg.media?.url || msg.rawPayload?.data || null;
+            // Media URL: from data field (e.g. "data/images/xxx.jpg", "data/audios/xxx.opus")
+            const mediaUrl = msg.data || null;
 
             // Template detection
-            const isTemplate = messageType === 'template' || msg.rawPayload?.eventType === 'broadcastMessage';
+            const isTemplate = messageType === 'template' || msg.eventType === 'broadcastMessage';
 
-            // Sender: direction "inbound" = contact, "outbound" = user
-            // Also check rawPayload.owner for outgoing messages
-            const isOutgoing = msg.direction === 'outbound' || msg.rawPayload?.owner === true;
+            // Sender: owner=true means sent by business (user), owner=false means from customer (contact)
+            const isOutgoing = msg.owner === true;
+
+            // Status: map statusString (SENT, DELIVERED, READ) to lowercase
+            const statusMap = { 'SENT': 'sent', 'DELIVERED': 'delivered', 'READ': 'read', 'FAILED': 'failed' };
+            const status = statusMap[msg.statusString] || msg.statusString?.toLowerCase() || 'sent';
 
             return {
-              id: msg._id || msg.whatsappMessageId || `api-${timestamp}-${Math.random()}`,
-              whatsappMessageId: msg.whatsappMessageId || null,
+              id: msg.id || `api-${timestamp}-${Math.random()}`,
+              whatsappMessageId: msg.id || null,
               text: messageText,
               sender: isOutgoing ? 'user' : 'contact',
               timestamp: timeString,
               sortTimestamp: timestamp,
-              status: msg.status || 'sent',
+              status: status,
               type: messageType,
               mediaUrl: mediaUrl,
               isTemplate: isTemplate,

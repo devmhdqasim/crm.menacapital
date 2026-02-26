@@ -81,6 +81,16 @@ function parseFirebaseNotifications(snapshot, source) {
   }));
 }
 
+// Only these roles should receive toast/banner notifications
+const ALLOWED_NOTIFICATION_ROLES = ['Admin', 'Sales Manager', 'Agent'];
+
+function isNotificationAllowedForUser() {
+  const userInfo = getUserInfo();
+  if (!userInfo) return false;
+  const role = userInfo.roleName || '';
+  return ALLOWED_NOTIFICATION_ROLES.includes(role);
+}
+
 export const FirebaseNotificationProvider = ({ children }) => {
   const [generalNotifications, setGeneralNotifications] = useState([]);
   const [inboxNotifications, setInboxNotifications] = useState([]);
@@ -100,6 +110,23 @@ export const FirebaseNotificationProvider = ({ children }) => {
   const inboxNotificationsRef = useRef([]);
 
   const { play: playSound } = useNotificationSound();
+
+  // Track active toast IDs to enforce max 3 visible notifications
+  const activeToastIds = useRef([]);
+  const MAX_VISIBLE_TOASTS = 3;
+
+  const showManagedToast = useCallback((toastFn) => {
+    // Dismiss oldest toast if at the limit
+    while (activeToastIds.current.length >= MAX_VISIBLE_TOASTS) {
+      const oldest = activeToastIds.current.shift();
+      toast.dismiss(oldest);
+    }
+    const id = toastFn();
+    if (id) {
+      activeToastIds.current.push(id);
+    }
+    return id;
+  }, []);
 
   const triggerBanner = useCallback((notification) => {
     setLatestNotification(notification);
@@ -123,7 +150,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
 
   // Subscribe to general notifications
   useEffect(() => {
-    if (!database) return;
+    if (!database || !isNotificationAllowedForUser()) return;
 
     const userInfo = getUserInfo();
     const generalRef = query(ref(database, 'notifications/general'), limitToLast(50));
@@ -157,7 +184,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
 
   // Subscribe to inbox notifications
   useEffect(() => {
-    if (!database) return;
+    if (!database || !isNotificationAllowedForUser()) return;
 
     const userInfo = getUserInfo();
     const inboxRef = query(ref(database, 'notifications/inbox'), limitToLast(50));
@@ -194,7 +221,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
   //   false → shows latest general notification banner
   //   true  → shows latest inbox notification banner
   useEffect(() => {
-    if (!database) return;
+    if (!database || !isNotificationAllowedForUser()) return;
 
     const triggerDbRef = ref(database, 'notifications/trigger');
 
@@ -223,7 +250,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
 
   // --- Listen for user-specific notifications (notifications/{userId}) ---
   useEffect(() => {
-    if (!database) return;
+    if (!database || !isNotificationAllowedForUser()) return;
 
     const userInfo = getUserInfo();
     const userId = userInfo?._id || userInfo?.id;
@@ -258,7 +285,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
         if (notifType === 'REMINDER_NOTIFICATION') {
           // Reminder notification - orange/amber theme
           playSound();
-          toast.custom((t) => (
+          showManagedToast(() => toast.custom((t) => (
             <div
               onClick={() => {
                 toast.dismiss(t.id);
@@ -394,11 +421,11 @@ export const FirebaseNotificationProvider = ({ children }) => {
                 <div style={{ height: '100%', background: '#f59e0b', animation: 'toast-shrink 6s linear forwards' }} />
               </div>
             </div>
-          ), { duration: 6000, position: 'top-right' });
+          ), { duration: 6000, position: 'top-right' }));
         } else {
           // General notification - gold theme
           playSound();
-          toast.custom((t) => (
+          showManagedToast(() => toast.custom((t) => (
             <div
               style={{
                 maxWidth: '400px',
@@ -481,7 +508,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
                 <div style={{ height: '100%', background: '#BBA473', animation: 'toast-shrink 5s linear forwards' }} />
               </div>
             </div>
-          ), { duration: 5000, position: 'top-right' });
+          ), { duration: 5000, position: 'top-right' }));
         }
       });
 
@@ -495,7 +522,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
 
   // --- Listen for whatsappSessions reminder flag ---
   useEffect(() => {
-    if (!database) return;
+    if (!database || !isNotificationAllowedForUser()) return;
 
     const sessionsRef = ref(database, 'whatsappSessions');
     const prevRemindersRef = { current: new Map() };
@@ -525,7 +552,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
 
         // New reminder flag detected
         playSound();
-        toast.custom((t) => (
+        showManagedToast(() => toast.custom((t) => (
           <div
             onClick={() => {
               toast.dismiss(t.id);
@@ -672,7 +699,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
               <div style={{ height: '100%', background: '#a855f7', animation: 'toast-shrink 7s linear forwards' }} />
             </div>
           </div>
-        ), { duration: 7000, position: 'top-right' });
+        ), { duration: 7000, position: 'top-right' }));
       });
 
       prevRemindersRef.current = currentReminders;

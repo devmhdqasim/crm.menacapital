@@ -577,11 +577,14 @@ export const setupWatiWebhook = async (webhookUrl) => {
 export const fetchWatiImage = async (imageUrl) => {
   try {
     console.log('🖼️ Fetching Wati image:', imageUrl);
-    
+
+    // If URL is a relative Wati path (e.g. "data/images/xxx.jpg"), use Wati API base URL
+    // If URL is already absolute, use it as-is
+    const isRelativePath = imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('blob:');
+
     const response = await watiApi.get(imageUrl, {
       responseType: 'blob',
-      // Remove baseURL for this request since imageUrl is already complete
-      baseURL: '',
+      baseURL: isRelativePath ? WATI_API_URL + '/' : '',
     });
     
     // Create blob URL
@@ -621,7 +624,7 @@ export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) =
     const cleanWaId = waId.replace(/\D/g, '');
     console.log('📬 Fetching previous messages from backend for:', cleanWaId);
 
-    const response = await axios.get(`${API_BASE_URL}/messages/getMessage/en`, {
+    const response = await axios.get(`${API_BASE_URL}/wati/getMessage/en`, {
       params: {
         waId: cleanWaId,
         pageSize,
