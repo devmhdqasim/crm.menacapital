@@ -578,13 +578,20 @@ export const fetchWatiImage = async (imageUrl) => {
   try {
     console.log('🖼️ Fetching Wati image:', imageUrl);
 
-    // If URL is a relative Wati path (e.g. "data/images/xxx.jpg"), use Wati API base URL
-    // If URL is already absolute, use it as-is
+    // For relative Wati paths (e.g. "data/images/xxx.jpg", "data/audios/xxx.opus"),
+    // use the /api/file/showFile endpoint
     const isRelativePath = imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('blob:');
 
-    const response = await watiApi.get(imageUrl, {
+    const WATI_BASE = 'https://live-mt-server.wati.io/1071091';
+    const url = isRelativePath
+      ? `${WATI_BASE}/api/file/showFile?fileName=${encodeURIComponent(imageUrl)}`
+      : imageUrl;
+
+    const response = await axios.get(url, {
       responseType: 'blob',
-      baseURL: isRelativePath ? WATI_API_URL + '/' : '',
+      headers: {
+        'Authorization': `Bearer ${WATI_API_TOKEN}`,
+      },
     });
     
     // Create blob URL
