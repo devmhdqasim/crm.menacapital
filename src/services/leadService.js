@@ -277,6 +277,7 @@ export const updateLeadTask = async (leadId, taskPayload) => {
       real: taskPayload.real,
       demo: taskPayload.demo,
       deposited: taskPayload.deposited,
+      taskStatus: "Completed",
       applicationInstalled: taskPayload.applicationInstalled,
       educationalVideosSent: taskPayload.educationalVideosSent,
       socialMediaLinksSent: taskPayload.socialMediaLinksSent,
@@ -721,6 +722,7 @@ export const createEventLead = async (leadData) => {
       leadSource: leadData.leadSource,
       leadSourceId: leadData.leadSourceId,
       leadStatus: leadData.eventLeadStatus || 'Lead',
+      kioskLeadStatus: leadData.kioskLeadStatus,
       depositStatus: leadData.depositStatus || '',
     };
 
@@ -1565,7 +1567,7 @@ export const createBranchLead = async (leadData) => {
  * @param {string} leadData.leadDescription - Description or notes about the lead
  * @param {string} leadData.leadSource - Source of the lead (e.g., "Facebook Ads", "Website")
  * @param {string} leadData.leadSourceId - Source of the lead (e.g., "Facebook Ads", "Website")
- * @param {string} leadData.leadStatus - Status of the lead (e.g., "Not Assigned", "Contacted", "Qualified")
+ * @param {string} leadData.kioskLeadStatus - Status of the lead (e.g., "Not Assigned", "Contacted", "Qualified")
  * @returns {Promise} - Returns created lead info
  */
 export const createLead = async (leadData) => {
@@ -1579,6 +1581,7 @@ export const createLead = async (leadData) => {
       leadSource: leadData.leadSource,
       leadSourceId: leadData.leadSourceId,
       leadStatus: leadData.leadStatus,
+      kioskLeadStatus: leadData.kioskLeadStatus,
     });
     
     if (!authToken) {
@@ -1602,6 +1605,7 @@ export const createLead = async (leadData) => {
       leadSourceId: leadData.leadSourceId,
       leadStatus: leadData.leadStatus || 'Not Assigned',
       depositStatus: leadData.depositStatus || '',
+      kioskLeadStatus: leadData.kioskLeadStatus,
     };
 
     console.log('📤 Sending payload to API');
