@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download, Play, Pause, Video, Image as ImageIcon } from 'lucide-react';
+import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, Download, Play, Pause, Video, Image as ImageIcon } from 'lucide-react';
 import { fetchWatiImage } from '../../../services/inboxService';
 
 // Custom audio player matching the gold/dark theme
@@ -145,19 +145,11 @@ const MessagesArea = ({
   // Track failed images and loading states
   const [failedImages, setFailedImages] = useState(new Set());
   const [loadingMedia, setLoadingMedia] = useState(new Set());
-  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   // Track which messages are currently being processed (ref to avoid re-renders)
   const processingRef = useRef(new Set());
   const isDownloadingRef = useRef(false);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    if (!openDropdownId) return;
-    const handleClickOutside = () => setOpenDropdownId(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [openDropdownId]);
 
   // Calculate media download progress
   const mediaProgress = useMemo(() => {
@@ -398,50 +390,19 @@ const MessagesArea = ({
             </div>
           ) : isDownloaded ? (
             <div
-              className="relative rounded-xl overflow-hidden bg-black/20 group"
+              className="relative rounded-xl overflow-hidden bg-black/20 cursor-pointer"
               style={{ maxWidth: '300px' }}
+              onClick={() => setPreviewImage(imageUrl)}
             >
               <img
                 src={imageUrl}
                 alt="Shared image"
-                className="w-full h-auto object-cover transition-all duration-300"
+                className="w-full h-auto object-cover transition-all duration-300 hover:brightness-90"
                 style={{ maxHeight: '400px', minHeight: '150px' }}
                 onError={() => {
                   setFailedImages(prev => new Set(prev).add(message.id));
                 }}
               />
-
-              {/* Dropdown menu button */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenDropdownId(openDropdownId === message.id ? null : message.id);
-                  }}
-                  className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-all"
-                >
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-
-                {openDropdownId === message.id && (
-                  <div className="absolute right-0 top-10 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-xl shadow-2xl z-30 min-w-[160px] py-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const link = document.createElement('a');
-                        link.href = imageUrl;
-                        link.download = `image-${message.id}.jpg`;
-                        link.click();
-                        setOpenDropdownId(null);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#BBA473]/20 flex items-center gap-2 transition-colors"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
@@ -722,6 +683,41 @@ const MessagesArea = ({
         </div>
       ))}
       <div ref={messagesEndRef} />
+
+      {/* Full-screen image preview */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button
+            onClick={() => setPreviewImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-10"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const link = document.createElement('a');
+              link.href = previewImage;
+              link.download = `image-${Date.now()}.jpg`;
+              link.click();
+            }}
+            className="absolute top-4 right-16 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-10"
+          >
+            <Download className="w-5 h-5" />
+          </button>
+          <img
+            src={previewImage}
+            alt="Preview"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };
