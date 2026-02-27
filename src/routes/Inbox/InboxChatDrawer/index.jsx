@@ -264,6 +264,26 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         type: data.type
       });
 
+      // Resolve media type: backend sends type:"message" for all media, so infer from URL/path
+      const rawMediaUrl = data.data || data.media?.url || '';
+      let resolvedType = data.type || 'text';
+      if (resolvedType === 'message' || resolvedType === 'text') {
+        if (rawMediaUrl) {
+          const pathLower = rawMediaUrl.toLowerCase();
+          if (pathLower.includes('/images/') || pathLower.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/)) {
+            resolvedType = 'image';
+          } else if (pathLower.includes('/audios/') || pathLower.includes('/ptt/') || pathLower.match(/\.(opus|ogg|mp3|m4a|aac)(\?|$)/)) {
+            resolvedType = 'audio';
+          } else if (pathLower.includes('/videos/') || pathLower.match(/\.(mp4|mov|avi|3gp|webm)(\?|$)/)) {
+            resolvedType = 'video';
+          } else if (pathLower.includes('/documents/') || pathLower.match(/\.(pdf|doc|docx|xls|xlsx)(\?|$)/)) {
+            resolvedType = 'document';
+          }
+        }
+        // If still "message" with no media, treat as text
+        if (resolvedType === 'message') resolvedType = 'text';
+      }
+
       // Create new message object
       const newMessage = {
         id: `socket-${Date.now()}`,
@@ -276,8 +296,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }),
         sortTimestamp: Date.now(),
         status: 'delivered',
-        type: data.type || 'text',
-        mediaUrl: data.data || data.media?.url || null,
+        type: resolvedType,
+        mediaUrl: rawMediaUrl || null,
       };
 
       console.log('📨 Created message:', newMessage);

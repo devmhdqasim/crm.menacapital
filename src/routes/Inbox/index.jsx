@@ -50,7 +50,15 @@ const InboxPage = () => {
 
       if (!phone) return;
 
-      const messageText = data.text || data.message || '';
+      let messageText = data.text || data.message || '';
+      // Backend sends type:"message" for media — infer actual type from URL for contact preview
+      if (!messageText) {
+        const mediaPath = (data.data || data.media?.url || '').toLowerCase();
+        if (mediaPath.includes('/images/') || mediaPath.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/)) messageText = '📷 Image';
+        else if (mediaPath.includes('/audios/') || mediaPath.includes('/ptt/') || mediaPath.match(/\.(opus|ogg|mp3|m4a|aac)(\?|$)/)) messageText = '🎤 Voice Note';
+        else if (mediaPath.includes('/videos/') || mediaPath.match(/\.(mp4|mov|avi|3gp|webm)(\?|$)/)) messageText = '🎥 Video';
+        else if (mediaPath.includes('/documents/') || mediaPath.match(/\.(pdf|doc|docx|xls|xlsx)(\?|$)/)) messageText = '📄 Document';
+      }
       const stripNonDigits = (p) => (p || '').replace(/\D/g, '');
       const msgDigits = stripNonDigits(phone);
 

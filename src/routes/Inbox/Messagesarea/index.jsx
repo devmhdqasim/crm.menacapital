@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download, Play, Pause, Video } from 'lucide-react';
+import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, ChevronDown, Download, Play, Pause, Video, Image as ImageIcon } from 'lucide-react';
 import { fetchWatiImage } from '../../../services/inboxService';
 
 // Custom audio player matching the gold/dark theme
@@ -368,6 +368,14 @@ const MessagesArea = ({
     }
 
     // IMAGE DISPLAY
+    if (message.type === 'image' && !message.mediaUrl) {
+      return (
+        <div className="flex items-center gap-2 py-2 px-1">
+          <ImageIcon className="w-5 h-5 text-[#BBA473]" />
+          <span className="text-sm text-[#BBA473]/80">{message.text || 'Image'}</span>
+        </div>
+      );
+    }
     if ((message.type === 'image' || (message.type === 'text' && message.mediaUrl)) && message.mediaUrl) {
       const imageUrl = message.downloadedImageUrl || message.mediaUrl;
       const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
@@ -449,6 +457,15 @@ const MessagesArea = ({
       );
     }
 
+    // AUDIO/VOICE NOTE DISPLAY (no mediaUrl - show icon placeholder)
+    if (message.type === 'audio' && !message.mediaUrl) {
+      return (
+        <div className="flex items-center gap-2 py-2 px-1">
+          <Mic className="w-5 h-5 text-[#BBA473]" />
+          <span className="text-sm text-[#BBA473]/80">{message.text || 'Voice Note'}</span>
+        </div>
+      );
+    }
     // AUDIO/VOICE NOTE DISPLAY
     if (message.type === 'audio' && message.mediaUrl) {
       const audioUrl = message.downloadedImageUrl || message.mediaUrl;
@@ -493,6 +510,15 @@ const MessagesArea = ({
       );
     }
 
+    // VIDEO DISPLAY (no mediaUrl - show icon placeholder)
+    if (message.type === 'video' && !message.mediaUrl) {
+      return (
+        <div className="flex items-center gap-2 py-2 px-1">
+          <Video className="w-5 h-5 text-[#BBA473]" />
+          <span className="text-sm text-[#BBA473]/80">{message.text || 'Video'}</span>
+        </div>
+      );
+    }
     // VIDEO DISPLAY
     if (message.type === 'video' && message.mediaUrl) {
       const videoUrl = message.downloadedImageUrl || message.mediaUrl;
