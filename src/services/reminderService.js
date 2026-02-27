@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1/';
 
 const getRefreshToken = () => {
   return localStorage.getItem('refreshToken');
