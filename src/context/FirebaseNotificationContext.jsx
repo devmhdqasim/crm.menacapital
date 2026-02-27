@@ -248,161 +248,152 @@ export const FirebaseNotificationProvider = ({ children }) => {
     return () => unsubscribe();
   }, [triggerBanner]);
 
-  // --- Listen for user-specific notifications (notifications/{userId}) ---
+  // --- Listen for new notification entries at notifications/whatsappSessions ---
+  // Same pattern as the working whatsappSessions reminder listener.
+  // BE writes: notifications/whatsappSessions/{pushId} -> { createdAt, notes, phoneNumber, type, ... }
+  // No userId matching — shows notification for ANY new entry.
   useEffect(() => {
-    if (!database || !isNotificationAllowedForUser()) return;
+    if (!database) return;
 
+    // Block only Kiosk/Event
+    const BLOCKED_ROLES = ['Kiosk Member', 'Event Member'];
     const userInfo = getUserInfo();
-    const userId = userInfo?._id || userInfo?.id;
-    if (!userId) return;
+    const userRole = userInfo?.roleName || '';
+    if (BLOCKED_ROLES.includes(userRole)) return;
 
-    const userNotifRef = query(ref(database, `notifications/${userId}`), limitToLast(20));
-    const prevKeysRef = { current: new Set() };
+    const notifRef = ref(database, 'notifications/whatsappSessions');
+    const prevKeys = { current: new Set() };
     let isInitial = true;
 
-    const unsubscribe = onValue(userNotifRef, (snapshot) => {
-      if (!snapshot.exists()) return;
+    console.log('🔔 Listening on notifications/whatsappSessions');
+
+    const unsubscribe = onValue(notifRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        console.log('🔔 notifications/whatsappSessions — no data');
+        return;
+      }
 
       const data = snapshot.val();
       const entries = Object.entries(data);
       const currentKeys = new Set(entries.map(([key]) => key));
 
+      console.log('🔔 notifications/whatsappSessions:', { total: entries.length, isInitial });
+
       if (isInitial) {
-        prevKeysRef.current = currentKeys;
+        prevKeys.current = currentKeys;
         isInitial = false;
         return;
       }
 
       // Find new entries
       entries.forEach(([key, value]) => {
-        if (prevKeysRef.current.has(key)) return;
+        if (prevKeys.current.has(key)) return;
+        // Skip non-object children
+        if (!value || typeof value !== 'object') return;
 
-        const notifType = value.type || 'GENERAL';
         const phone = typeof value.phoneNumber === 'object'
           ? (value.phoneNumber?.phoneNumber || '')
           : (value.phoneNumber || '');
 
-        if (notifType === 'REMINDER_NOTIFICATION') {
-          // Reminder notification - orange/amber theme
-          playSound();
-          showManagedToast(() => toast.custom((t) => (
-            <div
-              onClick={() => {
-                toast.dismiss(t.id);
-                if (phone) {
-                  sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
-                  sessionStorage.setItem('openChatForName', phone);
-                  if (window.location.pathname === '/inbox') {
-                    window.dispatchEvent(new Event('openChatFromNotification'));
-                  } else {
-                    window.location.href = '/inbox';
-                  }
-                }
-              }}
-              style={{
-                maxWidth: '400px',
-                width: '100%',
-                cursor: 'pointer',
-                background: 'linear-gradient(135deg, #2d1a00 0%, #3d2400 50%, #2d1a00 100%)',
-                borderRadius: '16px',
-                padding: '0',
-                border: '1px solid rgba(251, 146, 60, 0.3)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(251,146,60,0.1)',
-                overflow: 'hidden',
-                opacity: t.visible ? 1 : 0,
-                transform: t.visible ? 'translateX(0) scale(1)' : 'translateX(40px) scale(0.95)',
-                transition: 'all 0.35s cubic-bezier(0.21, 1.02, 0.73, 1)',
-              }}
-            >
-              <div style={{
-                height: '3px',
-                background: 'linear-gradient(90deg, transparent, #fb923c, #f59e0b, #fb923c, transparent)',
-              }} />
-              <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  flexShrink: 0,
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '14px',
-                  background: 'linear-gradient(145deg, #f59e0b, #d97706)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 15px rgba(245,158,11,0.3)',
-                }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '1px 8px',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      letterSpacing: '0.5px',
-                      textTransform: 'uppercase',
-                      color: '#fbbf24',
-                      background: 'rgba(245,158,11,0.15)',
-                      borderRadius: '20px',
-                    }}>
-                      Reminder
-                    </span>
-                    <span style={{
-                      color: 'rgba(255,255,255,0.35)',
-                      fontSize: '11px',
-                      fontWeight: 500,
-                      marginLeft: 'auto',
-                    }}>
-                      {value.createdAt ? new Date(value.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'just now'}
-                    </span>
-                  </div>
-                  <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700, marginBottom: '3px' }}>
-                    {phone ? `Reply to ${phone}` : 'Reminder'}
-                  </div>
-                  <p style={{
-                    color: 'rgba(255,255,255,0.7)',
-                    fontSize: '13px',
-                    margin: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    lineHeight: '1.4',
-                  }}>
-                    {value.notes || 'You have a pending reminder for this contact'}
-                  </p>
-                </div>
-                {/* Close button */}
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toast.dismiss(t.id);
-                  }}
-                  style={{
-                    flexShrink: 0,
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '10px',
-                    background: 'rgba(245,158,11,0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.25)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </div>
+        console.log('🔔 NEW notification:', { key, type: value.type, phone, notes: value.notes });
 
-                {/* Arrow indicator - commented out for now */}
-                {/* <div style={{
+        playSound();
+        showManagedToast(() => toast.custom((t) => (
+          <div
+            onClick={() => {
+              toast.dismiss(t.id);
+              if (phone) {
+                sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
+                sessionStorage.setItem('openChatForName', phone);
+                if (window.location.pathname === '/inbox') {
+                  window.dispatchEvent(new Event('openChatFromNotification'));
+                } else {
+                  window.location.href = '/inbox';
+                }
+              }
+            }}
+            style={{
+              maxWidth: '400px',
+              width: '100%',
+              cursor: 'pointer',
+              background: 'linear-gradient(135deg, #2d1a00 0%, #3d2400 50%, #2d1a00 100%)',
+              borderRadius: '16px',
+              padding: '0',
+              border: '1px solid rgba(251, 146, 60, 0.3)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(251,146,60,0.1)',
+              overflow: 'hidden',
+              opacity: t.visible ? 1 : 0,
+              transform: t.visible ? 'translateX(0) scale(1)' : 'translateX(40px) scale(0.95)',
+              transition: 'all 0.35s cubic-bezier(0.21, 1.02, 0.73, 1)',
+            }}
+          >
+            <div style={{
+              height: '3px',
+              background: 'linear-gradient(90deg, transparent, #fb923c, #f59e0b, #fb923c, transparent)',
+            }} />
+            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                flexShrink: 0,
+                width: '46px',
+                height: '46px',
+                borderRadius: '14px',
+                background: 'linear-gradient(145deg, #f59e0b, #d97706)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 15px rgba(245,158,11,0.3)',
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '1px 8px',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    color: '#fbbf24',
+                    background: 'rgba(245,158,11,0.15)',
+                    borderRadius: '20px',
+                  }}>
+                    {value.type === 'REMINDER_NOTIFICATION' ? 'Reminder' : 'Notification'}
+                  </span>
+                  <span style={{
+                    color: 'rgba(255,255,255,0.35)',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    marginLeft: 'auto',
+                  }}>
+                    {value.createdAt ? new Date(value.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'just now'}
+                  </span>
+                </div>
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700, marginBottom: '3px' }}>
+                  {value.title || (phone ? `Reply to ${phone}` : 'Reminder')}
+                </div>
+                <p style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '13px',
+                  margin: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  lineHeight: '1.4',
+                }}>
+                  {value.notes || value.message || 'You have a pending reminder for this contact'}
+                </p>
+              </div>
+              {/* Close button */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.dismiss(t.id);
+                }}
+                style={{
                   flexShrink: 0,
                   width: '32px',
                   height: '32px',
@@ -411,114 +402,32 @@ export const FirebaseNotificationProvider = ({ children }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                  </svg>
-                </div> */}
-              </div>
-              <div style={{ height: '2px', width: '100%', background: 'rgba(0,0,0,0.2)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: '#f59e0b', animation: 'toast-shrink 6s linear forwards' }} />
-              </div>
-            </div>
-          ), { duration: 6000, position: 'top-right' }));
-        } else {
-          // General notification - gold theme
-          playSound();
-          showManagedToast(() => toast.custom((t) => (
-            <div
-              style={{
-                maxWidth: '400px',
-                width: '100%',
-                cursor: 'pointer',
-                background: 'linear-gradient(135deg, #141414 0%, #1e1e1e 50%, #141414 100%)',
-                borderRadius: '16px',
-                padding: '0',
-                border: '1px solid rgba(187,164,115,0.25)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(187,164,115,0.08)',
-                overflow: 'hidden',
-                opacity: t.visible ? 1 : 0,
-                transform: t.visible ? 'translateX(0) scale(1)' : 'translateX(40px) scale(0.95)',
-                transition: 'all 0.35s cubic-bezier(0.21, 1.02, 0.73, 1)',
-              }}
-              onClick={() => toast.dismiss(t.id)}
-            >
-              <div style={{
-                height: '3px',
-                background: 'linear-gradient(90deg, transparent, #BBA473, transparent)',
-              }} />
-              <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  flexShrink: 0,
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '14px',
-                  background: 'linear-gradient(145deg, #BBA473, #8E7D5A)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 15px rgba(187,164,115,0.3)',
-                }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                  </svg>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '1px 8px',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      letterSpacing: '0.5px',
-                      textTransform: 'uppercase',
-                      color: '#d4bc89',
-                      background: 'rgba(187,164,115,0.15)',
-                      borderRadius: '20px',
-                    }}>
-                      Notification
-                    </span>
-                    <span style={{
-                      color: 'rgba(255,255,255,0.35)',
-                      fontSize: '11px',
-                      fontWeight: 500,
-                      marginLeft: 'auto',
-                    }}>
-                      {value.createdAt ? new Date(value.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'just now'}
-                    </span>
-                  </div>
-                  <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700, marginBottom: '3px' }}>
-                    {value.title || notifType}
-                  </div>
-                  <p style={{
-                    color: 'rgba(255,255,255,0.7)',
-                    fontSize: '13px',
-                    margin: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    lineHeight: '1.4',
-                  }}>
-                    {value.notes || value.message || 'New notification'}
-                  </p>
-                </div>
-              </div>
-              <div style={{ height: '2px', width: '100%', background: 'rgba(0,0,0,0.2)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: '#BBA473', animation: 'toast-shrink 5s linear forwards' }} />
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.25)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </div>
             </div>
-          ), { duration: 5000, position: 'top-right' }));
-        }
+            <div style={{ height: '2px', width: '100%', background: 'rgba(0,0,0,0.2)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: '#f59e0b', animation: 'toast-shrink 6s linear forwards' }} />
+            </div>
+          </div>
+        ), { duration: 6000, position: 'top-right' }));
       });
 
-      prevKeysRef.current = currentKeys;
+      prevKeys.current = currentKeys;
     }, (error) => {
-      console.error('Firebase user notifications error:', error);
+      console.error('🔔 Firebase notifications/whatsappSessions error:', error);
     });
 
     return () => unsubscribe();
-  }, [playSound]);
+  }, [playSound, showManagedToast]);
 
   // --- Listen for whatsappSessions reminder flag ---
   useEffect(() => {
