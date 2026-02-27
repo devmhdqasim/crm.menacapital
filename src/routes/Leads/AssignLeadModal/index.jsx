@@ -1307,40 +1307,44 @@ const AssignLeadModal = ({
                   </div>
                 )}
 
-                {/* Remarks */}
-                <div className="space-y-2 pt-4">
-                  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
-                    Notes / Remarks
-                  </label>
-                  <textarea
-                    name="modalRemarks"
-                    placeholder="Add any additional notes or comments about this update..."
-                    rows="4"
-                    value={modalRemarks}
-                    onChange={(e) => {
-                      setModalRemarks(e.target.value);
-                      if (modalErrors.remarks) {
-                        setModalErrors({ ...modalErrors, remarks: '' });
-                      }
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white resize-none transition-all duration-300 ${
-                      modalErrors.remarks
-                        ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
-                    }`}
-                  />
-                  <div className="flex justify-between items-center">
-                    <div>
-                      {modalErrors.remarks && (
-                        <div className="text-red-400 text-sm animate-pulse">{modalErrors.remarks}</div>
-                      )}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {modalRemarks.length}/500
-                    </div>
+              </div>
+
+              {/* Remarks - Always active regardless of answered status */}
+              <div className="space-y-2 pt-4">
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                  Notes / Remarks
+                </label>
+                <textarea
+                  name="modalRemarks"
+                  placeholder="Add any additional notes or comments about this update..."
+                  rows="4"
+                  value={modalRemarks}
+                  onChange={(e) => {
+                    setModalRemarks(e.target.value);
+                    if (modalErrors.remarks) {
+                      setModalErrors({ ...modalErrors, remarks: '' });
+                    }
+                  }}
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white resize-none transition-all duration-300 ${
+                    modalErrors.remarks
+                      ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                      : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
+                  }`}
+                />
+                <div className="flex justify-between items-center">
+                  <div>
+                    {modalErrors.remarks && (
+                      <div className="text-red-400 text-sm animate-pulse">{modalErrors.remarks}</div>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {modalRemarks.length}/500
                   </div>
                 </div>
+              </div>
 
+              {/* Task Title - inside disabled wrapper */}
+              <div className={`${isUpdateStatusDisabled() ? 'opacity-40 pointer-events-none' : ''}`}>
                 {/* Task Title */}
                 <div className="space-y-2 pt-4 border-t border-white/[0.06]">
                   <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
