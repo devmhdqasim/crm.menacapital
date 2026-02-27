@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, X, FileText } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import { createAutoTask } from '../../../services/taskService.js'
 
-const TaskManagementModal = ({ 
-  showReminderModal, 
-  selectedLead, 
+const TaskManagementModal = ({
+  showReminderModal,
+  selectedLead,
   currentStatus,
-  handleCloseReminderModal 
+  handleCloseReminderModal
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [latestStatus, setLatestStatus] = useState('');
@@ -36,7 +36,7 @@ const TaskManagementModal = ({
     onSubmit: async (values) => {
       try {
         console.log('🔵 Creating task for lead:', selectedLead, 'latestStatus', latestStatus);
-        
+
         // Prepare task data for API
         const taskData = {
           leadId: selectedLead?.id,
@@ -84,41 +84,58 @@ const TaskManagementModal = ({
     }, 300);
   };
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showReminderModal) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showReminderModal]);
+
   if (!showReminderModal || !selectedLead) return null;
 
   return (
-    <div 
-      className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-opacity duration-300 ${
+    <div
+      className={`fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-opacity duration-300 ${
         isClosing ? 'opacity-0' : 'opacity-100'
       }`}
+      onClick={handleClose}
     >
-      <div 
-        className={`bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${
+      <div
+        className={`bg-[#1f1f1f] rounded-2xl shadow-[0_8px_50px_rgba(0,0,0,0.8)] border border-gray-600 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${
           isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header - Sticky */}
-        <div className="sticky top-0 bg-gradient-to-r from-[#BBA473]/10 to-transparent border-b border-[#BBA473]/30 p-6 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-[#262626] border-b border-gray-600 px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#BBA473]/20">
-              <Bell className="w-6 h-6 text-[#BBA473]" />
+            <div className="p-2 rounded-lg bg-[#BBA473]/10">
+              <FileText className="w-4 h-4 text-[#BBA473]" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">Set Task</h2>
-              <p className="text-gray-400 text-sm mt-1">
+              <h2 className="text-lg font-semibold text-white">Set Task</h2>
+              <p className="text-gray-500 text-xs font-mono">
                 {selectedLead.name} • {selectedLead.leadId || selectedLead.id.slice(-6)}
               </p>
             </div>
           </div>
+          <button
+            onClick={handleClose}
+            className="p-2 rounded-lg hover:bg-white/5 transition-colors duration-200 text-gray-500 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Modal Content - Scrollable */}
-        <form onSubmit={formik.handleSubmit} className="overflow-y-auto flex-1">
-          <div className="p-6 space-y-6">
+        <form onSubmit={formik.handleSubmit} className="overflow-y-auto flex-1 modal-scrollbar">
+          <div className="p-6 space-y-5">
             {/* Title Input */}
             <div className="space-y-2">
-              <label className="text-sm text-[#E8D5A3] font-medium block">
+              <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                 Task Title <span className="text-red-400">*</span>
               </label>
               <input
@@ -128,10 +145,10 @@ const TaskManagementModal = ({
                 value={formik.values.title}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white text-sm transition-all duration-300 placeholder-gray-600 ${
                   formik.touched.title && formik.errors.title
-                    ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                    : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                    ? 'border-red-500/50 focus:border-red-400 focus:ring-red-500/30'
+                    : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
                 }`}
               />
               <div className="flex justify-between items-center">
@@ -148,20 +165,20 @@ const TaskManagementModal = ({
 
             {/* Description Input */}
             <div className="space-y-2">
-              <label className="text-sm text-[#E8D5A3] font-medium block">
+              <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                 Description <span className="text-red-400">*</span>
               </label>
               <textarea
                 name="description"
                 placeholder="Add detailed notes about what needs to be done, context, or any important information..."
-                rows="6"
+                rows="5"
                 value={formik.values.description}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white text-sm resize-none transition-all duration-300 placeholder-gray-600 ${
                   formik.touched.description && formik.errors.description
-                    ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                    : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                    ? 'border-red-500/50 focus:border-red-400 focus:ring-red-500/30'
+                    : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
                 }`}
               />
               <div className="flex justify-between items-center">
@@ -177,13 +194,13 @@ const TaskManagementModal = ({
             </div>
 
             {/* Info Box */}
-            <div className="bg-[#BBA473]/10 border border-[#BBA473]/30 rounded-lg p-4">
+            <div className="p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
-                  <Bell className="w-5 h-5 text-[#BBA473]" />
+                  <Bell className="w-4 h-4 text-[#BBA473]" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-gray-400">
                     Task will be auto created and scheduled according to the lead Status and Protocol for <span className="font-semibold text-[#BBA473]">{selectedLead.name}</span>
                   </p>
                 </div>
@@ -192,12 +209,20 @@ const TaskManagementModal = ({
           </div>
 
           {/* Action Buttons - Sticky */}
-          <div className="sticky bottom-0 bg-[#2A2A2A] border-t border-[#BBA473]/30 p-6">
+          <div className="sticky bottom-0 bg-[#262626] border-t border-white/[0.06] px-6 py-4">
             <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={formik.isSubmitting}
+                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed border border-white/5 hover:border-white/10"
+              >
+                Close
+              </button>
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black transition-all duration-300 shadow-lg shadow-[#BBA473]/10 hover:shadow-[#BBA473]/25 transform hover:scale-[1.02] active:scale-[0.98] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               >
                 {formik.isSubmitting ? 'Creating...' : 'Create Task'}
               </button>
@@ -211,11 +236,23 @@ const TaskManagementModal = ({
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        body{
-          background-color: #000;
-        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Modal Scrollbar */
+        .modal-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .modal-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .modal-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(187, 164, 115, 0.15);
+          border-radius: 10px;
+        }
+        .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(187, 164, 115, 0.3);
         }
       `}</style>
     </div>

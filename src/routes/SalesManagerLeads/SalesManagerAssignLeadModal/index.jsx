@@ -434,40 +434,40 @@ const SalesManagerAssignLeadModal = ({
 
   return (
     <div 
-      className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${
+      className={`fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${
         isClosing ? 'opacity-0' : 'opacity-100'
       }`}
       onClick={handleClose}
     >
       <div 
-        className={`bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${
+        className={`bg-[#1f1f1f] rounded-2xl shadow-[0_8px_50px_rgba(0,0,0,0.8)] border border-gray-600 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-all duration-300 ${
           isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header - Sticky */}
-        <div className="sticky top-0 bg-gradient-to-r from-[#BBA473]/10 to-transparent border-b border-[#BBA473]/30 p-6 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-[#262626] border-b border-gray-600 px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-2xl font-bold text-[#BBA473]">Lead Details</h2>
+            <h2 className="text-lg font-semibold text-white">Lead Details</h2>
             <p className="text-gray-400 text-sm mt-1">{selectedLead.leadId || selectedLead.id?.slice(-6)}</p>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-[#3A3A3A] transition-all duration-300 text-gray-400 hover:text-white hover:rotate-90"
+            className="p-2 rounded-lg hover:bg-white/5 transition-colors duration-200 text-gray-500 hover:text-white"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs for Assign/Status */}
         {isAssignedToCurrentUser && (
-          <div className="sticky top-[88px] bg-[#2A2A2A] border-b border-[#BBA473]/30 flex z-10">
+          <div className="sticky top-[88px] bg-[#262626] border-b border-gray-600 flex z-10">
             <button
               onClick={() => setActiveModalTab('assign')}
               className={`flex-1 px-6 py-3 font-semibold transition-all duration-300 ${
                 activeModalTab === 'assign'
-                  ? 'bg-[#BBA473]/20 text-[#BBA473] border-b-2 border-[#BBA473]'
-                  : 'text-gray-400 hover:text-white hover:bg-[#3A3A3A]'
+                  ? 'bg-white/[0.06] text-[#BBA473] border-b-2 border-[#BBA473]'
+                  : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               Assign Lead
@@ -476,8 +476,8 @@ const SalesManagerAssignLeadModal = ({
               onClick={() => setActiveModalTab('status')}
               className={`flex-1 px-6 py-3 font-semibold transition-all duration-300 ${
                 activeModalTab === 'status'
-                  ? 'bg-[#BBA473]/20 text-[#BBA473] border-b-2 border-[#BBA473]'
-                  : 'text-gray-400 hover:text-white hover:bg-[#3A3A3A]'
+                  ? 'bg-white/[0.06] text-[#BBA473] border-b-2 border-[#BBA473]'
+                  : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               Update Status
@@ -486,55 +486,55 @@ const SalesManagerAssignLeadModal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 modal-scrollbar">
           <div className="p-6 space-y-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Full Name</label>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Full Name</label>
                 <p className="text-white text-lg">{selectedLead.name}</p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Phone Number</label>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Phone Number</label>
                 <p className="text-white text-lg font-mono">{formatPhoneDisplay(selectedLead.phone)}</p>
               </div>
               {selectedLead.email && (
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium">Email</label>
+                  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Email</label>
                   <p className="text-white">{selectedLead.email}</p>
                 </div>
               )}
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Nationality</label>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Nationality</label>
                 <p className="text-white">{selectedLead.nationality || 'N/A'}</p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Preferred Language</label>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Preferred Language</label>
                 <p className="text-white">{selectedLead.language || 'N/A'}</p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Assigned Agent</label>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Assigned Agent</label>
                 <p className="text-white">{selectedLead.agent || 'Not Assigned'}</p>
               </div>
               
               {/* All Status Fields */}
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Status</label>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Status</label>
                 <p className="text-white">{selectedLead.status || 'N/A'}</p>
               </div>
 <div className="space-y-2">
-  <label className="text-sm text-[#E8D5A3] font-medium">
+  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">
     {selectedLead.source?.toLowerCase() === 'ramadan' ? 'Ramadan Event Lead Status' : 'Kiosk Lead Status'}
   </label>
   <p className="text-white">{selectedLead.kioskLeadStatus || 'N/A'}</p>
 </div>
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Deposit Status</label>
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Deposit Status</label>
                 <p className="text-white">{selectedLead.depositStatus || 'N/A'}</p>
               </div>
               
               <div className="space-y-2 col-span-2">
-<label className="text-sm text-[#E8D5A3] font-medium">
+<label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">
   {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length
     ? 'Chatbot Message'
     : selectedLead.source?.toLowerCase() === 'ramadan'
@@ -553,11 +553,11 @@ const SalesManagerAssignLeadModal = ({
 
             {/* Tab Content */}
             {activeModalTab === 'assign' && (
-              <div className="border-t border-[#BBA473]/30 pt-6 space-y-4 animate-fadeIn">
-                <h3 className="text-lg font-semibold text-[#E8D5A3] mb-4">Assign Lead to Agent</h3>
+              <div className="border-t border-white/[0.06] pt-6 space-y-4 animate-fadeIn">
+                <h3 className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest mb-4">Assign Lead to Agent</h3>
                 
                 {/* Assign to Self Checkbox */}
-                <label className="flex items-center gap-3 p-4 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                <label className="flex items-center gap-3 p-4 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer transition-all duration-300 border border-[#BBA473]/10 hover:border-[#BBA473]/30">
                   <input
                     type="checkbox"
                     checked={assignToSelf}
@@ -578,13 +578,13 @@ const SalesManagerAssignLeadModal = ({
                 {/* Agent Selection Dropdown */}
                 {!assignToSelf && (
                   <div className="space-y-2 animate-fadeIn">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                       Select Agent
                     </label>
                     <select
                       value={selectedAgentForLead}
                       onChange={(e) => setSelectedAgentForLead(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                      className="w-full px-4 py-3 border border-white/[0.06] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 focus:border-[#BBA473]/50 bg-white/[0.04] text-white transition-all duration-300 hover:border-white/10"
                     >
                       <option value="">Choose an agent...</option>
                       {agents.map((agent) => (
@@ -599,9 +599,9 @@ const SalesManagerAssignLeadModal = ({
             )}
 
             {activeModalTab === 'status' && (
-              <div className="border-t border-[#BBA473]/30 pt-6 animate-fadeIn">
+              <div className="border-t border-white/[0.06] pt-6 animate-fadeIn">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-[#E8D5A3]">Update Status</h3>
+                <h3 className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Update Status</h3>
                 
                 {/* Date Time Picker - Only enabled for Warm to Deposit */}
                 <div className="flex items-center gap-2">
@@ -616,8 +616,8 @@ const SalesManagerAssignLeadModal = ({
                       placeholderText="Set reminder"
                       minDate={new Date()}
                       disabled={!isReminderDateEnabled()}
-                      className={`px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] ${
-                        isReminderDateEnabled() ? 'cursor-pointer border-[#BBA473]/30' : 'cursor-not-allowed border-gray-600 opacity-50'
+                      className={`px-3 py-2 pl-10 rounded-lg bg-white/[0.04] text-white border focus:border-[#BBA473]/50 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all duration-300 text-sm ${
+                        isReminderDateEnabled() ? 'cursor-pointer border-white/10' : 'cursor-not-allowed border-gray-600 opacity-50'
                       }`}
                       calendarClassName="custom-datepicker"
                       wrapperClassName="w-full"
@@ -632,16 +632,16 @@ const SalesManagerAssignLeadModal = ({
 
               {/* Task Status Toggle Switch */}
               <div className="space-y-4 mb-6">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
                 
-                <div className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300 ${
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
                   isTaskStatusCompletedDisabled()
                     ? 'bg-gray-900/50 border-gray-700 opacity-50'
                     : taskStatus === 'Completed'
                       ? 'bg-green-500/10 border-green-500/50'
-                      : 'bg-[#1A1A1A] border-[#BBA473]/30 hover:border-[#BBA473]/50'
+                      : 'bg-white/[0.04] border-white/[0.06] hover:border-white/10'
                 }`}>
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${
@@ -688,7 +688,7 @@ const SalesManagerAssignLeadModal = ({
                       }
                     }}
                     disabled={isTaskStatusCompletedDisabled()}
-                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#2A2A2A] ${
+                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#1f1f1f] ${
                       isTaskStatusCompletedDisabled()
                         ? 'bg-gray-700 cursor-not-allowed'
                         : taskStatus === 'Completed'
@@ -706,7 +706,7 @@ const SalesManagerAssignLeadModal = ({
                 
                 {/* Info message when Completed is disabled */}
                 {isTaskStatusCompletedDisabled() && (
-                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
+                  <div className="mt-3 p-3 bg-blue-500/[0.08] border border-blue-500/20 rounded-xl flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
                       <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -728,15 +728,15 @@ const SalesManagerAssignLeadModal = ({
 
               {/* NEW: Answered Status Section */}
               <div className="space-y-4 mb-6">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                   Answered Status <span className="text-red-400">*</span>
                 </label>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     answeredStatus === 'Answered'
-                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
+                      ? 'bg-[#BBA473]/10 border-[#BBA473]/40 ring-1 ring-[#BBA473]/30 cursor-pointer'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30 cursor-pointer'
                   }`}>
                     <input
                       type="radio"
@@ -754,8 +754,8 @@ const SalesManagerAssignLeadModal = ({
                   
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     answeredStatus === 'Not Answered'
-                      ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
+                      ? 'bg-[#BBA473]/10 border-[#BBA473]/40 ring-1 ring-[#BBA473]/30 cursor-pointer'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30 cursor-pointer'
                   }`}>
                     <input
                       type="radio"
@@ -782,7 +782,7 @@ const SalesManagerAssignLeadModal = ({
                 
                 {/* MODIFIED: Updated info message when "Not Answered" is selected */}
                 {answeredStatus === 'Not Answered' && (
-                  <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
+                  <div className="mt-3 p-3 bg-orange-500/[0.08] border border-orange-500/20 rounded-xl flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
                       <AlertCircle className="w-5 h-5 text-orange-400" />
                     </div>
@@ -800,12 +800,12 @@ const SalesManagerAssignLeadModal = ({
 
                 {/* Level 1: Answered / Not Answered */}
                 <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-50 pointer-events-none' : ''}`}>
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                   Update Status
                 </label>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                    <label className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer transition-all duration-300 border border-[#BBA473]/10 hover:border-[#BBA473]/30">
                       <input
                         type="radio"
                         name="answered"
@@ -827,10 +827,10 @@ const SalesManagerAssignLeadModal = ({
                     
                     <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Not Answered')
-                        ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                        ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
                         : isFinalSelectedStatus('Not Answered')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -861,7 +861,7 @@ const SalesManagerAssignLeadModal = ({
                   {modalAnswered === 'Answered' && (
                     <div className="space-y-3 animate-fadeIn">
                       <div className="grid grid-cols-2 gap-3">
-                        <label className="flex items-center gap-3 p-3 rounded-lg bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer transition-all duration-300 border border-[#BBA473]/20 hover:border-[#BBA473]/50">
+                        <label className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer transition-all duration-300 border border-[#BBA473]/10 hover:border-[#BBA473]/30">
                           <input
                             type="radio"
                             name="interested"
@@ -882,10 +882,10 @@ const SalesManagerAssignLeadModal = ({
                         
                         <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                           isStatusDisabled('Not Interested')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
                             : isFinalSelectedStatus('Not Interested')
-                              ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                              ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                           <input
                             type="radio"
@@ -919,10 +919,10 @@ const SalesManagerAssignLeadModal = ({
                       <div className="grid grid-cols-2 gap-3">
                         <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                           isStatusDisabled('Warm')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
                             : isFinalSelectedStatus('Warm')
-                              ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                              ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                           <input
                             type="radio"
@@ -945,10 +945,10 @@ const SalesManagerAssignLeadModal = ({
                         
                         <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                           isStatusDisabled('Hot')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
                             : isFinalSelectedStatus('Hot')
-                              ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                              ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                           <input
                             type="radio"
@@ -981,10 +981,10 @@ const SalesManagerAssignLeadModal = ({
                       <div className="grid grid-cols-2 gap-3">
                         <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                           isStatusDisabled('Demo')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
                             : isFinalSelectedStatus('Demo')
-                              ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                              ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                           <input
                             type="radio"
@@ -1006,8 +1006,8 @@ const SalesManagerAssignLeadModal = ({
                         
                         <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                           isStatusDisabled('Real')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
+                            : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                           <input
                             type="radio"
@@ -1034,7 +1034,7 @@ const SalesManagerAssignLeadModal = ({
                   
                   {/* Demo Checkboxes - Show only when Demo is selected */}
                   {modalHotLeadType === 'Demo' && (
-                    <div className="mt-4 p-4 bg-[#1A1A1A] rounded-lg border-2 border-[#BBA473]/30 animate-fadeIn">
+                    <div className="mt-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] animate-fadeIn">
                       <h4 className="text-[#BBA473] font-semibold mb-3 flex items-center gap-2">
                         <span className="text-sm">Demo Steps</span>
                         <span className="text-xs text-gray-400">(First 2 are required)</span>
@@ -1050,7 +1050,7 @@ const SalesManagerAssignLeadModal = ({
                               setDemoInstallApp(e.target.checked);
                               setModalErrors({});
                             }}
-                            className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                            className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/20 cursor-pointer transition-all"
                           />
                           <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                             <span className="font-medium">1. Install the App</span>
@@ -1067,7 +1067,7 @@ const SalesManagerAssignLeadModal = ({
                               setDemoEducationVideo(e.target.checked);
                               setModalErrors({});
                             }}
-                            className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                            className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/20 cursor-pointer transition-all"
                           />
                           <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                             <span className="font-medium">2. Education Video</span>
@@ -1081,7 +1081,7 @@ const SalesManagerAssignLeadModal = ({
                             type="checkbox"
                             checked={demoAnalyzeChannel}
                             onChange={(e) => setDemoAnalyzeChannel(e.target.checked)}
-                            className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                            className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/20 cursor-pointer transition-all"
                           />
                           <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                             <span className="font-medium">3. Analyze Channel</span>
@@ -1106,10 +1106,10 @@ const SalesManagerAssignLeadModal = ({
                       <div className="grid grid-cols-2 gap-3">
                         <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                           isStatusDisabled('Deposit')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
                             : isFinalSelectedStatus('Deposit')
-                              ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                              ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                           <input
                             type="radio"
@@ -1130,10 +1130,10 @@ const SalesManagerAssignLeadModal = ({
                         
                         <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
                           isStatusDisabled('Not Deposit')
-                            ? 'bg-[#1A1A1A]/50 opacity-50 cursor-not-allowed border-[#BBA473]/10'
+                            ? 'bg-white/[0.02] opacity-40 cursor-not-allowed border-gray-800'
                             : isFinalSelectedStatus('Not Deposit')
-                              ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                              : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                              ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                         }`}>
                           <input
                             type="radio"
@@ -1160,7 +1160,7 @@ const SalesManagerAssignLeadModal = ({
                   
                   {/* Remarks / Notes */}
                   <div className="space-y-2 pt-4">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                       Notes / Remarks
                     </label>
                     <textarea
@@ -1174,10 +1174,10 @@ const SalesManagerAssignLeadModal = ({
                           setModalErrors({ ...modalErrors, remarks: '' });
                         }
                       }}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white resize-none transition-all duration-300 ${
                         modalErrors.remarks
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
                       }`}
                     />
                     <div className="flex justify-between items-center">
@@ -1193,8 +1193,8 @@ const SalesManagerAssignLeadModal = ({
                   </div>
 
                   {/* Task Title */}
-                  <div className="space-y-2 pt-4 border-t border-[#BBA473]/20">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <div className="space-y-2 pt-4 border-t border-white/[0.06]">
+                    <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                       Task Title <span className="text-xs text-gray-400">(Optional)</span>
                     </label>
                     <input
@@ -1204,7 +1204,7 @@ const SalesManagerAssignLeadModal = ({
                       value={`Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
                       onChange={(e) => setTaskTitle(e.target.value)}
                       maxLength={100}
-                      className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]"
+                      className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white transition-all duration-300 border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10"
                     />
                     <div className="flex justify-between items-center">
                       <p className="text-xs text-gray-400">
@@ -1222,11 +1222,11 @@ const SalesManagerAssignLeadModal = ({
         </div>
 
         {/* Action Buttons - Sticky */}
-        <div className="sticky bottom-0 bg-[#2A2A2A] border-t border-[#BBA473]/30 p-6">
+        <div className="sticky bottom-0 bg-[#262626] border-t border-white/[0.06] px-6 py-4">
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              className="flex-1 px-4 py-3 rounded-xl font-semibold bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-300 active:scale-[0.98] border border-white/5 hover:border-white/10"
             >
               Close
             </button>
@@ -1235,7 +1235,7 @@ const SalesManagerAssignLeadModal = ({
               <button
                 onClick={handleAssignAgent}
                 disabled={assigningLead || !hasAssignmentChanged()}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black transition-all duration-300 shadow-lg shadow-[#BBA473]/10 hover:shadow-[#BBA473]/25 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {assigningLead ? 'Assigning...' : 'Assign Lead'}
               </button>
@@ -1245,10 +1245,10 @@ const SalesManagerAssignLeadModal = ({
               <button
                 onClick={handleStatusUpdateWithValidation}
                 disabled={!isStatusFormValid()}
-                className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg transform ${
+                className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg transform ${
                   isStatusFormValid()
-                    ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
-                    : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                    ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black shadow-lg shadow-[#BBA473]/10 hover:shadow-[#BBA473]/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
+                    : 'bg-gradient-to-r from-[#6b6354] to-[#5a5447] text-gray-400 cursor-not-allowed transform-none shadow-none'
                 }`}
               >
                 Save Changes
@@ -1263,29 +1263,26 @@ const SalesManagerAssignLeadModal = ({
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        body{
-          background-color: #000;
-        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
         }
 
         /* Custom DatePicker Styling */
         .custom-datepicker {
-          background-color: #2A2A2A !important;
+          background-color: #0C0C0C !important;
           border: 2px solid rgba(187, 164, 115, 0.3) !important;
           border-radius: 12px !important;
           font-family: inherit !important;
         }
 
         .react-datepicker {
-          background-color: #2A2A2A !important;
+          background-color: #0C0C0C !important;
           border: 2px solid rgba(187, 164, 115, 0.3) !important;
           border-radius: 12px !important;
         }
 
         .react-datepicker__header {
-          background-color: #1A1A1A !important;
+          background-color: #0C0C0C !important;
           border-bottom: 1px solid rgba(187, 164, 115, 0.3) !important;
           border-top-left-radius: 12px !important;
           border-top-right-radius: 12px !important;
@@ -1310,7 +1307,7 @@ const SalesManagerAssignLeadModal = ({
         }
 
         .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list {
-          background-color: #2a2a2a;
+          background-color: #0C0C0C;
         }
 
         .react-datepicker__navigation--next--with-time:not(.react-datepicker__navigation--next--with-today-button) {
@@ -1363,6 +1360,21 @@ const SalesManagerAssignLeadModal = ({
 
         .react-datepicker__triangle {
           display: none !important;
+        }
+
+        /* Modal Scrollbar */
+        .modal-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .modal-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .modal-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(187, 164, 115, 0.15);
+          border-radius: 10px;
+        }
+        .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(187, 164, 115, 0.3);
         }
       `}</style>
     </div>
