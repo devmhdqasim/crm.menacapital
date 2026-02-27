@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, UserPlus, Clock, AlertCircle } from 'lucide-react';
+import { X, UserPlus, Clock, AlertCircle, User, Phone } from 'lucide-react';
 import { createAutoTask, createTask } from '../../../services/taskService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -56,6 +56,16 @@ const SalesManagerAssignLeadModal = ({
     if (showRowModal) {
       setIsClosing(false);
     }
+  }, [showRowModal]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showRowModal) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [showRowModal]);
 
   // Pre-populate modal when selectedLead changes
@@ -488,67 +498,88 @@ const SalesManagerAssignLeadModal = ({
         {/* Modal Content - Scrollable */}
         <div className="overflow-y-auto flex-1 modal-scrollbar">
           <div className="p-6 space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Full Name</label>
-                <p className="text-white text-lg">{selectedLead.name}</p>
+            {/* Lead Information */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <User className="w-3.5 h-3.5" />
+                Lead Information
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Name</span>
+                  <span className="text-white text-xs font-medium">{selectedLead.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">ID</span>
+                  <span className="text-white text-xs font-mono">{selectedLead.leadId || selectedLead.id?.slice(-6)}</span>
+                </div>
+                {selectedLead.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3 h-3 text-gray-500" />
+                    <span className="text-white text-xs font-mono">{formatPhoneDisplay(selectedLead.phone)}</span>
+                  </div>
+                )}
+                {selectedLead.email && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 text-xs">Email</span>
+                    <span className="text-white text-xs">{selectedLead.email}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Nationality</span>
+                  <span className="text-white text-xs">{selectedLead.nationality || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Language</span>
+                  <span className="text-white text-xs">{selectedLead.language || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Agent</span>
+                  <span className="text-white text-xs">{selectedLead.agent || 'Not Assigned'}</span>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Phone Number</label>
-                <p className="text-white text-lg font-mono">{formatPhoneDisplay(selectedLead.phone)}</p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.status)}`}>
+                    {selectedLead.status || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">
+                    {selectedLead.source?.toLowerCase() === 'ramadan' ? 'Ramadan Status' : 'Kiosk Status'}
+                  </span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.kioskLeadStatus)}`}>
+                    {selectedLead.kioskLeadStatus || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Deposit</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.depositStatus)}`}>
+                    {selectedLead.depositStatus || 'N/A'}
+                  </span>
+                </div>
               </div>
-              {selectedLead.email && (
-                <div className="space-y-2">
-                  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Email</label>
-                  <p className="text-white">{selectedLead.email}</p>
+              {(selectedLead.remarks || (selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length)) && (
+                <div className="space-y-1">
+                  <span className="text-gray-500 text-xs">
+                    {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length
+                      ? 'Chatbot Message'
+                      : selectedLead.source?.toLowerCase() === 'ramadan'
+                        ? 'Ramadan Event Remarks'
+                        : 'Kiosk Remarks'}
+                  </span>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                    {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length ? (
+                      selectedLead.chatbotMessage.map((item, _index) => (
+                        <span key={_index} className="block mb-0.5">{item}</span>
+                      ))
+                    ) : (
+                      selectedLead.remarks || 'No remarks'
+                    )}
+                  </p>
                 </div>
               )}
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Nationality</label>
-                <p className="text-white">{selectedLead.nationality || 'N/A'}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Preferred Language</label>
-                <p className="text-white">{selectedLead.language || 'N/A'}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Assigned Agent</label>
-                <p className="text-white">{selectedLead.agent || 'Not Assigned'}</p>
-              </div>
-              
-              {/* All Status Fields */}
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Status</label>
-                <p className="text-white">{selectedLead.status || 'N/A'}</p>
-              </div>
-<div className="space-y-2">
-  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">
-    {selectedLead.source?.toLowerCase() === 'ramadan' ? 'Ramadan Event Lead Status' : 'Kiosk Lead Status'}
-  </label>
-  <p className="text-white">{selectedLead.kioskLeadStatus || 'N/A'}</p>
-</div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Deposit Status</label>
-                <p className="text-white">{selectedLead.depositStatus || 'N/A'}</p>
-              </div>
-              
-              <div className="space-y-2 col-span-2">
-<label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">
-  {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length
-    ? 'Chatbot Message'
-    : selectedLead.source?.toLowerCase() === 'ramadan'
-      ? 'Ramadan Event Remarks'
-      : 'Kiosk Remarks'}
-</label>
-                {selectedLead.chatbotMessage && Array.isArray(selectedLead.chatbotMessage) && selectedLead.chatbotMessage.length ? (
-                  selectedLead.chatbotMessage.map((item, _index) => (
-                    <p key={_index} className="text-white mb-0.5">{item}</p>
-                  ))
-                ) : (
-                  <p className="text-white">{selectedLead.remarks || 'No remarks'}</p>
-                )}
-              </div>
             </div>
 
             {/* Tab Content */}

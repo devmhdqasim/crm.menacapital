@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { X, Calendar, Clock, AlertCircle, User, Phone } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { updateLeadTask } from '../../../services/leadService';
@@ -208,6 +208,16 @@ const AssignLeadModal = ({
     if (showDetailsModal) {
       setIsClosing(false);
     }
+  }, [showDetailsModal]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showDetailsModal) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [showDetailsModal]);
 
   const validateModalForm = () => {
@@ -653,71 +663,78 @@ const AssignLeadModal = ({
         {/* Modal Content - Scrollable */}
         <div className="overflow-y-auto flex-1 modal-scrollbar">
           <div className="p-6 space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Full Name</label>
-                <p className="text-white text-lg">{selectedLead.name}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Phone Number</label>
-                <p className="text-white text-lg font-mono">{formatPhoneDisplay(selectedLead.phone)}</p>
-              </div>
-              {selectedLead.email && (
-                <div className="space-y-2">
-                  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Email</label>
-                  <p className="text-white">{selectedLead.email}</p>
+            {/* Lead Information */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <User className="w-3.5 h-3.5" />
+                Lead Information
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Name</span>
+                  <span className="text-white text-xs font-medium">{selectedLead.name}</span>
                 </div>
-              )}
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Nationality</label>
-                <p className="text-white">{selectedLead.nationality || 'N/A'}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">ID</span>
+                  <span className="text-white text-xs font-mono">{selectedLead.leadId || selectedLead.id.slice(-6)}</span>
+                </div>
+                {selectedLead.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3 h-3 text-gray-500" />
+                    <span className="text-white text-xs font-mono">{formatPhoneDisplay(selectedLead.phone)}</span>
+                  </div>
+                )}
+                {selectedLead.email && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500 text-xs">Email</span>
+                    <span className="text-white text-xs">{selectedLead.email}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Nationality</span>
+                  <span className="text-white text-xs">{selectedLead.nationality || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Residency</span>
+                  <span className="text-white text-xs">{selectedLead.residency || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Language</span>
+                  <span className="text-white text-xs">{selectedLead.language || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Source</span>
+                  <span className="text-white text-xs">{selectedLead.source}</span>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Residency</label>
-                <p className="text-white">{selectedLead.residency || 'N/A'}</p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Lead Task Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.status)}`}>
+                    {selectedLead.status === 'Deposit' || selectedLead.status === 'Not Deposit'
+                      ? `Real - ${selectedLead.status}`
+                      : selectedLead.status || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-xs">Kiosk Status</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.kioskLeadStatus)}`}>
+                    {selectedLead.depositStatus === 'Deposit' || selectedLead.depositStatus === 'Not Deposit' || selectedLead.depositStatus === 'No Deposit'
+                      ? `Real - ${selectedLead.depositStatus}`
+                      : selectedLead.kioskLeadStatus || 'N/A'}
+                  </span>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Preferred Language</label>
-                <p className="text-white">{selectedLead.language || 'N/A'}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Source</label>
-                <p className="text-white">{selectedLead.source}</p>
-              </div>
-              
-              {/* Status Badges Section */}
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Lead Task Status</label>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(selectedLead.status)}`}>
-                  {selectedLead.status === 'Deposit' || selectedLead.status === 'Not Deposit' 
-                    ? `Real - ${selectedLead.status}` 
-                    : selectedLead.status || 'N/A'}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Kiosk Lead Status</label>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ml-3 ${getStatusColor(selectedLead.kioskLeadStatus)}`}>
-                  {selectedLead.depositStatus === 'Deposit' || selectedLead.depositStatus === 'Not Deposit' || selectedLead.depositStatus === 'No Deposit'
-                    ? `Real - ${selectedLead.depositStatus}` 
-                    : selectedLead.kioskLeadStatus || 'N/A'}
-                </span>
-              </div>
-
               {selectedLead.remarks && (
-                <div className="space-y-2 col-span-2">
-                  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">
-                    {selectedLead.chatbotMessage?.length ? 'Chatbot Message' : 'Kiosk Remarks'}
-                  </label>
+                <p className="text-gray-400 text-sm leading-relaxed">
                   {selectedLead.chatbotMessage?.length ? (
                     selectedLead.chatbotMessage.map((item, index) => (
-                      <p key={index} className="text-white mb-0.5">{item}</p>
+                      <span key={index} className="block mb-0.5">{item}</span>
                     ))
                   ) : (
-                    <p className="text-white">{selectedLead.remarks || 'No remarks'}</p>
+                    selectedLead.remarks || 'No remarks'
                   )}
-                </div>
+                </p>
               )}
             </div>
 
