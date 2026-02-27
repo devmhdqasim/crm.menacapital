@@ -205,7 +205,7 @@ const AgentManagement = () => {
   };
     
   useEffect(() => {
-    const FEATURE_START_DATE = '2026-03-19';
+    const FEATURE_START_DATE = '2027-03-19';
     
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);

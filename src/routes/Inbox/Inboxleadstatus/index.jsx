@@ -46,12 +46,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
       setModalRemarks(contact.latestRemarks || '');
       setTaskTitle('');
       setReminderDateTime(null);
-      setTaskStatus('');
-      
+      setTaskStatus('Completed');
+
       setDemoInstallApp(false);
       setDemoEducationVideo(false);
       setDemoAnalyzeChannel(false);
-      
+
       const currentStatus = contact.status || '';
       const kioskStatus = contact.kioskLeadStatus || '';
 
@@ -66,6 +66,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
 
       if (!currentStatus || currentStatus === '') {
         if (kioskStatus === 'Demo') {
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -75,6 +76,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
           setDemoInstallApp(true);
           setDemoEducationVideo(true);
         } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -82,6 +84,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
           setModalDepositStatus('Not Deposit');
           setLeadResponseStatus('Not Deposit');
         } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -92,10 +95,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
           resetAllSelections();
         }
       } else if (currentStatus === 'Not Answered') {
+        setAnsweredStatus('Not Answered');
         setModalAnswered('Not Answered');
         setLeadResponseStatus('Not Answered');
         resetSubSelections();
       } else if (currentStatus === 'Not Interested') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Not Interested');
         setLeadResponseStatus('Not Interested');
@@ -103,6 +108,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         setModalHotLeadType('');
         setModalDepositStatus('');
       } else if (currentStatus === 'Warm') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Warm');
@@ -110,6 +116,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         setModalHotLeadType('');
         setModalDepositStatus('');
       } else if (currentStatus === 'Hot') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
@@ -117,6 +124,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         setModalHotLeadType('');
         setModalDepositStatus('');
       } else if (currentStatus === 'Demo' || kioskStatus === 'Demo') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
@@ -125,21 +133,23 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         setModalDepositStatus('');
         setDemoInstallApp(true);
         setDemoEducationVideo(true);
-      } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' || 
-        kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || 
+      } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' ||
+        kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' ||
         kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
         setModalHotLeadType('Real');
         setModalDepositStatus('Not Deposit');
         setLeadResponseStatus('Not Deposit');
-      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || 
-        kioskStatus === 'Deposit' || currentStatus === 'Deposit' || 
+      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' ||
+        kioskStatus === 'Deposit' || currentStatus === 'Deposit' ||
         currentStatus === 'Real - Deposit') {
         const leadDepositStatus = contact.kioskDepositStatus || '';
-        
+
         if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -147,6 +157,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
           setModalDepositStatus('Not Deposit');
           setLeadResponseStatus('Not Deposit');
         } else {
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -159,43 +170,36 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
   }, [contact]);
 
   useEffect(() => {
-    const kioskStatus = contact?.kioskLeadStatus || '';
-    
-    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
-      return;
-    }
-
-    const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
-    if (allowedStatuses.includes(leadResponseStatus)) {
-      setTaskStatus('Completed');
-    }
-  }, [leadResponseStatus, contact]);
-
-  useEffect(() => {
     if (!contact) return;
 
+    const currentStatus = contact.status || '';
     const kioskStatus = contact.kioskLeadStatus || '';
 
+    // For Kiosk Lead Status "Lead": only reset if status has no meaningful hierarchy value
     if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if (meaningfulStatuses.includes(currentStatus)) {
+        return; // Preserve existing selections
+      }
       resetAllSelections();
       return;
     }
 
     if (answeredStatus === 'Not Answered') {
-      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        if (modalDepositStatus === 'Not Deposit') {
-          setModalDepositStatus('Deposit');
-          setLeadResponseStatus('Deposit');
-        }
-      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
-        if (modalDepositStatus === 'Deposit') {
-          setModalDepositStatus('Not Deposit');
-          setLeadResponseStatus('Not Deposit');
-        }
+      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit' ||
+          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+        // Don't force deposit status - let user keep their current selection
       } else if (kioskStatus === 'Demo') {
         if (modalHotLeadType !== 'Demo') {
           setModalHotLeadType('Demo');
           setLeadResponseStatus('Demo');
+          setModalDepositStatus('');
+        }
+      } else if (currentStatus === 'Warm') {
+        if (modalLeadType !== 'Warm' || leadResponseStatus !== 'Warm') {
+          setModalLeadType('Warm');
+          setLeadResponseStatus('Warm');
+          setModalHotLeadType('');
           setModalDepositStatus('');
         }
       }
@@ -455,9 +459,20 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
       return true;
     }
 
-    if (currentStatus === 'Lead' || currentStatus === 'lead' || 
-        kioskStatus === 'Lead' || kioskStatus === 'lead' || 
+    if (currentStatus === 'Lead' || currentStatus === 'lead' ||
+        kioskStatus === 'Lead' || kioskStatus === 'lead' ||
         currentStatus === '-' || kioskStatus === '-') {
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if ((kioskStatus === 'Lead' || kioskStatus === 'lead') && meaningfulStatuses.includes(currentStatus)) {
+        const hierarchy = ['', 'Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+        const currentIdx = hierarchy.indexOf(currentStatus);
+        const checkIdx = hierarchy.indexOf(statusToCheck);
+        if (checkIdx === -1) return false;
+        if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modalAnswered === 'Answered') {
+          return false;
+        }
+        return checkIdx < currentIdx;
+      }
       return false;
     }
 
@@ -485,7 +500,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
       if (kioskStatus === 'Demo') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
       } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        kioskHierarchyLevel = statusHierarchy.indexOf('Deposit');
+        kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       }
@@ -493,10 +508,6 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
       const checkStatusIndex = statusHierarchy.indexOf(statusToCheck);
 
       if (checkStatusIndex !== -1 && kioskHierarchyLevel !== -1) {
-        // FIX: Warm/Hot - only disable Warm, keep Hot enabled
-        if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && kioskHierarchyLevel >= statusHierarchy.indexOf('Warm')) {
-          return statusToCheck === 'Warm';
-        }
         return checkStatusIndex < kioskHierarchyLevel;
       }
     }
@@ -526,31 +537,21 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
       return false;
     }
 
-    // FIX: Warm/Hot selection - ensure at least one is always enabled
-    // When effective status is at Warm level or above, disable Warm (lower) but keep Hot enabled
     if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && modalInterested === 'Interested') {
       const warmIndex = statusHierarchy.indexOf('Warm');
+      const hotIndex = statusHierarchy.indexOf('Hot');
 
-      if (effectiveStatusIndex >= warmIndex) {
-        return statusToCheck === 'Warm';
+      if (effectiveStatusIndex === warmIndex || effectiveStatusIndex === hotIndex) {
+        if (effectiveStatusIndex === warmIndex) {
+          return statusToCheck === 'Warm';
+        }
+        if (effectiveStatusIndex === hotIndex) {
+          return false;
+        }
       }
     }
 
     return checkStatusIndex <= effectiveStatusIndex;
-  };
-
-  const isTaskStatusCompletedDisabled = () => {
-    const kioskStatus = contact?.kioskLeadStatus || '';
-    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
-      return false;
-    }
-
-    if (answeredStatus === 'Not Answered') {
-      return false;
-    }
-
-    const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
-    return !allowedStatuses.includes(leadResponseStatus);
   };
 
   const isReminderDateEnabled = () => {
@@ -558,6 +559,15 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
   };
 
   const isUpdateStatusDisabled = () => {
+    if (answeredStatus === 'Not Answered') {
+      const kioskStatus = contact?.kioskLeadStatus || '';
+      const currentStatus = contact?.status || '';
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if ((kioskStatus === 'Lead' || kioskStatus === 'lead') && !meaningfulStatuses.includes(currentStatus)) {
+        return false;
+      }
+      return true;
+    }
     return false;
   };
 
@@ -688,31 +698,17 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
             </div>
           </div>
 
-          {/* Task Status Toggle Switch */}
+          {/* Task Status - Always Completed */}
           <div className="space-y-4 mb-6">
             <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
               Task Status <span className="text-red-400">*</span>
             </label>
 
-            <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
-              isTaskStatusCompletedDisabled()
-                ? 'bg-white/[0.02] border-gray-800 opacity-40'
-                : taskStatus === 'Completed'
-                  ? 'bg-green-500/8 border-green-500/30'
-                  : 'bg-white/[0.03] border-white/[0.06] hover:border-white/10'
-            }`}>
+            <div className="flex items-center justify-between p-4 rounded-xl border transition-all duration-300 bg-green-500/8 border-green-500/30">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${
-                  taskStatus === 'Completed'
-                    ? 'bg-green-500/20'
-                    : 'bg-white/[0.04]'
-                }`}>
+                <div className="p-2 rounded-lg bg-green-500/20">
                   <svg
-                    className={`w-5 h-5 transition-colors ${
-                      taskStatus === 'Completed'
-                        ? 'text-green-400'
-                        : 'text-gray-500'
-                    }`}
+                    className="w-5 h-5 text-green-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -721,49 +717,15 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                   </svg>
                 </div>
                 <div>
-                  <p className={`font-medium ${
-                    taskStatus === 'Completed'
-                      ? 'text-green-400'
-                      : 'text-white'
-                  }`}>
-                    Mark as Completed
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {isTaskStatusCompletedDisabled()
-                      ? 'Available at Demo status or higher'
-                      : 'Task will be marked as complete'}
-                  </p>
+                  <p className="font-medium text-green-400">Mark as Completed</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Task will be marked as complete</p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isTaskStatusCompletedDisabled()) {
-                    setTaskStatus(taskStatus === 'Completed' ? 'Open' : 'Completed');
-                    setModalErrors({});
-                  }
-                }}
-                disabled={isTaskStatusCompletedDisabled()}
-                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none ${
-                  isTaskStatusCompletedDisabled()
-                    ? 'bg-gray-700 cursor-not-allowed'
-                    : taskStatus === 'Completed'
-                      ? 'bg-green-500'
-                      : 'bg-gray-600 hover:bg-gray-500'
-                }`}
-              >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
-                    taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+              <div className="relative inline-flex h-7 w-14 items-center rounded-full bg-green-500">
+                <span className="inline-block h-5 w-5 transform rounded-full bg-white shadow-lg translate-x-8" />
               </div>
-              
-            {modalErrors.taskStatus && (
-              <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
-            )}
+            </div>
           </div>
 
           {/* Answered Status Section */}
@@ -876,7 +838,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                 </label>
                 
                 <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
-                  isStatusDisabled('Not Answered')
+                  isStatusDisabled('Not Answered') || isUpdateStatusDisabled()
                     ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                     : isFinalSelectedStatus('Not Answered')
                       ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
@@ -887,7 +849,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                     name="answered"
                     value="Not Answered"
                     checked={modalAnswered === 'Not Answered' && leadResponseStatus === 'Not Answered'}
-                    disabled={isStatusDisabled('Not Answered')}
+                    disabled={isStatusDisabled('Not Answered') || isUpdateStatusDisabled()}
                     onChange={(e) => {
                       setModalAnswered(e.target.value);
                       setLeadResponseStatus(e.target.value);
@@ -1211,61 +1173,62 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                 </div>
               )}
               
-              {/* Remarks / Notes */}
-              <div className="space-y-2 pt-4">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
-                  Notes / Remarks
-                </label>
-                <textarea
-                  name="modalRemarks"
-                  placeholder="Add any additional notes or comments about this status update..."
-                  value={modalRemarks}
-                  onChange={(e) => {
-                    setModalRemarks(e.target.value);
-                    if (modalErrors.remarks) {
-                      setModalErrors({ ...modalErrors, remarks: '' });
-                    }
-                  }}
-                  style={{ height: '124px' }}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white resize-none transition-all duration-300 placeholder-gray-600 ${
-                    modalErrors.remarks
-                      ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-white/[0.06] focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-white/10'
-                  }`}
-                />
-                <div className="flex justify-between items-center">
-                  <div>
-                    {modalErrors.remarks && (
-                      <div className="text-red-400 text-sm animate-pulse">{modalErrors.remarks}</div>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {modalRemarks.length}/500
-                  </div>
+            </div>
+
+            {/* Remarks / Notes - Always active regardless of answered status */}
+            <div className="space-y-2 pt-4">
+              <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                Notes / Remarks
+              </label>
+              <textarea
+                name="modalRemarks"
+                placeholder="Add any additional notes or comments about this status update..."
+                value={modalRemarks}
+                onChange={(e) => {
+                  setModalRemarks(e.target.value);
+                  if (modalErrors.remarks) {
+                    setModalErrors({ ...modalErrors, remarks: '' });
+                  }
+                }}
+                style={{ height: '124px' }}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white resize-none transition-all duration-300 placeholder-gray-600 ${
+                  modalErrors.remarks
+                    ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                    : 'border-white/[0.06] focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-white/10'
+                }`}
+              />
+              <div className="flex justify-between items-center">
+                <div>
+                  {modalErrors.remarks && (
+                    <div className="text-red-400 text-sm animate-pulse">{modalErrors.remarks}</div>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {modalRemarks.length}/500
                 </div>
               </div>
+            </div>
 
-              {/* Task Title */}
-              <div className="space-y-2 pt-4 border-t border-white/[0.06]">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
-                  Task Title <span className="text-[10px] text-gray-500 normal-case">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  name="taskTitle"
-                  placeholder={`Default: Follow Up with lead ( ${leadResponseStatus || contact?.status} - lead )`}
-                  value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                  maxLength={100}
-                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white transition-all duration-300 placeholder-gray-600 border-white/[0.06] focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-white/10"
-                />
-                <div className="flex justify-between items-center">
-                  <p className="text-xs text-gray-400">
-                    Default: Follow Up with lead ( {leadResponseStatus || contact?.status} - lead )
-                  </p>
-                  <div className="text-xs text-gray-500">
-                    {taskTitle.length}/100
-                  </div>
+            {/* Task Title */}
+            <div className="space-y-2 pt-4 border-t border-white/[0.06]">
+              <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                Task Title <span className="text-[10px] text-gray-500 normal-case">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                name="taskTitle"
+                placeholder={`Default: Follow Up with lead ( ${leadResponseStatus || contact?.status} - lead )`}
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+                maxLength={100}
+                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white transition-all duration-300 placeholder-gray-600 border-white/[0.06] focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-white/10"
+              />
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-gray-400">
+                  Default: Follow Up with lead ( {leadResponseStatus || contact?.status} - lead )
+                </p>
+                <div className="text-xs text-gray-500">
+                  {taskTitle.length}/100
                 </div>
               </div>
             </div>

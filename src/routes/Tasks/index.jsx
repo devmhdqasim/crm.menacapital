@@ -693,7 +693,7 @@ const Tasks = () => {
   };
 
   useEffect(() => {
-    const FEATURE_START_DATE = '2026-03-27';
+    const FEATURE_START_DATE = '2027-03-27';
 
     const callRefreshAuthAgain = () => {
       const shouldHide = isUserAuthRefresh(FEATURE_START_DATE);
