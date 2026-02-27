@@ -734,9 +734,9 @@ const SalesManagerAssignLeadModal = ({
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-xs">Status</span>
+                  <span className="text-gray-500 text-xs">Task Status</span>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.status)}`}>
-                    {selectedLead.status || 'N/A'}
+                    {(selectedLead.status == 'Deposit' || selectedLead.status == 'Not Deposit') ? `Real - ${selectedLead.status}` : (selectedLead.status || 'N/A')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -744,13 +744,7 @@ const SalesManagerAssignLeadModal = ({
                     {selectedLead.source?.toLowerCase() === 'ramadan' ? 'Ramadan Status' : 'Kiosk Status'}
                   </span>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.kioskLeadStatus)}`}>
-                    {selectedLead.kioskLeadStatus || 'N/A'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-xs">Deposit</span>
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.depositStatus)}`}>
-                    {selectedLead.depositStatus || 'N/A'}
+                    {(selectedLead.kioskDepositStatus == 'Deposit' || selectedLead.kioskDepositStatus == 'Not Deposit' || selectedLead.kioskDepositStatus == 'No Deposit') ? `Real - ${selectedLead.kioskDepositStatus}` : (selectedLead.kioskLeadStatus || 'N/A')}
                   </span>
                 </div>
               </div>
