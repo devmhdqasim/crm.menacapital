@@ -16,7 +16,7 @@ const AssignLeadModal = ({
   isLeadsSelectedId,
   setLeadResponseStatusCurrent,
 }) => {
-  const [taskStatus, setTaskStatus] = useState('');
+  const [taskStatus, setTaskStatus] = useState('Completed');
 
   // Modal form state - using single variable to track the final selected status
   const [leadResponseStatus, setLeadResponseStatus] = useState('');
@@ -42,14 +42,15 @@ const AssignLeadModal = ({
   const [isClosing, setIsClosing] = useState(false);
 
   // Pre-populate modal when selectedLead changes
+  // Structure matches TaskDetailsModal: check currentStatus first, then kioskStatus
   useEffect(() => {
     if (selectedLead) {
       setModalRemarks(selectedLead.latestRemarks || '');
       setTaskTitle('');
       setReminderDateTime(null);
-      setTaskStatus('');
+      setTaskStatus('Completed'); // Always Completed
       setAnsweredStatus('');
-      
+
       // Reset demo checkboxes first
       setDemoInstallApp(false);
       setDemoEducationVideo(false);
@@ -59,28 +60,33 @@ const AssignLeadModal = ({
       const currentStatus = selectedLead.status || '';
       const kioskStatus = selectedLead.kioskLeadStatus || '';
 
-      // Determine initial state based on kiosk status and current status
-      if (kioskStatus === 'Demo') {
-        setModalAnswered('Answered');
-        setModalInterested('Interested');
-        setModalLeadType('Hot');
-        setModalHotLeadType('Demo');
-        setLeadResponseStatus('Demo');
-        setModalDepositStatus('');
-      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
-        setModalAnswered('Answered');
-        setModalInterested('Interested');
-        setModalLeadType('Hot');
-        setModalHotLeadType('Real');
-        setModalDepositStatus('Not Deposit');
-        setLeadResponseStatus('Not Deposit');
-      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        setModalAnswered('Answered');
-        setModalInterested('Interested');
-        setModalLeadType('Hot');
-        setModalHotLeadType('Real');
-        setModalDepositStatus('Deposit');
-        setLeadResponseStatus('Deposit');
+      if (!currentStatus || currentStatus === '') {
+        // No status set yet - check kiosk status
+        if (kioskStatus === 'Demo') {
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Demo');
+          setLeadResponseStatus('Demo');
+          setModalDepositStatus('');
+        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Not Deposit');
+          setLeadResponseStatus('Not Deposit');
+        } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Deposit');
+          setLeadResponseStatus('Deposit');
+        } else {
+          // kioskLeadStatus is "Lead" or empty - no changes
+          resetAllSelections();
+        }
       } else if (currentStatus === 'Not Answered') {
         setModalAnswered('Not Answered');
         setLeadResponseStatus('Not Answered');
@@ -106,27 +112,49 @@ const AssignLeadModal = ({
         setLeadResponseStatus('Hot');
         setModalHotLeadType('');
         setModalDepositStatus('');
-      } else if (currentStatus === 'Demo') {
+      } else if (currentStatus === 'Demo' || kioskStatus === 'Demo') {
+        // Auto-select Demo if status OR kioskLeadStatus is Demo
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
-      } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit') {
+      }
+      else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' ||
+        kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' ||
+        kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        // Auto-select Not Deposit
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
         setModalHotLeadType('Real');
         setModalDepositStatus('Not Deposit');
         setLeadResponseStatus('Not Deposit');
-      } else if (currentStatus === 'Deposit' || currentStatus === 'Real - Deposit') {
-        setModalAnswered('Answered');
-        setModalInterested('Interested');
-        setModalLeadType('Hot');
-        setModalHotLeadType('Real');
-        setModalDepositStatus('Deposit');
-        setLeadResponseStatus('Deposit');
+      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' ||
+                kioskStatus === 'Deposit' || currentStatus === 'Deposit' ||
+                currentStatus === 'Real - Deposit') {
+        // Auto-select Deposit for Real, Real Deposit, or Deposit
+        // Check depositStatus from lead to determine which one
+        const leadDepositStatus = selectedLead.kioskDepositStatus || '';
+
+        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
+          // If depositStatus indicates Not Deposit, select Not Deposit
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Not Deposit');
+          setLeadResponseStatus('Not Deposit');
+        } else {
+          // Otherwise, select Deposit (this is the true Real/Deposit case)
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Deposit');
+          setLeadResponseStatus('Deposit');
+        }
       } else {
         resetAllSelections();
       }
@@ -170,22 +198,22 @@ const AssignLeadModal = ({
     const currentStatus = selectedLead.status || '';
     const kioskStatus = selectedLead.kioskLeadStatus || '';
 
+    // For Kiosk Lead Status "Lead": only reset if status has no meaningful hierarchy value
     if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if (meaningfulStatuses.includes(currentStatus)) {
+        return; // Preserve existing selections
+      }
       resetAllSelections();
       return;
     }
 
+    // When answeredStatus changes to "Not Answered", check if current selections are now disabled
     if (answeredStatus === 'Not Answered') {
-      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        if (modalDepositStatus === 'Not Deposit') {
-          setModalDepositStatus('Deposit');
-          setLeadResponseStatus('Deposit');
-        }
-      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
-        if (modalDepositStatus === 'Deposit') {
-          setModalDepositStatus('Not Deposit');
-          setLeadResponseStatus('Not Deposit');
-        }
+      if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit' ||
+          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+        // Don't force deposit status - let user keep their current selection
+        // Both Deposit and Not Deposit should remain selectable
       } else if (kioskStatus === 'Demo') {
         if (modalHotLeadType !== 'Demo') {
           setModalHotLeadType('Demo');
@@ -487,12 +515,27 @@ const AssignLeadModal = ({
       return true;
     }
 
-    if (currentStatus === 'Lead' || currentStatus === 'lead' || 
-        kioskStatus === 'Lead' || kioskStatus === 'lead' || 
+    if (currentStatus === 'Lead' || currentStatus === 'lead' ||
+        kioskStatus === 'Lead' || kioskStatus === 'lead' ||
         currentStatus === '-' || kioskStatus === '-') {
-      return false;
+      // When kioskStatus is "Lead" but status has a meaningful hierarchy value,
+      // disable statuses strictly below it (current and above stay enabled)
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if ((kioskStatus === 'Lead' || kioskStatus === 'lead') && meaningfulStatuses.includes(currentStatus)) {
+        const hierarchy = ['', 'Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+        const currentIdx = hierarchy.indexOf(currentStatus);
+        const checkIdx = hierarchy.indexOf(statusToCheck);
+        if (checkIdx === -1) return false;
+        // Allow "Not Interested" at any point when Answered is selected
+        if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modalAnswered === 'Answered') {
+          return false;
+        }
+        return checkIdx < currentIdx; // Disable only strictly below current
+      }
+      return false; // No meaningful status — don't disable anything
     }
 
+    // "Not Interested" is always available when "Answered" is selected
     if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modalAnswered === 'Answered') {
       return false;
     }
@@ -516,7 +559,8 @@ const AssignLeadModal = ({
       if (kioskStatus === 'Demo') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
       } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-        kioskHierarchyLevel = statusHierarchy.indexOf('Deposit');
+        // Use 'Not Deposit' index so both Deposit and Not Deposit are enabled as siblings
+        kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       }
@@ -548,26 +592,28 @@ const AssignLeadModal = ({
 
     const currentEffectiveStatus = statusHierarchy[effectiveStatusIndex];
 
-    if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') && 
-        (currentEffectiveStatus === 'Deposit' || currentEffectiveStatus === 'Deposit')) {
+    // Allow toggling between Deposit and Not Deposit regardless of current selection
+    if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
+        (currentEffectiveStatus === 'Deposit' || currentEffectiveStatus === 'Not Deposit')) {
       return false;
+    }
+
+    // Warm/Hot selection fix - ensure at least one is always enabled
+    if ((statusToCheck === 'Warm' || statusToCheck === 'Hot') && modalInterested === 'Interested') {
+      const warmIndex = statusHierarchy.indexOf('Warm');
+      const hotIndex = statusHierarchy.indexOf('Hot');
+
+      if (effectiveStatusIndex === warmIndex || effectiveStatusIndex === hotIndex) {
+        if (effectiveStatusIndex === warmIndex) {
+          return statusToCheck === 'Warm';
+        }
+        if (effectiveStatusIndex === hotIndex) {
+          return false;
+        }
+      }
     }
 
     return checkStatusIndex <= effectiveStatusIndex;
-  };
-
-  const isTaskStatusCompletedDisabled = () => {
-    const kioskStatus = selectedLead?.kioskLeadStatus || '';
-    if (kioskStatus === 'Lead' || kioskStatus === 'lead') {
-      return false;
-    }
-
-    if (answeredStatus === 'Not Answered') {
-      return false;
-    }
-
-    const allowedStatuses = ['Demo', 'Not Deposit', 'Deposit'];
-    return !allowedStatuses.includes(leadResponseStatus);
   };
 
   const isReminderDateEnabled = () => {
@@ -575,6 +621,18 @@ const AssignLeadModal = ({
   };
 
   const isUpdateStatusDisabled = () => {
+    // Disable the entire Update Status section when "Not Answered" is selected
+    // EXCEPT: when kioskStatus is "Lead" and status has no meaningful hierarchy value
+    if (answeredStatus === 'Not Answered') {
+      const kioskStatus = selectedLead?.kioskLeadStatus || '';
+      const currentStatus = selectedLead?.status || '';
+      const meaningfulStatuses = ['Not Answered', 'Not Interested', 'Warm', 'Hot', 'Demo', 'Not Deposit', 'Deposit'];
+      if ((kioskStatus === 'Lead' || kioskStatus === 'lead') && !meaningfulStatuses.includes(currentStatus)) {
+        return false; // Keep section enabled — individual options handled by isUpdateStatusOptionDisabled
+      }
+      return true;
+    }
+
     return false;
   };
 
@@ -772,97 +830,33 @@ const AssignLeadModal = ({
 
               {/* Task Status Toggle Switch */}
               <div className="space-y-4 mb-6">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                <label className="text-sm text-[#E8D5A3] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
-                
-                <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
-                  isTaskStatusCompletedDisabled()
-                    ? 'bg-gray-900/50 border-gray-700 opacity-50'
-                    : taskStatus === 'Completed'
-                      ? 'bg-green-500/10 border-green-500/50'
-                      : 'bg-white/[0.04] border-white/[0.06] hover:border-white/10'
-                }`}>
+
+                <div className="flex items-center justify-between p-4 rounded-xl border transition-all duration-300 bg-green-500/8 border-green-500/30">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      taskStatus === 'Completed' 
-                        ? 'bg-green-500/20' 
-                        : 'bg-gray-700/50'
-                    }`}>
-                      <svg 
-                        className={`w-5 h-5 transition-colors ${
-                          taskStatus === 'Completed' 
-                            ? 'text-green-400' 
-                            : 'text-gray-500'
-                        }`} 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
+                    <div className="p-2 rounded-lg bg-green-500/20">
+                      <svg
+                        className="w-5 h-5 text-green-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <p className={`font-medium ${
-                        taskStatus === 'Completed' 
-                          ? 'text-green-400' 
-                          : 'text-white'
-                      }`}>
-                        Mark as Completed
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {isTaskStatusCompletedDisabled() 
-                          ? 'Available at Demo status or higher' 
-                          : 'Task will be marked as complete'}
-                      </p>
+                      <p className="font-medium text-green-400">Mark as Completed</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Task will be marked as complete</p>
                     </div>
                   </div>
-                  
-                  {/* Toggle Switch */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isTaskStatusCompletedDisabled()) {
-                        setTaskStatus(taskStatus === 'Completed' ? 'Open' : 'Completed');
-                        setModalErrors({});
-                      }
-                    }}
-                    disabled={isTaskStatusCompletedDisabled()}
-                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#1f1f1f] ${
-                      isTaskStatusCompletedDisabled()
-                        ? 'bg-gray-700 cursor-not-allowed'
-                        : taskStatus === 'Completed'
-                          ? 'bg-green-500'
-                          : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
-                        taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
+
+                  {/* Toggle Switch - Always ON */}
+                  <div className="relative inline-flex h-7 w-14 items-center rounded-full bg-green-500">
+                    <span className="inline-block h-5 w-5 transform rounded-full bg-white shadow-lg translate-x-8" />
+                  </div>
                 </div>
-                
-                {isTaskStatusCompletedDisabled() && (
-                  <div className="mt-3 p-3 bg-blue-500/[0.08] border border-blue-500/20 rounded-xl flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-blue-400 text-sm font-medium">Task Completion Locked</p>
-                      <p className="text-blue-300 text-xs mt-1">
-                        You can mark this task as completed once the lead reaches <span className="font-semibold">Demo</span> status or higher (Demo, Not Deposit, or Deposit).
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                {modalErrors.taskStatus && (
-                  <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
-                )}
               </div>
 
               {/* Answered Status Section */}
@@ -946,7 +940,7 @@ const AssignLeadModal = ({
               </div>
 
               {/* Update Status Section */}
-              <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-40 pointer-events-none' : ''}`}>
                 <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                   Update Status
                 </label>
@@ -1041,7 +1035,7 @@ const AssignLeadModal = ({
                           : isFinalSelectedStatus('Not Interested')
                             ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
                             : shouldShowNotInterestedAvailable()
-                              ? 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30 animate-pulse-border-subtle'
+                              ? 'bg-white/[0.04] hover:bg-white/[0.07] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/40 animate-pulse-border-subtle'
                               : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                       }`}>
                         <input
