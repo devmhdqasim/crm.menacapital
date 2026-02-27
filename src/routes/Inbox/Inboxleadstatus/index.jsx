@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { X, Calendar, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { updateLeadTask } from '../../../services/leadService';
@@ -589,116 +589,80 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
 
   return (
     <div className="overflow-y-auto flex-1">
-      <div className="p-6 space-y-6">
-        {/* Basic Information - Simple Card Style */}
-        <div className="bg-gradient-to-br from-[#2A2A2A] to-[#1F1F1F] rounded-xl p-5 border border-[#BBA473]/30 shadow-lg">
-          <h3 className="text-[#E8D5A3] text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="p-6 space-y-5">
+        {/* Contact Information */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             Contact Information
           </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm text-[#E8D5A3] font-medium">Full Name</label>
-              <p className="text-white text-lg">{contact.name}</p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-xs">Name</span>
+              <span className="text-white text-xs font-medium">{contact.name}</span>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm text-[#E8D5A3] font-medium">Phone Number</label>
-              <p className="text-white text-lg font-mono">{formatPhoneDisplay(contact.phone)}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-xs">Phone</span>
+              <span className="text-white text-xs font-mono">{formatPhoneDisplay(contact.phone)}</span>
             </div>
-
             {contact.email && (
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Email</label>
-                <p className="text-white">{contact.email}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 text-xs">Email</span>
+                <span className="text-white text-xs">{contact.email}</span>
               </div>
             )}
-
             {contact.nationality && contact.nationality !== '-' && (
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Nationality</label>
-                <p className="text-white">{contact.nationality}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 text-xs">Nationality</span>
+                <span className="text-white text-xs">{contact.nationality}</span>
               </div>
             )}
-
-            {contact.residency && (
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Residency</label>
-                <p className="text-white">{contact.residency}</p>
-              </div>
-            )}
-
-            {contact.language && (
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Preferred Language</label>
-                <p className="text-white">{contact.language}</p>
-              </div>
-            )}
-
             {contact.source && (
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Source</label>
-                <p className="text-white">{contact.source}</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-sm text-[#E8D5A3] font-medium">Current Status</label>
-              <p className="text-white">{contact.status || 'N/A'}</p>
-            </div>
-
-            {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Kiosk Lead Status</label>
-                <p className="text-white">{contact.kioskLeadStatus}</p>
-              </div>
-            )}
-
-            {contact.depositStatus && (
-              <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium">Deposit Status</label>
-                <p className="text-white">{contact.depositStatus}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 text-xs">Source</span>
+                <span className="text-white text-xs">{contact.source}</span>
               </div>
             )}
           </div>
-
-          {(contact.remarks || contact.latestRemarks) && (
-            <div className="space-y-2 mt-4 pt-4 border-t border-[#BBA473]/20">
-              <label className="text-sm text-[#E8D5A3] font-medium">
-                {contact.chatbotMessage?.length ? 'Chatbot Message' : 'Kiosk Remarks'}
-              </label>
-              {contact.chatbotMessage?.length ? (
-                contact.chatbotMessage.map((item, index) => (
-                  <p key={index} className="text-white mb-0.5">{item}</p>
-                ))
-              ) : (
-                <p className="text-white">{contact.remarks || contact.latestRemarks || 'No remarks'}</p>
-              )}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-xs">Current Status</span>
+              <span className="text-white text-xs font-medium">{contact.status || 'N/A'}</span>
             </div>
+            {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 text-xs">Kiosk Status</span>
+                <span className="text-white text-xs font-medium">{contact.kioskLeadStatus}</span>
+              </div>
+            )}
+            {contact.depositStatus && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 text-xs">Deposit</span>
+                <span className="text-white text-xs font-medium">{contact.depositStatus}</span>
+              </div>
+            )}
+          </div>
+          {(contact.remarks || contact.latestRemarks) && (
+            <p className="text-gray-400 text-sm">
+              {contact.chatbotMessage?.length
+                ? contact.chatbotMessage.join(', ')
+                : (contact.remarks || contact.latestRemarks || 'No remarks')}
+            </p>
           )}
         </div>
 
-        {/* Status Options - IMPROVED HEADER */}
-        <div className="bg-gradient-to-br from-[#2A2A2A] to-[#1F1F1F] rounded-xl border border-[#BBA473]/30 shadow-lg overflow-hidden">
-          {/* Enhanced Header */}
-          <div className="bg-gradient-to-r from-[#BBA473]/20 via-[#BBA473]/10 to-transparent border-b border-[#BBA473]/30 p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#BBA473]/20 rounded-lg">
-                  <svg className="w-5 h-5 text-[#BBA473]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#E8D5A3]">Update Lead Status</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">Track and manage lead progress</p>
-                </div>
-              </div>
-              
-              {/* Date Time Picker */}
+        {/* Update Task Status */}
+        <div className="border-t border-white/[0.06] pt-4">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Update Task
+            </h3>
+
+            {/* Date Time Picker */}
+            <div className="flex items-center gap-2">
               <div className="relative flex">
                 <DatePicker
                   selected={reminderDateTime}
@@ -710,8 +674,8 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                   placeholderText="Set reminder"
                   minDate={new Date()}
                   disabled={!isReminderDateEnabled()}
-                  className={`px-3 py-2 pl-10 rounded-lg bg-[#1A1A1A] text-white border-2 focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 transition-all duration-300 text-sm hover:border-[#BBA473] ${
-                    isReminderDateEnabled() ? 'cursor-pointer border-[#BBA473]/30' : 'cursor-not-allowed border-gray-600 opacity-50'
+                  className={`px-3 py-2 pl-10 rounded-lg bg-white/[0.04] text-white border focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/30 transition-all duration-300 text-sm hover:border-[#BBA473]/50 ${
+                    isReminderDateEnabled() ? 'cursor-pointer border-white/10' : 'cursor-not-allowed border-gray-700 opacity-40'
                   }`}
                   calendarClassName="custom-datepicker"
                   wrapperClassName="w-full"
@@ -724,160 +688,140 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-5 space-y-6">
-            {/* Task Status Toggle Switch */}
-            <div className="space-y-4">
-              <label className="text-sm text-[#E8D5A3] font-medium block">
-                Task Status <span className="text-red-400">*</span>
-              </label>
-              
-              <div className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300 ${
-                isTaskStatusCompletedDisabled()
-                  ? 'bg-gray-900/50 border-gray-700 opacity-50'
-                  : taskStatus === 'Completed'
-                    ? 'bg-green-500/10 border-green-500/50'
-                    : 'bg-[#1A1A1A] border-[#BBA473]/30 hover:border-[#BBA473]/50'
-              }`}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    taskStatus === 'Completed' 
-                      ? 'bg-green-500/20' 
-                      : 'bg-gray-700/50'
-                  }`}>
-                    <svg 
-                      className={`w-5 h-5 transition-colors ${
-                        taskStatus === 'Completed' 
-                          ? 'text-green-400' 
-                          : 'text-gray-500'
-                      }`} 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className={`font-medium ${
-                      taskStatus === 'Completed' 
-                        ? 'text-green-400' 
-                        : 'text-white'
-                    }`}>
-                      Mark as Completed
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {isTaskStatusCompletedDisabled() 
-                        ? 'Available at Demo status or higher' 
-                        : 'Task will be marked as complete'}
-                    </p>
-                  </div>
-                </div>
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isTaskStatusCompletedDisabled()) {
-                      setTaskStatus(taskStatus === 'Completed' ? 'Open' : 'Completed');
-                      setModalErrors({});
-                    }
-                  }}
-                  disabled={isTaskStatusCompletedDisabled()}
-                  className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:ring-offset-2 focus:ring-offset-[#2A2A2A] ${
-                    isTaskStatusCompletedDisabled()
-                      ? 'bg-gray-700 cursor-not-allowed'
-                      : taskStatus === 'Completed'
-                        ? 'bg-green-500'
-                        : 'bg-gray-600 hover:bg-gray-500'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
-                      taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
+          {/* Task Status Toggle Switch */}
+          <div className="space-y-4 mb-6">
+            <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+              Task Status <span className="text-red-400">*</span>
+            </label>
+
+            <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
+              isTaskStatusCompletedDisabled()
+                ? 'bg-white/[0.02] border-gray-800 opacity-40'
+                : taskStatus === 'Completed'
+                  ? 'bg-green-500/8 border-green-500/30'
+                  : 'bg-white/[0.03] border-white/[0.06] hover:border-white/10'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${
+                  taskStatus === 'Completed'
+                    ? 'bg-green-500/20'
+                    : 'bg-white/[0.04]'
+                }`}>
+                  <svg
+                    className={`w-5 h-5 transition-colors ${
+                      taskStatus === 'Completed'
+                        ? 'text-green-400'
+                        : 'text-gray-500'
                     }`}
-                  />
-                </button>
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className={`font-medium ${
+                    taskStatus === 'Completed'
+                      ? 'text-green-400'
+                      : 'text-white'
+                  }`}>
+                    Mark as Completed
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {isTaskStatusCompletedDisabled()
+                      ? 'Available at Demo status or higher'
+                      : 'Task will be marked as complete'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isTaskStatusCompletedDisabled()) {
+                    setTaskStatus(taskStatus === 'Completed' ? 'Open' : 'Completed');
+                    setModalErrors({});
+                  }
+                }}
+                disabled={isTaskStatusCompletedDisabled()}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+                  isTaskStatusCompletedDisabled()
+                    ? 'bg-gray-700 cursor-not-allowed'
+                    : taskStatus === 'Completed'
+                      ? 'bg-green-500'
+                      : 'bg-gray-600 hover:bg-gray-500'
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                    taskStatus === 'Completed' ? 'translate-x-8' : 'translate-x-1'
+                  }`}
+                />
+              </button>
               </div>
               
-              {isTaskStatusCompletedDisabled() && (
-                <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-blue-400 text-sm font-medium">Task Completion Locked</p>
-                    <p className="text-blue-300 text-xs mt-1">
-                      You can mark this task as completed once the lead reaches <span className="font-semibold">Demo</span> status or higher (Demo, Not Deposit, or Deposit).
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {modalErrors.taskStatus && (
-                <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
-              )}
+            {modalErrors.taskStatus && (
+              <div className="text-red-400 text-sm animate-pulse">{modalErrors.taskStatus}</div>
+            )}
+          </div>
+
+          {/* Answered Status Section */}
+          <div className="space-y-3 mb-6">
+            <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+              Answered Status <span className="text-red-400">*</span>
+            </label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 border ${
+                answeredStatus === 'Answered'
+                  ? 'bg-[#BBA473]/10 border-[#BBA473]/40 cursor-pointer'
+                  : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.06] hover:border-white/10 cursor-pointer'
+              }`}>
+                <input
+                  type="radio"
+                  name="answeredStatus"
+                  value="Answered"
+                  checked={answeredStatus === 'Answered'}
+                  onChange={(e) => {
+                    setAnsweredStatus(e.target.value);
+                    setModalErrors({});
+                  }}
+                  className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                />
+                <span className="text-white font-medium">Answered</span>
+              </label>
+
+              <label className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 border ${
+                answeredStatus === 'Not Answered'
+                  ? 'bg-[#BBA473]/10 border-[#BBA473]/40 cursor-pointer'
+                  : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.06] hover:border-white/10 cursor-pointer'
+              }`}>
+                <input
+                  type="radio"
+                  name="answeredStatus"
+                  value="Not Answered"
+                  checked={answeredStatus === 'Not Answered'}
+                  onChange={(e) => {
+                    setAnsweredStatus(e.target.value);
+                    setModalErrors({});
+                  }}
+                  className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                />
+                <span className="text-white font-medium">Not Answered</span>
+              </label>
             </div>
 
-            {/* Answered Status Section */}
-            <div className="space-y-4">
-              <label className="text-sm text-[#E8D5A3] font-medium block">
-                Answered Status <span className="text-red-400">*</span>
-              </label>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                  answeredStatus === 'Answered'
-                    ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                    : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
-                }`}>
-                  <input
-                    type="radio"
-                    name="answeredStatus"
-                    value="Answered"
-                    checked={answeredStatus === 'Answered'}
-                    onChange={(e) => {
-                      setAnsweredStatus(e.target.value);
-                      setModalErrors({});
-                    }}
-                    className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
-                  />
-                  <span className="text-white font-medium">Answered</span>
-                </label>
-                
-                <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
-                  answeredStatus === 'Not Answered'
-                    ? 'bg-[#BBA473]/20 border-[#BBA473] ring-2 ring-[#BBA473]/50 cursor-pointer'
-                    : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50 cursor-pointer'
-                }`}>
-                  <input
-                    type="radio"
-                    name="answeredStatus"
-                    value="Not Answered"
-                    checked={answeredStatus === 'Not Answered'}
-                    onChange={(e) => {
-                      setAnsweredStatus(e.target.value);
-                      setModalErrors({});
-                    }}
-                    className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
-                  />
-                  <span className="text-white font-medium">Not Answered</span>
-                </label>
+            {modalErrors.answeredStatus && (
+              <div className="text-red-400 text-sm animate-pulse flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{modalErrors.answeredStatus}</span>
               </div>
-              
-              {modalErrors.answeredStatus && (
-                <div className="text-red-400 text-sm animate-pulse flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>{modalErrors.answeredStatus}</span>
-                </div>
-              )}
-              
-              {answeredStatus === 'Not Answered' && (
-                <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <AlertCircle className="w-5 h-5 text-orange-400" />
-                  </div>
+            )}
+
+            {answeredStatus === 'Not Answered' && (
+              <div className="mt-3 p-3 bg-orange-500/8 border border-orange-500/20 rounded-xl flex items-start gap-3">
+                <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-orange-400 text-sm font-medium">
                       {contact && (contact.kioskLeadStatus === 'Lead' || contact.kioskLeadStatus === 'lead' || contact.kioskLeadStatus === '-' || contact.status === 'Lead' || contact.status === 'lead' || contact.status === '-')
@@ -900,16 +844,16 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               )}
             </div>
 
-            {/* Level 1: Answered / Not Answered */}
-            <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-50 pointer-events-none' : ''}`}>
-              <label className="text-sm text-[#E8D5A3] font-medium block">
-                Lead Response Status
-              </label>
+          {/* Lead Response Status */}
+          <div className={`space-y-3 ${isUpdateStatusDisabled() ? 'opacity-40 pointer-events-none' : ''}`}>
+            <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+              Update Status
+            </label>
               <div className="grid grid-cols-2 gap-3">
-                <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                <label className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 border ${
                   isStatusDisabled('Answered') || isUpdateStatusDisabled()
-                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                    : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                    ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
+                    : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                 }`}>
                   <input
                     type="radio"
@@ -931,12 +875,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                   <span className="text-white font-medium">Answered</span>
                 </label>
                 
-                <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                   isStatusDisabled('Not Answered')
-                    ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                    ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                     : isFinalSelectedStatus('Not Answered')
-                      ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                      : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                      ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                 }`}>
                   <input
                     type="radio"
@@ -967,10 +911,10 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               {modalAnswered === 'Answered' && (
                 <div className="space-y-3 animate-fadeIn">
                   <div className="grid grid-cols-2 gap-3">
-                    <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 border ${
                       isStatusDisabled('Interested')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
+                        : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -991,14 +935,14 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                       <span className="text-white font-medium">Interested</span>
                     </label>
                     
-                    <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Not Interested')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Not Interested')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
                           : shouldShowNotInterestedAvailable()
-                            ? 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50 animate-pulse-border-subtle'
-                            : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                            ? 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30 animate-pulse-border-subtle'
+                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -1030,12 +974,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               {modalInterested === 'Interested' && (
                 <div className="space-y-3 animate-fadeIn">
                   <div className="grid grid-cols-2 gap-3">
-                    <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Warm')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Warm')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -1056,12 +1000,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                       {isFinalSelectedStatus('Warm') && <SelectedStatusIndicator />}
                     </label>
                     
-                    <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Hot')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Hot')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -1092,12 +1036,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               {modalLeadType === 'Hot' && (
                 <div className="space-y-3 animate-fadeIn">
                   <div className="grid grid-cols-2 gap-3">
-                    <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Demo')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Demo')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -1117,10 +1061,10 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                       {isFinalSelectedStatus('Demo') && <SelectedStatusIndicator />}
                     </label>
                     
-                    <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Real')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
-                        : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
+                        : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -1147,10 +1091,10 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               
               {/* Demo Checkboxes */}
               {modalHotLeadType === 'Demo' && (
-                <div className="mt-4 p-4 bg-[#1A1A1A] rounded-lg border-2 border-[#BBA473]/30 animate-fadeIn">
-                  <h4 className="text-[#BBA473] font-semibold mb-3 flex items-center gap-2">
-                    <span className="text-sm">Demo Steps</span>
-                    <span className="text-xs text-gray-400">(First 2 are required)</span>
+                <div className="mt-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] animate-fadeIn">
+                  <h4 className="text-[#BBA473]/80 font-semibold mb-3 flex items-center gap-2">
+                    <span className="text-xs">Demo Steps</span>
+                    <span className="text-[10px] text-gray-500">(First 2 are required)</span>
                   </h4>
                   
                   <div className="space-y-3">
@@ -1162,7 +1106,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                           setDemoInstallApp(e.target.checked);
                           setModalErrors({});
                         }}
-                        className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                        className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
                       />
                       <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                         <span className="font-medium">1. Install the App</span>
@@ -1178,7 +1122,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                           setDemoEducationVideo(e.target.checked);
                           setModalErrors({});
                         }}
-                        className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                        className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
                       />
                       <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                         <span className="font-medium">2. Education Video</span>
@@ -1191,7 +1135,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                         type="checkbox"
                         checked={demoAnalyzeChannel}
                         onChange={(e) => setDemoAnalyzeChannel(e.target.checked)}
-                        className="w-5 h-5 rounded border-2 border-[#BBA473] bg-[#2A2A2A] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
+                        className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/50 cursor-pointer transition-all"
                       />
                       <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
                         <span className="font-medium">3. Analyze Channel</span>
@@ -1213,12 +1157,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               {modalHotLeadType === 'Real' && (
                 <div className="space-y-3 animate-fadeIn">
                   <div className="grid grid-cols-2 gap-3">
-                    <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Deposit')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Deposit')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -1237,12 +1181,12 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                       {isFinalSelectedStatus('Deposit') && <SelectedStatusIndicator />}
                     </label>
                     
-                    <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
                       isStatusDisabled('Not Deposit')
-                        ? 'bg-gray-800/50 cursor-not-allowed opacity-50 border-gray-700'
+                        ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                         : isFinalSelectedStatus('Not Deposit')
-                          ? 'bg-green-500/20 border-green-500 ring-2 ring-green-500/50 shadow-lg shadow-green-500/30 cursor-pointer scale-[1.02]'
-                          : 'bg-[#1A1A1A] hover:bg-[#3A3A3A] border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30'
                     }`}>
                       <input
                         type="radio"
@@ -1269,7 +1213,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               
               {/* Remarks / Notes */}
               <div className="space-y-2 pt-4">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
                   Notes / Remarks
                 </label>
                 <textarea
@@ -1283,10 +1227,10 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                     }
                   }}
                   style={{ height: '124px' }}
-                  className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white resize-none transition-all duration-300 placeholder-gray-600 ${
                     modalErrors.remarks
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-white/[0.06] focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-white/10'
                   }`}
                 />
                 <div className="flex justify-between items-center">
@@ -1302,9 +1246,9 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
               </div>
 
               {/* Task Title */}
-              <div className="space-y-2 pt-4 border-t border-[#BBA473]/20">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
-                  Task Title <span className="text-xs text-gray-400">(Optional)</span>
+              <div className="space-y-2 pt-4 border-t border-white/[0.06]">
+                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                  Task Title <span className="text-[10px] text-gray-500 normal-case">(Optional)</span>
                 </label>
                 <input
                   type="text"
@@ -1313,7 +1257,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   maxLength={100}
-                  className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]"
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white transition-all duration-300 placeholder-gray-600 border-white/[0.06] focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-white/10"
                 />
                 <div className="flex justify-between items-center">
                   <p className="text-xs text-gray-400">
@@ -1327,17 +1271,16 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Action Button - Sticky */}
-      <div className="sticky bottom-0 bg-[#1A1A1A] border-t border-[#BBA473]/30 p-4">
+      <div className="sticky bottom-0 bg-[#1A1A1A] border-t border-white/[0.06] p-4">
         <button
           onClick={handleModalSubmit}
           disabled={!isFormValid()}
-          className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg transform ${
+          className={`w-full px-4 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
             isFormValid()
-              ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] hover:shadow-xl hover:shadow-[#BBA473]/40 hover:scale-105 active:scale-95 cursor-pointer'
-              : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+              ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] shadow-[0_0_20px_rgba(187,164,115,0.15)] hover:shadow-[0_0_30px_rgba(187,164,115,0.25)] hover:scale-[1.01] active:scale-[0.99] cursor-pointer'
+              : 'bg-white/[0.04] text-gray-500 cursor-not-allowed opacity-40 border border-gray-800'
           }`}
         >
           Save Changes
@@ -1371,20 +1314,20 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
 
         .custom-datepicker {
           background-color: #2A2A2A !important;
-          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border: 1px solid rgba(255, 255, 255, 0.06) !important;
           border-radius: 12px !important;
           font-family: inherit !important;
         }
 
         .react-datepicker {
           background-color: #2A2A2A !important;
-          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border: 1px solid rgba(255, 255, 255, 0.06) !important;
           border-radius: 12px !important;
         }
 
         .react-datepicker__header {
           background-color: #1A1A1A !important;
-          border-bottom: 1px solid rgba(187, 164, 115, 0.3) !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
           border-top-left-radius: 12px !important;
           border-top-right-radius: 12px !important;
         }
@@ -1430,9 +1373,9 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         .react-datepicker__time-container {
           position: absolute;
           right: 100%;
-          border: 2px solid #e8d5a33d;
+          border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 12px;
-          border-left: 1px solid rgba(187, 164, 115, 0.3) !important;
+          border-left: 1px solid rgba(255, 255, 255, 0.06) !important;
         }
 
         .react-datepicker__time-list-item {

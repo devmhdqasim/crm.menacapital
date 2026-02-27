@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, StickyNote, Info, Timer } from 'lucide-react';
+import { MessageSquare, StickyNote, Info, Timer, UserPlus } from 'lucide-react';
 import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession'; // adjust path as needed
 
 const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, contactId, contactPhone }) => {
@@ -49,6 +49,17 @@ const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, conta
         >
           <Info className="w-4 h-4 inline-block mr-2" />
           Status
+        </button>
+        <button
+          onClick={() => setActiveTab('assign')}
+          className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
+            activeTab === 'assign'
+              ? 'text-[#BBA473] border-[#BBA473]'
+              : 'text-gray-400 border-transparent hover:text-gray-300'
+          }`}
+        >
+          <UserPlus className="w-4 h-4 inline-block mr-2" />
+          Assign
         </button>
 
         {/* ✅ Real Firebase timer - only renders if session isOpen */}

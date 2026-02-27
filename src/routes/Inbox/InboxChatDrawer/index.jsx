@@ -12,6 +12,7 @@ import ProfileSidebar from '../ProfileSidebar';
 import TemplatePicker from '../Templatepicker';
 import ReminderModal from '../Remindermodal';
 import InboxLeadStatus from '../Inboxleadstatus';
+import AssignAgent from '../AssignAgent';
 import { convertToMp4 } from '../../../utils/videoConverter';
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
@@ -1097,6 +1098,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                     setNewNote={setNewNote}
                     contact={contact}
                   />
+                ) : activeTab === 'assign' ? (
+                  <AssignAgent contact={contact} refreshContacts={refreshContacts} />
                 ) : (
                   <InboxLeadStatus contact={contact} refreshContacts={refreshContacts} />
                 )}
