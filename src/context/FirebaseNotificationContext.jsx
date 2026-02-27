@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { ref, onValue, query, limitToLast } from 'firebase/database';
+import { ref, onValue, onChildAdded, onChildChanged, query, limitToLast } from 'firebase/database';
 import database from '../config/firebaseDb';
 import toast from 'react-hot-toast';
 import { useNotificationSound } from '../hooks/useNotificationSound';
@@ -430,6 +430,201 @@ export const FirebaseNotificationProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
+  }, [playSound, showManagedToast]);
+
+  // --- Listen for NEW entries under any notifications/{id} object ---
+  // Uses onChildAdded + onChildChanged instead of onValue on root (more reliable with Firebase rules).
+  // Skips reserved sub-paths that already have their own listeners.
+  // Uses createdAt timestamp to avoid toasting old entries on page load — no isInitial gate.
+  const NOTIF_RESERVED_KEYS = ['general', 'inbox', 'trigger', 'whatsappSessions'];
+
+  useEffect(() => {
+    if (!database) return;
+
+    const userInfo = getUserInfo();
+    if (!userInfo) return;
+
+    const BLOCKED_ROLES = ['Kiosk Member', 'Event Member'];
+    if (BLOCKED_ROLES.includes(userInfo?.roleName || '')) return;
+
+    const notifRootRef = ref(database, 'notifications');
+    const listenStartTime = new Date().toISOString();
+    const shownKeys = new Set();
+
+    console.log('🔔 Listening on notifications/* (child events), startTime:', listenStartTime);
+
+    const processParentSnapshot = (snapshot) => {
+      const parentKey = snapshot.key;
+      if (NOTIF_RESERVED_KEYS.includes(parentKey)) return;
+
+      const parentData = snapshot.val();
+      if (!parentData || typeof parentData !== 'object') return;
+
+      Object.entries(parentData).forEach(([pushKey, value]) => {
+        if (!value || typeof value !== 'object') return;
+
+        const compositeKey = `${parentKey}/${pushKey}`;
+        if (shownKeys.has(compositeKey)) return;
+        shownKeys.add(compositeKey);
+
+        // Only toast entries created AFTER this listener started
+        if (!value.createdAt || value.createdAt <= listenStartTime) return;
+
+        const phone = typeof value.phoneNumber === 'object'
+          ? (value.phoneNumber?.phoneNumber || '')
+          : (value.phoneNumber || '');
+
+        console.log('🔔 NEW notification entry:', { compositeKey, type: value.type, phone, notes: value.notes });
+
+        playSound();
+        showManagedToast(() => toast.custom((t) => (
+          <div
+            onClick={() => {
+              toast.dismiss(t.id);
+              if (phone) {
+                sessionStorage.setItem('openChatForPhone', phone.replace(/\D/g, ''));
+                sessionStorage.setItem('openChatForName', phone);
+                if (window.location.pathname === '/inbox') {
+                  window.dispatchEvent(new Event('openChatFromNotification'));
+                } else {
+                  window.location.href = '/inbox';
+                }
+              }
+            }}
+            style={{
+              maxWidth: '400px',
+              width: '100%',
+              cursor: 'pointer',
+              background: 'linear-gradient(135deg, #0a1e2e 0%, #0d2a3d 50%, #0a1e2e 100%)',
+              borderRadius: '16px',
+              padding: '0',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(6,182,212,0.1)',
+              overflow: 'hidden',
+              opacity: t.visible ? 1 : 0,
+              transform: t.visible ? 'translateX(0) scale(1)' : 'translateX(40px) scale(0.95)',
+              transition: 'all 0.35s cubic-bezier(0.21, 1.02, 0.73, 1)',
+            }}
+          >
+            <div style={{
+              height: '3px',
+              background: 'linear-gradient(90deg, transparent, #06b6d4, #0891b2, #06b6d4, transparent)',
+            }} />
+            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                position: 'relative',
+                flexShrink: 0,
+              }}>
+                <div style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(145deg, #06b6d4, #0891b2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 15px rgba(6,182,212,0.3)',
+                }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                </div>
+                <div style={{
+                  position: 'absolute',
+                  top: '-3px',
+                  right: '-3px',
+                  width: '14px',
+                  height: '14px',
+                  borderRadius: '50%',
+                  background: '#06b6d4',
+                  border: '2.5px solid #0a1e2e',
+                  boxShadow: '0 0 8px rgba(6,182,212,0.5)',
+                  animation: 'pulse-dot 1.5s ease-in-out infinite',
+                }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '1px 8px',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    color: '#67e8f9',
+                    background: 'rgba(6,182,212,0.15)',
+                    borderRadius: '20px',
+                  }}>
+                    Follow-up
+                  </span>
+                  <span style={{
+                    color: 'rgba(255,255,255,0.35)',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    marginLeft: 'auto',
+                  }}>
+                    {value.createdAt ? new Date(value.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'just now'}
+                  </span>
+                </div>
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700, marginBottom: '3px' }}>
+                  {phone ? `Follow up with ${phone}` : 'Follow-up Reminder'}
+                </div>
+                <p style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '13px',
+                  margin: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  lineHeight: '1.4',
+                }}>
+                  {value.notes || 'You have a pending follow-up for this contact'}
+                </p>
+              </div>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.dismiss(t.id);
+                }}
+                style={{
+                  flexShrink: 0,
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '10px',
+                  background: 'rgba(6,182,212,0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(6,182,212,0.25)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(6,182,212,0.1)'; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </div>
+            </div>
+            <div style={{ height: '2px', width: '100%', background: 'rgba(0,0,0,0.2)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: '#06b6d4', animation: 'toast-shrink 6s linear forwards' }} />
+            </div>
+          </div>
+        ), { duration: 6000, position: 'top-right' }));
+      });
+    };
+
+    // onChildAdded: fires once per existing child + for each new child added
+    const unsubAdded = onChildAdded(notifRootRef, processParentSnapshot);
+    // onChildChanged: fires when a child node changes (e.g. new push key added under it)
+    const unsubChanged = onChildChanged(notifRootRef, processParentSnapshot);
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+    };
   }, [playSound, showManagedToast]);
 
   // --- Listen for whatsappSessions reminder flag ---
