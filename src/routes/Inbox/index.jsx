@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllLeads } from '../../services/leadService';
+import { getWatiContacts, getAllLeads } from '../../services/leadService';
 import { getAllSalesManagerLeads } from '../../services/leadService';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import { getAllUsers } from '../../services/teamService';
@@ -207,7 +207,7 @@ const InboxPage = () => {
 
       if (userRole === 'Sales Manager') {
         // Sales Manager sees all leads
-        result = await getAllSalesManagerLeads(
+        result = await getWatiContacts(
           page,
           limit,
           startDateStr,
@@ -218,7 +218,7 @@ const InboxPage = () => {
         );
       } else {
         // Agent sees only their assigned leads
-        result = await getAllLeads(
+        result = await getWatiContacts(
           page,
           limit,
           startDateStr,
@@ -229,46 +229,56 @@ const InboxPage = () => {
       }
 
       if (result.success && result.data) {
-        const transformedContacts = result.data.map((lead) => ({
-          id: lead._id,
-          leadId: lead.leadId,
-          name: lead.leadName,
-          email: lead.leadEmail,
-          phone: typeof lead.leadPhoneNumber === 'object' && lead.leadPhoneNumber !== null
-            ? (lead.leadPhoneNumber.phoneNumber || '')
-            : (lead.leadPhoneNumber || ''),
-          agent: lead.leadAgentId && lead.leadAgentId.length > 0
-            ? `${lead.leadAgentId[0].firstName} ${lead.leadAgentId[0].lastName}`
-            : 'Not Assigned',
-          agentId: lead.leadAgentId && lead.leadAgentId.length > 0 ? lead.leadAgentId[0]._id : null,
-          dateOfBirth: lead.leadDateOfBirth,
-          nationality: lead.leadNationality ?? '-',
-          residency: lead.leadResidency,
-          language: lead.leadPreferredLanguage,
-          source: lead.leadSource,
-          remarks: lead.leadDescription || '',
-          depositStatus: lead.depositStatus || '',
-          status: lead.leadStatus,
-          createdAt: lead.createdAt,
-          leadSourceId: lead?.leadSourceId?.[0],
-          kioskLeadStatus: lead.kioskLeadStatus ?? '-',
-          contacted: lead.contacted || false,
-          answered: lead.answered || false,
-          interested: lead.interested || false,
-          hot: lead.hot || false,
-          cold: lead.cold || false,
-          real: lead.real || false,
-          demo: lead.demo || false,
-          deposited: lead.deposited || false,
-          latestRemarks: lead.latestRemarks || '',
-          // Add messaging-specific fields
-          lastMessage: lead.latestRemarks || 'No messages yet',
-          lastMessageTime: lead.updatedAt || lead.createdAt,
-          unreadCount: 0, // TODO: Implement unread count from backend
-          isOnline: false, // TODO: Implement online status from backend
-          // Map potential profile picture fields
-          avatar: lead.profilePicture || lead.avatar || lead.profileUrl || lead.profileImg || null,
-        }));
+        const transformedContacts = result.data.map((lead) => {
+          const userData = lead.userData || {};
+          // leadAgentId can be null, a string, or an array of objects
+          const agentObj = Array.isArray(lead.leadAgentId) && lead.leadAgentId.length > 0
+            ? lead.leadAgentId[0]
+            : null;
+
+          return {
+            id: lead._id,
+            leadId: lead.leadId,
+            name: lead.leadName || userData.name || '',
+            email: lead.leadEmail || '',
+            phone: typeof lead.leadPhoneNumber === 'object' && lead.leadPhoneNumber !== null
+              ? (lead.leadPhoneNumber.phoneNumber || '')
+              : (lead.leadPhoneNumber || ''),
+            normalizedPhone: lead.normalizedPhone || userData.phoneNumber || '',
+            agent: agentObj
+              ? `${agentObj.firstName} ${agentObj.lastName}`
+              : (lead.leadAgentId ? 'Assigned' : 'Not Assigned'),
+            agentId: agentObj ? agentObj._id : (typeof lead.leadAgentId === 'string' ? lead.leadAgentId : null),
+            dateOfBirth: lead.leadDateOfBirth,
+            nationality: lead.leadNationality ?? '-',
+            residency: lead.leadResidency,
+            language: lead.leadPreferredLanguage,
+            source: lead.leadSource,
+            remarks: lead.leadDescription || '',
+            depositStatus: lead.depositStatus || '',
+            status: lead.leadStatus,
+            createdAt: lead.createdAt,
+            leadSourceId: Array.isArray(lead.leadSourceId) ? lead.leadSourceId[0] : lead.leadSourceId,
+            kioskLeadStatus: lead.kioskLeadStatus ?? '-',
+            contacted: lead.contacted || false,
+            answered: lead.answered || false,
+            interested: lead.interested || false,
+            hot: lead.hot || false,
+            cold: lead.cold || false,
+            real: lead.real || false,
+            demo: lead.demo || false,
+            deposited: lead.deposited || false,
+            latestRemarks: lead.latestRemarks || '',
+            lastTaskStatus: lead.lastTaskStatus || '',
+            // Messaging-specific fields from userData
+            lastMessage: lead.latestRemarks || 'No messages yet',
+            lastMessageTime: userData.lastMessageAt || lead.updatedAt || lead.createdAt,
+            sessionExpiresAt: userData.sessionExpiresAt || null,
+            unreadCount: 0,
+            isOnline: false,
+            avatar: lead.profilePicture || lead.avatar || lead.profileUrl || lead.profileImg || null,
+          };
+        });
 
         setContacts(transformedContacts);
         setTotalContacts(result.metadata?.total || 0);

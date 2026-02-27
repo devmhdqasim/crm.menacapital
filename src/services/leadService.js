@@ -1184,6 +1184,116 @@ export const deleteBranch = async (userId) => {
   }
 };
 
+export const getWatiContacts = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '', agentId = '') => {
+  try {
+    const authToken = getRefreshToken();
+    
+    console.log('🔵 Fetching leads...');
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status, 'AgentId:', agentId);
+    
+    if (!authToken) {
+      console.error('❌ No refresh token found in localStorage!');
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    console.log('🔑 Using refresh token for API call');
+
+    const userInfo = localStorage.getItem('userInfo')
+      ? JSON.parse(localStorage.getItem('userInfo'))
+      : null;
+
+    // ✅ Build query parameters
+    const queryParams = new URLSearchParams({
+      paramPage: page,
+      paramLimit: limit,
+      fromDate: fromDate || '',
+      toDate: toDate || '',
+      keyword: keyword || '',
+    });
+
+    // Add status parameter if provided
+    if (status) {
+      queryParams.append('status', status);
+    }
+
+    // Add agentId parameter if provided
+    if (agentId) {
+      queryParams.append('agent', agentId);
+    }
+
+    const refreshUrl = `${API_BASE_URL}/lead/getAllByLastMessage/en?${queryParams.toString()}`;
+
+    const response = await axios.get(
+      refreshUrl,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ Leads fetched successfully:', response.data);
+
+    const data = response.data;
+
+    if (data.success && data.data?.[0]?.data) {
+      const leadsData = data.data[0].data;
+      const metadata = data.data[0].metadata?.[0] || {};
+
+      console.log('📊 Retrieved', leadsData.length, 'leads');
+      console.log('📊 Total leads:', metadata.total);
+      console.log('📊 Current page:', metadata.page);
+
+      return {
+        success: true,
+        data: leadsData,
+        metadata: metadata,
+        message: data.message,
+      };
+    } else {
+      console.error('❌ Unexpected response structure');
+      return {
+        success: false,
+        message: data.message || 'Failed to fetch leads',
+        data: [],
+        metadata: {},
+      };
+    }
+  } catch (error) {
+    console.error('❌ Get leads error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    if (error.response?.status === 401) {
+      console.log('❌ Unauthorized (401), token may be expired');
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+    
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to fetch leads',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
 export const getAllSalesManagerLeads = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '', agentId = '') => {
   try {
     const authToken = getRefreshToken();
