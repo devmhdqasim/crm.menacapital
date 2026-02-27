@@ -255,9 +255,12 @@ export const FirebaseNotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!database) return;
 
+    // Don't listen when user is not logged in
+    const userInfo = getUserInfo();
+    if (!userInfo) return;
+
     // Block only Kiosk/Event
     const BLOCKED_ROLES = ['Kiosk Member', 'Event Member'];
-    const userInfo = getUserInfo();
     const userRole = userInfo?.roleName || '';
     if (BLOCKED_ROLES.includes(userRole)) return;
 

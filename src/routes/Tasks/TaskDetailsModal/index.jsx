@@ -51,10 +51,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
       const currentStatus = task.taskCreationStatus || '';
       const kioskStatus = task.kioskLeadStatus || ''; // Get kiosk lead status
 
+      console.log('🔍 PRE-POPULATION: currentStatus =', JSON.stringify(currentStatus), '| kioskStatus =', JSON.stringify(kioskStatus), '| kioskDepositStatus =', JSON.stringify(task.kioskDepositStatus));
+
       if (!currentStatus || currentStatus === '') {
         // No status set yet - but check kiosk status
         if (kioskStatus === 'Demo') {
-          // Point 2: Auto-select Demo if kioskLeadStatus is Demo
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -62,7 +64,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           setLeadResponseStatus('Demo');
           setModalDepositStatus('');
         } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
-          // Point 4: Auto-select Not Deposit
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -70,7 +72,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           setModalDepositStatus('Not Deposit');
           setLeadResponseStatus('Not Deposit');
         } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
-          // Point 3: Auto-select Deposit for Real, Real Deposit, or Deposit
+          setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -82,10 +84,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           resetAllSelections();
         }
       } else if (currentStatus === 'Not Answered') {
+        setAnsweredStatus('Not Answered');
         setModalAnswered('Not Answered');
         setLeadResponseStatus('Not Answered');
         resetSubSelections();
       } else if (currentStatus === 'Not Interested') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Not Interested');
         setLeadResponseStatus('Not Interested');
@@ -93,6 +97,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalHotLeadType('');
         setModalDepositStatus('');
       } else if (currentStatus === 'Warm') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Warm');
@@ -100,6 +105,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalHotLeadType('');
         setModalDepositStatus('');
       } else if (currentStatus === 'Hot') {
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
@@ -107,49 +113,47 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalHotLeadType('');
         setModalDepositStatus('');
       } else if (currentStatus === 'Demo' || kioskStatus === 'Demo') {
-        // Point 2: Auto-select Demo if taskCreationStatus OR kioskLeadStatus is Demo
+        setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
         setModalHotLeadType('Demo');
         setLeadResponseStatus('Demo');
         setModalDepositStatus('');
-      } 
-      else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' || 
-        kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || 
+      } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' ||
+        kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' ||
         kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
- // Point 4: Auto-select Not Deposit
- setModalAnswered('Answered');
- setModalInterested('Interested');
- setModalLeadType('Hot');
- setModalHotLeadType('Real');
- setModalDepositStatus('Not Deposit');
- setLeadResponseStatus('Not Deposit');
-} else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || 
-          kioskStatus === 'Deposit' || currentStatus === 'Deposit' || 
+        console.log('🔍 PRE-POP: Entered NOT DEPOSIT branch');
+        setAnsweredStatus('Answered');
+        setModalAnswered('Answered');
+        setModalInterested('Interested');
+        setModalLeadType('Hot');
+        setModalHotLeadType('Real');
+        setModalDepositStatus('Not Deposit');
+        setLeadResponseStatus('Not Deposit');
+      } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' ||
+          kioskStatus === 'Deposit' || currentStatus === 'Deposit' ||
           currentStatus === 'Real - Deposit') {
- // Point 3: Auto-select Deposit for Real, Real Deposit, or Deposit
- // Check depositStatus from lead to determine which one
- const leadDepositStatus = task.kioskDepositStatus || '';
- 
- if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
-   // If depositStatus indicates Not Deposit, select Not Deposit
-   setModalAnswered('Answered');
-   setModalInterested('Interested');
-   setModalLeadType('Hot');
-   setModalHotLeadType('Real');
-   setModalDepositStatus('Not Deposit');
-   setLeadResponseStatus('Not Deposit');
- } else {
-   // Otherwise, select Deposit (this is the true Real/Deposit case)
-   setModalAnswered('Answered');
-   setModalInterested('Interested');
-   setModalLeadType('Hot');
-   setModalHotLeadType('Real');
-   setModalDepositStatus('Deposit');
-   setLeadResponseStatus('Deposit');
- }
-}
+        const leadDepositStatus = task.kioskDepositStatus || '';
+        console.log('🔍 PRE-POP: Entered DEPOSIT branch. leadDepositStatus =', JSON.stringify(leadDepositStatus));
+        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
+          setAnsweredStatus('Answered');
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Not Deposit');
+          setLeadResponseStatus('Not Deposit');
+        } else {
+          setAnsweredStatus('Answered');
+          setModalAnswered('Answered');
+          setModalInterested('Interested');
+          setModalLeadType('Hot');
+          setModalHotLeadType('Real');
+          setModalDepositStatus('Deposit');
+          setLeadResponseStatus('Deposit');
+        }
+      }
     }
   }, [task]);
 
@@ -1308,6 +1312,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                 )}
 
                 {/* Level 5: Deposit / Not Deposit */}
+                {console.log('🔍 RENDER STATE: answeredStatus=', answeredStatus, '| modalAnswered=', modalAnswered, '| modalInterested=', modalInterested, '| modalLeadType=', modalLeadType, '| modalHotLeadType=', modalHotLeadType, '| modalDepositStatus=', modalDepositStatus, '| leadResponseStatus=', leadResponseStatus)}
                 {modalHotLeadType === 'Real' && (
                   <div className="space-y-3 animate-fadeIn">
                     <div className="grid grid-cols-2 gap-3">
