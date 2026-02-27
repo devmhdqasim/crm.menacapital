@@ -93,8 +93,19 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         const messageText = data.text || data.message || '';
         const isRecentlySent = messageText && recentlySentTextsRef.current.has(messageText.trim());
 
+        // Check if the current user's role is allowed to receive message notifications
+        const BLOCKED_NOTIFICATION_ROLES = ['Kiosk Member', 'Event Member'];
+        let userRole = '';
+        try {
+          const userInfo = localStorage.getItem('userInfo');
+          if (userInfo) {
+            userRole = JSON.parse(userInfo).roleName || '';
+          }
+        } catch {}
+        const isRoleBlocked = BLOCKED_NOTIFICATION_ROLES.includes(userRole);
+
         // Only show notification for genuine incoming customer messages (skip read receipts)
-        if (!isOwnMessage && !isRecentlySent && data.name !== 'Read type') {
+        if (!isOwnMessage && !isRecentlySent && data.name !== 'Read type' && !isRoleBlocked) {
           const previewText = messageText.length > 60
             ? messageText.substring(0, 60) + '...'
             : messageText;
