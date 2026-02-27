@@ -190,14 +190,21 @@ const ChatInput = ({
     );
   }, [onCameraCapture, closeCamera]);
 
-  // Start video recording
+  // Max video recording duration (seconds)
+  const MAX_VIDEO_DURATION = 10 * 60; // 10 minutes
+
+  // Start video recording — prefer MP4 (WhatsApp compatible), fallback to WebM
   const startVideoRecording = useCallback(() => {
     if (!cameraStreamRef.current) return;
 
     videoChunksRef.current = [];
-    const recorder = new MediaRecorder(cameraStreamRef.current, {
-      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
-    });
+
+    // Chrome 124+ supports video/mp4, Safari uses it natively
+    const preferredMimes = ['video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
+    const mimeType = preferredMimes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+    console.log('🎥 Recording video with mimeType:', mimeType);
+
+    const recorder = new MediaRecorder(cameraStreamRef.current, { mimeType });
 
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) videoChunksRef.current.push(e.data);
@@ -205,7 +212,9 @@ const ChatInput = ({
 
     recorder.onstop = () => {
       if (videoChunksRef.current.length > 0) {
-        const blob = new Blob(videoChunksRef.current, { type: 'video/mp4' });
+        // Use the actual recorded MIME type so the data matches the label
+        const actualMime = recorder.mimeType.split(';')[0];
+        const blob = new Blob(videoChunksRef.current, { type: actualMime });
         if (onCameraCapture) {
           onCameraCapture(blob, 'video');
         }
@@ -213,15 +222,22 @@ const ChatInput = ({
       closeCamera();
     };
 
-    recorder.start();
+    recorder.start(1000);
     videoRecorderRef.current = recorder;
     setIsVideoRecording(true);
     setVideoRecordingDuration(0);
 
     videoTimerRef.current = setInterval(() => {
-      setVideoRecordingDuration(prev => prev + 1);
+      setVideoRecordingDuration(prev => {
+        const next = prev + 1;
+        if (next >= MAX_VIDEO_DURATION) {
+          toast.error('Maximum recording time (10 minutes) reached.', { duration: 3000 });
+          stopVideoRecording();
+        }
+        return next;
+      });
     }, 1000);
-  }, [onCameraCapture, closeCamera, videoRecordingDuration]);
+  }, [onCameraCapture, closeCamera]);
 
   // Stop video recording
   const stopVideoRecording = useCallback(() => {

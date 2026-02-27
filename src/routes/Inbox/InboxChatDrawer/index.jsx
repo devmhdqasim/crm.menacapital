@@ -12,6 +12,7 @@ import ProfileSidebar from '../ProfileSidebar';
 import TemplatePicker from '../Templatepicker';
 import ReminderModal from '../Remindermodal';
 import InboxLeadStatus from '../Inboxleadstatus';
+import { convertToMp4 } from '../../../utils/videoConverter';
 
 const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // State management
@@ -548,7 +549,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const FILE_SIZE_LIMITS = {
     image: 1 * 1024 * 1024,      // 1 MB
     audio: 16 * 1024 * 1024,     // 16 MB
-    video: 16 * 1024 * 1024,     // 16 MB
+    video: 30 * 1024 * 1024,     // 30 MB
   };
 
   // Allowed MIME types with labels
@@ -772,7 +773,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     if (!blob || !contact) return;
 
     const mimeType = blob.type || (type === 'image' ? 'image/jpeg' : 'video/mp4');
-    const ext = type === 'image' ? 'jpg' : 'mp4';
+    const extMap = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'image/jpeg': 'jpg' };
+    const ext = extMap[mimeType] || (type === 'image' ? 'jpg' : 'mp4');
     const fileName = `camera-${type}-${Date.now()}.${ext}`;
 
     // Validate captured file size
@@ -826,13 +828,33 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
       // Use Wati API for video captures, WebSocket for photos
       if (type === 'video') {
+        // Always convert recorded video to standard MP4.
+        // Browser MediaRecorder produces WebM or fragmented MP4 — both rejected by WhatsApp.
+        let videoToSend = blob;
+        let videoFileName = fileName.replace(/\.\w+$/, '.mp4');
+        console.log('🔄 Converting recorded video from', mimeType, 'to standard MP4...');
+        toast('Converting video to MP4... This may take a moment.', { icon: '🔄', duration: 5000 });
+        try {
+          // Add 2-minute timeout so the UI doesn't get stuck forever
+          const conversionPromise = convertToMp4(blob);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Video conversion timed out after 2 minutes')), 120000)
+          );
+          videoToSend = await Promise.race([conversionPromise, timeoutPromise]);
+        } catch (convErr) {
+          console.error('❌ Video conversion failed:', convErr);
+          toast.error('Failed to convert video. Please try again.');
+          markFailed();
+          return;
+        }
+
         console.log('📤 Sending camera video via Wati API:', {
           phone: contact.phone,
-          size: blob.size,
-          fileName,
+          size: videoToSend.size,
+          fileName: videoFileName,
         });
 
-        const result = await sendSessionFile(contact.phone, blob, fileName);
+        const result = await sendSessionFile(contact.phone, videoToSend, videoFileName);
 
         if (result.success) {
           setMessages(prev =>
