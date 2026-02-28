@@ -292,13 +292,13 @@ const ChatHeader = ({
             <Download className={`w-4.5 h-4.5 ${isGeneratingPdf ? 'animate-pulse' : ''}`} />
           </button>
 
-          <button
+          {/* <button
             onClick={() => setShowReminderModal(true)}
             className="p-2 rounded-lg bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] transition-all duration-200 hover:scale-105"
             title="Set Reminder"
           >
             <Bell className="w-4.5 h-4.5" />
-          </button>
+          </button> */}
 
           <button
             onClick={() => setShowProfileSidebar(!showProfileSidebar)}
