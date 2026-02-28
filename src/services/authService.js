@@ -59,7 +59,8 @@ export const loginUser = async (login, password, loginBy = 'email') => {
         localStorage.setItem('userInfo', JSON.stringify(userInfo));
         // Store loginBy for future reference
         localStorage.setItem('loginBy', loginBy);
-        
+        window.dispatchEvent(new Event('user-login'));
+
         console.log('✅ Access token stored in localStorage');
         console.log('✅ User info stored with role:', userInfo.roleName);
         console.log('✅ Login type stored:', loginBy);
@@ -634,6 +635,7 @@ export const logoutUser = () => {
   localStorage.removeItem('userInfo');
   localStorage.removeItem('loginBy');
   console.log('🔴 User logged out, all tokens cleared');
+  window.dispatchEvent(new Event('user-logout'));
 };
 
 /**

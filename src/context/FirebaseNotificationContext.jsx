@@ -97,6 +97,23 @@ export const FirebaseNotificationProvider = ({ children }) => {
   const [readIds, setReadIds] = useState(getReadIds);
   const [latestNotification, setLatestNotification] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!getUserInfo());
+
+  // Listen for logout events to tear down Firebase listeners
+  useEffect(() => {
+    const handleLogout = () => {
+      setIsLoggedIn(false);
+      toast.dismiss(); // Clear any active notification toasts
+      setShowBanner(false);
+    };
+    const handleLogin = () => setIsLoggedIn(true);
+    window.addEventListener('user-logout', handleLogout);
+    window.addEventListener('user-login', handleLogin);
+    return () => {
+      window.removeEventListener('user-logout', handleLogout);
+      window.removeEventListener('user-login', handleLogin);
+    };
+  }, []);
 
   const isInitialLoadGeneral = useRef(true);
   const isInitialLoadInbox = useRef(true);
@@ -150,7 +167,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
 
   // Subscribe to general notifications
   useEffect(() => {
-    if (!database || !isNotificationAllowedForUser()) return;
+    if (!isLoggedIn || !database || !isNotificationAllowedForUser()) return;
 
     const userInfo = getUserInfo();
     const generalRef = query(ref(database, 'notifications/general'), limitToLast(50));
@@ -180,11 +197,11 @@ export const FirebaseNotificationProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [triggerBanner]);
+  }, [triggerBanner, isLoggedIn]);
 
   // Subscribe to inbox notifications
   useEffect(() => {
-    if (!database || !isNotificationAllowedForUser()) return;
+    if (!isLoggedIn || !database || !isNotificationAllowedForUser()) return;
 
     const userInfo = getUserInfo();
     const inboxRef = query(ref(database, 'notifications/inbox'), limitToLast(50));
@@ -214,14 +231,14 @@ export const FirebaseNotificationProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [triggerBanner]);
+  }, [triggerBanner, isLoggedIn]);
 
   // --- Trigger boolean listener ---
   // Toggle `notifications/trigger` in Firebase Console:
   //   false → shows latest general notification banner
   //   true  → shows latest inbox notification banner
   useEffect(() => {
-    if (!database || !isNotificationAllowedForUser()) return;
+    if (!isLoggedIn || !database || !isNotificationAllowedForUser()) return;
 
     const triggerDbRef = ref(database, 'notifications/trigger');
 
@@ -246,16 +263,15 @@ export const FirebaseNotificationProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [triggerBanner]);
+  }, [triggerBanner, isLoggedIn]);
 
   // --- Listen for new notification entries at notifications/whatsappSessions ---
   // Same pattern as the working whatsappSessions reminder listener.
   // BE writes: notifications/whatsappSessions/{pushId} -> { createdAt, notes, phoneNumber, type, ... }
   // No userId matching — shows notification for ANY new entry.
   useEffect(() => {
-    if (!database) return;
+    if (!isLoggedIn || !database) return;
 
-    // Don't listen when user is not logged in
     const userInfo = getUserInfo();
     if (!userInfo) return;
 
@@ -430,7 +446,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [playSound, showManagedToast]);
+  }, [playSound, showManagedToast, isLoggedIn]);
 
   // --- Listen for NEW entries under any notifications/{id} object ---
   // Uses onChildAdded + onChildChanged instead of onValue on root (more reliable with Firebase rules).
@@ -439,7 +455,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
   const NOTIF_RESERVED_KEYS = ['general', 'inbox', 'trigger', 'whatsappSessions'];
 
   useEffect(() => {
-    if (!database) return;
+    if (!isLoggedIn || !database) return;
 
     const userInfo = getUserInfo();
     if (!userInfo) return;
@@ -625,11 +641,11 @@ export const FirebaseNotificationProvider = ({ children }) => {
       unsubAdded();
       unsubChanged();
     };
-  }, [playSound, showManagedToast]);
+  }, [playSound, showManagedToast, isLoggedIn]);
 
   // --- Listen for whatsappSessions reminder flag ---
   useEffect(() => {
-    if (!database || !isNotificationAllowedForUser()) return;
+    if (!isLoggedIn || !database || !isNotificationAllowedForUser()) return;
 
     const sessionsRef = ref(database, 'whatsappSessions');
     const prevRemindersRef = { current: new Map() };
@@ -815,7 +831,7 @@ export const FirebaseNotificationProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [playSound]);
+  }, [playSound, isLoggedIn]);
 
   // Cleanup banner timer
   useEffect(() => {
