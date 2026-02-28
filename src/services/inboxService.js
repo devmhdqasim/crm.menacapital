@@ -678,7 +678,7 @@ export const fetchWatiImage = async (imageUrl) => {
  * @returns {Promise} API response with messages
  */
 export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) => {
-  const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1/';
+  const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
   try {
