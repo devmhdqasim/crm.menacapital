@@ -555,6 +555,7 @@ const AssignLeadModal = ({
     const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
 
     if (answeredStatus === 'Not Answered' && allowedKioskStatuses.includes(kioskStatus)) {
+      // Use 'Not Deposit' index for all Real/Deposit variants so both Deposit and Not Deposit are enabled as siblings
       let kioskHierarchyLevel = -1;
       if (kioskStatus === 'Demo') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');

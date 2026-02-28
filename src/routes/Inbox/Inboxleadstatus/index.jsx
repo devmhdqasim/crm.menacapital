@@ -189,6 +189,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
       if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit' ||
           kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
         // Don't force deposit status - let user keep their current selection
+        // Both Deposit and Not Deposit should remain selectable
       } else if (kioskStatus === 'Demo') {
         if (modalHotLeadType !== 'Demo') {
           setModalHotLeadType('Demo');
@@ -496,6 +497,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
     const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
 
     if (answeredStatus === 'Not Answered' && allowedKioskStatuses.includes(kioskStatus)) {
+      // Use 'Not Deposit' index for all Real/Deposit variants so both Deposit and Not Deposit are enabled as siblings
       let kioskHierarchyLevel = -1;
       if (kioskStatus === 'Demo') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
