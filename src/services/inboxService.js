@@ -688,12 +688,11 @@ export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) =
 
     const cleanWaId = waId.replace(/\D/g, '');
     console.log('📬 Fetching previous messages from backend for:', cleanWaId);
-    const abc = 5;
 
     const response = await axios.get(`${API_BASE_URL}/wati/getMessage/en`, {
       params: {
         waId: cleanWaId,
-        abc,
+        pageSize,
         pageNumber,
       },
       headers: {
