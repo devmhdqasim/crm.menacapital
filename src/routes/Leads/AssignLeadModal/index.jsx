@@ -633,7 +633,6 @@ const AssignLeadModal = ({
       }
       return true;
     }
-
     return false;
   };
 
