@@ -87,7 +87,7 @@ const SalesManagerLeadsListing = ({
   // Build dynamic source tabs: exclude null _id, skip sources already covered or not wanted
   // 'Event' is already the 'Event Leads' static tab.
   // 'Kiosk' and 'Goldie' are excluded per product requirement.
-  const excludedSources = ['Event', 'Kiosk'];
+  const excludedSources = ['Event', 'Kiosk', 'Social Media/WhatsApp'];
   const dynamicSourceTabs = leadSourceSummary
     .filter(s => s._id && !excludedSources.map(e => e.toLowerCase()).includes(s._id.toLowerCase()))
     .map(s => ({ name: s._id, count: s.total }));
