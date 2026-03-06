@@ -11,6 +11,7 @@ import { getAllLeads, searchLeadById } from '../../services/leadService';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import TaskDetailsModal from './TaskDetailsModal';
+import InboxChatDrawer from '../Inbox/InboxChatDrawer';
 
 // Validation Schema for Task Form
 const taskValidationSchema = Yup.object({
@@ -84,6 +85,10 @@ const Tasks = () => {
   // Delete confirmation modal states
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
+
+  // Chat drawer states
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [chatContact, setChatContact] = useState(null);
 
   // Dropdown data
   const [agents, setAgents] = useState([]);
@@ -262,17 +267,23 @@ const Tasks = () => {
   };
 
   const handleOpenChat = (task) => {
-    // Navigate to inbox with the lead's phone number
     if (task.leadPhone) {
-      // Store the selected lead phone in sessionStorage so InboxPage can auto-open it
-      sessionStorage.setItem('openChatForPhone', task.leadPhone);
-      sessionStorage.setItem('openChatForName', task.leadName);
-      sessionStorage.setItem('openChatForLeadId', task.leadIdRaw);
-      
-      // Navigate to inbox
-      navigate('/inbox');
-      
-      toast.success(`Opening chat with ${task.leadName}`);
+      setChatContact({
+        id: task.leadIdRaw || `task_${task.leadPhone}`,
+        name: task.leadName || task.leadPhone,
+        phone: task.leadPhone,
+        email: '',
+        agent: '',
+        nationality: '',
+        status: '',
+        kioskLeadStatus: '',
+        lastMessage: '',
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0,
+        isOnline: false,
+        avatar: null,
+      });
+      setChatDrawerOpen(true);
     } else {
       toast.error('No phone number available for this lead');
     }
@@ -1718,7 +1729,18 @@ const Tasks = () => {
         input[type="datetime-local"] + .lucide-calendar {
           pointer-events: none;
         } 
-      `}</style> 
+      `}</style>
+
+      {/* Chat Drawer */}
+      <InboxChatDrawer
+        isOpen={chatDrawerOpen}
+        onClose={() => {
+          setChatDrawerOpen(false);
+          setChatContact(null);
+        }}
+        contact={chatContact}
+        refreshContacts={() => {}}
+      />
     </>
   );
 };
