@@ -1223,8 +1223,8 @@ export const getWatiContacts = async (page = 1, limit = 10, fromDate = '', toDat
       queryParams.append('agent', agentId);
     }
     
-    const refreshUrl = `https://staging.crm.saveingold.app/api/v1/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
-    // const refreshUrl = `${API_BASE_URL}/lead/getAllByLastMessage/en?${queryParams.toString()}`;
+    // const refreshUrl = `https://staging.crm.saveingold.app/api/v1/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
+    const refreshUrl = `${API_BASE_URL}/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
 
     const response = await axios.get(
       refreshUrl,
