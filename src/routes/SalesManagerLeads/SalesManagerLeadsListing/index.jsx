@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, AlertTriangle, X } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, AlertTriangle, X, MessageSquare } from 'lucide-react';
+import InboxChatDrawer from '../../Inbox/InboxChatDrawer';
 import DateRangePicker from '../../../components/DateRangePicker';
 import { deleteLead } from '../../../services/leadService';
 import { getSalesEventLeads, getAllSalesManagerLeads } from '../../../services/leadService';
@@ -56,6 +57,8 @@ const SalesManagerLeadsListing = ({
   const [assignedLeadMessage, setAssignedLeadMessage] = useState('');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [chatContact, setChatContact] = useState(null);
 
   // Static tabs — Event Leads onwards will be appended dynamically
   const staticTabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
@@ -350,6 +353,29 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
       }
     }
     return pages;
+  };
+
+  const handleOpenChat = (lead) => {
+    if (lead.phone) {
+      setChatContact({
+        id: lead.id || `lead_${lead.phone}`,
+        name: lead.name || lead.phone,
+        phone: lead.phone,
+        email: lead.email || '',
+        agent: lead.agent || '',
+        nationality: lead.nationality || '',
+        status: lead.status || '',
+        kioskLeadStatus: lead.kioskLeadStatus || '',
+        lastMessage: '',
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0,
+        isOnline: false,
+        avatar: null,
+      });
+      setChatDrawerOpen(true);
+    } else {
+      toast.error('No phone number available for this lead');
+    }
   };
 
   const handleEdit = (lead) => {
@@ -802,6 +828,18 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                       <td className="px-6 py-4 text-gray-300">{convertToDubaiTime(lead.createdAt)}</td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
+                          {lead.phone && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenChat(lead);
+                              }}
+                              className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white transition-all duration-300 hover:scale-110"
+                              title="Open Chat"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleEdit(lead)}
                             className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
@@ -967,6 +1005,17 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
           </div>
         </div>
       )}
+
+      {/* Chat Drawer */}
+      <InboxChatDrawer
+        isOpen={chatDrawerOpen}
+        onClose={() => {
+          setChatDrawerOpen(false);
+          setChatContact(null);
+        }}
+        contact={chatContact}
+        refreshContacts={() => {}}
+      />
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirmModal && (
