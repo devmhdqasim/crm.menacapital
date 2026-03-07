@@ -215,13 +215,13 @@ const ProfileSidebar = ({
               <Phone className="w-4 h-4" />
               Call Contact
             </button>
-            <button
+            {/* <button
               onClick={() => setShowReminderModal(true)}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
             >
               <Bell className="w-4 h-4" />
               Set Follow-up
-            </button>
+            </button> */}
           </div>
         </div>
 
