@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
+import InboxChatDrawer from '../../Inbox/InboxChatDrawer';
 import DateRangePicker from '../../../components/DateRangePicker';
+import toast from 'react-hot-toast';
 
 const LeadsListing = ({
   leads,
@@ -36,6 +38,8 @@ const LeadsListing = ({
   leadsCount,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [chatContact, setChatContact] = useState(null);
 
   const tabs = ['All', 'Pending', 'Contacted'];
   const contactedSubTabs = ['Interested', 'Not Interested', 'Not Answered'];
@@ -119,7 +123,31 @@ const LeadsListing = ({
     return formatted.replace(",", "");
   }
 
+  const handleOpenChat = (lead) => {
+    if (lead.phone) {
+      setChatContact({
+        id: lead.id || `lead_${lead.phone}`,
+        name: lead.name || lead.phone,
+        phone: lead.phone,
+        email: lead.email || '',
+        agent: lead.agent || '',
+        nationality: lead.nationality || '',
+        status: lead.status || '',
+        kioskLeadStatus: lead.kioskLeadStatus || '',
+        lastMessage: '',
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0,
+        isOnline: false,
+        avatar: null,
+      });
+      setChatDrawerOpen(true);
+    } else {
+      toast.error('No phone number available for this lead');
+    }
+  };
+
   return (
+    <>
     <div className={`min-h-screen bg-[#1A1A1A] text-white p-6 transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
       {/* Header */}
       <div className="mb-8 animate-fadeIn">
@@ -304,12 +332,13 @@ const LeadsListing = ({
                     </>
                 )}
                 <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
+                <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#BBA473]/10">
               {loading ? (
                 <tr>
-                  <td colSpan={isLeadsSelectedId ? "5" : "7"} className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={isLeadsSelectedId ? "6" : "8"} className="px-6 py-12 text-center text-gray-400">
                     <div className="flex flex-col items-center gap-3">
                       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#BBA473]"></div>
                       <span>Loading leads...</span>
@@ -318,7 +347,7 @@ const LeadsListing = ({
                 </tr>
               ) : currentLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={isLeadsSelectedId ? "5" : "7"} className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={isLeadsSelectedId ? "6" : "8"} className="px-6 py-12 text-center text-gray-400">
                     No leads found
                   </td>
                 </tr>
@@ -355,6 +384,22 @@ const LeadsListing = ({
                       </>
                     )}
                     <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{convertToDubaiTime(lead.createdAt)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2">
+                        {lead.phone && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenChat(lead);
+                            }}
+                            className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white transition-all duration-300 hover:scale-110"
+                            title="Open Chat"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -467,6 +512,18 @@ const LeadsListing = ({
         }
       `}</style>
     </div>
+
+    {/* Chat Drawer */}
+    <InboxChatDrawer
+      isOpen={chatDrawerOpen}
+      onClose={() => {
+        setChatDrawerOpen(false);
+        setChatContact(null);
+      }}
+      contact={chatContact}
+      refreshContacts={() => {}}
+    />
+    </>
   );
 };
 
