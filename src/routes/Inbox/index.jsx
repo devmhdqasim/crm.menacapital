@@ -79,15 +79,37 @@ const InboxPage = () => {
           // Contact not in current list — add a temporary entry at the top
           const newContact = {
             id: `ws_${msgDigits}`,
+            leadId: null,
             name: senderName,
             phone: phone,
+            normalizedPhone: phone,
             email: '',
             agent: '',
+            agentId: null,
+            dateOfBirth: null,
             nationality: '',
+            residency: '',
+            language: '',
+            source: '',
+            remarks: '',
+            depositStatus: '',
             status: '',
+            createdAt: new Date().toISOString(),
+            leadSourceId: null,
             kioskLeadStatus: '',
+            contacted: false,
+            answered: false,
+            interested: false,
+            hot: false,
+            cold: false,
+            real: false,
+            demo: false,
+            deposited: false,
+            latestRemarks: '',
+            lastTaskStatus: '',
             lastMessage: messageText || 'New message',
             lastMessageTime: new Date().toISOString(),
+            sessionExpiresAt: null,
             unreadCount: 1,
             isOnline: false,
             avatar: null,
@@ -386,6 +408,12 @@ const InboxPage = () => {
     fetchContacts(currentPage, itemsPerPage);
   }, [currentPage, itemsPerPage, userRole, startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
 
+  const handleMarkUnread = useCallback((contactId) => {
+    setContacts(prev => prev.map(c =>
+      c.id === contactId ? { ...c, unreadCount: Math.max(c.unreadCount || 0, 1) } : c
+    ));
+  }, []);
+
   return (
     <>
       <InboxListing
@@ -408,6 +436,7 @@ const InboxPage = () => {
         agents={agents}
         selectedAgentFilter={selectedAgentFilter}
         setSelectedAgentFilter={setSelectedAgentFilter}
+        onMarkUnread={handleMarkUnread}
       />
 
       <InboxChatDrawer

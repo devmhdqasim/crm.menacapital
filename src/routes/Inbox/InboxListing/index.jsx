@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer, Pin, PinOff, BellOff, Bell, MoreVertical } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer, Pin, PinOff, BellOff, Bell, MoreVertical, LayoutGrid, LayoutList, User, Eye } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import InboxTemplateManager from '../InboxTemplateManager';
 import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
@@ -30,7 +30,7 @@ const useContactSession = (phone) => {
   return isSessionOpen;
 };
 
-const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneDisplay, formatTimeAgo, userRole, isPinned, isMuted, onTogglePin, onToggleMute }) => {
+const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneDisplay, formatTimeAgo, userRole, isPinned, isMuted, onTogglePin, onToggleMute, onMarkUnread }) => {
   const hasActiveSession = useContactSession(contact.phone);
   const [showActions, setShowActions] = useState(false);
   const actionsRef = React.useRef(null);
@@ -78,14 +78,14 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
               />
               <div className="hidden w-full h-full rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
                 <span className="text-2xl font-bold text-white">
-                  {contact.name.charAt(0).toUpperCase()}
+                  {(contact.name || '?').charAt(0).toUpperCase()}
                 </span>
               </div>
             </div>
           ) : (
             <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 ${isMuted ? 'opacity-60' : ''}`}>
               <span className="text-2xl font-bold text-white">
-                {contact.name.charAt(0).toUpperCase()}
+                {(contact.name || '?').charAt(0).toUpperCase()}
               </span>
             </div>
           )}
@@ -162,6 +162,18 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
                         {isMuted ? <Bell className="w-4 h-4 text-[#BBA473]" /> : <BellOff className="w-4 h-4 text-gray-400" />}
                         {isMuted ? 'Unmute' : 'Mute'}
                       </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMarkUnread?.(contact.id);
+                          setShowActions(false);
+                          toast.success('Marked as unread', { duration: 1500 });
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                      >
+                        <Eye className="w-4 h-4 text-[#BBA473]" />
+                        Mark as Unread
+                      </button>
                     </div>
                   </div>
                 )}
@@ -178,33 +190,182 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
               <span className="text-base">📱</span>
               <span className="font-medium">{formatPhoneDisplay(contact.phone)}</span>
             </span>
-            {userRole === 'Sales Manager' && contact.agent !== 'Not Assigned' && (
+            {contact.agent && contact.agent !== 'Not Assigned' && contact.agent !== 'Assigned' && (
               <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
-                <span className="text-base">👤</span>
+                <User className="w-3.5 h-3.5" />
                 <span className="font-medium">{capitalizeWords(contact.agent)}</span>
               </span>
             )}
-            {contact.nationality && (
+            {contact.nationality && contact.nationality !== '-' && (
               <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
                 <span className="text-base">🌍</span>
                 <span className="font-medium">{contact.nationality}</span>
               </span>
             )}
+            {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
+              <span className="text-xs"><span className="text-gray-400">Kiosk: </span><span className="text-white font-medium">{contact.kioskLeadStatus}</span></span>
+            )}
+            {contact.status && contact.status !== '-' && (
+              <span className="text-xs"><span className="text-gray-400">Lead: </span><span className="text-white font-medium">{contact.status}</span></span>
+            )}
+            {contact.lastTaskStatus && contact.lastTaskStatus !== '-' && (
+              <span className="text-xs"><span className="text-gray-400">Task: </span><span className="text-white font-medium">{contact.lastTaskStatus}</span></span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhoneDisplay, formatTimeAgo, userRole, isPinned, isMuted, onTogglePin, onToggleMute, onMarkUnread }) => {
+  const hasActiveSession = useContactSession(contact.phone);
+  const [showActions, setShowActions] = useState(false);
+  const actionsRef = React.useRef(null);
+
+  useEffect(() => {
+    if (!showActions) return;
+    const handleClickOutside = (e) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) {
+        setShowActions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showActions]);
+
+  return (
+    <div
+      onClick={() => handleContactClick(contact)}
+      className={`p-4 rounded-xl transition-all duration-300 cursor-pointer group relative border ${
+        isPinned
+          ? 'bg-[#BBA473]/[0.03] border-[#BBA473]/30 hover:bg-[#BBA473]/[0.08]'
+          : hasActiveSession
+            ? 'bg-[#BBA473]/[0.04] border-[#BBA473]/40 hover:bg-[#BBA473]/[0.09]'
+            : 'bg-[#2A2A2A] border-[#BBA473]/10 hover:border-[#BBA473]/30'
+      }`}
+    >
+      {/* Header: Avatar + Name + Actions */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="relative flex-shrink-0">
+            {contact.avatar ? (
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg p-0.5 ${isMuted ? 'opacity-60' : ''}`}>
+                <img
+                  src={contact.avatar}
+                  alt={contact.name}
+                  className="w-full h-full rounded-xl object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = 'none';
+                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="hidden w-full h-full rounded-xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
+                  <span className="text-lg font-bold text-white">
+                    {(contact.name || '?').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg ${isMuted ? 'opacity-60' : ''}`}>
+                <span className="text-lg font-bold text-white">
+                  {(contact.name || '?').charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+            {contact.unreadCount > 0 && !isMuted && (
+              <div className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 rounded-full flex items-center justify-center px-1 shadow-lg">
+                <span className="text-[10px] font-bold text-white">{contact.unreadCount}</span>
+              </div>
+            )}
+            {contact.unreadCount > 0 && isMuted && (
+              <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-gray-600 rounded-full flex items-center justify-center px-1 shadow-lg">
+                <span className="text-[9px] font-bold text-gray-300">{contact.unreadCount}</span>
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <h3 className={`text-sm font-semibold truncate group-hover:text-[#BBA473] transition-colors ${isMuted ? 'text-gray-400' : 'text-white'}`}>
+                {capitalizeWords(contact.name)}
+              </h3>
+              {isPinned && <Pin className="w-3 h-3 text-[#BBA473]/60 flex-shrink-0 rotate-45" />}
+              {isMuted && <BellOff className="w-3 h-3 text-gray-500 flex-shrink-0" />}
+            </div>
+            <p className="text-xs text-gray-400 truncate">{formatPhoneDisplay(contact.phone)}</p>
           </div>
         </div>
 
-        {/* Status Badge */}
+        {/* Actions */}
+        <div className="relative flex-shrink-0 ml-2" ref={actionsRef}>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
+            className="p-1.5 rounded-lg text-gray-500 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all opacity-0 group-hover:opacity-100"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+          {showActions && (
+            <div className="absolute right-0 top-full mt-1 w-48 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl z-30 overflow-hidden" style={{ animation: 'scaleIn 0.15s ease-out' }}>
+              <div className="p-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onTogglePin(contact.id); setShowActions(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                >
+                  {isPinned ? <PinOff className="w-4 h-4 text-[#BBA473]" /> : <Pin className="w-4 h-4 text-[#BBA473]" />}
+                  {isPinned ? 'Unpin' : 'Pin to Top'}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleMute(contact.id); setShowActions(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                >
+                  {isMuted ? <Bell className="w-4 h-4 text-[#BBA473]" /> : <BellOff className="w-4 h-4 text-gray-400" />}
+                  {isMuted ? 'Unmute' : 'Mute'}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMarkUnread?.(contact.id);
+                    setShowActions(false);
+                    toast.success('Marked as unread', { duration: 1500 });
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                >
+                  <Eye className="w-4 h-4 text-[#BBA473]" />
+                  Mark as Unread
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Last Message */}
+      <p className={`text-xs truncate mb-3 leading-relaxed ${isMuted ? 'text-gray-500' : 'text-gray-300'}`}>
+        {contact.lastMessage || 'No messages yet'}
+      </p>
+
+      {/* Footer: Timer + Time + Agent + Statuses */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <ContactTimer phone={contact.phone} />
+        <div className="flex items-center gap-1 text-[10px] text-gray-400 bg-[#1A1A1A] px-2 py-0.5 rounded">
+          <Clock className="w-3 h-3" />
+          <span>{formatTimeAgo(contact.lastMessageTime)}</span>
+        </div>
+        {contact.agent && contact.agent !== 'Not Assigned' && contact.agent !== 'Assigned' && (
+          <span className="flex items-center gap-1 text-[10px] text-gray-400 bg-[#1A1A1A] px-2 py-0.5 rounded">
+            <User className="w-3 h-3" />
+            <span className="truncate max-w-[80px]">{capitalizeWords(contact.agent)}</span>
+          </span>
+        )}
         {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
-          <div className="flex-shrink-0">
-            <span className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border shadow-sm ${contact.kioskLeadStatus === 'Demo'
-                ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-400 border-yellow-500/30'
-                : contact.kioskLeadStatus === 'Real'
-                  ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-400 border-green-500/30'
-                  : 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border-blue-500/30'
-              }`}>
-              {contact.kioskLeadStatus}
-            </span>
-          </div>
+          <span className="text-[10px]"><span className="text-gray-400">Kiosk: </span><span className="text-white font-medium">{contact.kioskLeadStatus}</span></span>
+        )}
+        {contact.status && contact.status !== '-' && (
+          <span className="text-[10px]"><span className="text-gray-400">Lead: </span><span className="text-white font-medium">{contact.status}</span></span>
+        )}
+        {contact.lastTaskStatus && contact.lastTaskStatus !== '-' && (
+          <span className="text-[10px]"><span className="text-gray-400">Task: </span><span className="text-white font-medium">{contact.lastTaskStatus}</span></span>
         )}
       </div>
     </div>
@@ -231,9 +392,14 @@ const InboxListing = ({
   agents,
   selectedAgentFilter,
   setSelectedAgentFilter,
+  onMarkUnread,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [viewMode, setViewMode] = useState(() => {
+    try { return localStorage.getItem('inbox_view_mode') || 'list'; }
+    catch { return 'list'; }
+  });
 
   // Pin & Mute state (persisted in localStorage)
   const [pinnedIds, setPinnedIds] = useState(() => {
@@ -267,6 +433,11 @@ const InboxListing = ({
       toast.success(prev.includes(contactId) ? 'Unmuted' : 'Muted', { duration: 1500 });
       return next;
     });
+  }, []);
+
+  const handleViewModeChange = useCallback((mode) => {
+    setViewMode(mode);
+    try { localStorage.setItem('inbox_view_mode', mode); } catch {}
   }, []);
 
   // Sort: pinned contacts first, then original order
@@ -355,6 +526,24 @@ const InboxListing = ({
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Layout Toggle */}
+            <div className="flex items-center bg-[#2A2A2A] rounded-lg p-1 border border-[#BBA473]/20">
+              <button
+                onClick={() => handleViewModeChange('list')}
+                className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list' ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-gray-400 hover:text-white'}`}
+                title="List view"
+              >
+                <LayoutList className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => handleViewModeChange('cards')}
+                className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'cards' ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-gray-400 hover:text-white'}`}
+                title="Card view"
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
+            </div>
+
             <button
               onClick={() => setShowTemplateManager(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg font-semibold transition-all duration-300 hover:from-[#d4bc89] hover:to-[#a69363] shadow-lg hover:shadow-xl hover:scale-105"
@@ -429,6 +618,25 @@ const InboxListing = ({
             <p className="text-lg">No contacts found</p>
             <p className="text-sm mt-2">Try adjusting your filters or search query</p>
           </div>
+        ) : viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+            {sortedContacts.map((contact) => (
+              <ContactCard
+                key={contact.id}
+                contact={contact}
+                handleContactClick={handleContactClick}
+                capitalizeWords={capitalizeWords}
+                formatPhoneDisplay={formatPhoneDisplay}
+                formatTimeAgo={formatTimeAgo}
+                userRole={userRole}
+                isPinned={pinnedIds.includes(contact.id)}
+                isMuted={mutedIds.includes(contact.id)}
+                onTogglePin={handleTogglePin}
+                onToggleMute={handleToggleMute}
+                onMarkUnread={onMarkUnread}
+              />
+            ))}
+          </div>
         ) : (
           <div className="divide-y divide-[#BBA473]/10">
             {/* Pinned section divider */}
@@ -451,6 +659,7 @@ const InboxListing = ({
                     isMuted={mutedIds.includes(contact.id)}
                     onTogglePin={handleTogglePin}
                     onToggleMute={handleToggleMute}
+                    onMarkUnread={onMarkUnread}
                   />
                   {/* Visual divider between pinned and unpinned sections */}
                   {isPinned && !nextIsPinned && (
