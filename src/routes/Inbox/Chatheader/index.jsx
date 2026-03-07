@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Search, Bell, Info, Phone, ChevronLeft, Download, Maximize2, Minimize2, MoreVertical, ShieldBan, AlertOctagon, ShieldCheck, ShieldOff } from 'lucide-react';
+import { X, Search, Bell, Info, Phone, ChevronLeft, Download, Maximize2, Minimize2, MoreVertical, ShieldBan, AlertOctagon, ShieldCheck, ShieldOff, Settings } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
 
 const ChatHeader = ({
   contact,
-  isConnected, 
+  isConnected,
   showMessageSearch,
   setShowMessageSearch,
   setShowReminderModal,
@@ -26,6 +26,8 @@ const ChatHeader = ({
   isSpam = false,
   onToggleBlock,
   onToggleSpam,
+  onToggleChatSettings,
+  showChatSettings = false,
 }) => {
   const { isSessionOpen, formattedTimeLeft } = useWhatsAppSession(contact?.phone);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -407,6 +409,19 @@ const ChatHeader = ({
             title="Close"
           >
             <X className="w-4.5 h-4.5" />
+          </button>
+
+          {/* Chat Settings */}
+          <button
+            onClick={() => onToggleChatSettings?.()}
+            className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+              showChatSettings
+                ? 'bg-[#BBA473] text-black'
+                : 'bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473]'
+            }`}
+            title="Chat Settings"
+          >
+            <Settings className="w-4.5 h-4.5" />
           </button>
         </div>
       </div>

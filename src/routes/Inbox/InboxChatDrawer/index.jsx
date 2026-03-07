@@ -62,6 +62,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // Block/Spam State
   const [isBlocked, setIsBlocked] = useState(false);
   const [isSpam, setIsSpam] = useState(false);
+
+  // Chat Background Customization
+  const [showChatSettings, setShowChatSettings] = useState(false);
+  const [chatBg, setChatBg] = useState(() => {
+    try { return localStorage.getItem('chat_bg') || '#1A1A1A'; }
+    catch { return '#1A1A1A'; }
+  });
   
   // Refs
   const messagesEndRef = useRef(null);
@@ -489,6 +496,57 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     localStorage.setItem(`spam_${contact.id}`, String(newVal));
     toast.success(newVal ? 'Marked as spam' : 'Removed from spam');
   }, [isSpam, contact]);
+
+  // Chat background presets
+  const chatBgColors = [
+    { label: 'Default', value: '#1A1A1A' },
+    { label: 'Charcoal', value: '#0D0D0D' },
+    { label: 'Dark Slate', value: '#1E293B' },
+    { label: 'Midnight', value: '#0F172A' },
+    { label: 'Deep Navy', value: '#111827' },
+    { label: 'Dark Olive', value: '#1A1C16' },
+    { label: 'Espresso', value: '#1C1410' },
+    { label: 'Dark Plum', value: '#1A1020' },
+    { label: 'Gold Tint', value: 'linear-gradient(180deg, #1A1A1A 0%, #1F1B14 100%)' },
+    { label: 'Ocean', value: 'linear-gradient(180deg, #0F172A 0%, #1E293B 100%)' },
+    { label: 'Ember', value: 'linear-gradient(180deg, #1A1A1A 0%, #1C1410 100%)' },
+    { label: 'Aurora', value: 'linear-gradient(180deg, #0F172A 0%, #1A1020 100%)' },
+  ];
+
+  const chatBgPatterns = [
+    { label: 'Dots', value: 'pattern:dots', bg: '#1A1A1A', css: 'radial-gradient(circle, #2A2A2A 1px, transparent 1px)', size: '20px 20px' },
+    { label: 'Grid', value: 'pattern:grid', bg: '#1A1A1A', css: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)', size: '24px 24px' },
+    { label: 'Diagonal', value: 'pattern:diagonal', bg: '#1A1A1A', css: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #222 10px, #222 11px)', size: 'auto' },
+    { label: 'Cross', value: 'pattern:cross', bg: '#1A1A1A', css: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)', size: '32px 32px' },
+    { label: 'Gold Dots', value: 'pattern:golddots', bg: '#1A1A1A', css: 'radial-gradient(circle, #BBA47315 1px, transparent 1px)', size: '18px 18px' },
+    { label: 'Gold Grid', value: 'pattern:goldgrid', bg: '#1A1A1A', css: 'linear-gradient(#BBA47310 1px, transparent 1px), linear-gradient(90deg, #BBA47310 1px, transparent 1px)', size: '28px 28px' },
+    { label: 'Checkers', value: 'pattern:checkers', bg: '#1A1A1A', css: 'conic-gradient(#1E1E1E 90deg, #1A1A1A 90deg 180deg, #1E1E1E 180deg 270deg, #1A1A1A 270deg)', size: '40px 40px' },
+    { label: 'Waves', value: 'pattern:waves', bg: '#1A1A1A', css: 'repeating-linear-gradient(135deg, transparent, transparent 6px, #22222280 6px, #22222280 7px, transparent 7px, transparent 13px, #22222240 13px, #22222240 14px)', size: 'auto' },
+    { label: 'Hex', value: 'pattern:hex', bg: '#1A1A1A', css: 'radial-gradient(circle at 0% 50%, #252525 25%, transparent 25%), radial-gradient(circle at 100% 50%, #252525 25%, transparent 25%)', size: '30px 52px' },
+    { label: 'Fine Dots', value: 'pattern:finedots', bg: '#0F172A', css: 'radial-gradient(circle, #1E293B 0.5px, transparent 0.5px)', size: '12px 12px' },
+    { label: 'Plaid', value: 'pattern:plaid', bg: '#1A1A1A', css: 'linear-gradient(#22222280 1px, transparent 1px), linear-gradient(90deg, #22222280 1px, transparent 1px), linear-gradient(#22222240 2px, transparent 2px), linear-gradient(90deg, #22222240 2px, transparent 2px)', size: '20px 20px, 20px 20px, 60px 60px, 60px 60px' },
+    { label: 'Zigzag', value: 'pattern:zigzag', bg: '#1A1A1A', css: 'linear-gradient(135deg, #222 25%, transparent 25%), linear-gradient(225deg, #222 25%, transparent 25%), linear-gradient(315deg, #222 25%, transparent 25%), linear-gradient(45deg, #222 25%, transparent 25%)', size: '20px 20px' },
+  ];
+
+  const chatBgImages = [
+    { label: 'Topography', value: 'image:topography', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cpath d='M306 300c0-28 23-51 51-51s51 23 51 51-23 51-51 51-51-23-51-51zm-102 0c0-28 23-51 51-51s51 23 51 51-23 51-51 51-51-23-51-51zm-102 0c0-28 23-51 51-51s51 23 51 51-23 51-51 51-51-23-51-51z' fill='none' stroke='%23252525' stroke-width='1'/%3E%3C/svg%3E")` },
+    { label: 'Bubbles', value: 'image:bubbles', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ccircle cx='25' cy='25' r='15' fill='none' stroke='%23222' stroke-width='0.5'/%3E%3Ccircle cx='75' cy='75' r='20' fill='none' stroke='%23222' stroke-width='0.5'/%3E%3Ccircle cx='70' cy='20' r='8' fill='none' stroke='%23252525' stroke-width='0.5'/%3E%3Ccircle cx='20' cy='70' r='12' fill='none' stroke='%23252525' stroke-width='0.5'/%3E%3C/svg%3E")` },
+    { label: 'Stars', value: 'image:stars', bg: '#0F172A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Ccircle cx='10' cy='10' r='1' fill='%23334155'/%3E%3Ccircle cx='60' cy='30' r='0.5' fill='%23475569'/%3E%3Ccircle cx='100' cy='15' r='1.2' fill='%23334155'/%3E%3Ccircle cx='30' cy='60' r='0.7' fill='%23475569'/%3E%3Ccircle cx='80' cy='70' r='1' fill='%23334155'/%3E%3Ccircle cx='50' cy='90' r='0.5' fill='%23475569'/%3E%3Ccircle cx='110' cy='100' r='0.8' fill='%23334155'/%3E%3Ccircle cx='15' cy='100' r='1' fill='%23475569'/%3E%3Ccircle cx='90' cy='50' r='0.6' fill='%23334155'/%3E%3C/svg%3E")` },
+    { label: 'Diamonds', value: 'image:diamonds', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M24 4L44 24L24 44L4 24Z' fill='none' stroke='%23222' stroke-width='0.5'/%3E%3C/svg%3E")` },
+    { label: 'Hexagons', value: 'image:hexagons', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50Z' fill='none' stroke='%23222' stroke-width='0.5'/%3E%3Cpath d='M28 100L0 84L0 50L28 34L56 50L56 84Z' fill='none' stroke='%23252525' stroke-width='0.3'/%3E%3C/svg%3E")` },
+    { label: 'Triangles', value: 'image:triangles', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpath d='M30 0L60 52H0Z' fill='none' stroke='%23222' stroke-width='0.5'/%3E%3C/svg%3E")` },
+    { label: 'Gold Hex', value: 'image:goldhex', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50Z' fill='none' stroke='%23BBA473' stroke-width='0.3' opacity='0.12'/%3E%3Cpath d='M28 100L0 84L0 50L28 34L56 50L56 84Z' fill='none' stroke='%23BBA473' stroke-width='0.2' opacity='0.08'/%3E%3C/svg%3E")` },
+    { label: 'Circuits', value: 'image:circuits', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 40h20m0 0v-20m0 0h20m0 0v40m0 0h20m0 0v-20m0 0h20' fill='none' stroke='%23222' stroke-width='0.5'/%3E%3Ccircle cx='20' cy='20' r='2' fill='%23252525'/%3E%3Ccircle cx='40' cy='40' r='2' fill='%23252525'/%3E%3Ccircle cx='60' cy='20' r='2' fill='%23252525'/%3E%3C/svg%3E")` },
+    { label: 'Waves', value: 'image:waves', bg: '#0F172A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='20'%3E%3Cpath d='M0 10c25-10 25 10 50 0s25 10 50 0' fill='none' stroke='%231E293B' stroke-width='1'/%3E%3C/svg%3E")` },
+    { label: 'Leaves', value: 'image:leaves', bg: '#1A1C16', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40 10c15 0 20 15 20 30s-20 30-20 30S20 55 20 40s5-30 20-30z' fill='none' stroke='%23252820' stroke-width='0.5'/%3E%3Cpath d='M40 10v60' fill='none' stroke='%23252820' stroke-width='0.3'/%3E%3C/svg%3E")` },
+    { label: 'Moroccan', value: 'image:moroccan', bg: '#1C1410', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M20 0a20 20 0 010 40 20 20 0 010-40M0 20a20 20 0 0140 0 20 20 0 01-40 0' fill='none' stroke='%23261E16' stroke-width='0.5'/%3E%3C/svg%3E")` },
+    { label: 'Scales', value: 'image:scales', bg: '#1A1A1A', svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20a20 20 0 0140 0' fill='none' stroke='%23252525' stroke-width='0.5'/%3E%3Cpath d='M20 20a20 20 0 0140 0' fill='none' stroke='%23222' stroke-width='0.5' transform='translate(-20,20)'/%3E%3C/svg%3E")` },
+  ];
+
+  const handleChatBgChange = useCallback((bg) => {
+    setChatBg(bg);
+    try { localStorage.setItem('chat_bg', bg); } catch {}
+  }, []);
 
   // Handle retry message
   const handleRetryMessage = async (messageId, messageText) => {
@@ -1007,6 +1065,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 isSpam={isSpam}
                 onToggleBlock={handleToggleBlock}
                 onToggleSpam={handleToggleSpam}
+                onToggleChatSettings={() => setShowChatSettings(prev => !prev)}
+                showChatSettings={showChatSettings}
               />
 
               {/* 24-Hour Window Warning */}
@@ -1075,8 +1135,137 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 contactPhone={contact.phone}  // ✅ Add this
               />
 
+              {/* Chat Settings Panel */}
+              {showChatSettings && (
+                <div className="border-b border-[#BBA473]/20 bg-[#222222] animate-slideDown flex-shrink-0">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-white">Chat Background</h4>
+                      <button
+                        onClick={() => setShowChatSettings(false)}
+                        className="text-gray-400 hover:text-white text-xs transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    {/* Colors & Gradients */}
+                    <p className="text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider">Colors</p>
+                    <div className="grid grid-cols-6 gap-2 mb-4">
+                      {chatBgColors.map((preset) => {
+                        const isActive = chatBg === preset.value;
+                        return (
+                          <button
+                            key={preset.label}
+                            onClick={() => handleChatBgChange(preset.value)}
+                            className={`group relative rounded-lg h-10 border-2 transition-all duration-200 hover:scale-105 ${
+                              isActive
+                                ? 'border-[#BBA473] ring-1 ring-[#BBA473]/50'
+                                : 'border-[#333] hover:border-[#555]'
+                            }`}
+                            style={{ background: preset.value }}
+                            title={preset.label}
+                          >
+                            {isActive && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-[#BBA473]" />
+                              </div>
+                            )}
+                            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              {preset.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Patterns */}
+                    <p className="text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider">Patterns</p>
+                    <div className="grid grid-cols-6 gap-2 mb-4">
+                      {chatBgPatterns.map((preset) => {
+                        const isActive = chatBg === preset.value;
+                        return (
+                          <button
+                            key={preset.label}
+                            onClick={() => handleChatBgChange(preset.value)}
+                            className={`group relative rounded-lg h-10 border-2 transition-all duration-200 hover:scale-105 overflow-hidden ${
+                              isActive
+                                ? 'border-[#BBA473] ring-1 ring-[#BBA473]/50'
+                                : 'border-[#333] hover:border-[#555]'
+                            }`}
+                            style={{
+                              backgroundColor: preset.bg,
+                              backgroundImage: preset.css,
+                              backgroundSize: preset.size,
+                            }}
+                            title={preset.label}
+                          >
+                            {isActive && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-[#BBA473] shadow-[0_0_4px_#BBA473]" />
+                              </div>
+                            )}
+                            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              {preset.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Images */}
+                    <p className="text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider">Images</p>
+                    <div className="grid grid-cols-6 gap-2">
+                      {chatBgImages.map((preset) => {
+                        const isActive = chatBg === preset.value;
+                        return (
+                          <button
+                            key={preset.label}
+                            onClick={() => handleChatBgChange(preset.value)}
+                            className={`group relative rounded-lg h-10 border-2 transition-all duration-200 hover:scale-105 overflow-hidden ${
+                              isActive
+                                ? 'border-[#BBA473] ring-1 ring-[#BBA473]/50'
+                                : 'border-[#333] hover:border-[#555]'
+                            }`}
+                            style={{
+                              backgroundColor: preset.bg,
+                              backgroundImage: preset.svg,
+                            }}
+                            title={preset.label}
+                          >
+                            {isActive && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-[#BBA473] shadow-[0_0_4px_#BBA473]" />
+                              </div>
+                            )}
+                            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              {preset.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Content Area */}
-              <div className="flex-1 overflow-y-auto bg-[#1A1A1A] custom-scrollbar">
+              <div
+                className={`flex-1 overflow-y-auto custom-scrollbar${chatBg.startsWith('image:') ? ' animated-bg' : ''}`}
+                style={(() => {
+                  if (chatBg.startsWith('pattern:')) {
+                    const p = chatBgPatterns.find(pt => pt.value === chatBg);
+                    if (p) return { backgroundColor: p.bg, backgroundImage: p.css, backgroundSize: p.size };
+                    return { backgroundColor: '#1A1A1A' };
+                  }
+                  if (chatBg.startsWith('image:')) {
+                    const img = chatBgImages.find(i => i.value === chatBg);
+                    if (img) return { backgroundColor: img.bg, backgroundImage: img.svg };
+                    return { backgroundColor: '#1A1A1A' };
+                  }
+                  return { background: chatBg };
+                })()}
+              >
                 {activeTab === 'chat' ? (
                   <MessagesArea
                     messages={messages}
@@ -1260,6 +1449,18 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           0% { background-color: rgba(187, 164, 115, 0.2); }
           50% { background-color: rgba(187, 164, 115, 0.4); }
           100% { background-color: transparent; }
+        }
+
+        @keyframes driftBg {
+          0% { background-position: 0% 0%; }
+          25% { background-position: 50% 25%; }
+          50% { background-position: 100% 50%; }
+          75% { background-position: 50% 75%; }
+          100% { background-position: 0% 0%; }
+        }
+
+        .animated-bg {
+          animation: driftBg 60s ease-in-out infinite;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
