@@ -352,7 +352,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         console.log('Messages found:', rawMessages.length, 'from response:', responseData);
 
         // Filter out status events (not actual messages)
-        rawMessages = rawMessages.filter(msg => msg.eventType !== 'sentMessageDELIVERED_v2');
+        rawMessages = rawMessages.filter(msg => msg.eventType !== 'sentMessageDELIVERED_v2' && msg.eventType !== 'ticket');
 
         if (rawMessages.length > 0) {
           const transformedMessages = rawMessages.map((msg) => {
