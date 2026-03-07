@@ -301,8 +301,13 @@ const InboxPage = () => {
             latestRemarks: lead.latestRemarks || '',
             lastTaskStatus: lead.lastTaskStatus || '',
             // Messaging-specific fields from userData
-            lastMessage: lead.latestRemarks || 'No messages yet',
-            lastMessageTime: userData.lastMessageAt || lead.updatedAt || lead.createdAt,
+            lastMessage: (Array.isArray(lead.lastMessage) && lead.lastMessage.length > 0 && lead.lastMessage[0].text)
+              ? lead.lastMessage[0].text
+              : (lead.latestRemarks || 'No messages yet'),
+            lastMessageTime: (Array.isArray(lead.lastMessage) && lead.lastMessage.length > 0 && lead.lastMessage[0].createdAt)
+              ? lead.lastMessage[0].createdAt
+              : (userData.lastMessageAt || lead.updatedAt || lead.createdAt),
+            leadAgentName: (lead.leadAgentName && lead.leadAgentName.trim()) ? lead.leadAgentName.trim() : '',
             sessionExpiresAt: userData.sessionExpiresAt || null,
             unreadCount: 0,
             isOnline: false,

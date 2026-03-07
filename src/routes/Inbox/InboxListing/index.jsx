@@ -190,12 +190,10 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
               <span className="text-base">📱</span>
               <span className="font-medium">{formatPhoneDisplay(contact.phone)}</span>
             </span>
-            {contact.agent && contact.agent !== 'Not Assigned' && contact.agent !== 'Assigned' && (
-              <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
-                <User className="w-3.5 h-3.5" />
-                <span className="font-medium">{capitalizeWords(contact.agent)}</span>
-              </span>
-            )}
+            <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
+              <User className="w-3.5 h-3.5" />
+              <span className="font-medium">{contact.leadAgentName ? capitalizeWords(contact.leadAgentName) : 'Lead Not Assigned'}</span>
+            </span>
             {contact.nationality && contact.nationality !== '-' && (
               <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
                 <span className="text-base">🌍</span>
@@ -352,12 +350,10 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
           <Clock className="w-3 h-3" />
           <span>{formatTimeAgo(contact.lastMessageTime)}</span>
         </div>
-        {contact.agent && contact.agent !== 'Not Assigned' && contact.agent !== 'Assigned' && (
-          <span className="flex items-center gap-1 text-[10px] text-gray-400 bg-[#1A1A1A] px-2 py-0.5 rounded">
-            <User className="w-3 h-3" />
-            <span className="truncate max-w-[80px]">{capitalizeWords(contact.agent)}</span>
-          </span>
-        )}
+        <span className="flex items-center gap-1 text-[10px] text-gray-400 bg-[#1A1A1A] px-2 py-0.5 rounded">
+          <User className="w-3 h-3" />
+          <span className="truncate max-w-[100px]">{contact.leadAgentName ? capitalizeWords(contact.leadAgentName) : 'Lead Not Assigned'}</span>
+        </span>
         {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
           <span className="text-[10px]"><span className="text-gray-400">Kiosk: </span><span className="text-white font-medium">{contact.kioskLeadStatus}</span></span>
         )}
