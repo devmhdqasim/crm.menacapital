@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, Download, Play, Pause, Video, Image as ImageIcon } from 'lucide-react';
+import { Clock, AlertTriangle, RefreshCw, FileText, Mic, Loader2, Download, Play, Pause, Video, Image as ImageIcon, MoreVertical, Copy, CornerUpLeft, Share2, Star, Trash2, Pin, Gauge } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { fetchWatiImage } from '../../../services/inboxService';
 
 // Custom audio player matching the gold/dark theme
@@ -9,7 +10,11 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [loadError, setLoadError] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [audioMenuUp, setAudioMenuUp] = useState(true);
   const progressRef = useRef(null);
+  const audioMenuRef = useRef(null);
 
   const formatTime = (secs) => {
     if (!secs || !isFinite(secs)) return '0:00';
@@ -28,6 +33,14 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
     }
   }, [isPlaying]);
 
+  const changeSpeed = useCallback((rate) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.playbackRate = rate;
+    setPlaybackRate(rate);
+    setShowAudioMenu(false);
+  }, []);
+
   const handleSeek = useCallback((e) => {
     const audio = audioRef.current;
     const bar = progressRef.current;
@@ -36,6 +49,18 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     audio.currentTime = ratio * duration;
   }, [duration]);
+
+  // Close audio menu on click outside
+  useEffect(() => {
+    if (!showAudioMenu) return;
+    const handleClick = (e) => {
+      if (audioMenuRef.current && !audioMenuRef.current.contains(e.target)) {
+        setShowAudioMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showAudioMenu]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -73,6 +98,8 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
 
   // Waveform bars (static visual)
   const bars = [3, 5, 8, 12, 7, 14, 10, 6, 11, 8, 13, 5, 9, 7, 12, 6, 10, 14, 8, 5];
+
+  const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   return (
     <div className="flex items-center gap-2.5 min-w-[220px]">
@@ -117,13 +144,73 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
           })}
         </div>
 
-        {/* Time */}
+        {/* Time + speed */}
         <div className={`flex justify-between text-[10px] leading-none font-medium ${
           isUserMessage ? 'text-black/50' : 'text-gray-500'
         }`}>
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
+      </div>
+
+      {/* Speed / More button */}
+      <div className="relative flex-shrink-0" ref={audioMenuRef}>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!showAudioMenu) {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setAudioMenuUp(rect.bottom > window.innerHeight * 0.5);
+            }
+            setShowAudioMenu(!showAudioMenu);
+          }}
+          className={`min-w-[32px] h-7 rounded-lg flex items-center justify-center text-[10px] font-bold transition-all ${
+            isUserMessage
+              ? 'bg-black/15 hover:bg-black/25 text-black/70'
+              : 'bg-[#BBA473]/15 hover:bg-[#BBA473]/25 text-[#BBA473]'
+          }`}
+          title="Playback speed"
+        >
+          {playbackRate !== 1 ? `${playbackRate}x` : <Gauge className="w-3.5 h-3.5" />}
+        </button>
+        {showAudioMenu && (
+          <div className={`absolute right-0 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl py-1.5 min-w-[130px] z-40 animate-scaleIn ${
+            audioMenuUp ? 'bottom-full mb-1' : 'top-full mt-1'
+          }`}>
+            <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Speed</p>
+            {speeds.map(s => (
+              <button
+                key={s}
+                onClick={(e) => { e.stopPropagation(); changeSpeed(s); }}
+                className={`w-full flex items-center justify-between px-3 py-1.5 text-sm transition-colors ${
+                  playbackRate === s
+                    ? 'text-[#BBA473] bg-[#BBA473]/10'
+                    : 'text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473]'
+                }`}
+              >
+                <span>{s}x</span>
+                {playbackRate === s && <span className="text-[#BBA473] text-xs">&#10003;</span>}
+              </button>
+            ))}
+            <div className="my-1 border-t border-[#BBA473]/10" />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (src) {
+                  const a = document.createElement('a');
+                  a.href = src;
+                  a.download = `audio-${Date.now()}.mp3`;
+                  a.click();
+                }
+                setShowAudioMenu(false);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              Download
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -140,12 +227,34 @@ const MessagesArea = ({
   downloadedImages,
   setDownloadedImages,
   setMessages,
+  onReply,
+  starredMessages,
+  pinnedMessages,
+  onToggleStar,
+  onTogglePin,
 }) => {
 
   // Track failed images and loading states
   const [failedImages, setFailedImages] = useState(new Set());
   const [loadingMedia, setLoadingMedia] = useState(new Set());
   const [previewImage, setPreviewImage] = useState(null);
+
+  // Message action menu state
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [menuOpenUp, setMenuOpenUp] = useState(true);
+  const menuRef = useRef(null);
+
+  // Close message menu on click outside
+  useEffect(() => {
+    if (!activeMenuId) return;
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeMenuId]);
 
   // Track which messages are currently being processed (ref to avoid re-renders)
   const processingRef = useRef(new Set());
@@ -589,6 +698,34 @@ const MessagesArea = ({
         </div>
       )}
 
+      {/* Pinned messages banner */}
+      {pinnedMessages?.length > 0 && (
+        <div className="sticky top-0 z-20 mb-2 space-y-1.5">
+          {pinnedMessages.map(pin => (
+            <div
+              key={pin.id}
+              className="bg-[#2A2A2A]/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-[#BBA473]/30 shadow-xl cursor-pointer hover:bg-[#333]/95 transition-colors"
+              onClick={() => {
+                const el = document.getElementById(`message-${pin.id}`);
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  el.classList.add('highlight-message');
+                  setTimeout(() => el.classList.remove('highlight-message'), 2000);
+                }
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <Pin className="w-3.5 h-3.5 text-[#BBA473] flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-[#BBA473]">Pinned</p>
+                  <p className="text-xs text-gray-300 truncate">{pin.text || 'Media'}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {Object.keys(messageGroups).map((dateKey) => (
         <div key={dateKey} className="space-y-3">
           {/* Sticky Date Separator */}
@@ -623,32 +760,133 @@ const MessagesArea = ({
                     <span>Template</span>
                   </div>
                 )}
-                <div
-                  className={`rounded-2xl px-4 py-3 shadow-md ${message.sender === 'user'
-                    ? message.failed
-                      ? 'bg-red-500/20 text-white border border-red-500/30'
-                      : message.isTemplate
-                        ? 'bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30'
-                        : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
-                    : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
-                    } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
-                >
-                  {renderMessageContent(message)}
-                  <div className="flex items-center justify-end gap-1.5 mt-2">
-                    <span className={`text-xs font-medium ${message.sender === 'user'
+                <div className="flex items-start gap-1">
+                  <div
+                    className={`rounded-2xl px-4 py-3 shadow-md ${message.sender === 'user'
                       ? message.failed
-                        ? 'text-red-300'
+                        ? 'bg-red-500/20 text-white border border-red-500/30'
                         : message.isTemplate
-                          ? 'text-white/70'
-                          : 'text-black/70'
-                      : 'text-gray-400'
-                      }`}>
-                      {message.timestamp}
-                    </span>
-                    {message.sender === 'user' && (
-                      <span className="ml-0.5 inline-flex items-center">{getMessageStatusIcon(message.status, message.failed)}</span>
+                          ? 'bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30'
+                          : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
+                      : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
+                      } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
+                  >
+                    {/* Reply quote */}
+                    {message.replyTo && (
+                      <div
+                        className={`mb-2 rounded-lg px-3 py-1.5 cursor-pointer border-l-[3px] ${
+                          message.sender === 'user'
+                            ? 'bg-black/10 border-white/40'
+                            : 'bg-white/5 border-[#BBA473]'
+                        }`}
+                        onClick={() => {
+                          const el = document.getElementById(`message-${message.replyTo.id}`);
+                          if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            el.classList.add('highlight-message');
+                            setTimeout(() => el.classList.remove('highlight-message'), 2000);
+                          }
+                        }}
+                      >
+                        <p className={`text-[11px] font-semibold ${
+                          message.sender === 'user' ? 'text-black/60' : 'text-[#BBA473]'
+                        }`}>
+                          {message.replyTo.sender === 'user' ? 'You' : contact?.name?.split(' ')[0] || 'Contact'}
+                        </p>
+                        <p className={`text-xs truncate max-w-[250px] ${
+                          message.sender === 'user' ? 'text-black/50' : 'text-gray-400'
+                        }`}>
+                          {message.replyTo.text || 'Media'}
+                        </p>
+                      </div>
                     )}
+                    {renderMessageContent(message)}
+                    <div className="flex items-center justify-end gap-1.5 mt-2">
+                      {starredMessages?.has(message.id) && (
+                        <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      )}
+                      <span className={`text-xs font-medium ${message.sender === 'user'
+                        ? message.failed
+                          ? 'text-red-300'
+                          : message.isTemplate
+                            ? 'text-white/70'
+                            : 'text-black/70'
+                        : 'text-gray-400'
+                        }`}>
+                        {message.timestamp}
+                      </span>
+                      {message.sender === 'user' && (
+                        <span className="ml-0.5 inline-flex items-center">{getMessageStatusIcon(message.status, message.failed)}</span>
+                      )}
+                    </div>
                   </div>
+                  {/* 3-dot action menu for contact messages */}
+                  {message.sender !== 'user' && (
+                    <div className="relative flex-shrink-0" ref={activeMenuId === message.id ? menuRef : undefined}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (activeMenuId !== message.id) {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMenuOpenUp(rect.bottom > window.innerHeight * 0.5);
+                          }
+                          setActiveMenuId(activeMenuId === message.id ? null : message.id);
+                        }}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100 mt-1"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {activeMenuId === message.id && (
+                        <div className={`absolute left-0 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl py-1.5 min-w-[160px] z-30 animate-scaleIn ${
+                          menuOpenUp ? 'bottom-full mb-1' : 'top-full mt-1'
+                        }`}>
+                          <button
+                            onClick={() => { onReply?.(message); setActiveMenuId(null); }}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                          >
+                            <CornerUpLeft className="w-3.5 h-3.5" />
+                            Reply
+                          </button>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(message.text || ''); toast.success('Copied to clipboard'); setActiveMenuId(null); }}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copy
+                          </button>
+                          <button
+                            onClick={() => { toast('Forward coming soon', { icon: '🔜' }); setActiveMenuId(null); }}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                            Forward
+                          </button>
+                          <button
+                            onClick={() => { onToggleStar?.(message.id); setActiveMenuId(null); }}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                          >
+                            <Star className={`w-3.5 h-3.5 ${starredMessages?.has(message.id) ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                            {starredMessages?.has(message.id) ? 'Unstar' : 'Star'}
+                          </button>
+                          <button
+                            onClick={() => { onTogglePin?.(message); setActiveMenuId(null); }}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                          >
+                            <Pin className={`w-3.5 h-3.5 ${pinnedMessages?.some(p => p.id === message.id) ? 'text-[#BBA473]' : ''}`} />
+                            {pinnedMessages?.some(p => p.id === message.id) ? 'Unpin' : 'Pin'}
+                          </button>
+                          <div className="my-1 border-t border-[#BBA473]/10" />
+                          <button
+                            onClick={() => { toast('Delete coming soon', { icon: '🗑️' }); setActiveMenuId(null); }}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {message.failed && message.sender === 'user' && handleRetryMessage && message.type === 'text' && (

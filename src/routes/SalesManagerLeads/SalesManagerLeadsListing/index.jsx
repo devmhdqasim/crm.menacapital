@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, AlertTriangle, X, MessageSquare } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, AlertTriangle, X, MessageSquare, Check, Users, RefreshCw, StickyNote } from 'lucide-react';
 import InboxChatDrawer from '../../Inbox/InboxChatDrawer';
 import DateRangePicker from '../../../components/DateRangePicker';
 import { deleteLead } from '../../../services/leadService';
@@ -60,6 +60,11 @@ const SalesManagerLeadsListing = ({
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [chatContact, setChatContact] = useState(null);
 
+  // Bulk selection states
+  const [selectedLeads, setSelectedLeads] = useState([]);
+  const [showBulkStatusDropdown, setShowBulkStatusDropdown] = useState(false);
+  const [showBulkAssignDropdown, setShowBulkAssignDropdown] = useState(false);
+
   // Static tabs — Event Leads onwards will be appended dynamically
   const staticTabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
   const perPageOptions = [10, 20, 30, 50, 100];
@@ -102,6 +107,25 @@ const SalesManagerLeadsListing = ({
 
   // Special tabs that have their own fetch logic inside this component
   const selfFetchingTabs = ['Event Leads', ...dynamicSourceTabs.map(t => t.name)];
+
+  // Clear selection when tab, page, or filters change
+  useEffect(() => {
+    setSelectedLeads([]);
+    setShowBulkStatusDropdown(false);
+    setShowBulkAssignDropdown(false);
+  }, [activeTab, activeSubTab, currentPage, itemsPerPage, debouncedSearchQuery]);
+
+  // Close bulk dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.bulk-dropdown-container')) {
+        setShowBulkStatusDropdown(false);
+        setShowBulkAssignDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ─── Critical tabs that get a red badge (high priority) ───────────────────
   const criticalTabs = ['Not Assigned'];
@@ -325,6 +349,37 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
 
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
   const currentLeads = filteredLeads;
+
+  // Bulk selection computed values
+  const isAllSelected = currentLeads.length > 0 && selectedLeads.length === currentLeads.length;
+  const isSomeSelected = selectedLeads.length > 0 && selectedLeads.length < currentLeads.length;
+
+  const handleSelectLead = (leadId) => {
+    setSelectedLeads(prev =>
+      prev.includes(leadId)
+        ? prev.filter(id => id !== leadId)
+        : [...prev, leadId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(currentLeads.map(l => l.id));
+    }
+  };
+
+  const bulkStatusOptions = [
+    { value: 'Not Answered', label: 'Not Answered', dot: 'bg-gray-400' },
+    { value: 'Not Interested', label: 'Not Interested', dot: 'bg-gray-400' },
+    { value: 'Warm', label: 'Warm Lead', dot: 'bg-orange-400' },
+    { value: 'Hot', label: 'Hot Lead', dot: 'bg-red-400' },
+    { value: 'Demo', label: 'Demo', dot: 'bg-yellow-400' },
+    { value: 'Deposit', label: 'Deposit', dot: 'bg-purple-400' },
+    { value: 'Not Deposit', label: 'Not Deposit', dot: 'bg-red-400' },
+  ];
+
   const showingFrom = totalLeads > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const showingTo = Math.min((currentPage - 1) * itemsPerPage + leads.length, totalLeads);
 
@@ -565,6 +620,131 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
           </div>
         </div>
 
+        {/* ── Bulk Actions Bar ──────────────────────────────────────────── */}
+        {selectedLeads.length > 0 && (
+          <div className="mb-4 animate-fadeIn">
+            <div className="bg-[#262626] border border-[#BBA473]/30 rounded-xl px-5 py-3 flex flex-wrap items-center gap-3 shadow-lg shadow-[#BBA473]/5">
+              {/* Selected count */}
+              <div className="flex items-center gap-2 pr-4 border-r border-[#BBA473]/20">
+                <div className="w-7 h-7 rounded-lg bg-[#BBA473]/20 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5 text-[#BBA473]" />
+                </div>
+                <span className="text-white font-medium text-sm">
+                  {selectedLeads.length} lead{selectedLeads.length !== 1 ? 's' : ''} selected
+                </span>
+              </div>
+
+              {/* Bulk Status Update */}
+              <div className="relative bulk-dropdown-container">
+                {showBulkStatusDropdown && (
+                  <div className="absolute top-full left-0 mt-2 bg-[#1f1f1f] border border-[#BBA473]/30 rounded-xl shadow-2xl z-20 min-w-[200px] py-1 animate-fadeIn">
+                    {bulkStatusOptions.map((status) => (
+                      <button
+                        key={status.value}
+                        onClick={() => {
+                          setShowBulkStatusDropdown(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left hover:bg-white/[0.06] transition-colors text-sm flex items-center gap-3"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${status.dot}`}></span>
+                        <span className="text-white">{status.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Assign Lead */}
+              <div className="relative bulk-dropdown-container">
+                <button
+                  onClick={() => {
+                    setShowBulkAssignDropdown(!showBulkAssignDropdown);
+                    setShowBulkStatusDropdown(false);
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 border ${
+                    showBulkAssignDropdown
+                      ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                      : 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border-cyan-500/20 hover:border-cyan-500/40'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="text-sm font-medium">Assign Lead</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showBulkAssignDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {showBulkAssignDropdown && (
+                  <div className="absolute top-full left-0 mt-2 bg-[#1f1f1f] border border-[#BBA473]/30 rounded-xl shadow-2xl z-20 min-w-[260px] py-1 animate-fadeIn max-h-[300px] overflow-y-auto bulk-actions-scrollbar">
+                    {/* Assign to Myself */}
+                    <button
+                      onClick={() => {
+                        setShowBulkAssignDropdown(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left hover:bg-white/[0.06] transition-colors text-sm flex items-center gap-3 border-b border-white/[0.06]"
+                    >
+                      <UserPlus className="w-4 h-4 text-[#BBA473]" />
+                      <span className="text-[#BBA473] font-medium">Assign to Myself</span>
+                    </button>
+                    {/* Agents list */}
+                    <div className="py-1">
+                      <p className="px-4 py-1.5 text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Sales Agents & Managers</p>
+                      {agents.map((agent) => (
+                        <button
+                          key={agent.id}
+                          onClick={() => {
+                            setShowBulkAssignDropdown(false);
+                          }}
+                          className="w-full px-4 py-2.5 text-left hover:bg-white/[0.06] transition-colors text-sm flex items-center gap-3"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-[#BBA473]/20 flex items-center justify-center text-[#BBA473] text-xs font-semibold flex-shrink-0">
+                            {agent.firstName?.[0]}{agent.lastName?.[0]}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-white">{agent.fullName}</span>
+                            <span className="text-gray-500 text-xs ml-2">{agent.role}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+
+              {/* Bulk Note */}
+              <button
+                onClick={() => {}}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all duration-300 border border-green-500/20 hover:border-green-500/40"
+                disabled
+              >
+                <StickyNote className="w-4 h-4" />
+                <span className="text-sm text-green-400 font-medium">Write Note</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-green-500/20 text-green-400 border border-green-500/30">Coming Soon</span>
+              </button>
+
+              {/* Bulk Delete */}
+              <button
+                onClick={() => {}}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all duration-300 border border-red-500/20 hover:border-red-500/40"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Delete</span>
+              </button>
+
+              {/* Deselect All */}
+              <button
+                onClick={() => {
+                  setSelectedLeads([]);
+                  setShowBulkStatusDropdown(false);
+                  setShowBulkAssignDropdown(false);
+                }}
+                className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-all duration-300"
+              >
+                <X className="w-4 h-4" />
+                <span className="text-sm">Deselect</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── Main Tabs (Level 1) ─────────────────────────────────────────── */}
         <div className="mb-4 animate-fadeIn">
           <div className="overflow-x-auto tabs-scroll-container">
@@ -757,21 +937,30 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
             <table className="w-full">
               <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
                 <tr>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Name</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Nationality</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Agent</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
+                  <th className="text-center px-4 py-4 w-12">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      ref={el => { if (el) el.indeterminate = isSomeSelected; }}
+                      onChange={handleSelectAll}
+                      className="dark-checkbox"
+                    />
+                  </th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Lead ID</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Name</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Phone</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Nationality</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Agent</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Source</th>
                   <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Kiosk - Lead - Task</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Created At</th>
+                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#BBA473]/10">
                 {loading ? (
                   <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan="10" className="px-6 py-12 text-center text-gray-400">
                       <div className="flex flex-col items-center gap-3">
                         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#BBA473]"></div>
                         <span>Loading leads...</span>
@@ -780,7 +969,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                   </tr>
                 ) : currentLeads.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan="10" className="px-6 py-12 text-center text-gray-400">
                       No leads found
                     </td>
                   </tr>
@@ -789,8 +978,18 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                     <tr
                       key={lead.id}
                       onClick={(e) => handleRowClick(lead, e)}
-                      className="hover:bg-[#3A3A3A] transition-all duration-300 group cursor-pointer"
+                      className={`hover:bg-[#3A3A3A] transition-all duration-300 group cursor-pointer ${
+                        selectedLeads.includes(lead.id) ? 'bg-[#BBA473]/[0.06]' : ''
+                      }`}
                     >
+                      <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.includes(lead.id)}
+                          onChange={() => handleSelectLead(lead.id)}
+                          className="dark-checkbox"
+                        />
+                      </td>
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{lead.leadId || lead.id.slice(-6)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -977,6 +1176,72 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
           .tabs-scroll-container::-webkit-scrollbar-thumb {
             background-color: #BBA473;
             border-radius: 2px;
+          }
+          /* Bulk actions dropdown scrollbar */
+          /* Dark checkbox styling */
+          .dark-checkbox {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(187, 164, 115, 0.35);
+            border-radius: 4px;
+            background-color: #1A1A1A;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+          }
+          .dark-checkbox:hover {
+            border-color: rgba(187, 164, 115, 0.6);
+            background-color: #222;
+          }
+          .dark-checkbox:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(187, 164, 115, 0.25);
+          }
+          .dark-checkbox:checked {
+            background-color: #BBA473;
+            border-color: #BBA473;
+          }
+          .dark-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 1px;
+            width: 5px;
+            height: 9px;
+            border: solid #000;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+          }
+          .dark-checkbox:indeterminate {
+            background-color: #BBA473;
+            border-color: #BBA473;
+          }
+          .dark-checkbox:indeterminate::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 5px;
+            width: 8px;
+            height: 2px;
+            background: #000;
+            border-radius: 1px;
+          }
+          .bulk-actions-scrollbar::-webkit-scrollbar {
+            width: 5px;
+          }
+          .bulk-actions-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .bulk-actions-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(187, 164, 115, 0.15);
+            border-radius: 10px;
+          }
+          .bulk-actions-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(187, 164, 115, 0.3);
           }
         `}</style>
       </div>

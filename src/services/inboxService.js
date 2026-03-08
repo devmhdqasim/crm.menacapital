@@ -692,7 +692,7 @@ export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) =
     const response = await axios.get(`${API_BASE_URL}/wati/getMessage/en`, {
       params: {
         waId: cleanWaId,
-        pageSize,
+        pageSize: 15,
         pageNumber,
       },
       headers: {

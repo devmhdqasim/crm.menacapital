@@ -5,6 +5,11 @@ import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession'; // adjus
 const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, contactId, contactPhone }) => {
   const { isSessionOpen, formattedTimeLeft, colors } = useWhatsAppSession(contactPhone);
 
+  // Hide Status tab for Sales Agents — only Sales Managers can update status
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const userRole = userInfo.roleName || userInfo.role || '';
+  const isSalesAgent = userRole === 'Agent';
+
   return (
     <div className="bg-[#1A1A1A] border-b border-[#BBA473]/20 px-5 flex-shrink-0">
       <div className="flex items-center gap-1">
@@ -35,21 +40,23 @@ const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, conta
             </span>
           )}
         </button>
-        <button
-          onClick={() => !isLeadUnassigned && setActiveTab('status')}
-          disabled={isLeadUnassigned}
-          title={isLeadUnassigned ? 'Lead must be assigned to an agent before updating status' : ''}
-          className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
-            isLeadUnassigned
-              ? 'text-gray-600 border-transparent cursor-not-allowed opacity-50'
-              : activeTab === 'status'
-                ? 'text-[#BBA473] border-[#BBA473]'
-                : 'text-gray-400 border-transparent hover:text-gray-300'
-          }`}
-        >
-          <Info className="w-4 h-4 inline-block mr-2" />
-          Status
-        </button>
+        {!isSalesAgent && (
+          <button
+            onClick={() => !isLeadUnassigned && setActiveTab('status')}
+            disabled={isLeadUnassigned}
+            title={isLeadUnassigned ? 'Lead must be assigned to an agent before updating status' : ''}
+            className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
+              isLeadUnassigned
+                ? 'text-gray-600 border-transparent cursor-not-allowed opacity-50'
+                : activeTab === 'status'
+                  ? 'text-[#BBA473] border-[#BBA473]'
+                  : 'text-gray-400 border-transparent hover:text-gray-300'
+            }`}
+          >
+            <Info className="w-4 h-4 inline-block mr-2" />
+            Status
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('assign')}
           className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${

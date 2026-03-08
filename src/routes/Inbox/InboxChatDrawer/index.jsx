@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle, Phone } from 'lucide-react';
+import { AlertCircle, Phone, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPreviousMessages, sendWatiMessage, sendSessionFile } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
@@ -59,6 +59,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // Maximize State
   const [isMaximized, setIsMaximized] = useState(false);
 
+  // Reply State
+  const [replyToMessage, setReplyToMessage] = useState(null);
+
+  // Star & Pin State
+  const [starredMessages, setStarredMessages] = useState(new Set());
+  const [pinnedMessages, setPinnedMessages] = useState([]);
+
   // Block/Spam State
   const [isBlocked, setIsBlocked] = useState(false);
   const [isSpam, setIsSpam] = useState(false);
@@ -66,9 +73,13 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   // Chat Background Customization
   const [showChatSettings, setShowChatSettings] = useState(false);
   const [chatBg, setChatBg] = useState(() => {
-    try { return localStorage.getItem('chat_bg') || '#1A1A1A'; }
-    catch { return '#1A1A1A'; }
+    try { return localStorage.getItem('chat_bg') || 'image:stars'; }
+    catch { return 'image:stars'; }
   });
+
+  // Mouse position for parallax on stars bg
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const contentAreaRef = useRef(null);
   
   // Refs
   const messagesEndRef = useRef(null);
@@ -83,6 +94,17 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   
   // Notification sound
   const notificationSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+  // Mouse move handler for stars parallax (viewport-relative, ignores scroll)
+  const handleContentMouseMove = useCallback((e) => {
+    const el = contentAreaRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setMousePos({
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    });
+  }, []);
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -126,11 +148,14 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       setActiveTab('chat');
       setShowMessageSearch(false);
       setDownloadedImages(new Set()); // ✅ Reset on contact change
-      
+      setReplyToMessage(null);
+
       fetchPreviousMessages();
       loadContactNotes();
       loadContactTags();
       loadBlockSpamStatus();
+      loadStarredMessages();
+      loadPinnedMessage();
 
       setTimeout(() => {
         inputRef.current?.focus();
@@ -547,6 +572,70 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     setChatBg(bg);
     try { localStorage.setItem('chat_bg', bg); } catch {}
   }, []);
+
+  // Handle reply to a message - show reply bar above input
+  const handleReplyToMessage = useCallback((message) => {
+    setReplyToMessage(message);
+    setActiveTab('chat');
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
+
+  // Load starred messages from localStorage
+  const loadStarredMessages = () => {
+    try {
+      const stored = localStorage.getItem(`starred_${contact.id}`);
+      setStarredMessages(stored ? new Set(JSON.parse(stored)) : new Set());
+    } catch { setStarredMessages(new Set()); }
+  };
+
+  // Load pinned messages from localStorage
+  const loadPinnedMessage = () => {
+    try {
+      const stored = localStorage.getItem(`pinned_${contact.id}`);
+      if (!stored) { setPinnedMessages([]); return; }
+      const parsed = JSON.parse(stored);
+      // migrate old single-object format to array
+      setPinnedMessages(Array.isArray(parsed) ? parsed : [parsed]);
+    } catch { setPinnedMessages([]); }
+  };
+
+  // Toggle star on a message
+  const handleToggleStar = useCallback((messageId) => {
+    setStarredMessages(prev => {
+      const next = new Set(prev);
+      if (next.has(messageId)) {
+        next.delete(messageId);
+        toast.success('Star removed');
+      } else {
+        next.add(messageId);
+        toast.success('Message starred');
+      }
+      localStorage.setItem(`starred_${contact.id}`, JSON.stringify([...next]));
+      return next;
+    });
+  }, [contact]);
+
+  // Toggle pin on a message (supports multiple)
+  const handleTogglePin = useCallback((message) => {
+    setPinnedMessages(prev => {
+      const exists = prev.some(p => p.id === message.id);
+      let next;
+      if (exists) {
+        next = prev.filter(p => p.id !== message.id);
+        toast.success('Message unpinned');
+      } else {
+        const pinData = { id: message.id, text: message.text, sender: message.sender };
+        next = [...prev, pinData];
+        toast.success('Message pinned');
+      }
+      if (next.length === 0) {
+        localStorage.removeItem(`pinned_${contact.id}`);
+      } else {
+        localStorage.setItem(`pinned_${contact.id}`, JSON.stringify(next));
+      }
+      return next;
+    });
+  }, [contact]);
 
   // Handle retry message
   const handleRetryMessage = async (messageId, messageText) => {
@@ -1036,7 +1125,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       {/* Drawer */}
       <div className={`fixed right-0 top-0 h-full bg-gradient-to-br from-[#1A1A1A] to-[#252525] shadow-2xl z-50 flex transform transition-all duration-300 ease-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
-      } ${isMaximized ? 'w-full' : showProfileSidebar ? 'w-full lg:w-[900px]' : 'w-full md:w-[500px] lg:w-[650px]'}`}>
+      } ${isMaximized ? 'w-full' : showProfileSidebar ? 'w-full lg:w-[950px]' : 'w-full md:w-[560px] lg:w-[720px]'}`}>
         {contact && (
           <>
             {/* Main Chat Area */}
@@ -1251,7 +1340,9 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
               {/* Content Area */}
               <div
-                className={`flex-1 overflow-y-auto custom-scrollbar${chatBg.startsWith('image:') ? ' animated-bg' : ''}`}
+                ref={contentAreaRef}
+                onMouseMove={chatBg === 'image:stars' ? handleContentMouseMove : undefined}
+                className={`flex-1 overflow-y-auto custom-scrollbar relative${chatBg.startsWith('image:') ? ' animated-bg' : ''}`}
                 style={(() => {
                   if (chatBg.startsWith('pattern:')) {
                     const p = chatBgPatterns.find(pt => pt.value === chatBg);
@@ -1266,6 +1357,35 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   return { background: chatBg };
                 })()}
               >
+                {/* Stars interactive overlay: shooting star + mouse glow */}
+                {chatBg === 'image:stars' && (
+                  <div className="sticky top-0 left-0 w-full h-0 pointer-events-none overflow-visible z-[1]">
+                    <div className="absolute top-0 left-0 w-full overflow-hidden" style={{ height: contentAreaRef.current?.clientHeight || '100vh' }}>
+                      {/* Mouse-following glow with fire tint */}
+                      <div
+                        className="absolute w-48 h-48 rounded-full transition-all duration-700 ease-out"
+                        style={{
+                          left: `${mousePos.x * 100}%`,
+                          top: `${mousePos.y * 100}%`,
+                          transform: 'translate(-50%, -50%)',
+                          background: 'radial-gradient(circle, rgba(255,140,50,0.04) 0%, rgba(187,164,115,0.06) 30%, transparent 70%)',
+                        }}
+                      />
+                      {/* Shooting star 1 */}
+                      <div className="shooting-star shooting-star-1">
+                        <span className="shooting-star-ember" />
+                        <span className="shooting-star-ember ember-2" />
+                        <span className="shooting-star-ember ember-3" />
+                      </div>
+                      {/* Shooting star 2 (delayed) */}
+                      <div className="shooting-star shooting-star-2">
+                        <span className="shooting-star-ember" />
+                        <span className="shooting-star-ember ember-2" />
+                        <span className="shooting-star-ember ember-3" />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {activeTab === 'chat' ? (
                   <MessagesArea
                     messages={messages}
@@ -1278,6 +1398,11 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                     downloadedImages={downloadedImages}
                     setDownloadedImages={setDownloadedImages}
                     setMessages={setMessages}
+                    onReply={handleReplyToMessage}
+                    starredMessages={starredMessages}
+                    pinnedMessages={pinnedMessages}
+                    onToggleStar={handleToggleStar}
+                    onTogglePin={handleTogglePin}
                   />
                 ) : activeTab === 'notes' ? (
                   <NotesArea
@@ -1293,6 +1418,28 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                   <InboxLeadStatus contact={contact} refreshContacts={refreshContacts} />
                 )}
               </div>
+
+              {/* Reply Preview Bar */}
+              {replyToMessage && (
+                <div className="bg-[#1e1e1e] border-t border-[#333] px-4 pt-3 flex-shrink-0">
+                  <div className="flex items-start gap-3 bg-[#2A2A2A] rounded-xl px-3 py-2.5 border-l-[3px] border-[#BBA473]">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-[#BBA473]">
+                        {replyToMessage.sender === 'user' ? 'You' : contact?.name?.split(' ')[0] || 'Contact'}
+                      </p>
+                      <p className="text-sm text-gray-300 truncate">
+                        {replyToMessage.text || 'Media'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setReplyToMessage(null)}
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Chat Input */}
               <ChatInput
@@ -1325,6 +1472,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                 setDownloadedImages={setDownloadedImages}
                 trackSentMessage={trackSentMessage}
                 onCameraCapture={handleCameraFile}
+                replyToMessage={replyToMessage}
+                setReplyToMessage={setReplyToMessage}
               />
             </div>
 
@@ -1478,6 +1627,118 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(180deg, #d4bc89 0%, #a69363 100%);
+        }
+
+        /* Shooting star animations — angled diagonal fall */
+        .shooting-star {
+          position: absolute;
+          width: 3px;
+          height: 3px;
+          background: #fff;
+          border-radius: 50%;
+          opacity: 0;
+          box-shadow:
+            0 0 4px 2px rgba(255,200,80,0.8),
+            0 0 8px 4px rgba(255,140,50,0.5),
+            0 0 16px 6px rgba(255,80,20,0.25),
+            0 0 2px 1px rgba(255,255,255,0.9);
+        }
+
+        /* Fire glow around the head */
+        .shooting-star::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 8px;
+          height: 8px;
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,200,80,0.6) 0%, rgba(255,100,30,0.3) 50%, transparent 100%);
+          animation: fireFlicker 0.15s ease-in-out infinite alternate;
+        }
+
+        /* Tail — angled to match the 35° diagonal trajectory */
+        .shooting-star::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          right: 100%;
+          width: 90px;
+          height: 2px;
+          background: linear-gradient(to left, rgba(255,200,80,0.7), rgba(255,120,30,0.4) 30%, rgba(187,164,115,0.2) 60%, transparent);
+          transform-origin: right center;
+          transform: translateY(-50%);
+          border-radius: 1px;
+        }
+
+        /* Fire ember particles trailing behind */
+        .shooting-star-ember {
+          position: absolute;
+          width: 2px;
+          height: 2px;
+          border-radius: 50%;
+          background: #ff9030;
+          box-shadow: 0 0 3px 1px rgba(255,140,50,0.6);
+          animation: emberDrift 0.4s ease-out infinite;
+          top: 0;
+          left: 0;
+        }
+
+        .shooting-star-ember.ember-2 {
+          width: 1.5px;
+          height: 1.5px;
+          background: #ffcc44;
+          animation-delay: 0.12s;
+          animation-duration: 0.35s;
+          box-shadow: 0 0 2px 1px rgba(255,200,60,0.5);
+        }
+
+        .shooting-star-ember.ember-3 {
+          width: 1px;
+          height: 1px;
+          background: #ff6020;
+          animation-delay: 0.22s;
+          animation-duration: 0.5s;
+          box-shadow: 0 0 2px 1px rgba(255,80,20,0.4);
+        }
+
+        /* Star 1 — starts top-left, falls at ~35° angle */
+        .shooting-star-1 {
+          top: -5%;
+          left: 10%;
+          animation: shootingStar1 7s ease-in-out 2s infinite;
+        }
+
+        /* Star 2 — different start, same angle */
+        .shooting-star-2 {
+          top: -5%;
+          left: 40%;
+          animation: shootingStar2 7s ease-in-out 5.5s infinite;
+        }
+
+        @keyframes shootingStar1 {
+          0%  { transform: translate(0, 0) rotate(35deg); opacity: 0; }
+          2%  { opacity: 0.9; }
+          18% { transform: translate(55vw, 38vh) rotate(35deg); opacity: 0; }
+          100% { opacity: 0; }
+        }
+
+        @keyframes shootingStar2 {
+          0%  { transform: translate(0, 0) rotate(35deg); opacity: 0; }
+          2%  { opacity: 0.9; }
+          18% { transform: translate(50vw, 35vh) rotate(35deg); opacity: 0; }
+          100% { opacity: 0; }
+        }
+
+        @keyframes fireFlicker {
+          0%  { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+          100% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+        }
+
+        @keyframes emberDrift {
+          0%  { transform: translate(0, 0) scale(1); opacity: 0.9; }
+          100% { transform: translate(-10px, -6px) scale(0); opacity: 0; }
         }
       `}</style>
     </>

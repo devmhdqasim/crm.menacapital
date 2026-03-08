@@ -35,6 +35,8 @@ const ChatInput = ({
   setDownloadedImages,
   trackSentMessage,
   onCameraCapture,
+  replyToMessage,
+  setReplyToMessage,
 }) => {
   
   // Handle send text message
@@ -64,10 +66,12 @@ const ChatInput = ({
           status: 'sent',
           failed: false,
           type: 'text',
+          ...(replyToMessage ? { replyTo: { id: replyToMessage.id, text: replyToMessage.text, sender: replyToMessage.sender } } : {}),
         };
 
         setMessages(prev => [...prev, newMessage]);
         setMessageInput('');
+        setReplyToMessage?.(null);
         setContactNotFound(false);
 
         if (refreshContacts) {
