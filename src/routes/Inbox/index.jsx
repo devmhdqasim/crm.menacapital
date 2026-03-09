@@ -42,6 +42,17 @@ const InboxPage = () => {
       const evtType = data.type || data.eventType || '';
       if (evtType.includes('DELIVERED') || evtType.includes('READ_v')) return;
 
+      // Sales Agent filtering: only show in inbox if leadAgentId matches logged-in user
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const role = userInfo.roleName || userInfo.role || '';
+        const uid = userInfo._id || userInfo.id || '';
+        const leadAgentId = data.leadData?.leadAgentId || null;
+        if (role === 'Agent' && leadAgentId !== uid) {
+          return; // Agent only sees messages for their own assigned leads
+        }
+      } catch {}
+
       // Extract phone number from the message
       const rawPhone = data.from || data.waId || '';
       const phone = typeof rawPhone === 'object' && rawPhone !== null

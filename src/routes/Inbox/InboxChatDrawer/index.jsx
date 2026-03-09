@@ -331,6 +331,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         status: 'delivered',
         type: resolvedType,
         mediaUrl: rawMediaUrl || null,
+        leadData: data.leadData || null,
+        leadAgentId: data.leadData?.leadAgentId || null,
       };
 
       console.log('📨 Created message:', newMessage);

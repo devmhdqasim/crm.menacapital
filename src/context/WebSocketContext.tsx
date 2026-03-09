@@ -96,15 +96,30 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         // Check if the current user is logged in and their role is allowed
         const BLOCKED_NOTIFICATION_ROLES = ['Kiosk Member', 'Event Member'];
         let userRole = '';
+        let userId = '';
         let isLoggedIn = false;
         try {
           const userInfo = localStorage.getItem('userInfo');
           if (userInfo) {
             isLoggedIn = true;
-            userRole = JSON.parse(userInfo).roleName || '';
+            const parsed = JSON.parse(userInfo);
+            userRole = parsed.roleName || '';
+            userId = parsed._id || parsed.id || '';
           }
         } catch {}
         const isRoleBlocked = BLOCKED_NOTIFICATION_ROLES.includes(userRole);
+
+        // Sales Agent filtering: block everything (notification + listener forwarding + inbox pop)
+        // Agents only see their own leads; Sales Managers see everything
+        const leadAgentId = data.leadData?.leadAgentId || null;
+        const isSalesAgent = userRole === 'Agent';
+        const isAgentFiltered = isSalesAgent && leadAgentId !== userId;
+        console.log('🔍 Agent filter debug:', { userRole, userId, leadAgentId, isSalesAgent, isAgentFiltered });
+
+        if (isAgentFiltered) {
+          console.log('🚫 Agent filtered — skipping notification + listener forwarding');
+          return; // Early exit: no toast, no unread count, no listener forwarding
+        }
 
         // Only show notification for genuine incoming customer messages (skip read receipts, logged out, blocked roles)
         if (!isOwnMessage && !isRecentlySent && data.name !== 'Read type' && !isRoleBlocked && isLoggedIn) {
