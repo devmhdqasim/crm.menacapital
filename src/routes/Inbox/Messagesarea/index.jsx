@@ -636,6 +636,24 @@ const MessagesArea = ({
       );
     }
 
+    // TEMPLATE MESSAGE
+    if (message.isTemplate && message.text) {
+      const isUser = true;
+      return (
+        <div className="rounded-2xl px-4 py-3 shadow-md bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] min-w-[200px]">
+          {message.templateName && (
+            <div className={`flex items-center gap-1.5 mb-2 pb-2 border-b ${isUser ? 'border-white/20' : 'border-[#BBA473]/20'}`}>
+              <FileText className={`w-3.5 h-3.5 ${isUser ? 'text-white/70' : 'text-[#BBA473]'}`} />
+              <span className={`text-xs font-semibold uppercase tracking-wide ${isUser ? 'text-white/70' : 'text-[#BBA473]'}`}>
+                {message.templateName.replace(/_/g, ' ')}
+              </span>
+            </div>
+          )}
+          <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+        </div>
+      );
+    }
+
     // TEXT MESSAGE
     return <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>;
   };
@@ -751,15 +769,16 @@ const MessagesArea = ({
             <div
               key={message.id}
               id={`message-${message.id}`}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} message-item transition-all duration-300`}
+              className={`flex ${message.sender === 'user' || (message.isTemplate && message.text) ? 'justify-end' : 'justify-start'} message-item transition-all duration-300`}
             >
-              <div className={`max-w-[80%] group ${message.sender === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
+              <div className={`max-w-[80%] group ${message.sender === 'user' || (message.isTemplate && message.text) ? 'items-end' : 'items-start'} flex flex-col`}>
                 {message.isTemplate && (
-                  <div className={`flex items-center gap-1 mb-1 text-xs ${message.sender === 'user' ? 'text-[#BBA473]' : 'text-gray-400'}`}>
+                  <div className={`flex items-center gap-1 mb-1 text-xs ${message.sender === 'user' || (message.isTemplate && message.text) ? 'text-[#BBA473]' : 'text-gray-400'}`}>
                     <FileText className="w-3 h-3" />
                     <span>Template</span>
                   </div>
                 )}
+
                 <div className="flex items-start gap-1">
                   <div
                     className={`rounded-2xl px-4 py-3 shadow-md ${message.sender === 'user'
@@ -820,8 +839,9 @@ const MessagesArea = ({
                       )}
                     </div>
                   </div>
+
                   {/* 3-dot action menu for contact messages */}
-                  {message.sender !== 'user' && (
+                  {(message.sender !== 'user' && !(message.isTemplate && message.text)) &&  (
                     <div className="relative flex-shrink-0" ref={activeMenuId === message.id ? menuRef : undefined}>
                       <button
                         onClick={(e) => {

@@ -406,14 +406,21 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
             // Message type directly from type field
             const messageType = msg.type || 'text';
 
-            // Text content
-            let messageText = msg.text || '';
+            // Template detection
+            const isTemplate = messageType === 'template' || msg.eventType === 'broadcastMessage';
+
+            // Text content: use finalText for broadcast/template messages
+            let messageText = msg.text || msg.finalText || '';
+
+            // Extract template name from eventDescription (e.g. 'Broadcast message with using "support_en" template')
+            let templateName = null;
+            if (isTemplate && msg.eventDescription) {
+              const match = msg.eventDescription.match(/"([^"]+)"/);
+              if (match) templateName = match[1];
+            }
 
             // Media URL: from data field (e.g. "data/images/xxx.jpg", "data/audios/xxx.opus")
             const mediaUrl = msg.data || null;
-
-            // Template detection
-            const isTemplate = messageType === 'template' || msg.eventType === 'broadcastMessage';
 
             // Sender: owner=true means sent by business (user), owner=false means from customer (contact)
             const isOutgoing = msg.owner === true;
@@ -433,6 +440,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               type: messageType,
               mediaUrl: mediaUrl,
               isTemplate: isTemplate,
+              templateName: templateName,
             };
           });
 
