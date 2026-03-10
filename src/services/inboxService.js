@@ -677,7 +677,7 @@ export const fetchWatiImage = async (imageUrl) => {
  * @param {number} pageNumber - Page number for pagination (default: 1)
  * @returns {Promise} API response with messages
  */
-export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) => {
+export const getPreviousMessages = async (waId, pageSize = 40, pageNumber = 1) => {
   const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
@@ -692,7 +692,7 @@ export const getPreviousMessages = async (waId, pageSize = 20, pageNumber = 1) =
     const response = await axios.get(`${API_BASE_URL}/wati/getMessage/en`, {
       params: {
         waId: cleanWaId,
-        pageSize: 15,
+        pageSize,
         pageNumber,
       },
       headers: {
