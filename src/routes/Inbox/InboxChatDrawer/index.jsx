@@ -1130,17 +1130,23 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     }
   };
 
-  // Cleanup recording on unmount
+  // Clear interval whenever recordingTimer changes
   useEffect(() => {
     return () => {
       if (recordingTimer) {
         clearInterval(recordingTimer);
       }
-      if (mediaRecorderRef.current && isRecording) {
+    };
+  }, [recordingTimer]);
+
+  // Stop recorder only on actual unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
     };
-  }, [recordingTimer, isRecording]);
+  }, []);
 
   if (!isOpen) return null;
 

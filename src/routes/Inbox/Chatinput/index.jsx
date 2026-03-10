@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Send, FileText, Paperclip, Mic, Smile, RefreshCw, X, Camera, Video, SwitchCamera, Circle } from 'lucide-react';
+import { Send, FileText, Paperclip, Mic, Smile, RefreshCw, X, Camera, Video, SwitchCamera, Circle, Pause, Play } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import toast from 'react-hot-toast';
 import { Mp3Encoder } from '../../../utils/mp3encoder';
@@ -95,6 +95,10 @@ const ChatInput = ({
   const handleFileAttachment = () => {
     fileInputRef.current?.click();
   };
+
+  // Voice recording pause state
+  const [isRecordingPaused, setIsRecordingPaused] = useState(false);
+  const recordingCancelledRef = useRef(false);
 
   // Camera state
   const [showCamera, setShowCamera] = useState(false);
@@ -269,8 +273,9 @@ const ChatInput = ({
   // ✅ FIXED: Start voice recording
   const startVoiceRecording = async () => {
     try {
+      recordingCancelledRef.current = false;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Use a Wati-compatible format: prefer ogg/opus, fallback to mp4, then webm
       const preferredMimes = ['audio/ogg;codecs=opus', 'audio/mp4', 'audio/ogg', 'audio/webm'];
       const supportedMime = preferredMimes.find(m => MediaRecorder.isTypeSupported(m)) || 'audio/webm';
@@ -279,12 +284,12 @@ const ChatInput = ({
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: supportedMime
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data.size > 0 && !recordingCancelledRef.current) {
           audioChunksRef.current.push(event.data);
         }
       };
@@ -293,10 +298,17 @@ const ChatInput = ({
         // Reset recording UI immediately — don't wait for conversion/send
         stream.getTracks().forEach(track => track.stop());
         setIsRecording(false);
+        setIsRecordingPaused(false);
         setRecordingDuration(0);
         if (recordingTimer) {
           clearInterval(recordingTimer);
           setRecordingTimer(null);
+        }
+
+        // If cancelled, do nothing — just silently close
+        if (recordingCancelledRef.current) {
+          audioChunksRef.current = [];
+          return;
         }
 
         // Strip codec params (e.g. "audio/ogg;codecs=opus" -> "audio/ogg") for API compatibility
@@ -304,7 +316,7 @@ const ChatInput = ({
         const cleanMime = rawMime.split(';')[0];
         const audioBlob = new Blob(audioChunksRef.current, { type: cleanMime });
 
-        // Only send if recording has actual audio chunks (cancel clears the array)
+        // Only send if recording has actual audio chunks
         if (audioChunksRef.current.length > 0) {
           await sendVoiceNote(audioBlob);
         }
@@ -332,31 +344,63 @@ const ChatInput = ({
     }
   };
 
-  // ✅ FIXED: Stop voice recording
+  // ✅ FIXED: Stop voice recording (send)
   const stopVoiceRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') return;
+
+    // If paused, resume briefly so .stop() collects all data
+    if (recorder.state === 'paused') {
+      recorder.resume();
     }
+    recorder.stop();
   };
 
   // ✅ FIXED: Cancel voice recording
   const cancelVoiceRecording = () => {
-    // Clear audio chunks so nothing is sent
+    // Flag as cancelled so onstop and ondataavailable do nothing
+    recordingCancelledRef.current = true;
     audioChunksRef.current = [];
     setRecordingDuration(0);
-    
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
-    
+
     setIsRecording(false);
-    
+    setIsRecordingPaused(false);
+
     if (recordingTimer) {
       clearInterval(recordingTimer);
       setRecordingTimer(null);
     }
-    
-    toast.success('Recording cancelled', { duration: 1500, icon: '❌' });
+  };
+
+  // Toggle pause/resume voice recording
+  const togglePauseRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') return;
+
+    try {
+      if (recorder.state === 'recording') {
+        recorder.pause();
+        setIsRecordingPaused(true);
+        if (recordingTimer) {
+          clearInterval(recordingTimer);
+          setRecordingTimer(null);
+        }
+      } else if (recorder.state === 'paused') {
+        recorder.resume();
+        setIsRecordingPaused(false);
+        const timer = setInterval(() => {
+          setRecordingDuration(prev => prev + 1);
+        }, 1000);
+        setRecordingTimer(timer);
+      }
+    } catch (err) {
+      console.error('Pause/resume error:', err);
+      toast.error('Pause not supported on this browser');
+    }
   };
 
   // Convert recorded audio blob to MP3 using lamejs
@@ -608,12 +652,12 @@ const ChatInput = ({
       {isRecording ? (
         // Voice Recording UI
         <div className="flex items-center gap-3 bg-red-500/8 border border-red-500/20 rounded-2xl px-4 py-3">
-          <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center animate-pulse flex-shrink-0">
+          <div className={`w-10 h-10 rounded-full ${isRecordingPaused ? 'bg-yellow-500' : 'bg-red-500'} flex items-center justify-center ${isRecordingPaused ? '' : 'animate-pulse'} flex-shrink-0`}>
             <Mic className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white font-medium">Recording...</p>
-            <p className="text-lg font-mono text-red-400">{formatRecordingTime(recordingDuration)}</p>
+            <p className="text-sm text-white font-medium">{isRecordingPaused ? 'Paused' : 'Recording...'}</p>
+            <p className={`text-lg font-mono ${isRecordingPaused ? 'text-yellow-400' : 'text-red-400'}`}>{formatRecordingTime(recordingDuration)}</p>
           </div>
           <button
             onClick={cancelVoiceRecording}
@@ -621,6 +665,17 @@ const ChatInput = ({
             title="Cancel"
           >
             <X className="w-4 h-4" />
+          </button>
+          <button
+            onClick={togglePauseRecording}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 flex-shrink-0 ${
+              isRecordingPaused
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+            }`}
+            title={isRecordingPaused ? 'Resume' : 'Pause'}
+          >
+            {isRecordingPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
           <button
             onClick={stopVoiceRecording}
