@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle, Phone, X } from 'lucide-react';
+import { AlertCircle, Phone, X, Image as ImageIcon, Video, Music, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPreviousMessages, sendWatiMessage, sendSessionFile } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
@@ -55,6 +55,12 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   
   // Emoji State
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Media Preview Modal State
+  const [mediaPreviewFile, setMediaPreviewFile] = useState(null);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState(null);
+  const [mediaPreviewType, setMediaPreviewType] = useState(null);
+  const [mediaPreviewMime, setMediaPreviewMime] = useState(null);
 
   // Maximize State
   const [isMaximized, setIsMaximized] = useState(false);
@@ -745,7 +751,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  // ✅ Handle file selection and send
+  // ✅ Handle file selection — validate then show preview modal
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !contact) return;
@@ -796,14 +802,38 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       return;
     }
 
-    const type = mediaCategory === 'document' ? 'document' : mediaCategory;
+    // Show preview modal instead of sending immediately
+    const previewUrl = URL.createObjectURL(file);
+    setMediaPreviewFile(file);
+    setMediaPreviewUrl(previewUrl);
+    setMediaPreviewType(mediaCategory === 'document' ? 'document' : mediaCategory);
+    setMediaPreviewMime(detectedMime);
+
+    // Reset file input so same file can be re-selected
+    event.target.value = '';
+  };
+
+  // Confirm sending from media preview modal
+  const handleMediaPreviewConfirm = async () => {
+    const file = mediaPreviewFile;
+    const type = mediaPreviewType;
+    const detectedMime = mediaPreviewMime;
+
+    // Close modal and revoke preview URL
+    if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
+    setMediaPreviewFile(null);
+    setMediaPreviewUrl(null);
+    setMediaPreviewType(null);
+    setMediaPreviewMime(null);
+
+    if (!file || !contact) return;
 
     setIsSending(true);
-    
+
     try {
       // ✅ Create local URL for immediate display
       const localUrl = URL.createObjectURL(file);
-      
+
       // ✅ CRITICAL: Create optimistic message FIRST so it shows in chat immediately
       const optimisticMessageId = `local-${Date.now()}`;
       const optimisticMessage = {
@@ -825,13 +855,10 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
       // ✅ Add to messages immediately
       setMessages(prev => [...prev, optimisticMessage]);
-      
+
       // ✅ Mark as downloaded so it displays without blur
       setDownloadedImages(prev => new Set(prev).add(optimisticMessageId));
 
-      // ✅ CRITICAL FIX: Read file as ArrayBuffer for sending
-      const reader = new FileReader();
-      
       // Helper to mark the message as failed (keeps it visible in chat)
       const markFailed = () => {
         setMessages(prev => prev.map(msg =>
@@ -840,7 +867,6 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
             : msg
         ));
         setIsSending(false);
-        event.target.value = '';
       };
 
       // Use Wati sendSessionFile API for audio/video, WebSocket for others
@@ -877,8 +903,9 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }
 
         setIsSending(false);
-        event.target.value = '';
       } else {
+        const reader = new FileReader();
+
         reader.onload = () => {
           if (!isConnected) {
             toast.error('Not connected to server. File saved in chat.');
@@ -922,7 +949,6 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           }
 
           setIsSending(false);
-          event.target.value = '';
         };
 
         reader.onerror = () => {
@@ -936,14 +962,19 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     } catch (error) {
       console.error('Error sending file:', error);
       toast.error(`Failed to send ${type}`);
-      setMessages(prev => prev.map(msg =>
-        msg.id === optimisticMessageId
-          ? { ...msg, status: 'failed', failed: true }
-          : msg
-      ));
       setIsSending(false);
-      event.target.value = '';
     }
+  };
+
+  // Cancel media preview modal
+  const handleMediaPreviewCancel = () => {
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
+    setMediaPreviewFile(null);
+    setMediaPreviewUrl(null);
+    setMediaPreviewType(null);
+    setMediaPreviewMime(null);
   };
 
   // Handle camera captured blob (photo or video)
@@ -1525,6 +1556,98 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           />
         )}
       </div>
+
+      {/* Media Preview Modal */}
+      {mediaPreviewFile && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-fadeIn"
+          onClick={handleMediaPreviewCancel}
+        >
+          <div
+            className="bg-[#1E1E1E] rounded-2xl border border-[#BBA473]/20 shadow-2xl max-w-md w-full overflow-hidden animate-scaleIn"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#333]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#BBA473]/15 flex items-center justify-center">
+                  {mediaPreviewType === 'image' ? (
+                    <ImageIcon className="w-4 h-4 text-[#BBA473]" />
+                  ) : mediaPreviewType === 'video' ? (
+                    <Video className="w-4 h-4 text-[#BBA473]" />
+                  ) : (
+                    <Music className="w-4 h-4 text-[#BBA473]" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-sm">
+                    Send {mediaPreviewType === 'image' ? 'Image' : mediaPreviewType === 'video' ? 'Video' : 'Audio'}
+                  </h3>
+                  <p className="text-gray-500 text-xs truncate max-w-[220px]">
+                    {mediaPreviewFile.name} &middot; {formatFileSize(mediaPreviewFile.size)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleMediaPreviewCancel}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Preview Area */}
+            <div className="p-5 flex items-center justify-center bg-[#161616] min-h-[200px]">
+              {mediaPreviewType === 'image' && (
+                <img
+                  src={mediaPreviewUrl}
+                  alt="Preview"
+                  className="max-h-[360px] max-w-full object-contain rounded-lg"
+                />
+              )}
+              {mediaPreviewType === 'video' && (
+                <video
+                  src={mediaPreviewUrl}
+                  controls
+                  autoPlay
+                  muted
+                  className="max-h-[360px] max-w-full rounded-lg"
+                />
+              )}
+              {mediaPreviewType === 'audio' && (
+                <div className="w-full flex flex-col items-center gap-4 py-6">
+                  <div className="w-20 h-20 rounded-full bg-[#BBA473]/10 flex items-center justify-center">
+                    <Music className="w-10 h-10 text-[#BBA473]" />
+                  </div>
+                  <p className="text-gray-400 text-sm truncate max-w-[280px]">{mediaPreviewFile.name}</p>
+                  <audio
+                    src={mediaPreviewUrl}
+                    controls
+                    className="w-full max-w-[320px]"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex items-center gap-3 px-5 py-4 border-t border-[#333]">
+              <button
+                onClick={handleMediaPreviewCancel}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#2A2A2A] text-gray-300 text-sm font-medium hover:bg-[#333] transition-colors border border-[#3A3A3A]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMediaPreviewConfirm}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes slideDown {
