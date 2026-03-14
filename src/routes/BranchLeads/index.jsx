@@ -87,7 +87,7 @@ const BranchLeadsManagement = () => {
           nationality: lead.leadNationality,
           language: lead.leadPreferredLanguage,
           source: lead.leadSource,
-          leadSourceName: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}`: "-"}`,
+          leadSourceName: `${lead.leadSourceId.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}` : (lead.leadSource || "-")}`,
           leadSourceId: lead.leadSourceId.at(-1),
           remarks: lead.leadDescription || '',
           status: lead.leadStatus ?? '',
@@ -226,6 +226,7 @@ const BranchLeadsManagement = () => {
           totalLeads={totalLeads}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onRefresh={() => fetchLeads(currentPage, itemsPerPage)}
         />
       </div>
       

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, AlertTriangle, Clock, X } from 'lucide-react';
+import { Search, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, AlertTriangle, Clock, X, ArrowRightLeft } from 'lucide-react';
+import { updateMobileUserSource } from '../../../services/leadService';
+import toast from 'react-hot-toast';
 
 const LeadsListingTable = ({
   leads,
@@ -21,6 +23,7 @@ const LeadsListingTable = ({
   totalLeads,
   onEdit,
   onDelete,
+  onRefresh,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showAssignedLeadModal, setShowAssignedLeadModal] = useState(false);
@@ -28,6 +31,16 @@ const LeadsListingTable = ({
   const [isBranchUsernameEmail, setIsBranchUsernameEmail] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
+
+  // Source change modal states
+  const [showSourceChangeModal, setShowSourceChangeModal] = useState(false);
+  const [sourceChangeLead, setSourceChangeLead] = useState(null);
+  const [sourceChangeStep, setSourceChangeStep] = useState('confirm');
+  const [sourceChangeSource, setSourceChangeSource] = useState('Kiosk');
+  const [sourceChangeKioskMember, setSourceChangeKioskMember] = useState('');
+  const [sourceChangeClosing, setSourceChangeClosing] = useState(false);
+  const [sourceChangeErrors, setSourceChangeErrors] = useState({});
+  const [sourceChangeSubmitting, setSourceChangeSubmitting] = useState(false);
 
   const perPageOptions = [10, 20, 30, 50, 100];
 
@@ -75,6 +88,87 @@ const LeadsListingTable = ({
   const cancelDelete = () => {
     setShowDeleteConfirmModal(false);
     setLeadToDelete(null);
+  };
+
+  const isMobileAppSource = (source) => {
+    if (!source) return false;
+    const s = source.toLowerCase().replace(/[\s_-]/g, '');
+    return s === 'mobile' || s === 'mobileapp';
+  };
+
+  const handleOpenSourceChange = (lead) => {
+    setSourceChangeLead(lead);
+    setSourceChangeStep('confirm');
+    setSourceChangeSource('Kiosk');
+    setSourceChangeKioskMember('');
+    setSourceChangeClosing(false);
+    setSourceChangeErrors({});
+    setShowSourceChangeModal(true);
+  };
+
+  const handleCloseSourceChangeModal = () => {
+    setSourceChangeClosing(true);
+    setTimeout(() => {
+      setShowSourceChangeModal(false);
+      setSourceChangeLead(null);
+      setSourceChangeStep('confirm');
+      setSourceChangeSource('Kiosk');
+      setSourceChangeKioskMember('');
+      setSourceChangeClosing(false);
+      setSourceChangeErrors({});
+      setSourceChangeSubmitting(false);
+    }, 200);
+  };
+
+  const handleSourceChangeConfirm = () => {
+    setSourceChangeStep('form');
+  };
+
+  const handleSourceChangeSubmit = async () => {
+    const errors = {};
+    if (!sourceChangeSource) errors.source = 'Please select a lead source';
+    if (!sourceChangeKioskMember) errors.kioskMember = 'Please select a kiosk team member';
+    if (Object.keys(errors).length > 0) {
+      setSourceChangeErrors(errors);
+      return;
+    }
+
+    setSourceChangeSubmitting(true);
+    try {
+      const lead = sourceChangeLead;
+      const result = await updateMobileUserSource(lead.id, {
+        leadName: lead.name,
+        leadEmail: lead.email,
+        leadPhoneNumber: lead.phone,
+        leadResidency: lead.residency,
+        leadPreferredLanguage: lead.language,
+        leadDateOfBirth: lead.dateOfBirth,
+        leadNationality: lead.nationality,
+        leadDescription: lead.remarks,
+        leadSourceId: sourceChangeKioskMember,
+        leadStatus: lead.status,
+        depositStatus: lead.depositStatus,
+        kioskLeadStatus: lead.kioskLeadStatus,
+        leadSource: sourceChangeSource,
+      });
+
+      if (result.success) {
+        toast.success(result.message || 'Lead source updated successfully');
+        handleCloseSourceChangeModal();
+        if (onRefresh) onRefresh();
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.message || 'Failed to update lead source');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating lead source:', error);
+      toast.error('Failed to update lead source. Please try again');
+    } finally {
+      setSourceChangeSubmitting(false);
+    }
   };
 
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
@@ -519,6 +613,15 @@ const LeadsListingTable = ({
                     <td className="px-6 py-4">
                       {!isBranchUsernameEmail && (
                       <div className="flex justify-center gap-2">
+                        {isMobileAppSource(lead.source) && (
+                          <button
+                            onClick={() => handleOpenSourceChange(lead)}
+                            className="p-2 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white transition-all duration-300 hover:scale-110"
+                            title="Change Source"
+                          >
+                            <ArrowRightLeft className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(lead)}
                           className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
@@ -702,6 +805,159 @@ const LeadsListingTable = ({
               >
                 Delete Lead
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Source Change Modal */}
+      {showSourceChangeModal && (
+        <div
+          className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-opacity duration-200 ${sourceChangeClosing ? 'opacity-0' : 'opacity-100'}`}
+          onClick={handleCloseSourceChangeModal}
+        >
+          <div
+            className={`bg-[#2A2A2A] rounded-2xl shadow-2xl border border-[#BBA473]/30 max-w-md w-full transform transition-all duration-200 ${sourceChangeClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'} overflow-hidden`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-[#262626] border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                  <ArrowRightLeft className="w-5 h-5 text-orange-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  {sourceChangeStep === 'confirm' ? 'Change Lead Source' : 'Update Source Details'}
+                </h3>
+              </div>
+              <button
+                onClick={handleCloseSourceChangeModal}
+                className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-white transition-all duration-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="relative overflow-hidden">
+              {/* Step 1: Confirmation */}
+              <div className={`px-6 py-6 transition-all duration-300 ease-in-out ${sourceChangeStep === 'confirm' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
+                {sourceChangeLead && (
+                  <>
+                    <div className="p-4 bg-[#1A1A1A] rounded-xl border border-orange-500/20 mb-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center text-orange-400 text-sm font-bold flex-shrink-0">
+                          {sourceChangeLead.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white font-semibold capitalize truncate">{sourceChangeLead.name}</p>
+                          <p className="text-gray-400 text-sm font-mono">{sourceChangeLead.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-orange-500/15 text-orange-400 border border-orange-500/25">
+                          {sourceChangeLead.source || 'Mobile'}
+                        </span>
+                        <span className="text-gray-500 text-xs">Current Source</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-gray-300 leading-relaxed">
+                        This lead was generated from the <span className="text-orange-400 font-semibold">Mobile App</span>. Would you like to change its source?
+                      </p>
+                      <p className="text-gray-500 text-sm leading-relaxed">
+                        Changing the source will reassign this lead from Mobile App to a different source category.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Step 2: Form */}
+              <div className={`px-6 py-6 transition-all duration-300 ease-in-out ${sourceChangeStep === 'form' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0'}`}>
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Lead Source <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={sourceChangeSource}
+                        onChange={(e) => { setSourceChangeSource(e.target.value); setSourceChangeErrors(prev => ({ ...prev, source: undefined })); }}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
+                          sourceChangeErrors.source
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Source</option>
+                        <option value="Kiosk">Kiosk</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                    {sourceChangeErrors.source && (
+                      <p className="text-red-400 text-sm animate-pulse">{sourceChangeErrors.source}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                      Kiosk Team <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={sourceChangeKioskMember}
+                        onChange={(e) => { setSourceChangeKioskMember(e.target.value); setSourceChangeErrors(prev => ({ ...prev, kioskMember: undefined })); }}
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
+                          sourceChangeErrors.kioskMember
+                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
+                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        }`}
+                      >
+                        <option value="">Select Kiosk Member</option>
+                        {kioskMembers.map((member) => (
+                          <option key={member.id} value={member.id}>{member.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                    {sourceChangeErrors.kioskMember && (
+                      <p className="text-red-400 text-sm animate-pulse">{sourceChangeErrors.kioskMember}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-[#262626] border-t border-white/[0.06] px-6 py-4 flex gap-3 justify-end">
+              <button
+                onClick={handleCloseSourceChangeModal}
+                className="px-5 py-2.5 rounded-lg font-semibold bg-[#3A3A3A] text-white hover:bg-[#4A4A4A] transition-all duration-300 transform hover:scale-105 active:scale-95"
+              >
+                Cancel
+              </button>
+              {sourceChangeStep === 'confirm' ? (
+                <button
+                  onClick={handleSourceChangeConfirm}
+                  className="px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-orange-500/30 transform hover:scale-105 active:scale-95"
+                >
+                  Yes, Change Source
+                </button>
+              ) : (
+                <button
+                  onClick={handleSourceChangeSubmit}
+                  disabled={sourceChangeSubmitting}
+                  className="px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-[#BBA473]/30 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {sourceChangeSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
+                      Submitting...
+                    </span>
+                  ) : 'Submit'}
+                </button>
+              )}
             </div>
           </div>
         </div>
