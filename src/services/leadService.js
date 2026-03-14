@@ -2076,6 +2076,92 @@ export const updateLeadStatus = async (leadId, newStatus) => {
 };
 
 /**
+ * Update mobile app user source
+ * @param {string} leadId - Lead's ID (_id)
+ * @param {Object} leadData - Lead data to update
+ * @returns {Promise} - Returns update result
+ */
+export const updateMobileUserSource = async (leadId, leadData) => {
+  try {
+    const authToken = getRefreshToken();
+
+    if (!authToken) {
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    const payload = {
+      _id: leadId,
+      leadName: leadData.leadName,
+      leadEmail: leadData.leadEmail,
+      leadPhoneNumber: leadData.leadPhoneNumber,
+      leadResidency: leadData.leadResidency,
+      leadPreferredLanguage: leadData.leadPreferredLanguage,
+      leadDateOfBirth: leadData.leadDateOfBirth,
+      leadNationality: leadData.leadNationality,
+      leadDescription: leadData.leadDescription,
+      leadSourceId: leadData.leadSourceId,
+      leadStatus: leadData.leadStatus,
+      depositStatus: leadData.depositStatus,
+      kioskLeadStatus: leadData.kioskLeadStatus,
+      leadSource: leadData.leadSource,
+    };
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/lead/branch/updateMobileUsers`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Mobile user source updated successfully',
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || 'Failed to update mobile user source',
+      };
+    }
+  } catch (error) {
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to update mobile user source',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
+
+/**
  * Debug function to check lead service state
  */
 export const debugLeadService = () => {

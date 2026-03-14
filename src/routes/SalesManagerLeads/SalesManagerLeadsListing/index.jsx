@@ -3,7 +3,7 @@ import { Search, ChevronDown, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus,
 import InboxChatDrawer from '../../Inbox/InboxChatDrawer';
 import DateRangePicker from '../../../components/DateRangePicker';
 import { deleteLead } from '../../../services/leadService';
-import { getSalesEventLeads, getAllSalesManagerLeads } from '../../../services/leadService';
+import { getSalesEventLeads, getAllSalesManagerLeads, updateMobileUserSource } from '../../../services/leadService';
 import toast from 'react-hot-toast';
 import { useCRM } from '../../../context/CRMContext';
 
@@ -69,6 +69,7 @@ const SalesManagerLeadsListing = ({
   const [sourceChangeKioskMember, setSourceChangeKioskMember] = useState('');
   const [sourceChangeClosing, setSourceChangeClosing] = useState(false);
   const [sourceChangeErrors, setSourceChangeErrors] = useState({});
+  const [sourceChangeSubmitting, setSourceChangeSubmitting] = useState(false);
 
   // Bulk selection states
   const [selectedLeads, setSelectedLeads] = useState([]);
@@ -518,6 +519,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
       setSourceChangeKioskMember('');
       setSourceChangeClosing(false);
       setSourceChangeErrors({});
+      setSourceChangeSubmitting(false);
     }, 200);
   };
 
@@ -525,7 +527,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
     setSourceChangeStep('form');
   };
 
-  const handleSourceChangeSubmit = () => {
+  const handleSourceChangeSubmit = async () => {
     const errors = {};
     if (!sourceChangeSource) errors.source = 'Please select a lead source';
     if (!sourceChangeKioskMember) errors.kioskMember = 'Please select a kiosk team member';
@@ -533,8 +535,53 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
       setSourceChangeErrors(errors);
       return;
     }
-    toast.success('Source change submitted');
-    handleCloseSourceChangeModal();
+
+    setSourceChangeSubmitting(true);
+    try {
+      const lead = sourceChangeLead;
+      const result = await updateMobileUserSource(lead.id, {
+        leadName: lead.name,
+        leadEmail: lead.email,
+        leadPhoneNumber: lead.phone,
+        leadResidency: lead.residency,
+        leadPreferredLanguage: lead.language,
+        leadDateOfBirth: lead.dateOfBirth,
+        leadNationality: lead.nationality,
+        leadDescription: lead.remarks,
+        leadSourceId: sourceChangeKioskMember,
+        leadStatus: lead.status,
+        depositStatus: lead.depositStatus,
+        kioskLeadStatus: lead.kioskLeadStatus,
+        leadSource: sourceChangeSource,
+      });
+
+      if (result.success) {
+        toast.success(result.message || 'Lead source updated successfully');
+        handleCloseSourceChangeModal();
+        // Refresh the current tab data
+        if (activeTab === 'Event Leads') {
+          fetchEventLeads();
+        } else {
+          const dynTab = dynamicSourceTabs.find(t => t.name === activeTab);
+          if (dynTab) {
+            fetchSourceLeads(activeTab);
+          } else {
+            window.location.reload();
+          }
+        }
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.message || 'Failed to update lead source');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating lead source:', error);
+      toast.error('Failed to update lead source. Please try again');
+    } finally {
+      setSourceChangeSubmitting(false);
+    }
   };
 
   const formatPhoneDisplay = (phone) => {
@@ -1491,9 +1538,15 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
               ) : (
                 <button
                   onClick={handleSourceChangeSubmit}
-                  className="px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-[#BBA473]/30 transform hover:scale-105 active:scale-95"
+                  disabled={sourceChangeSubmitting}
+                  className="px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-[#BBA473]/30 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  Submit
+                  {sourceChangeSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
+                      Submitting...
+                    </span>
+                  ) : 'Submit'}
                 </button>
               )}
             </div>
