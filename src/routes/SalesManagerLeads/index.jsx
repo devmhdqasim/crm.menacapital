@@ -678,6 +678,7 @@ const SalesManagerLeadManagement = () => {
         setMobileLeadsCount={setMobileLeadsCount}
         ramadanLeadsCount={ramadanLeadsCount}
         setRamadanLeadsCount={setRamadanLeadsCount}
+        kioskMembers={kioskMembers}
       />
 
       <SalesManagerLeadFormDrawer
