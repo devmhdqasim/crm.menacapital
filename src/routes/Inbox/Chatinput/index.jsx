@@ -39,6 +39,13 @@ const ChatInput = ({
   setReplyToMessage,
 }) => {
   
+  // Keep input focused when messages change (send/receive) or sending completes
+  useEffect(() => {
+    if (!isRecording && !isSending) {
+      inputRef.current?.focus();
+    }
+  }, [messages, isSending]);
+
   // Handle send text message
   const handleSendMessage = async () => {
     const textToSend = messageInput.trim();
