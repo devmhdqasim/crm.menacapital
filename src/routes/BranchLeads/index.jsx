@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus } from 'lucide-react';
-import { getAllBranchLeads, deleteBranch } from '../../services/leadService';
+import { getAllBranchLeads, deleteBranch, getAllSalesManagerLeads } from '../../services/leadService';
 import { getAllUsersKioskMembers } from '../../services/teamService';
 import DateRangePicker from '../../components/DateRangePicker';
 import toast from 'react-hot-toast';
@@ -25,7 +25,7 @@ const BranchLeadsManagement = () => {
   const [endDate, setEndDate] = useState(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  const tabs = ['All', 'Kiosk Members'];
+  const tabs = ['All', 'Kiosk Members', 'MobileAPP'];
 
   // Debouncing effect for search query
   useEffect(() => {
@@ -60,24 +60,28 @@ const BranchLeadsManagement = () => {
 
   // Fetch leads from API
   const fetchLeads = async (page = 1, limit = 10) => {
+    if (activeTab === 'MobileAPP') {
+      return fetchMobileAppLeads(page, limit);
+    }
+
     setLoading(true);
     try {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
-      
+
       // Only pass agentId if on Kiosk Members tab and a filter is selected
       const agentId = (activeTab === 'Kiosk Members' && selectedKioskMemberFilter) ? selectedKioskMemberFilter : '';
-      
+
       const result = await getAllBranchLeads(
-        page, 
-        limit, 
-        startDateStr, 
-        endDateStr, 
+        page,
+        limit,
+        startDateStr,
+        endDateStr,
         debouncedSearchQuery,
         statusFilter,
         agentId
       );
-      
+
       if (result.success && result.data) {
         const transformedLeads = result.data.map((lead) => ({
           id: lead._id,
@@ -98,10 +102,10 @@ const BranchLeadsManagement = () => {
           kioskLeadStatus: lead.kioskLeadStatus ?? '',
           leadAgentData: lead?.leadAgentData?.[0],
         }));
-        
+
         setLeads(transformedLeads);
         setTotalLeads(result.metadata?.total || 0);
-      } else { 
+      } else {
         console.error('Failed to fetch leads:', result.message);
         if (result.requiresAuth) {
           toast.error('Session expired. Please login again.');
@@ -112,6 +116,62 @@ const BranchLeadsManagement = () => {
     } catch (error) {
       console.error('Error fetching leads:', error);
       toast.error('Failed to fetch leads. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch MobileAPP leads using the same sales API as SalesManager
+  const fetchMobileAppLeads = async (page = 1, limit = 10) => {
+    setLoading(true);
+    try {
+      const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
+      const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
+
+      const result = await getAllSalesManagerLeads(
+        page,
+        limit,
+        startDateStr,
+        endDateStr,
+        debouncedSearchQuery,
+        'MobileApp',
+        ''
+      );
+
+      if (result.success && result.data) {
+        const transformedLeads = result.data.map((lead) => ({
+          id: lead._id,
+          leadId: lead.leadId,
+          name: lead.leadName,
+          phone: lead.leadPhoneNumber,
+          nationality: lead.leadNationality,
+          language: lead.leadPreferredLanguage,
+          source: lead.leadSource,
+          leadSourceName: `${lead.leadSourceId?.length > 0 ? `${lead.leadSourceId.at(-1).firstName} ${lead.leadSourceId.at(-1).lastName}` : (lead.leadSource || "-")}`,
+          leadSourceId: lead.leadSourceId?.at(-1),
+          remarks: lead.leadDescription || '',
+          status: lead.leadStatus ?? '',
+          depositStatus: lead.depositStatus || '',
+          kioskName: lead.kioskName || 'N/A',
+          leadAgentId: lead.leadAgentId,
+          createdAt: lead.createdAt,
+          kioskLeadStatus: lead.kioskLeadStatus ?? '',
+          leadAgentData: lead?.leadAgentData?.[0],
+        }));
+
+        setLeads(transformedLeads);
+        setTotalLeads(result.metadata?.total || 0);
+      } else {
+        console.error('Failed to fetch mobile app leads:', result.message);
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error(result.error?.payload?.message || 'Failed to fetch mobile app leads');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching mobile app leads:', error);
+      toast.error('Failed to fetch mobile app leads. Please try again.');
     } finally {
       setLoading(false);
     }
