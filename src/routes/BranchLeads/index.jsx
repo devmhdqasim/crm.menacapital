@@ -24,6 +24,7 @@ const BranchLeadsManagement = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [sourceChangeLeadFromCreate, setSourceChangeLeadFromCreate] = useState(null);
 
   const tabs = ['All', 'Kiosk Members', 'MobileAPP'];
 
@@ -287,9 +288,11 @@ const BranchLeadsManagement = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onRefresh={() => fetchLeads(currentPage, itemsPerPage)}
+          sourceChangeLeadFromCreate={sourceChangeLeadFromCreate}
+          onSourceChangeLeadConsumed={() => setSourceChangeLeadFromCreate(null)}
         />
       </div>
-      
+
 
       {/* Lead Form Drawer Component */}
       <LeadFormDrawer
@@ -298,6 +301,7 @@ const BranchLeadsManagement = () => {
         kioskMembers={kioskMembers}
         onClose={handleCloseDrawer}
         onSuccess={handleFormSuccess}
+        onSourceChange={(lead) => setSourceChangeLeadFromCreate(lead)}
       />
 
       <style>{`

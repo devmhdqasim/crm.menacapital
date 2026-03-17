@@ -40,7 +40,7 @@ const leadValidationSchema = Yup.object({
   remarks: Yup.string().max(500, 'Remarks must not exceed 500 characters'),
 });
 
-const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSuccess }) => {
+const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSuccess, onSourceChange }) => {
   const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
   const [countries, setCountries] = useState([]);
   const [nationalitySearch, setNationalitySearch] = useState('');
@@ -119,11 +119,35 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, onClose, onSucc
         const result = editingLead ? await updateLead(editingLead.id, leadData): await createBranchLead(leadData);
 
         if (result.success) {
-          toast.success(result.message || (editingLead ? 'Lead updated successfully!' : 'Lead created successfully!'));
-          resetForm();
-          setHasFormChanged(false);
-          setInitialFormValues(null);
-          onSuccess();
+          if (!editingLead && result.message === 'No content updated' && result.data?.leadSource === 'MobileApp') {
+            resetForm();
+            setHasFormChanged(false);
+            setInitialFormValues(null);
+            onClose();
+            if (onSourceChange) {
+              onSourceChange({
+                id: result.data._id,
+                name: result.data.leadName,
+                phone: result.data.leadPhoneNumber,
+                email: result.data.leadEmail,
+                nationality: result.data.leadNationality,
+                language: result.data.leadPreferredLanguage,
+                source: result.data.leadSource,
+                remarks: result.data.latestRemarks || result.data.leadDescription || '',
+                status: result.data.leadStatus,
+                depositStatus: result.data.depositStatus,
+                kioskLeadStatus: result.data.kioskLeadStatus,
+                residency: result.data.leadResidency,
+                dateOfBirth: result.data.leadDateOfBirth,
+              });
+            }
+          } else {
+            toast.success(result.message || (editingLead ? 'Lead updated successfully!' : 'Lead created successfully!'));
+            resetForm();
+            setHasFormChanged(false);
+            setInitialFormValues(null);
+            onSuccess();
+          }
         } else {
           if (result.requiresAuth) {
             toast.error('Session expired. Please login again.');

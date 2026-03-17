@@ -24,6 +24,8 @@ const LeadsListingTable = ({
   onEdit,
   onDelete,
   onRefresh,
+  sourceChangeLeadFromCreate,
+  onSourceChangeLeadConsumed,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showAssignedLeadModal, setShowAssignedLeadModal] = useState(false);
@@ -41,6 +43,13 @@ const LeadsListingTable = ({
   const [sourceChangeClosing, setSourceChangeClosing] = useState(false);
   const [sourceChangeErrors, setSourceChangeErrors] = useState({});
   const [sourceChangeSubmitting, setSourceChangeSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (sourceChangeLeadFromCreate) {
+      handleOpenSourceChange(sourceChangeLeadFromCreate);
+      if (onSourceChangeLeadConsumed) onSourceChangeLeadConsumed();
+    }
+  }, [sourceChangeLeadFromCreate]);
 
   const perPageOptions = [10, 20, 30, 50, 100];
 
