@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllSalesManagerLeads, getSalesEventLeads, assignLeadToAgent, updateLeadTask } from '../../services/leadService';
+import { getAllSalesManagerLeads, getSalesEventLeads, assignLeadToAgent, updateLeadTask, bulkAssignLeadsToAgent } from '../../services/leadService';
 import { getAllUsers } from '../../services/teamService';
 import toast from 'react-hot-toast';
 import SalesManagerLeadsListing from './SalesManagerLeadsListing';
@@ -612,6 +612,26 @@ const SalesManagerLeadManagement = () => {
     setDemoAnalyzeChannel(false);
   };
 
+  const handleBulkAssign = async (agentId, leadIds) => {
+    try {
+      const result = await bulkAssignLeadsToAgent(agentId, leadIds, 'Bulk assigned by sales manager', 'Pending');
+
+      if (result.success) {
+        toast.success(result.message || 'Leads assigned successfully!');
+        refreshCurrentTab();
+      } else {
+        if (result.requiresAuth) {
+          toast.error('Session expired. Please login again');
+        } else {
+          toast.error(result.message || 'Failed to bulk assign leads');
+        }
+      }
+    } catch (error) {
+      console.error('Error bulk assigning leads:', error);
+      toast.error('Failed to bulk assign leads. Please try again');
+    }
+  };
+
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
     setEditingLead(null);
@@ -679,6 +699,8 @@ const SalesManagerLeadManagement = () => {
         ramadanLeadsCount={ramadanLeadsCount}
         setRamadanLeadsCount={setRamadanLeadsCount}
         kioskMembers={kioskMembers}
+        handleBulkAssign={handleBulkAssign}
+        currentUserId={currentUserId}
       />
 
       <SalesManagerLeadFormDrawer

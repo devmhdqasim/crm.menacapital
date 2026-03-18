@@ -232,6 +232,83 @@ export const assignLeadToAgent = async (leadId, agentId) => {
   }
 };
 
+/**
+ * Bulk assign leads to an agent
+ * @param {string} agentId - Agent's ID (_id)
+ * @param {string[]} leadIds - Array of Lead IDs
+ * @param {string} leadRemarks - Remarks for the assignment
+ * @param {string} leadResponseStatus - Response status for the leads
+ * @returns {Promise} - Returns bulk assignment result
+ */
+export const bulkAssignLeadsToAgent = async (agentId, leadIds, leadRemarks = '', leadResponseStatus = 'Pending') => {
+  try {
+    const authToken = getRefreshToken();
+
+    if (!authToken) {
+      throw new Error('No refresh token available. Please login first.');
+    }
+
+    const payload = {
+      agentId,
+      leadIds,
+      leadRemarks,
+      leadResponseStatus,
+    };
+
+    const response = await axios.post(
+      `${API_BASE_URL}/lead/bulkAssignToAgent/en`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    const data = response.data;
+
+    if (data.status === 'success') {
+      return {
+        success: true,
+        data: data.payload,
+        message: data.message || 'Leads assigned to agent successfully',
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || 'Failed to bulk assign leads',
+      };
+    }
+  } catch (error) {
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        message: 'Session expired. Please login again.',
+        requiresAuth: true,
+      };
+    }
+
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Failed to bulk assign leads',
+        error: error.response.data,
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    } else {
+      return {
+        success: false,
+        message: error.message || 'An unexpected error occurred',
+      };
+    }
+  }
+};
 
 /**
  * Update lead task with response status and remarks

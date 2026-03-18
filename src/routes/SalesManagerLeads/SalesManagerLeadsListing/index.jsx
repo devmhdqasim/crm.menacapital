@@ -51,6 +51,8 @@ const SalesManagerLeadsListing = ({
   ramadanLeadsCount,
   setRamadanLeadsCount,
   kioskMembers = [],
+  handleBulkAssign,
+  currentUserId,
 }) => {
   const { crmCategorySummary } = useCRM();
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
@@ -75,6 +77,7 @@ const SalesManagerLeadsListing = ({
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [showBulkStatusDropdown, setShowBulkStatusDropdown] = useState(false);
   const [showBulkAssignDropdown, setShowBulkAssignDropdown] = useState(false);
+  const [bulkAssigning, setBulkAssigning] = useState(false);
 
   // Static tabs — Event Leads onwards will be appended dynamically
   const staticTabs = ['All', 'Assigned', 'Not Assigned', 'Contacted', 'Event Leads'];
@@ -763,24 +766,34 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                     setShowBulkAssignDropdown(!showBulkAssignDropdown);
                     setShowBulkStatusDropdown(false);
                   }}
+                  disabled={bulkAssigning}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 border ${
                     showBulkAssignDropdown
                       ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
                       : 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border-cyan-500/20 hover:border-cyan-500/40'
-                  }`}
+                  } disabled:opacity-50`}
                 >
                   <Users className="w-4 h-4" />
-                  <span className="text-sm font-medium">Assign Lead</span>
+                  <span className="text-sm font-medium">{bulkAssigning ? 'Assigning...' : 'Assign Lead'}</span>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showBulkAssignDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 {showBulkAssignDropdown && (
                   <div className="absolute top-full left-0 mt-2 bg-[#1f1f1f] border border-[#BBA473]/30 rounded-xl shadow-2xl z-20 min-w-[260px] py-1 animate-fadeIn max-h-[300px] overflow-y-auto bulk-actions-scrollbar">
                     {/* Assign to Myself */}
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        if (!currentUserId) {
+                          toast.error('Unable to determine current user');
+                          return;
+                        }
                         setShowBulkAssignDropdown(false);
+                        setBulkAssigning(true);
+                        await handleBulkAssign(currentUserId, selectedLeads);
+                        setBulkAssigning(false);
+                        setSelectedLeads([]);
                       }}
-                      className="w-full px-4 py-2.5 text-left hover:bg-white/[0.06] transition-colors text-sm flex items-center gap-3 border-b border-white/[0.06]"
+                      disabled={bulkAssigning}
+                      className="w-full px-4 py-2.5 text-left hover:bg-white/[0.06] transition-colors text-sm flex items-center gap-3 border-b border-white/[0.06] disabled:opacity-50"
                     >
                       <UserPlus className="w-4 h-4 text-[#BBA473]" />
                       <span className="text-[#BBA473] font-medium">Assign to Myself</span>
@@ -791,10 +804,15 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                       {agents.map((agent) => (
                         <button
                           key={agent.id}
-                          onClick={() => {
+                          onClick={async () => {
                             setShowBulkAssignDropdown(false);
+                            setBulkAssigning(true);
+                            await handleBulkAssign(agent.id, selectedLeads);
+                            setBulkAssigning(false);
+                            setSelectedLeads([]);
                           }}
-                          className="w-full px-4 py-2.5 text-left hover:bg-white/[0.06] transition-colors text-sm flex items-center gap-3"
+                          disabled={bulkAssigning}
+                          className="w-full px-4 py-2.5 text-left hover:bg-white/[0.06] transition-colors text-sm flex items-center gap-3 disabled:opacity-50"
                         >
                           <div className="w-6 h-6 rounded-full bg-[#BBA473]/20 flex items-center justify-center text-[#BBA473] text-xs font-semibold flex-shrink-0">
                             {agent.firstName?.[0]}{agent.lastName?.[0]}
@@ -824,7 +842,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
 
               {/* Bulk Delete */}
               <button
-                onClick={() => {}}
+                onClick={() => toast('Bulk delete coming soon!', { icon: '🚧' })}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all duration-300 border border-red-500/20 hover:border-red-500/40"
               >
                 <Trash2 className="w-4 h-4" />
