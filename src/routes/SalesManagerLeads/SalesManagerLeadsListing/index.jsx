@@ -1141,7 +1141,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                               <MessageSquare className="w-4 h-4" />
                             </button>
                           )}
-                          {isMobileAppSource(lead.source) && (
+                          {/* {isMobileAppSource(lead.source) && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1152,7 +1152,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                             >
                               <ArrowRightLeft className="w-4 h-4" />
                             </button>
-                          )}
+                          )} */}
                           <button
                             onClick={() => handleEdit(lead)}
                             className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"

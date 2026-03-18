@@ -26,7 +26,7 @@ const BranchLeadsManagement = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [sourceChangeLeadFromCreate, setSourceChangeLeadFromCreate] = useState(null);
 
-  const tabs = ['All', 'Kiosk Members', 'MobileAPP'];
+  const tabs = ['All', 'Kiosk Members'];
 
   // Debouncing effect for search query
   useEffect(() => {

@@ -622,7 +622,7 @@ const LeadsListingTable = ({
                     <td className="px-6 py-4">
                       {!isBranchUsernameEmail && (
                       <div className="flex justify-center gap-2">
-                        {isMobileAppSource(lead.source) && (
+                        {/* {isMobileAppSource(lead.source) && (
                           <button
                             onClick={() => handleOpenSourceChange(lead)}
                             className="p-2 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white transition-all duration-300 hover:scale-110"
@@ -630,7 +630,7 @@ const LeadsListingTable = ({
                           >
                             <ArrowRightLeft className="w-4 h-4" />
                           </button>
-                        )}
+                        )} */}
                         <button
                           onClick={() => handleEdit(lead)}
                           className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
