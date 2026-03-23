@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, Phone, X, Image as ImageIcon, Video, Music, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getPreviousMessages, sendWatiMessage, sendSessionFile } from '../../../services/inboxService';
+import { getPreviousMessages, sendWatiMessage, sendSessionFile, markMessagesRead } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
 import ChatHeader from '../Chatheader';
 import ChatTabs from '../Chattabs';
@@ -162,6 +162,11 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       loadBlockSpamStatus();
       loadStarredMessages();
       loadPinnedMessage();
+
+      // Mark messages as read when opening the conversation
+      if (contact.phone) {
+        markMessagesRead(contact.phone).catch(() => {});
+      }
 
       setTimeout(() => {
         inputRef.current?.focus();
@@ -344,14 +349,19 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       console.log('📨 Created message:', newMessage);
 
       setMessages(prev => {
-        const exists = prev.some(msg => 
-          msg.text === newMessage.text && 
+        const exists = prev.some(msg =>
+          msg.text === newMessage.text &&
           Math.abs(msg.sortTimestamp - newMessage.sortTimestamp) < 5000
         );
         if (exists) return prev;
-        
+
         return [...prev, newMessage].sort((a, b) => a.sortTimestamp - b.sortTimestamp);
       });
+
+      // Mark as read since user is viewing this conversation
+      if (contact.phone) {
+        markMessagesRead(contact.phone).catch(() => {});
+      }
 
       setTimeout(() => scrollToBottom(), 100);
 

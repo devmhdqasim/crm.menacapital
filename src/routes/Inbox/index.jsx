@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getWatiContacts, getAllLeads } from '../../services/leadService';
 import { getAllSalesManagerLeads } from '../../services/leadService';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import { getAllUsers } from '../../services/teamService';
+import { markMessagesRead, getUnreadCount } from '../../services/inboxService';
 import toast from 'react-hot-toast';
 import { useWebSocket } from '../../context/WebSocketContext';
 import InboxListing from './InboxListing';
@@ -27,6 +28,14 @@ const InboxPage = () => {
   // Chat drawer state
   const [selectedContact, setSelectedContact] = useState(null);
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+
+  // Refs so WebSocket listener can access current drawer state without stale closures
+  const selectedContactRef = useRef(null);
+  const chatDrawerOpenRef = useRef(false);
+  useEffect(() => {
+    selectedContactRef.current = selectedContact;
+    chatDrawerOpenRef.current = chatDrawerOpen;
+  }, [selectedContact, chatDrawerOpen]);
 
   // Reset unread count when inbox page is visible
   const { resetUnreadCount, addMessageListener } = useWebSocket();
@@ -133,7 +142,14 @@ const InboxPage = () => {
         const contact = { ...updated[idx] };
         contact.lastMessage = messageText || contact.lastMessage;
         contact.lastMessageTime = new Date().toISOString();
-        contact.unreadCount = (contact.unreadCount || 0) + 1;
+
+        // Don't increment unread if the drawer is currently open for this contact
+        const isViewingThisContact = chatDrawerOpenRef.current &&
+          selectedContactRef.current &&
+          phonesMatch(stripNonDigits(selectedContactRef.current.phone), msgDigits);
+        if (!isViewingThisContact) {
+          contact.unreadCount = (contact.unreadCount || 0) + 1;
+        }
 
         updated.splice(idx, 1);
         updated.unshift(contact);
@@ -328,6 +344,9 @@ const InboxPage = () => {
 
         setContacts(transformedContacts);
         setTotalContacts(result.metadata?.total || 0);
+
+        // Fetch real unread counts from backend
+        fetchUnreadCounts(transformedContacts);
       } else {
         console.error('Failed to fetch contacts:', result.message);
         if (result.requiresAuth) {
@@ -341,6 +360,38 @@ const InboxPage = () => {
       toast.error('Failed to fetch contacts. Please try again');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch unread counts from backend for all contacts
+  const fetchUnreadCounts = async (contactsList) => {
+    try {
+      const results = await Promise.allSettled(
+        contactsList.map(async (c) => {
+          if (!c.phone) return { id: c.id, count: 0 };
+          const result = await getUnreadCount(c.phone);
+          if (result.success && result.data) {
+            const d = result.data;
+            const count = d.unreadCount ?? d.count ?? d.data?.unreadCount ?? d.data?.count ?? 0;
+            return { id: c.id, count: typeof count === 'number' ? count : 0 };
+          }
+          return { id: c.id, count: 0 };
+        })
+      );
+
+      const countMap = {};
+      results.forEach(r => {
+        if (r.status === 'fulfilled') {
+          countMap[r.value.id] = r.value.count;
+        }
+      });
+
+      setContacts(prev => prev.map(c => ({
+        ...c,
+        unreadCount: countMap[c.id] !== undefined ? countMap[c.id] : c.unreadCount,
+      })));
+    } catch (error) {
+      console.error('Error fetching unread counts:', error);
     }
   };
 
@@ -364,6 +415,14 @@ const InboxPage = () => {
   const handleContactClick = (contact) => {
     setSelectedContact(contact);
     setChatDrawerOpen(true);
+
+    // Mark messages as read and clear local unread badge
+    if (contact.phone) {
+      markMessagesRead(contact.phone).catch(() => {});
+      setContacts(prev => prev.map(c =>
+        c.id === contact.id ? { ...c, unreadCount: 0 } : c
+      ));
+    }
   };
 
   // Listen for notification clicks to open chat drawer
