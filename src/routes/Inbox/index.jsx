@@ -3,7 +3,7 @@ import { getWatiContacts, getAllLeads } from '../../services/leadService';
 import { getAllSalesManagerLeads } from '../../services/leadService';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import { getAllUsers } from '../../services/teamService';
-import { markMessagesRead, getUnreadCount } from '../../services/inboxService';
+import { markMessagesRead, getUnreadCount, getConversations } from '../../services/inboxService';
 import toast from 'react-hot-toast';
 import { useWebSocket } from '../../context/WebSocketContext';
 import InboxListing from './InboxListing';
@@ -398,6 +398,13 @@ const InboxPage = () => {
   // Load contacts on component mount and when filters change
   useEffect(() => {
     setIsLoaded(true);
+  }, []);
+
+  // Debug: log conversations API response
+  useEffect(() => {
+    getConversations(1, 10).then(result => {
+      console.log('Conversations API response:', result);
+    });
   }, []);
 
   // Reset to page 1 when search or filters change

@@ -824,6 +824,55 @@ export const getUnreadCount = async (phoneNumber) => {
   }
 };
 
+/**
+ * Get conversations list with pagination
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 10)
+ * @returns {Promise} API response with conversations
+ */
+export const getConversations = async (page = 1, limit = 10) => {
+  const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
+  const authToken = localStorage.getItem('refreshToken');
+
+  try {
+    if (!authToken) {
+      throw new Error('No auth token available. Please login first.');
+    }
+
+    const response = await axios.get(`${API_BASE_URL}/messages/conversations/en`, {
+      params: {
+        paramPage: page,
+        paramLimit: limit,
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+    });
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error('Error fetching conversations:', error.response?.data || error.message);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: 'Session expired. Please login again.',
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || 'Failed to fetch conversations',
+    };
+  }
+};
+
 export default {
   sendWatiMessage,
   getWatiMessages,
@@ -839,4 +888,5 @@ export default {
   getPreviousMessages,
   markMessagesRead,
   getUnreadCount,
+  getConversations,
 };
