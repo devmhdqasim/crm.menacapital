@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, Phone, X, Image as ImageIcon, Video, Music, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getPreviousMessages, sendWatiMessage, sendSessionFile, markMessagesRead } from '../../../services/inboxService';
+import { getPreviousMessages, sendMessageViaBackend, sendSessionFile, markMessagesRead } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
 import ChatHeader from '../Chatheader';
 import ChatTabs from '../Chattabs';
@@ -667,7 +667,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
   const handleRetryMessage = async (messageId, messageText) => {
     setRetryingMessageId(messageId);
     try {
-      const result = await sendWatiMessage(contact.phone, messageText);
+      const cleanPhone = contact.phone.replace(/\D/g, '');
+      const result = await sendMessageViaBackend(cleanPhone, 'text', messageText, contact.name || '');
 
       if (result.success) {
         setMessages(prev => prev.map(msg =>

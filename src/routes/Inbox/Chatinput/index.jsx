@@ -3,7 +3,7 @@ import { Send, FileText, Paperclip, Mic, Smile, RefreshCw, X, Camera, Video, Swi
 import EmojiPicker from 'emoji-picker-react';
 import toast from 'react-hot-toast';
 import { Mp3Encoder } from '../../../utils/mp3encoder';
-import { sendWatiMessage, sendSessionFile } from '../../../services/inboxService';
+import { sendMessageViaBackend, sendSessionFile } from '../../../services/inboxService';
 
 const ChatInput = ({
   messageInput,
@@ -54,7 +54,8 @@ const ChatInput = ({
     setIsSending(true);
 
     try {
-      const result = await sendWatiMessage(contact.phone, textToSend);
+      const cleanPhone = contact.phone.replace(/\D/g, '');
+      const result = await sendMessageViaBackend(cleanPhone, 'text', textToSend, contact.name || '');
 
       if (result.success) {
         // Track sent text to suppress self-notification toast
