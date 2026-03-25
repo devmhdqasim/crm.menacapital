@@ -873,6 +873,62 @@ export const getConversations = async (page = 1, limit = 10) => {
   }
 };
 
+/**
+ * Send a message via backend API
+ * @param {string} waId - WhatsApp ID (phone number digits, e.g. "971503045327")
+ * @param {string} type - Message type (e.g. "text", "image", "audio", "video")
+ * @param {string} text - Message text content
+ * @param {string} name - Sender name
+ * @param {File|null} file - Optional file attachment
+ * @returns {Promise} API response
+ */
+export const sendMessageViaBackend = async (waId, type, text, name, file = null) => {
+  const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
+  const authToken = localStorage.getItem('refreshToken');
+
+  try {
+    if (!authToken) {
+      throw new Error('No auth token available. Please login first.');
+    }
+
+    const formData = new FormData();
+    formData.append('waId', waId);
+    formData.append('type', type);
+    formData.append('text', text || '');
+    formData.append('name', name || '');
+    if (file) {
+      formData.append('file', file);
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/messages/sendMessages/en`, formData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+      },
+    });
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error('Error sending message via backend:', error.response?.data || error.message);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: 'Session expired. Please login again.',
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || 'Failed to send message',
+    };
+  }
+};
+
 export default {
   sendWatiMessage,
   getWatiMessages,
@@ -889,4 +945,5 @@ export default {
   markMessagesRead,
   getUnreadCount,
   getConversations,
+  sendMessageViaBackend,
 };
