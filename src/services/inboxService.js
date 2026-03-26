@@ -891,18 +891,19 @@ export const sendMessageViaBackend = async (waId, type, text, name, file = null)
       throw new Error('No auth token available. Please login first.');
     }
 
-    const formData = new FormData();
-    formData.append('waId', waId);
-    formData.append('type', type);
-    formData.append('text', text || '');
-    formData.append('name', name || '');
-    if (file) {
-      formData.append('file', file);
-    }
 
-    const response = await axios.post(`${API_BASE_URL}/messages/sendMessages/en`, formData, {
+    const payload = {
+      waId,
+      type,
+      text: text || '',
+      name: name || '',
+    };
+
+    const response = await axios.post(`${API_BASE_URL}/messages/sendMessages/en`, payload, {
       headers: {
+        'accept': 'application/json',
         'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
       },
     });
 
