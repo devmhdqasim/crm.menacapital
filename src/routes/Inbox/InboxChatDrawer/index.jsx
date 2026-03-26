@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle, Phone, X, Image as ImageIcon, Video, Music, Send } from 'lucide-react';
+import { AlertCircle, Phone, X, Image as ImageIcon, Video, Music, Send, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPreviousMessages, sendMessageViaBackend, sendSessionFile, markMessagesRead } from '../../../services/inboxService';
 import { useWebSocket } from '../../../context/WebSocketContext';
@@ -745,6 +745,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     image: 1 * 1024 * 1024,      // 1 MB
     audio: 16 * 1024 * 1024,     // 16 MB
     video: 30 * 1024 * 1024,     // 30 MB
+    document: 16 * 1024 * 1024,  // 16 MB
   };
 
   // Allowed MIME types with labels
@@ -754,6 +755,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     'image/webp': 'image',
     'audio/mpeg': 'audio',
     'video/mp4': 'video',
+    'application/pdf': 'document',
   };
 
   const formatFileSize = (bytes) => {
@@ -783,12 +785,15 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       if (ext === 'mp3') {
         detectedMime = 'audio/mpeg';
         mediaCategory = 'audio';
+      } else if (ext === 'pdf') {
+        detectedMime = 'application/pdf';
+        mediaCategory = 'document';
       }
     }
 
     if (!mediaCategory) {
       toast.error(
-        'Unsupported file type. Allowed: JPEG, PNG, WebP images, MP3 audio, MP4 video.',
+        'Unsupported file type. Allowed: JPEG, PNG, WebP images, MP3 audio, MP4 video, PDF documents.',
         { duration: 5000 }
       );
       event.target.value = '';
@@ -880,8 +885,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         setIsSending(false);
       };
 
-      // Use Wati sendSessionFile API for audio/video, WebSocket for others
-      if (type === 'audio' || type === 'video') {
+      // Use Wati sendSessionFile API for audio/video/document, WebSocket for others
+      if (type === 'audio' || type === 'video' || type === 'document') {
         // For audio files, ensure the File object has the correct MIME type
         // (browsers on macOS can misdetect .ogg/.mp3 MIME types)
         let fileToSend = file;
@@ -905,7 +910,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               ? { ...msg, status: 'sent' }
               : msg
           ));
-          toast.success(`${type === 'audio' ? 'Audio' : 'Video'} sent successfully!`);
+          toast.success(`${type === 'audio' ? 'Audio' : type === 'document' ? 'Document' : 'Video'} sent successfully!`);
           if (refreshContacts) refreshContacts();
         } else {
           console.error('❌ Wati API error:', result.message);
@@ -1175,7 +1180,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,audio/mpeg,.mp3,video/mp4,.mp4"
+        accept="image/jpeg,image/png,image/webp,audio/mpeg,.mp3,video/mp4,.mp4,application/pdf,.pdf"
         className="hidden"
         onChange={handleFileChange}
       />
@@ -1592,13 +1597,15 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                     <ImageIcon className="w-4 h-4 text-[#BBA473]" />
                   ) : mediaPreviewType === 'video' ? (
                     <Video className="w-4 h-4 text-[#BBA473]" />
+                  ) : mediaPreviewType === 'document' ? (
+                    <FileText className="w-4 h-4 text-[#BBA473]" />
                   ) : (
                     <Music className="w-4 h-4 text-[#BBA473]" />
                   )}
                 </div>
                 <div>
                   <h3 className="text-white font-semibold text-sm">
-                    Send {mediaPreviewType === 'image' ? 'Image' : mediaPreviewType === 'video' ? 'Video' : 'Audio'}
+                    Send {mediaPreviewType === 'image' ? 'Image' : mediaPreviewType === 'video' ? 'Video' : mediaPreviewType === 'document' ? 'Document' : 'Audio'}
                   </h3>
                   <p className="text-gray-500 text-xs truncate max-w-[220px]">
                     {mediaPreviewFile.name} &middot; {formatFileSize(mediaPreviewFile.size)}
@@ -1642,6 +1649,15 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                     controls
                     className="w-full max-w-[320px]"
                   />
+                </div>
+              )}
+              {mediaPreviewType === 'document' && (
+                <div className="w-full flex flex-col items-center gap-4 py-6">
+                  <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center">
+                    <FileText className="w-10 h-10 text-red-400" />
+                  </div>
+                  <p className="text-gray-400 text-sm truncate max-w-[280px]">{mediaPreviewFile.name}</p>
+                  <p className="text-gray-500 text-xs">{formatFileSize(mediaPreviewFile.size)}</p>
                 </div>
               )}
             </div>

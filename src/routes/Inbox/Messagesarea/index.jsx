@@ -263,7 +263,7 @@ const MessagesArea = ({
   // Calculate media download progress
   const mediaProgress = useMemo(() => {
     const mediaMessages = messages.filter(
-      msg => (msg.type === 'image' || msg.type === 'audio' || msg.type === 'video') && msg.mediaUrl && !msg.localFile
+      msg => (msg.type === 'image' || msg.type === 'audio' || msg.type === 'video' || msg.type === 'document') && msg.mediaUrl && !msg.localFile
     );
     const total = mediaMessages.length;
     const downloaded = mediaMessages.filter(
@@ -277,7 +277,7 @@ const MessagesArea = ({
     if (isDownloadingRef.current) return;
 
     const mediaToDownload = messages.filter(msg =>
-      (msg.type === 'image' || msg.type === 'audio' || msg.type === 'video') &&
+      (msg.type === 'image' || msg.type === 'audio' || msg.type === 'video' || msg.type === 'document') &&
       msg.mediaUrl &&
       !msg.localFile &&
       !msg.mediaUrl.startsWith('blob:') &&
@@ -630,6 +630,70 @@ const MessagesArea = ({
           )}
 
           {message.text && message.text !== '🎥 Video' && (
+            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+        </div>
+      );
+    }
+
+    // DOCUMENT/PDF DISPLAY (no mediaUrl - show icon placeholder)
+    if (message.type === 'document' && !message.mediaUrl) {
+      return (
+        <div className="flex items-center gap-2 py-2 px-1">
+          <FileText className="w-5 h-5 text-[#BBA473]" />
+          <span className="text-sm text-[#BBA473]/80">{message.text || 'Document'}</span>
+        </div>
+      );
+    }
+    // DOCUMENT/PDF DISPLAY
+    if (message.type === 'document' && message.mediaUrl) {
+      const docUrl = message.downloadedImageUrl || message.mediaUrl;
+      const isDownloaded = downloadedImages.has(message.id) || message.localFile || message.mediaUrl.startsWith('blob:');
+      const hasFailed = failedImages.has(message.id);
+      const isUser = message.sender === 'user';
+      const fileName = message.mediaUrl?.split('/').pop()?.split('?')[0] || message.text || 'Document.pdf';
+
+      return (
+        <div className="space-y-2">
+          {hasFailed ? (
+            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[100px] max-w-[280px]">
+              <FileText className={`w-10 h-10 mb-2 ${isUser ? 'text-black/30' : 'text-[#BBA473]/50'}`} />
+              <p className={`text-sm ${isUser ? 'text-black/50' : 'text-[#BBA473]/70'}`}>Failed to load document</p>
+              <button
+                onClick={() => handleMediaDownload(message)}
+                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all"
+              >
+                Retry
+              </button>
+            </div>
+          ) : isDownloaded ? (
+            <div
+              className={`flex items-center gap-3 p-3 rounded-xl max-w-[280px] cursor-pointer transition-all hover:opacity-80 ${
+                isUser ? 'bg-black/10' : 'bg-[#BBA473]/10'
+              }`}
+              onClick={() => window.open(docUrl, '_blank')}
+            >
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                isUser ? 'bg-red-500/20' : 'bg-red-500/15'
+              }`}>
+                <FileText className="w-5 h-5 text-red-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium truncate ${isUser ? 'text-black/80' : 'text-white/90'}`}>
+                  {fileName}
+                </p>
+                <p className={`text-xs ${isUser ? 'text-black/50' : 'text-gray-400'}`}>PDF &middot; Tap to open</p>
+              </div>
+              <Download className={`w-4 h-4 flex-shrink-0 ${isUser ? 'text-black/40' : 'text-[#BBA473]/60'}`} />
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl max-w-[280px]">
+              <Loader2 className="w-5 h-5 text-[#BBA473] animate-spin flex-shrink-0" />
+              <span className="text-[#BBA473]/70 text-sm">Loading document...</span>
+            </div>
+          )}
+
+          {message.text && message.text !== 'Document' && (
             <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.text}</p>
           )}
         </div>
