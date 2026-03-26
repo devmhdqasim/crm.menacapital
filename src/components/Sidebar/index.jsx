@@ -21,6 +21,8 @@ import {
 import { logoutUser } from '../../services/authService';
 import { filterMenuByRole, SIDEBAR_MENU_CONFIG, ROUTES } from '@/config/roleConfig';
 import { useWebSocket } from '../../context/WebSocketContext';
+import { ref, onValue } from 'firebase/database';
+import { db } from '../../config/firebase';
 import logo from '@/assets/images/logo.svg';
 
 const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) => {
@@ -32,6 +34,19 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
 
   // Unread message count from WebSocket
   const { unreadCount } = useWebSocket();
+
+  // Firebase unreadTotal for Inbox badge
+  const [unreadTotal, setUnreadTotal] = useState(0);
+
+  useEffect(() => {
+    if (!db) return;
+    const unreadRef = ref(db, 'unreadTotal');
+    const unsub = onValue(unreadRef, (snapshot) => {
+      const val = snapshot.val();
+      setUnreadTotal(typeof val === 'number' ? val : 0);
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -260,15 +275,11 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
                           className="flex-shrink-0"
                         />
                         {/* Unread badge on icon (visible when collapsed) */}
-                        {/* {item.label === 'Inbox' && isCollapsed && (
-                          <span className={`absolute -top-2 -right-2 min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 text-[10px] font-bold shadow-[0_2px_8px_rgba(0,0,0,0.4),0_0_6px_rgba(187,164,115,0.2)] ${
-                            unreadCount > 0
-                              ? 'bg-[#BBA473] text-[#1A1A1A] border border-[#BBA473]'
-                              : 'bg-[#2A2A2A] text-[#BBA473] border border-[#BBA473]/50'
-                          }`}>
-                            {unreadCount > 99 ? '99+' : unreadCount}
+                        {item.label === 'Inbox' && isCollapsed && unreadTotal > 0 && (
+                          <span className="absolute -top-2.5 -right-3 min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 text-[11px] font-extrabold tracking-tight bg-gradient-to-br from-[#ef4444] to-[#b91c1c] text-white ring-2 ring-[#0A0A0A] shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                            {unreadTotal}
                           </span>
-                        )} */}
+                        )}
                       </div>
                       <span className={`font-medium transition-all duration-500 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100'}`}>
                         {item.label}
@@ -276,15 +287,11 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
                     </div>
 
                     {/* Unread badge (visible when expanded) */}
-                    {/* {item.label === 'Inbox' && !isCollapsed && (
-                      <span className={`ml-auto min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-1.5 text-[11px] font-bold shadow-[0_2px_8px_rgba(0,0,0,0.4),0_0_6px_rgba(187,164,115,0.2)] relative z-10 ${
-                        unreadCount > 0
-                          ? 'bg-[#BBA473] text-[#1A1A1A] border border-[#BBA473]'
-                          : 'bg-[#2A2A2A] text-[#BBA473] border border-[#BBA473]/50'
-                      }`}>
-                        {unreadCount > 99 ? '99+' : unreadCount}
+                    {item.label === 'Inbox' && !isCollapsed && unreadTotal > 0 && (
+                      <span className="ml-auto px-2.5 py-0.5 rounded-full text-[13px] font-extrabold tracking-wide relative z-10 bg-gradient-to-r from-[#ef4444] to-[#b91c1c] text-white shadow-[0_0_12px_rgba(239,68,68,0.4)] ring-1 ring-[#ef4444]/30">
+                        {unreadTotal}
                       </span>
-                    )} */}
+                    )}
 
                     {/* Active Indicator */}
                     {isLinkActive(item.href) && (
