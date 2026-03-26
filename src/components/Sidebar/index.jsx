@@ -40,7 +40,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
 
   useEffect(() => {
     if (!db) return;
-    const unreadRef = ref(db, 'unreadTotal');
+    const unreadRef = ref(db, 'unreadTotal-production');
     const unsub = onValue(unreadRef, (snapshot) => {
       const val = snapshot.val();
       setUnreadTotal(typeof val === 'number' ? val : 0);
