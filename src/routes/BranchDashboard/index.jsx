@@ -450,7 +450,7 @@ const Dashboard = () => {
 
                               {/* Real Not Deposit */}
                               <div className="flex items-center justify-between">
-                                <p className="text-gray-400 text-xs font-medium">Real (No Deposit)</p>
+                                <p className="text-gray-400 text-xs font-medium">Real (Not Deposit)</p>
                                 <p className="text-lg font-bold text-white group-hover:text-[#FF6384] transition-colors duration-300">
                                   {member.realNotDepositCount || 0}
                                 </p>
@@ -526,7 +526,7 @@ const Dashboard = () => {
 
                                 {/* Real Not Deposit */}
                                 <div className="flex items-center justify-between">
-                                  <p className="text-gray-400 text-xs font-medium">Real (No Deposit)</p>
+                                  <p className="text-gray-400 text-xs font-medium">Real (Not Deposit)</p>
                                   <p className="text-lg font-bold text-white group-hover:text-[#FF6384] transition-colors duration-300">
                                     {member.realNotDepositCount || 0}
                                   </p>

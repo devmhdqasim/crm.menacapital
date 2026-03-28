@@ -75,7 +75,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
           setModalDepositStatus('');
           setDemoInstallApp(true);
           setDemoEducationVideo(true);
-        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit') {
           setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
@@ -135,7 +135,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         setDemoEducationVideo(true);
       } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' ||
         kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' ||
-        kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit') {
         setAnsweredStatus('Answered');
         setModalAnswered('Answered');
         setModalInterested('Interested');
@@ -148,7 +148,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         currentStatus === 'Real - Deposit') {
         const leadDepositStatus = contact.kioskDepositStatus || '';
 
-        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
+        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'Not Deposit') {
           setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
@@ -187,7 +187,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
 
     if (answeredStatus === 'Not Answered') {
       if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit' ||
-          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
         // Don't force deposit status - let user keep their current selection
         // Both Deposit and Not Deposit should remain selectable
       } else if (kioskStatus === 'Demo') {
@@ -494,7 +494,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
 
     const currentStatusIndex = statusHierarchy.indexOf(currentStatus);
 
-    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'];
 
     if (answeredStatus === 'Not Answered' && allowedKioskStatuses.includes(kioskStatus)) {
       // Use 'Not Deposit' index for all Real/Deposit variants so both Deposit and Not Deposit are enabled as siblings
@@ -503,7 +503,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
       } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
-      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       }
 
@@ -522,7 +522,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
     } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
-    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Not Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
     }
@@ -583,7 +583,7 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
     const currentStatus = contact?.status || '';
     const kioskStatus = contact?.kioskLeadStatus || '';
     
-    const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+    const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'];
     
     return advancedStatuses.includes(currentStatus) || advancedStatuses.includes(kioskStatus);
   };
@@ -790,14 +790,14 @@ const InboxLeadStatus = ({ contact, refreshContacts }) => {
                     <p className="text-orange-400 text-sm font-medium">
                       {contact && (contact.kioskLeadStatus === 'Lead' || contact.kioskLeadStatus === 'lead' || contact.kioskLeadStatus === '-' || contact.status === 'Lead' || contact.status === 'lead' || contact.status === '-')
                         ? 'All Status Options Enabled'
-                        : contact && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(contact.kioskLeadStatus || '')
+                        : contact && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'].includes(contact.kioskLeadStatus || '')
                           ? 'Lead Has Not Responded'
                           : 'Update Status Disabled'}
                     </p>
                     <p className="text-orange-300 text-xs mt-1">
                       {contact && (contact.kioskLeadStatus === 'Lead' || contact.kioskLeadStatus === 'lead' || contact.kioskLeadStatus === '-' || contact.status === 'Lead' || contact.status === 'lead' || contact.status === '-')
                         ? `Since the status is "Lead", you can select any status without restrictions in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
-                        : contact && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(contact.kioskLeadStatus || '')
+                        : contact && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'].includes(contact.kioskLeadStatus || '')
                           ? `Since the Kiosk Lead Status is "${contact.kioskLeadStatus}", you can select statuses at the same level or higher in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
                           : taskStatus === 'Completed'
                             ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'

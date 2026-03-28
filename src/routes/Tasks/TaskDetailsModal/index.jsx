@@ -63,7 +63,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           setModalHotLeadType('Demo');
           setLeadResponseStatus('Demo');
           setModalDepositStatus('');
-        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit') {
           setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
@@ -122,7 +122,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
         setModalDepositStatus('');
       } else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' ||
         kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' ||
-        kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit') {
         console.log('🔍 PRE-POP: Entered NOT DEPOSIT branch');
         setAnsweredStatus('Answered');
         setModalAnswered('Answered');
@@ -136,7 +136,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
           currentStatus === 'Real - Deposit') {
         const leadDepositStatus = task.kioskDepositStatus || '';
         console.log('🔍 PRE-POP: Entered DEPOSIT branch. leadDepositStatus =', JSON.stringify(leadDepositStatus));
-        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
+        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'Not Deposit') {
           setAnsweredStatus('Answered');
           setModalAnswered('Answered');
           setModalInterested('Interested');
@@ -196,7 +196,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task, onTaskUpdated }) => {
     if (answeredStatus === 'Not Answered') {
       // Map kiosk status to determine what should be selected
       if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit' ||
-          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
         // Don't force deposit status - let user keep their current selection
         // Both Deposit and Not Deposit should remain selectable
       } else if (kioskStatus === 'Demo') {
@@ -525,7 +525,7 @@ const shouldShowNotInterestedAvailable = () => {
   const kioskStatus = task?.kioskLeadStatus || '';
   
   // List of statuses that are beyond "Not Interested"
-  const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+  const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'];
   
   return advancedStatuses.includes(currentStatus) || advancedStatuses.includes(kioskStatus);
 };
@@ -613,7 +613,7 @@ if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modal
     const currentStatusIndex = statusHierarchy.indexOf(currentStatus);
 
     // List of kiosk statuses that should allow sibling selection when "Not Answered" is selected
-    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'];
 
     // NEW REQUIREMENT: If user selects "Not Answered" and kiosk status is in allowed list,
     // allow selecting sibling statuses at the same level
@@ -625,7 +625,7 @@ if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modal
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
       } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
-      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       }
 
@@ -648,7 +648,7 @@ if (statusToCheck === 'Not Interested' && answeredStatus === 'Answered' && modal
     } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
-    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Not Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
     }
@@ -852,7 +852,7 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500 text-xs">Kiosk Status</span>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(task.kioskLeadStatus)}`}>
-                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'No Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
+                    {(task.kioskDepositStatus == 'Deposit' || task.kioskDepositStatus == 'Not Deposit' || task.kioskDepositStatus == 'Not Deposit') ? `Real - ${task.kioskDepositStatus}` : task.kioskLeadStatus}
                   </span>
                 </div>
               </div>
@@ -993,14 +993,14 @@ if ((statusToCheck === 'Deposit' || statusToCheck === 'Not Deposit') &&
                       <p className="text-orange-400 text-sm font-medium">
                         {task && (task.kioskLeadStatus === 'Lead' || task.kioskLeadStatus === 'lead' || task.kioskLeadStatus === '-' || task.taskCreationStatus === 'Lead' || task.taskCreationStatus === 'lead' || task.taskCreationStatus === '-')
                           ? 'All Status Options Enabled'
-                          : task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
+                          : task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'].includes(task.kioskLeadStatus || '')
                             ? 'Lead Has Not Responded'
                             : 'Update Status Disabled'}
                       </p>
                       <p className="text-orange-300 text-xs mt-1">
                         {task && (task.kioskLeadStatus === 'Lead' || task.kioskLeadStatus === 'lead' || task.kioskLeadStatus === '-' || task.taskCreationStatus === 'Lead' || task.taskCreationStatus === 'lead' || task.taskCreationStatus === '-')
                           ? `Since the status is "Lead", you can select any status without restrictions in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
-                          : task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(task.kioskLeadStatus || '')
+                          : task && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'].includes(task.kioskLeadStatus || '')
                             ? `Since the Kiosk Lead Status is "${task.kioskLeadStatus}", you can select statuses at the same level or higher in the Update Status section below. ${taskStatus === 'Completed' ? 'Toggle the Task Status above to save.' : 'Please enable the Task Completion toggle above to save.'}`
                             : taskStatus === 'Completed'
                               ? 'When "Not Answered" is selected, you can only toggle the Task Status above. The Update Status section below is disabled.'

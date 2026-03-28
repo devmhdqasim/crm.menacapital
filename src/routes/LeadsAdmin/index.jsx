@@ -87,7 +87,7 @@ const LeadManagement = () => {
   const perPageOptions = [10, 20, 30, 50, 100];
   const filterOptions = ['Active Deposits', 'Not Active Deposits'];
   const statusOptions = ['Lead', 'Demo', 'Real'];
-  const depositStatusOptions = ['Deposit', 'No Deposit'];
+  const depositStatusOptions = ['Deposit', 'Not Deposit'];
 
   const countryCodes = [
     { code: 'ae', name: 'United Arab Emirates', dialCode: '+971', flag: '🇦🇪' },

@@ -111,7 +111,7 @@ const SalesManagerAssignLeadModal = ({
           setModalHotLeadType('Demo');
           setLeadResponseStatus('Demo');
           setModalDepositStatus('');
-        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit') {
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -163,7 +163,7 @@ const SalesManagerAssignLeadModal = ({
       }
       else if (currentStatus === 'Not Deposit' || currentStatus === 'Real - Not Deposit' ||
         kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' ||
-        kioskStatus === 'Real No Deposit' || kioskStatus === 'No Deposit') {
+        kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit') {
         setModalAnswered('Answered');
         setModalInterested('Interested');
         setModalLeadType('Hot');
@@ -175,7 +175,7 @@ const SalesManagerAssignLeadModal = ({
                 currentStatus === 'Real - Deposit') {
         const leadDepositStatus = selectedLead.kioskDepositStatus || '';
 
-        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'No Deposit') {
+        if (leadDepositStatus === 'Not Deposit' || leadDepositStatus === 'Not Deposit') {
           setModalAnswered('Answered');
           setModalInterested('Interested');
           setModalLeadType('Hot');
@@ -229,7 +229,7 @@ const SalesManagerAssignLeadModal = ({
 
     if (answeredStatus === 'Not Answered') {
       if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit' ||
-          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+          kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
         // Don't force deposit status - let user keep their current selection
       } else if (kioskStatus === 'Demo') {
         if (modalHotLeadType !== 'Demo') {
@@ -417,7 +417,7 @@ const SalesManagerAssignLeadModal = ({
     ];
 
     const currentStatusIndex = statusHierarchy.indexOf(currentStatus);
-    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+    const allowedKioskStatuses = ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'];
 
     if (answeredStatus === 'Not Answered' && allowedKioskStatuses.includes(kioskStatus)) {
       let kioskHierarchyLevel = -1;
@@ -425,7 +425,7 @@ const SalesManagerAssignLeadModal = ({
         kioskHierarchyLevel = statusHierarchy.indexOf('Demo');
       } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
-      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+      } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
         kioskHierarchyLevel = statusHierarchy.indexOf('Not Deposit');
       }
 
@@ -444,7 +444,7 @@ const SalesManagerAssignLeadModal = ({
     } else if (kioskStatus === 'Real' || kioskStatus === 'Real Deposit' || kioskStatus === 'Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
-    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'No Deposit' || kioskStatus === 'Real No Deposit') {
+    } else if (kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit' || kioskStatus === 'Not Deposit' || kioskStatus === 'Real Not Deposit') {
       const kioskIndex = statusHierarchy.indexOf('Not Deposit');
       effectiveStatusIndex = Math.max(effectiveStatusIndex, kioskIndex);
     }
@@ -536,7 +536,7 @@ const SalesManagerAssignLeadModal = ({
     const currentStatus = selectedLead?.status || '';
     const kioskStatus = selectedLead?.kioskLeadStatus || '';
 
-    const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'];
+    const advancedStatuses = ['Warm', 'Hot', 'Demo', 'Real', 'Deposit', 'Not Deposit', 'Real Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'];
 
     return advancedStatuses.includes(currentStatus) || advancedStatuses.includes(kioskStatus);
   };
@@ -744,7 +744,7 @@ const SalesManagerAssignLeadModal = ({
                     {selectedLead.source?.toLowerCase() === 'ramadan' ? 'Ramadan Status' : 'Kiosk Status'}
                   </span>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(selectedLead.kioskLeadStatus)}`}>
-                    {(selectedLead.kioskDepositStatus == 'Deposit' || selectedLead.kioskDepositStatus == 'Not Deposit' || selectedLead.kioskDepositStatus == 'No Deposit') ? `Real - ${selectedLead.kioskDepositStatus}` : (selectedLead.kioskLeadStatus || 'N/A')}
+                    {(selectedLead.kioskDepositStatus == 'Deposit' || selectedLead.kioskDepositStatus == 'Not Deposit' || selectedLead.kioskDepositStatus == 'Not Deposit') ? `Real - ${selectedLead.kioskDepositStatus}` : (selectedLead.kioskLeadStatus || 'N/A')}
                   </span>
                 </div>
               </div>
@@ -943,14 +943,14 @@ const SalesManagerAssignLeadModal = ({
                       <p className="text-orange-400 text-sm font-medium">
                         {selectedLead && (selectedLead.kioskLeadStatus === 'Lead' || selectedLead.kioskLeadStatus === 'lead' || selectedLead.kioskLeadStatus === '-' || selectedLead.status === 'Lead' || selectedLead.status === 'lead' || selectedLead.status === '-')
                           ? 'All Status Options Enabled'
-                          : selectedLead && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(selectedLead.kioskLeadStatus || '')
+                          : selectedLead && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'].includes(selectedLead.kioskLeadStatus || '')
                             ? 'Lead Has Not Responded'
                             : 'Update Status Disabled'}
                       </p>
                       <p className="text-orange-300 text-xs mt-1">
                         {selectedLead && (selectedLead.kioskLeadStatus === 'Lead' || selectedLead.kioskLeadStatus === 'lead' || selectedLead.kioskLeadStatus === '-' || selectedLead.status === 'Lead' || selectedLead.status === 'lead' || selectedLead.status === '-')
                           ? 'Since the status is "Lead", you can select any status without restrictions in the Update Status section below.'
-                          : selectedLead && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'No Deposit', 'Real No Deposit'].includes(selectedLead.kioskLeadStatus || '')
+                          : selectedLead && ['Demo', 'Real', 'Real Deposit', 'Deposit', 'Not Deposit', 'Real Not Deposit', 'Not Deposit', 'Real Not Deposit'].includes(selectedLead.kioskLeadStatus || '')
                             ? `Since the Kiosk Lead Status is "${selectedLead.kioskLeadStatus}", you can select statuses at the same level or higher in the Update Status section below.`
                             : 'When "Not Answered" is selected, the Update Status section below is disabled.'}
                       </p>

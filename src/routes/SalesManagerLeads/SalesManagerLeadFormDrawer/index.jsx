@@ -57,7 +57,7 @@ const SalesManagerLeadFormDrawer = ({
   const [assignToSelfOnCreate, setAssignToSelfOnCreate] = useState(false);
 
   const statusOptions = ['Lead', 'Demo', 'Real'];
-  const depositStatusOptions = ['Deposit', 'No Deposit'];
+  const depositStatusOptions = ['Deposit', 'Not Deposit'];
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
   const sources = ['Kiosk'];
 

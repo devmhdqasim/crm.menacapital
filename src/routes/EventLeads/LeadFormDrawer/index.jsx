@@ -58,7 +58,7 @@ const LeadFormDrawer = ({ drawerOpen, editingLead, kioskMembers, leadSources = [
 
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
   const statusOptions = ['Lead', 'Demo', 'Real'];
-  const depositStatusOptions = ['Deposit', 'No Deposit'];
+  const depositStatusOptions = ['Deposit', 'Not Deposit'];
 
   // Fetch countries from REST Countries API
   const fetchCountries = async () => {
