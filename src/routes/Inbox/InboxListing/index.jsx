@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer, Pin, PinOff, BellOff, Bell, MoreVertical, LayoutGrid, LayoutList, User, Eye } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Clock, FileText, Timer, Pin, PinOff, BellOff, Bell, MoreVertical, LayoutGrid, LayoutList, User, Eye, CornerUpRight, CornerDownLeft } from 'lucide-react';
 import DateRangePicker from '../../../components/DateRangePicker';
 import InboxTemplateManager from '../InboxTemplateManager';
 import { useWhatsAppSession } from '../../../hooks/useWhatsAppSession';
@@ -181,9 +181,22 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
             </div>
           </div>
 
-          <p className={`text-sm truncate mb-2 leading-relaxed ${isMuted ? 'text-gray-500' : 'text-gray-300'}`}>
-            {contact.lastMessage}
-          </p>
+          <div className={`flex items-center gap-2 mb-2 ${isMuted ? 'opacity-50' : ''}`}>
+            {contact.lastMessageDirection === 'outbound' ? (
+              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-xs font-semibold px-2 py-0.5 rounded-md flex-shrink-0">
+                <CornerUpRight className="w-3 h-3" />
+                You
+              </span>
+            ) : contact.lastMessageDirection === 'inbound' ? (
+              <span className="inline-flex items-center gap-1 bg-[#2A2A2A] text-white text-xs font-semibold px-2 py-0.5 rounded-md border border-[#BBA473]/20 flex-shrink-0">
+                <CornerDownLeft className="w-3 h-3 text-[#BBA473]" />
+                Lead
+              </span>
+            ) : null}
+            <p className={`text-sm truncate leading-relaxed ${contact.lastMessageDirection === 'outbound' ? 'text-[#BBA473]/80' : 'text-gray-300'}`}>
+              {contact.lastMessage}
+            </p>
+          </div>
 
           <div className="flex items-center gap-4 text-xs">
             <span className="flex items-center gap-1.5 text-gray-400 bg-[#1A1A1A] px-2.5 py-1 rounded-md">
@@ -339,9 +352,22 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
       </div>
 
       {/* Last Message */}
-      <p className={`text-xs truncate mb-3 leading-relaxed ${isMuted ? 'text-gray-500' : 'text-gray-300'}`}>
-        {contact.lastMessage || 'No messages yet'}
-      </p>
+      <div className={`flex items-center gap-1.5 mb-3 ${isMuted ? 'opacity-50' : ''}`}>
+        {contact.lastMessageDirection === 'outbound' ? (
+          <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0">
+            <CornerUpRight className="w-2.5 h-2.5" />
+            You
+          </span>
+        ) : contact.lastMessageDirection === 'inbound' ? (
+          <span className="inline-flex items-center gap-0.5 bg-[#2A2A2A] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[#BBA473]/20 flex-shrink-0">
+            <CornerDownLeft className="w-2.5 h-2.5 text-[#BBA473]" />
+            Lead
+          </span>
+        ) : null}
+        <p className={`text-xs truncate leading-relaxed ${contact.lastMessageDirection === 'outbound' ? 'text-[#BBA473]/80' : 'text-gray-300'}`}>
+          {contact.lastMessage || 'No messages yet'}
+        </p>
+      </div>
 
       {/* Footer: Timer + Time + Agent + Statuses */}
       <div className="flex items-center gap-2 flex-wrap">

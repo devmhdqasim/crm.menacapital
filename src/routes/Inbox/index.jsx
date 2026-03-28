@@ -128,6 +128,7 @@ const InboxPage = () => {
             latestRemarks: '',
             lastTaskStatus: '',
             lastMessage: messageText || 'New message',
+            lastMessageDirection: 'inbound',
             lastMessageTime: new Date().toISOString(),
             sessionExpiresAt: null,
             unreadCount: 1,
@@ -141,6 +142,7 @@ const InboxPage = () => {
         const updated = [...prev];
         const contact = { ...updated[idx] };
         contact.lastMessage = messageText || contact.lastMessage;
+        contact.lastMessageDirection = 'inbound';
         contact.lastMessageTime = new Date().toISOString();
 
         // Don't increment unread if the drawer is currently open for this contact
@@ -331,6 +333,9 @@ const InboxPage = () => {
             lastMessage: (Array.isArray(lead.lastMessage) && lead.lastMessage.length > 0 && lead.lastMessage[0].text)
               ? lead.lastMessage[0].text
               : (lead.latestRemarks || 'No messages yet'),
+            lastMessageDirection: (Array.isArray(lead.lastMessage) && lead.lastMessage.length > 0 && lead.lastMessage[0].direction)
+              ? lead.lastMessage[0].direction
+              : null,
             lastMessageTime: (Array.isArray(lead.lastMessage) && lead.lastMessage.length > 0 && lead.lastMessage[0].createdAt)
               ? lead.lastMessage[0].createdAt
               : (userData.lastMessageAt || lead.updatedAt || lead.createdAt),
