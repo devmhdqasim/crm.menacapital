@@ -623,6 +623,13 @@ const InboxListing = ({
             className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
           />
         </div>
+        <button
+          onClick={() => toast('Coming Soon!', { icon: '🚧', duration: 2000 })}
+          className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 border-2 whitespace-nowrap bg-[#1A1A1A] border-[#BBA473]/30 text-gray-400 hover:border-[#BBA473] hover:text-[#BBA473]"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Unread
+        </button>
       </div>
 
       {/* Contacts Grid/List */}
