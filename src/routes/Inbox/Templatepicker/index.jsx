@@ -27,7 +27,9 @@ const TemplatePicker = ({ contact, onClose, setMessages, refreshContacts }) => {
       if (result.success) {
         const templatesList = result.data?.messageTemplates || result.templates || [];
         const activeTemplates = templatesList.filter(
-          t => t.status !== 'DELETED' && t.status !== 'REJECTED'
+          t => t.status !== 'DELETED' &&
+              t.status !== 'REJECTED' &&
+              t.elementName !== 'otp_verification'
         );
         setTemplates(activeTemplates);
         const uniqueCategories = [...new Set(activeTemplates.map(t => t.category || 'UNCATEGORIZED'))];

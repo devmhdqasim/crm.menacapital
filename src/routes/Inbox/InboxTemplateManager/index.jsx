@@ -80,7 +80,9 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
       if (result.success && result.data) {
         const templatesList = result.data.messageTemplates || result.templates || result.data || [];
         const activeTemplates = templatesList.filter(t =>
-          t.status !== 'DELETED' && t.status !== 'REJECTED'
+          t.status !== 'DELETED' &&
+          t.status !== 'REJECTED' &&
+          t.elementName !== 'otp_verification'
         );
         setTemplates(activeTemplates);
         const uniqueCategories = [...new Set(activeTemplates.map(t => t.category || 'UNCATEGORIZED'))];
