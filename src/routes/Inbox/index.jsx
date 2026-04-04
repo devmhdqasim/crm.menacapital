@@ -3,7 +3,7 @@ import { getWatiContacts, getAllLeads } from '../../services/leadService';
 import { getAllSalesManagerLeads } from '../../services/leadService';
 import { getDashboardStatsByFilter } from '../../services/dashboardService';
 import { getAllUsers } from '../../services/teamService';
-import { markMessagesRead, getUnreadCount, getConversations } from '../../services/inboxService';
+import { markMessagesRead, markMessagesUnread, getUnreadCount, getConversations } from '../../services/inboxService';
 import toast from 'react-hot-toast';
 import { useWebSocket } from '../../context/WebSocketContext';
 import InboxListing from './InboxListing';
@@ -501,10 +501,14 @@ const InboxPage = () => {
   }, [currentPage, itemsPerPage, userRole, startDate, endDate, debouncedSearchQuery, selectedAgentFilter, unreadFilter]);
 
   const handleMarkUnread = useCallback((contactId) => {
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact?.phone) {
+      markMessagesUnread(contact.phone).catch(() => {});
+    }
     setContacts(prev => prev.map(c =>
       c.id === contactId ? { ...c, unreadCount: Math.max(c.unreadCount || 0, 1) } : c
     ));
-  }, []);
+  }, [contacts]);
 
   return (
     <>

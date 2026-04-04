@@ -775,6 +775,49 @@ export const markMessagesRead = async (phoneNumber) => {
   }
 };
 
+export const markMessagesUnread = async (phoneNumber) => {
+  const API_BASE_URL = 'https://api.crm.saveingold.app/api/v1';
+  const authToken = localStorage.getItem('refreshToken');
+
+  try {
+    if (!authToken) {
+      throw new Error('No auth token available. Please login first.');
+    }
+
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+
+    const response = await axios.patch(`${API_BASE_URL}/messages/mark-unread/en`, {
+      phoneNumber: cleanPhone,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+    });
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error('Error marking messages as unread:', error.response?.data || error.message);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        message: 'Session expired. Please login again.',
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      message: error.response?.data?.message || 'Failed to mark messages as unread',
+    };
+  }
+};
+
 /**
  * Get unread message count for a phone number
  * @param {string} phoneNumber - Phone number (digits only, e.g. "971503045327")
