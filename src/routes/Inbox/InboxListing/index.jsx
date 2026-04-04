@@ -415,6 +415,8 @@ const InboxListing = ({
   selectedAgentFilter,
   setSelectedAgentFilter,
   onMarkUnread,
+  unreadFilter,
+  setUnreadFilter,
 }) => {
   const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
@@ -623,13 +625,18 @@ const InboxListing = ({
             className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
           />
         </div>
-        <button
-          onClick={() => toast('Coming Soon!', { icon: '🚧', duration: 2000 })}
-          className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 border-2 whitespace-nowrap bg-[#1A1A1A] border-[#BBA473]/30 text-gray-400 hover:border-[#BBA473] hover:text-[#BBA473]"
-        >
-          <MessageSquare className="w-4 h-4" />
-          Unread
-        </button>
+        <div className="relative w-full lg:w-48">
+          <MessageSquare className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+          <select
+            value={unreadFilter}
+            onChange={(e) => setUnreadFilter(e.target.value)}
+            className="w-full pl-10 pr-10 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+          >
+            <option value="all">All Messages</option>
+            <option value="true">Unread Only</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
       </div>
 
       {/* Contacts Grid/List */}

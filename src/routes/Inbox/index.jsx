@@ -24,6 +24,7 @@ const InboxPage = () => {
   const [endDate, setEndDate] = useState(null);
   const [agents, setAgents] = useState([]);
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
+  const [unreadFilter, setUnreadFilter] = useState('all');
 
   // Chat drawer state
   const [selectedContact, setSelectedContact] = useState(null);
@@ -261,6 +262,7 @@ const InboxPage = () => {
       const startDateStr = startDate ? startDate.toISOString().split('T')[0] : '';
       const endDateStr = endDate ? endDate.toISOString().split('T')[0] : '';
       const agentId = selectedAgentFilter || '';
+      const unreadParam = unreadFilter === 'true' ? 'true' : '';
 
       let result;
 
@@ -273,7 +275,8 @@ const InboxPage = () => {
           endDateStr,
           debouncedSearchQuery,
           '', // No status filter
-          agentId
+          agentId,
+          unreadParam
         );
       } else {
         // Agent sees only their assigned leads
@@ -283,7 +286,9 @@ const InboxPage = () => {
           startDateStr,
           endDateStr,
           debouncedSearchQuery,
-          '' // No status filter
+          '', // No status filter
+          '',
+          unreadParam
         );
       }
 
@@ -415,14 +420,14 @@ const InboxPage = () => {
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedAgentFilter]);
+  }, [debouncedSearchQuery, selectedAgentFilter, unreadFilter]);
 
   // Fetch contacts when page, filters, or dates change
   useEffect(() => {
     if (userRole) {
       fetchContacts(currentPage, itemsPerPage);
     }
-  }, [userRole, startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, selectedAgentFilter]);
+  }, [userRole, startDate, endDate, currentPage, itemsPerPage, debouncedSearchQuery, selectedAgentFilter, unreadFilter]);
 
   const handleContactClick = (contact) => {
     setSelectedContact(contact);
@@ -493,7 +498,7 @@ const InboxPage = () => {
 
   const refreshContacts = useCallback(() => {
     fetchContacts(currentPage, itemsPerPage);
-  }, [currentPage, itemsPerPage, userRole, startDate, endDate, debouncedSearchQuery, selectedAgentFilter]);
+  }, [currentPage, itemsPerPage, userRole, startDate, endDate, debouncedSearchQuery, selectedAgentFilter, unreadFilter]);
 
   const handleMarkUnread = useCallback((contactId) => {
     setContacts(prev => prev.map(c =>
@@ -524,6 +529,8 @@ const InboxPage = () => {
         selectedAgentFilter={selectedAgentFilter}
         setSelectedAgentFilter={setSelectedAgentFilter}
         onMarkUnread={handleMarkUnread}
+        unreadFilter={unreadFilter}
+        setUnreadFilter={setUnreadFilter}
       />
 
       <InboxChatDrawer

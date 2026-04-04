@@ -1263,13 +1263,13 @@ export const deleteBranch = async (userId) => {
   }
 };
 
-export const getWatiContacts = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '', agentId = '') => {
+export const getWatiContacts = async (page = 1, limit = 10, fromDate = '', toDate = '', keyword = '', status = '', agentId = '', unread = '') => {
   try {
     const authToken = getRefreshToken();
-    
+
     console.log('🔵 Fetching leads...');
-    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status, 'AgentId:', agentId);
-    
+    console.log('📄 Page:', page, 'Limit:', limit, 'Keyword:', keyword, 'Status:', status, 'AgentId:', agentId, 'Unread:', unread);
+
     if (!authToken) {
       console.error('❌ No refresh token found in localStorage!');
       throw new Error('No refresh token available. Please login first.');
@@ -1299,7 +1299,12 @@ export const getWatiContacts = async (page = 1, limit = 10, fromDate = '', toDat
     if (agentId) {
       queryParams.append('agent', agentId);
     }
-    
+
+    // Add unread parameter if provided
+    if (unread) {
+      queryParams.append('unread', unread);
+    }
+
     // const refreshUrl = `https://staging.crm.saveingold.app/api/v1/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
     const refreshUrl = `${API_BASE_URL}/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
 
