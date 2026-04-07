@@ -1130,7 +1130,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                       <td className="px-6 py-4 flex items-center gap-2">
                         {lead?.kioskLeadStatus ? (
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                            {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
+                            {lead?.kioskLeadStatus} {lead?.kioskLeadStatus == 'Real' ? (lead.depositStatus && `- ${lead.depositStatus}`) : ''}
                           </span>
                         ) : ''}
                         {lead.status ? (
