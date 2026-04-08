@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Loader2, Shield, Zap, Globe } from 'lucide-react';
+import { Loader2, Shield, Zap, Globe, Mail, Phone } from 'lucide-react';
 
 
 const APP_VERSION = __APP_VERSION__ || '1.0.0';
@@ -251,8 +251,34 @@ export default function EnterEmailOrUsername({
           </div>
         </div>
 
+        {/* Contact Info */}
+        <div className="mt-6 opacity-0 animate-fadeIn" style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <a href="https://menacapital.ae" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#00FF7F]/40 hover:text-[#00FF7F]/70 text-[10px] tracking-wider transition-colors">
+              <Globe size={10} />
+              <span>menacapital.ae</span>
+            </a>
+            <div className="w-px h-3 bg-[#16A249]/20"></div>
+            <a href="mailto:support@menacapital.ae" className="flex items-center gap-1.5 text-[#00FF7F]/40 hover:text-[#00FF7F]/70 text-[10px] tracking-wider transition-colors">
+              <Mail size={10} />
+              <span>support@menacapital.ae</span>
+            </a>
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
+            <a href="tel:+971569971187" className="flex items-center gap-1.5 text-[#00FF7F]/40 hover:text-[#00FF7F]/70 text-[10px] tracking-wider transition-colors">
+              <Phone size={10} />
+              <span>+971 56 997 1187</span>
+            </a>
+            <div className="w-px h-3 bg-[#16A249]/20"></div>
+            <a href="tel:+97143200801" className="flex items-center gap-1.5 text-[#00FF7F]/40 hover:text-[#00FF7F]/70 text-[10px] tracking-wider transition-colors">
+              <Phone size={10} />
+              <span>+971 43 200 801</span>
+            </a>
+          </div>
+        </div>
+
         {/* Footer Text */}
-        <div className="text-center mt-6 space-y-2 opacity-0 animate-fadeIn" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
+        <div className="text-center mt-4 space-y-2 opacity-0 animate-fadeIn" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
           <p className="text-[#00FF7F]/50 text-xs tracking-widest uppercase">Secured by Mena Capital</p>
           <p className="text-[#00FF7F]/30 text-[10px] tracking-wider">
             v{APP_VERSION} &middot; &copy; {new Date().getFullYear()} Mena Capital
