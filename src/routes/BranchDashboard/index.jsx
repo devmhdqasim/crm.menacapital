@@ -304,7 +304,7 @@ const Dashboard = () => {
           <div className="relative flex flex-col md:flex-row md:items-center justify-between mb-8 bg-gradient-to-r from-[#16A249]/10 to-transparent border border-[#16A249]/30 rounded-2xl p-6 backdrop-blur-sm z-10">
             <div className="flex-1">
               <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#16A249] to-yellow-200 mb-3 animate-fade-in">
-                Welcome to the MenaCapital Sales CRM
+                Welcome to the MENA Capital CRM
               </h2>
               <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                 Monitor your monthly performance, revenue growth, and conversion progress in real-time.

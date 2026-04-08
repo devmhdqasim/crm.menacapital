@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import logo from '../../assets/images/logo.svg';
+
 
 const APP_VERSION = __APP_VERSION__ || '1.0.0';
 
@@ -100,7 +100,10 @@ export default function ForgetPassword({
 
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img src={logo} alt="SaveInGold Logo" className="h-16 w-auto object-contain" />
+            <div className="h-16 flex items-end justify-center gap-[6px]">
+              <div className="w-[14px] rounded-sm bg-gradient-to-t from-[#16A249] to-[#00FF7F] shadow-[0_0_10px_rgba(22,162,73,0.4)] animate-[barPulse1_2.5s_ease-in-out_infinite]" style={{ height: '65%' }} />
+              <div className="w-[14px] rounded-sm bg-gradient-to-t from-[#16A249] to-[#00FF7F] shadow-[0_0_10px_rgba(22,162,73,0.4)] animate-[barPulse2_2.5s_ease-in-out_infinite]" style={{ height: '90%' }} />
+            </div>
           </div>
 
           {/* Heading */}

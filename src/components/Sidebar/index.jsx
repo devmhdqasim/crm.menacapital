@@ -169,7 +169,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed, userRole }) =
         {/* Logo with Enhanced Animation */}
         <div className={`mb-8 transition-all duration-700 delay-150 ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}>
           <div className={`flex items-end ${isCollapsed ? 'justify-center' : 'gap-3'} group cursor-pointer overflow-hidden transition-all duration-500`}>
-            <div className="relative w-10 h-10 transition-all duration-500 group-hover:scale-110 flex-shrink-0 flex items-end justify-center gap-[5px]">
+            <div className="relative w-10 h-10 flex-shrink-0 flex items-end justify-center gap-[5px]">
               <div className="w-[10px] rounded-sm bg-gradient-to-t from-[#16A249] to-[#00FF7F] shadow-[0_0_8px_rgba(22,162,73,0.4)] animate-[barPulse1_2.5s_ease-in-out_infinite]" style={{ height: '65%' }} />
               <div className="w-[10px] rounded-sm bg-gradient-to-t from-[#16A249] to-[#00FF7F] shadow-[0_0_8px_rgba(22,162,73,0.4)] animate-[barPulse2_2.5s_ease-in-out_infinite]" style={{ height: '90%' }} />
             </div>
