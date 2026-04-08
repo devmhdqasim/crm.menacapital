@@ -11,13 +11,13 @@ const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, conta
   const isSalesAgent = userRole === 'Agent';
 
   return (
-    <div className="bg-[#1A1A1A] border-b border-[#BBA473]/20 px-5 flex-shrink-0">
+    <div className="bg-[#1A1A1A] border-b border-[#16A249]/20 px-5 flex-shrink-0">
       <div className="flex items-center gap-1">
         <button
           onClick={() => setActiveTab('chat')}
           className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
             activeTab === 'chat'
-              ? 'text-[#BBA473] border-[#BBA473]'
+              ? 'text-[#00FF7F] border-[#16A249]'
               : 'text-gray-400 border-transparent hover:text-gray-300'
           }`}
         >
@@ -28,14 +28,14 @@ const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, conta
           onClick={() => setActiveTab('notes')}
           className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 relative ${
             activeTab === 'notes'
-              ? 'text-[#BBA473] border-[#BBA473]'
+              ? 'text-[#00FF7F] border-[#16A249]'
               : 'text-gray-400 border-transparent hover:text-gray-300'
           }`}
         >
           <StickyNote className="w-4 h-4 inline-block mr-2" />
           Notes
           {notesCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#BBA473] text-black rounded-full text-xs flex items-center justify-center font-bold">
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#16A249] text-black rounded-full text-xs flex items-center justify-center font-bold">
               {notesCount}
             </span>
           )}
@@ -49,7 +49,7 @@ const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, conta
               isLeadUnassigned
                 ? 'text-gray-600 border-transparent cursor-not-allowed opacity-50'
                 : activeTab === 'status'
-                  ? 'text-[#BBA473] border-[#BBA473]'
+                  ? 'text-[#00FF7F] border-[#16A249]'
                   : 'text-gray-400 border-transparent hover:text-gray-300'
             }`}
           >
@@ -61,7 +61,7 @@ const ChatTabs = ({ activeTab, setActiveTab, notesCount, isLeadUnassigned, conta
           onClick={() => setActiveTab('assign')}
           className={`px-4 py-3 text-sm font-semibold transition-all duration-300 border-b-2 ${
             activeTab === 'assign'
-              ? 'text-[#BBA473] border-[#BBA473]'
+              ? 'text-[#00FF7F] border-[#16A249]'
               : 'text-gray-400 border-transparent hover:text-gray-300'
           }`}
         >

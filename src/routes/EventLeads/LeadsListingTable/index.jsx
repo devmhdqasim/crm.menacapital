@@ -408,7 +408,7 @@ const LeadsListingTable = ({
     <>
       {/* Tabs */}
       <div className="mb-6 overflow-x-auto animate-fadeIn">
-        <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
+        <div className="flex gap-2 border-b border-[#16A249]/30 min-w-max">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -418,7 +418,7 @@ const LeadsListingTable = ({
               }}
               className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
                 activeTab === tab
-                  ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                  ? 'border-[#16A249] text-[#00FF7F] bg-[#16A249]/10'
                   : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
               }`}
             >
@@ -432,7 +432,7 @@ const LeadsListingTable = ({
       {activeTab === membersLabel && (
         <div className="mb-6 animate-fadeIn">
           <div className="flex items-center gap-4">
-            <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+            <label className="text-[#A8E6B8] font-medium text-sm whitespace-nowrap">
               Filter by {memberLabel}:
             </label>
             <div className="relative w-full max-w-xs">
@@ -440,7 +440,7 @@ const LeadsListingTable = ({
               <select
                 value={selectedMemberFilter}
                 onChange={(e) => setSelectedMemberFilter(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                className="w-full px-4 py-2 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
               >
                 <option value="">All {membersLabel}</option>
                 {members && members.map((member) => (
@@ -458,14 +458,14 @@ const LeadsListingTable = ({
       {activeTab === 'Lead Sources' && (
         <div className="mb-6 animate-fadeIn">
           <div className="flex items-center gap-4">
-            <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+            <label className="text-[#A8E6B8] font-medium text-sm whitespace-nowrap">
               Filter by Lead Source:
             </label>
             <div className="relative w-full max-w-xs">
               <select
                 value={selectedLeadSourceFilter}
                 onChange={(e) => setSelectedLeadSourceFilter(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                className="w-full px-4 py-2 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
               >
                 <option value="">All Lead Sources</option>
                 {leadSources && leadSources.map((source) => (
@@ -487,34 +487,34 @@ const LeadsListingTable = ({
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+            className="w-full pl-10 pr-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
           />
         </div>
       </div>
 
       {/* Table Container */}
-      <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+      <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#16A249]/20 animate-fadeIn">
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
+            <thead className="bg-[#1A1A1A] border-b border-[#16A249]/30">
               <tr>
-                <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Lead ID</th>
-                <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Name</th>
-                <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
+                <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Lead ID</th>
+                <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Name</th>
+                <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Phone</th>
                 {!isBranchUsernameEmail && (
                   <>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Language</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Nationality</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Language</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Nationality</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Source</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Status</th>
                   </>
                 )}
-                <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Created At</th>
-                <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Created At</th>
+                <th className="text-center px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#BBA473]/10">
+            <tbody className="divide-y divide-[#16A249]/10">
               {loading ? (
                 <tr>
                   <td colSpan="9" className="px-6 py-12 text-center text-gray-400">
@@ -535,7 +535,7 @@ const LeadsListingTable = ({
                   >
                     <td className="px-6 py-4 text-gray-300 font-mono text-sm">{lead.leadId || lead.id.slice(-6) || '-'}</td>
                     <td className="px-6 py-4">
-                      <span className="font-medium capitalize text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                      <span className="font-medium capitalize text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                         {lead.name}
                       </span>
                     </td>
@@ -577,7 +577,7 @@ const LeadsListingTable = ({
                       <div className="flex justify-center gap-2">
                         <button
                           onClick={() => handleEdit(lead)}
-                          className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
+                          className="p-2 rounded-lg bg-[#16A249]/20 text-[#00FF7F] hover:bg-[#16A249] hover:text-black transition-all duration-300 hover:scale-110"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
@@ -600,7 +600,7 @@ const LeadsListingTable = ({
         </div>
 
         {/* Pagination */}
-        <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#16A249]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="text-gray-400 text-sm">
               Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
@@ -610,7 +610,7 @@ const LeadsListingTable = ({
             <div className="relative">
               <button
                 onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30"
               >
                 {!isBranchUsernameEmail && (
                   <span className="text-sm">{itemsPerPage} per page</span>
@@ -618,13 +618,13 @@ const LeadsListingTable = ({
                 <ChevronDown className="w-4 h-4" />
               </button>
               {showPerPageDropdown && (
-                <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
+                <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
                   {perPageOptions.map(option => (
                     <button
                       key={option}
                       onClick={() => handlePerPageChange(option)}
                       className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                        option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                        option === itemsPerPage ? 'bg-[#16A249]/20 text-[#00FF7F]' : 'text-white'
                       }`}
                     >
                       {option} per page
@@ -639,7 +639,7 @@ const LeadsListingTable = ({
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -648,7 +648,7 @@ const LeadsListingTable = ({
               <>
                 <button
                   onClick={() => handlePageChange(1)}
-                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                 >
                   1
                 </button>
@@ -662,8 +662,8 @@ const LeadsListingTable = ({
                 onClick={() => handlePageChange(page)}
                 className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
                   currentPage === page
-                    ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
-                    : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
+                    ? 'bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white border-[#16A249] font-semibold shadow-lg'
+                    : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#16A249]/30 hover:border-[#16A249]'
                 }`}
               >
                 {page}
@@ -675,7 +675,7 @@ const LeadsListingTable = ({
                 {currentPage < totalPages - 2 && <span className="text-gray-400">...</span>}
                 <button
                   onClick={() => handlePageChange(totalPages)}
-                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                 >
                   {totalPages}
                 </button>
@@ -685,7 +685,7 @@ const LeadsListingTable = ({
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -696,13 +696,13 @@ const LeadsListingTable = ({
       {/* Assigned Lead Modal */}
       {showAssignedLeadModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn">
-          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 max-w-md w-full p-6 transform transition-all duration-300 scale-100">
+          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#16A249]/30 max-w-md w-full p-6 transform transition-all duration-300 scale-100">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-yellow-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-[#BBA473] mb-2">
+                <h3 className="text-xl font-bold text-[#00FF7F] mb-2">
                   Cannot Modify Assigned Lead
                 </h3>
                 <p className="text-gray-300 leading-relaxed">
@@ -713,7 +713,7 @@ const LeadsListingTable = ({
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowAssignedLeadModal(false)}
-                className="px-6 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                className="px-6 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:from-[#1EB956] hover:to-[#267A3D] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95"
               >
                 Understood
               </button>
@@ -725,20 +725,20 @@ const LeadsListingTable = ({
       {/* Delete Confirmation Modal */}
       {showDeleteConfirmModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn">
-          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#BBA473]/30 max-w-md w-full p-6 transform transition-all duration-300 scale-100">
+          <div className="bg-[#2A2A2A] rounded-xl shadow-2xl border border-[#16A249]/30 max-w-md w-full p-6 transform transition-all duration-300 scale-100">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
                 <Trash2 className="w-6 h-6 text-red-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-[#BBA473] mb-2">
+                <h3 className="text-xl font-bold text-[#00FF7F] mb-2">
                   Delete Lead
                 </h3>
                 <p className="text-gray-300 leading-relaxed mb-1">
                   Are you sure you want to delete this lead?
                 </p>
                 {leadToDelete && (
-                  <div className="mt-3 p-3 bg-[#1A1A1A] rounded-lg border border-[#BBA473]/20">
+                  <div className="mt-3 p-3 bg-[#1A1A1A] rounded-lg border border-[#16A249]/20">
                     <p className="text-white capitalize font-semibold">{leadToDelete.name}</p>
                     <p className="text-gray-400 text-sm">{formatPhoneDisplay(leadToDelete.phone)}</p>
                   </div>

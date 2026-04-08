@@ -76,12 +76,12 @@ const NotificationComponent: React.FC<NotificationComponentProps> = ({ onNotific
                 <div
                   className={`${
                     t.visible ? 'animate-enter' : 'animate-leave'
-                  } max-w-md w-full bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border border-[#BBA473]/30`}
+                  } max-w-md w-full bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border border-[#16A249]/30`}
                 >
                   <div className="flex-1 w-0 p-4">
                     <div className="flex items-start">
                       <div className="flex-shrink-0 pt-0.5">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#BBA473]/20 to-[#8E7D5A]/20 flex items-center justify-center border border-[#BBA473]/30">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#16A249]/20 to-[#1C4F2A]/20 flex items-center justify-center border border-[#16A249]/30">
                           <span className="text-xl">🔔</span>
                         </div>
                       </div>
@@ -95,10 +95,10 @@ const NotificationComponent: React.FC<NotificationComponentProps> = ({ onNotific
                       </div>
                     </div>
                   </div>
-                  <div className="flex border-l border-[#BBA473]/20">
+                  <div className="flex border-l border-[#16A249]/20">
                     <button
                       onClick={() => toast.dismiss(t.id)}
-                      className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[#BBA473] hover:text-[#8E7D5A] focus:outline-none"
+                      className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[#00FF7F] hover:text-[#1C4F2A] focus:outline-none"
                     >
                       Close
                     </button>

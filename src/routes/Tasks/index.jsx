@@ -805,7 +805,7 @@ const Tasks = () => {
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] bg-clip-text text-transparent">
                 Tasks Management
               </h1>
               <p className="text-gray-400 mt-2">View and manage your team's tasks</p>
@@ -815,7 +815,7 @@ const Tasks = () => {
               <div className="flex gap-3 ml-auto">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#BBA473]/20 text-[#BBA473] rounded-lg hover:bg-[#BBA473]/30 transition-all duration-300 border border-[#BBA473]/30"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#16A249]/20 text-[#00FF7F] rounded-lg hover:bg-[#16A249]/30 transition-all duration-300 border border-[#16A249]/30"
                 >
                   <Filter className="w-5 h-5" />
                   {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -826,7 +826,7 @@ const Tasks = () => {
                     formik.resetForm();
                     setDrawerOpen(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg hover:from-[#d4bc89] hover:to-[#a69363] transition-all duration-300 shadow-lg font-semibold"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white rounded-lg hover:from-[#1EB956] hover:to-[#267A3D] transition-all duration-300 shadow-lg font-semibold"
                 >
                   {!clearFilter && (
                     <>
@@ -854,7 +854,7 @@ const Tasks = () => {
 
         {/* Filters Section */}
         {showFilters && (
-          <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#BBA473]/20 animate-fadeIn">
+          <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#16A249]/20 animate-fadeIn">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Priority Filter - Only for Sales Manager */}
               <div>
@@ -863,7 +863,7 @@ const Tasks = () => {
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+                    className="w-full px-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249] appearance-none cursor-pointer"
                   >
                     {priorities.map((priority) => (
                       <option key={priority} value={priority}>
@@ -883,7 +883,7 @@ const Tasks = () => {
                     <select
                       value={assignedToFilter}
                       onChange={(e) => setAssignedToFilter(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+                      className="w-full px-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249] appearance-none cursor-pointer"
                     >
                       {uniqueAssignees.map((assignee) => (
                         <option key={assignee} value={assignee}>
@@ -904,7 +904,7 @@ const Tasks = () => {
                     <select
                       value={assignedToFilter}
                       onChange={(e) => setAssignedToFilter(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+                      className="w-full px-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249] appearance-none cursor-pointer"
                     >
                       {uniqueSalesManagers.map((sm) => (
                         <option key={sm} value={sm}>
@@ -931,7 +931,7 @@ const Tasks = () => {
         )}
 
         {/* Lead Search Section */}
-        <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#BBA473]/20 animate-fadeIn">
+        <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#16A249]/20 animate-fadeIn">
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             {/* Lead Search Input */}
             <div className="relative flex-1">
@@ -941,7 +941,7 @@ const Tasks = () => {
                 placeholder="Search lead by ID..."
                 value={leadSearchQuery}
                 onChange={(e) => setLeadSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-20 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                className="w-full pl-10 pr-20 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
               />
               {leadSearchQuery && (
                 <button
@@ -957,18 +957,18 @@ const Tasks = () => {
 
         {/* Lead Search Results Box */}
         {showLeadSearchResults && (
-          <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#BBA473]/20 animate-fadeIn">
+          <div className="mb-6 bg-[#2A2A2A] rounded-xl p-6 border border-[#16A249]/20 animate-fadeIn">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-[#BBA473]">Search Results</h3>
+              <h3 className="text-xl font-semibold text-[#00FF7F]">Search Results</h3>
               <p className="text-sm text-gray-400">
-                Total found: <span className="text-[#BBA473] font-semibold">{leadSearchTotalResults}</span>
+                Total found: <span className="text-[#00FF7F] font-semibold">{leadSearchTotalResults}</span>
               </p>
             </div>
             
             <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
               {leadSearchLoading && leadSearchResults.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#BBA473]"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#16A249]"></div>
                   <p className="text-gray-400 mt-2">Searching...</p>
                 </div>
               ) : leadSearchResults.length === 0 ? (
@@ -983,8 +983,8 @@ const Tasks = () => {
                       onClick={() => handleLeadClick(lead)}
                       className={`bg-[#1A1A1A] p-4 rounded-lg border transition-all duration-300 cursor-pointer ${
                         selectedLeadId === lead._id 
-                          ? 'border-[#BBA473] bg-[#BBA473]/10' 
-                          : 'border-[#BBA473]/20 hover:border-[#BBA473]/50'
+                          ? 'border-[#16A249] bg-[#16A249]/10' 
+                          : 'border-[#16A249]/20 hover:border-[#16A249]/50'
                       }`}
                     >
                       <div className="flex justify-between items-start">
@@ -1010,30 +1010,30 @@ const Tasks = () => {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-sm mt-3">
                             {lead.leadId && (
                               <p className="text-gray-400">
-                                <span className="text-[#BBA473] font-medium">Lead ID:</span> {lead.leadId}
+                                <span className="text-[#00FF7F] font-medium">Lead ID:</span> {lead.leadId}
                               </p>
                             )}
                             <p className="text-gray-400">
-                              <span className="text-[#BBA473] font-medium">Phone:</span> {lead.leadPhoneNumber}
+                              <span className="text-[#00FF7F] font-medium">Phone:</span> {lead.leadPhoneNumber}
                             </p>
                             {lead.leadEmail && (
                               <p className="text-gray-400">
-                                <span className="text-[#BBA473] font-medium">Email:</span> {lead.leadEmail}
+                                <span className="text-[#00FF7F] font-medium">Email:</span> {lead.leadEmail}
                               </p>
                             )}
                             {lead.leadPreferredLanguage && (
                               <p className="text-gray-400">
-                                <span className="text-[#BBA473] font-medium">Language:</span> {lead.leadPreferredLanguage}
+                                <span className="text-[#00FF7F] font-medium">Language:</span> {lead.leadPreferredLanguage}
                               </p>
                             )}
                             {lead.leadNationality && (
                               <p className="text-gray-400">
-                                <span className="text-[#BBA473] font-medium">Nationality:</span> {lead.leadNationality}
+                                <span className="text-[#00FF7F] font-medium">Nationality:</span> {lead.leadNationality}
                               </p>
                             )}
                             {lead.leadSource && (
                               <p className="text-gray-400">
-                                <span className="text-[#BBA473] font-medium">Source:</span> {lead.leadSource}
+                                <span className="text-[#00FF7F] font-medium">Source:</span> {lead.leadSource}
                               </p>
                             )}
                           </div>
@@ -1048,11 +1048,11 @@ const Tasks = () => {
                       <button
                         onClick={loadMoreLeads}
                         disabled={leadSearchLoading}
-                        className="px-6 py-2 bg-[#BBA473]/20 text-[#BBA473] rounded-lg hover:bg-[#BBA473]/30 transition-all duration-300 border border-[#BBA473]/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 bg-[#16A249]/20 text-[#00FF7F] rounded-lg hover:bg-[#16A249]/30 transition-all duration-300 border border-[#16A249]/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {leadSearchLoading ? (
                           <span className="flex items-center gap-2">
-                            <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-[#BBA473]"></div>
+                            <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-[#16A249]"></div>
                             Loading...
                           </span>
                         ) : (
@@ -1069,7 +1069,7 @@ const Tasks = () => {
 
         {/* Tabs */}
         <div className="mb-6 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
+          <div className="flex gap-2 border-b border-[#16A249]/30 min-w-max">
             {tabs.map((tab) => {
               const counter = getTabCounter(tab);
 
@@ -1078,7 +1078,7 @@ const Tasks = () => {
                   key={tab}
                   onClick={() => handleTabChange(tab)}
                   className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${activeTab === tab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                    ? 'border-[#16A249] text-[#00FF7F] bg-[#16A249]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                     }`}
                 >
@@ -1089,8 +1089,8 @@ const Tasks = () => {
                       tab === 'Today Pending' || tab === 'Not-Completed'
                         ? 'text-white bg-red-500 animate-pulse'
                         : tab === 'Completed'
-                          ? 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
-                          : 'text-[#BBA473] bg-[#BBA473]/15 border border-[#BBA473]/30'
+                          ? 'text-[#00FF7F] bg-[#16A249]/15 border border-[#16A249]/30'
+                          : 'text-[#00FF7F] bg-[#16A249]/15 border border-[#16A249]/30'
                     }`}>
                       {counter}
                     </span>
@@ -1110,7 +1110,7 @@ const Tasks = () => {
               placeholder="Search by title, description, assignee, lead, or task ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+              className="w-full pl-10 pr-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
             />
           </div>
         </div>
@@ -1118,7 +1118,7 @@ const Tasks = () => {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#BBA473]"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#16A249]"></div>
             <p className="text-gray-400 mt-2">Loading tasks...</p>
           </div>
         )}
@@ -1127,33 +1127,33 @@ const Tasks = () => {
         {!loading && (
           <div 
             id="tasks-table"
-            className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn"
+            className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#16A249]/20 animate-fadeIn"
           >
             {/* Table */}
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
+                <thead className="bg-[#1A1A1A] border-b border-[#16A249]/30">
                   <tr>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Task ID</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Task Title</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Info</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
-                    {/* <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Status</th> */}
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead Task Status</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Task ID</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Task Title</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Lead Info</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Status</th>
+                    {/* <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Lead Status</th> */}
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Lead Task Status</th>
                     {/* Conditional column: Priority for Sales Manager, Scheduled Date for Agent */}
                     {/* {userRole === 'Sales Manager' ? ( 
-                      <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Priority</th>
+                      <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Priority</th>
                     ) : ( 
                       <></>
                     )} */}
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Scheduled Date</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Assigned To</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Assigned By</th>
-                    <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                    <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Scheduled Date</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Assigned To</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Assigned By</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Created At</th>
+                    <th className="text-center px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Actions</th>
                   </tr>  
                 </thead>
-                <tbody className="divide-y divide-[#BBA473]/10"> 
+                <tbody className="divide-y divide-[#16A249]/10"> 
                   {filteredTasks.length === 0 ? (
                     <tr>
                       <td colSpan="10" className="px-6 py-12 text-center text-gray-400">
@@ -1171,7 +1171,7 @@ const Tasks = () => {
                           {task.taskId}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                          <div className="font-medium text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                             {task.title}
                           </div>
                           <div className="text-gray-400 text-xs mt-1 truncate max-w-xs">
@@ -1268,7 +1268,7 @@ const Tasks = () => {
             </div>
 
             {/* Pagination/Summary Bar */}
-            <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#16A249]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
               <div className="text-gray-400 text-sm">
                 Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
                 <span className="text-white font-semibold">{showingTo}</span> of{' '}
@@ -1278,7 +1278,7 @@ const Tasks = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-[#BBA473]/20 text-[#BBA473] rounded-lg hover:bg-[#BBA473]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-[#16A249]/20 text-[#00FF7F] rounded-lg hover:bg-[#16A249]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -1288,7 +1288,7 @@ const Tasks = () => {
                 <button
                   onClick={() => setCurrentPage(prev => prev + 1)}
                   disabled={currentPage >= totalPages}
-                  className="px-4 py-2 bg-[#BBA473]/20 text-[#BBA473] rounded-lg hover:bg-[#BBA473]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-[#16A249]/20 text-[#00FF7F] rounded-lg hover:bg-[#16A249]/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -1305,9 +1305,9 @@ const Tasks = () => {
       >
         <div className="h-full flex flex-col">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
+          <div className="flex items-center justify-between p-6 border-b border-[#16A249]/30 bg-gradient-to-r from-[#16A249]/10 to-transparent">
             <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">
+              <h2 className="text-2xl font-bold text-[#00FF7F]">
                 {editingTask ? 'Edit Task' : 'Add New Task'}
               </h2>
               <p className="text-gray-400 text-sm mt-1">
@@ -1327,7 +1327,7 @@ const Tasks = () => {
             <div className="space-y-6">
               {/* Task Information Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-[#E8D5A3] border-b border-[#BBA473]/30 pb-2">
+                <h3 className="text-lg font-semibold text-[#A8E6B8] border-b border-[#16A249]/30 pb-2">
                   Task Information
                 </h3>
 
@@ -1342,9 +1342,9 @@ const Tasks = () => {
                       value={formik.values.agentId}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.agentId && formik.errors.agentId
+                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.agentId && formik.errors.agentId
                         ? 'border-red-500'
-                        : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                        : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                         }`}
                     >
                       <option value="">Select an agent...</option>
@@ -1376,9 +1376,9 @@ const Tasks = () => {
                       value={formik.values.leadId}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.leadId && formik.errors.leadId
+                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.leadId && formik.errors.leadId
                         ? 'border-red-500'
-                        : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                        : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                         }`}
                     >
                       <option value="">Select a lead...</option>
@@ -1410,7 +1410,7 @@ const Tasks = () => {
                       value={formik.values.salesManagerId}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full px-4 py-3 pr-10 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none"
+                      className="w-full px-4 py-3 pr-10 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249] appearance-none"
                     >
                       <option value="">Select a sales manager...</option>
                       {salesManagers.length === 0 ? (
@@ -1439,9 +1439,9 @@ const Tasks = () => {
                     value={formik.values.taskTitle}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 ${formik.touched.taskTitle && formik.errors.taskTitle
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 ${formik.touched.taskTitle && formik.errors.taskTitle
                       ? 'border-red-500'
-                      : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                      : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                       }`}
                   />
                   {formik.touched.taskTitle && formik.errors.taskTitle && (
@@ -1461,9 +1461,9 @@ const Tasks = () => {
                     value={formik.values.taskDescription}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 resize-none ${formik.touched.taskDescription && formik.errors.taskDescription
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 resize-none ${formik.touched.taskDescription && formik.errors.taskDescription
                       ? 'border-red-500'
-                      : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                      : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                       }`}
                   />
                   {formik.touched.taskDescription && formik.errors.taskDescription && (
@@ -1484,9 +1484,9 @@ const Tasks = () => {
                         value={formik.values.taskPriority}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.taskPriority && formik.errors.taskPriority
+                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.taskPriority && formik.errors.taskPriority
                           ? 'border-red-500'
-                          : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                          : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                           }`}
                       >
                         {priorityOptions.map(priority => (
@@ -1514,9 +1514,9 @@ const Tasks = () => {
                           value={formik.values.taskStatus}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.taskStatus && formik.errors.taskStatus
+                          className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${formik.touched.taskStatus && formik.errors.taskStatus
                             ? 'border-red-500'
-                            : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                            : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                             }`}
                         >
                           {statusOptions.map(status => (
@@ -1547,15 +1547,15 @@ const Tasks = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       min={new Date().toISOString().slice(0, 16)}
-                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 ${formik.touched.taskScheduledDate && formik.errors.taskScheduledDate
+                      className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 ${formik.touched.taskScheduledDate && formik.errors.taskScheduledDate
                         ? 'border-red-500'
-                        : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                        : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                         }`}
                       style={{
                         colorScheme: 'dark'
                       }}
                     />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00FF7F] pointer-events-none" />
                   </div>
                   {formik.touched.taskScheduledDate && formik.errors.taskScheduledDate && (
                     <p className="text-red-500 text-xs mt-1">{formik.errors.taskScheduledDate}</p>
@@ -1573,7 +1573,7 @@ const Tasks = () => {
                       value={formik.values.leadResponseStatus}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none"
+                      className="w-full px-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249] appearance-none"
                     >
                       {responseStatusOptions.map(status => (
                         <option key={status} value={status}>
@@ -1597,9 +1597,9 @@ const Tasks = () => {
                     value={formik.values.leadRemarks}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300 resize-none ${formik.touched.leadRemarks && formik.errors.leadRemarks
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300 resize-none ${formik.touched.leadRemarks && formik.errors.leadRemarks
                       ? 'border-red-500'
-                      : 'border-[#BBA473]/30 hover:border-[#BBA473] focus:border-[#BBA473]'
+                      : 'border-[#16A249]/30 hover:border-[#16A249] focus:border-[#16A249]'
                       }`}
                   />
                   {formik.touched.leadRemarks && formik.errors.leadRemarks && (
@@ -1610,7 +1610,7 @@ const Tasks = () => {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-6">
+            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#16A249]/30 mt-6">
               <button
                 type="button"
                 onClick={handleCloseDrawer}
@@ -1622,7 +1622,7 @@ const Tasks = () => {
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:from-[#1EB956] hover:to-[#267A3D] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95"
               >
                 {formik.isSubmitting
                   ? (editingTask ? 'Updating Task...' : 'Creating Task...')

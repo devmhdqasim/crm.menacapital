@@ -140,10 +140,10 @@ const DateRangePicker = ({
 
   return (
     <div className={`date-range-picker-container ${className}`}>
-      <div className="flex items-center gap-3 bg-[#2A2A2A] p-3 rounded-lg border border-[#BBA473]/30 hover:border-[#BBA473] transition-all duration-300">
+      <div className="flex items-center gap-3 bg-[#2A2A2A] p-3 rounded-lg border border-[#16A249]/30 hover:border-[#16A249] transition-all duration-300">
         {/* Start Date */}
         <div className="flex items-center gap-2 flex-1">
-          <label className="text-[#E8D5A3] text-sm font-medium whitespace-nowrap">
+          <label className="text-[#A8E6B8] text-sm font-medium whitespace-nowrap">
             {startLabel}
           </label>
           <div className="relative flex-1">
@@ -162,16 +162,16 @@ const DateRangePicker = ({
               calendarClassName="date-picker-calendar"
               wrapperClassName="date-picker-wrapper"
             />
-            <Calendar className="absolute right-7 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+            <Calendar className="absolute right-7 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#00FF7F] pointer-events-none" />
           </div>
         </div>
 
         {/* Separator */}
-        <div className="w-px h-6 bg-[#BBA473]/30"></div>
+        <div className="w-px h-6 bg-[#16A249]/30"></div>
 
         {/* End Date */}
         <div className="flex items-center gap-2 flex-1">
-          <label className="text-[#E8D5A3] text-sm font-medium whitespace-nowrap">
+          <label className="text-[#A8E6B8] text-sm font-medium whitespace-nowrap">
             {endLabel}
           </label>
           <div className="relative flex-1">
@@ -190,13 +190,13 @@ const DateRangePicker = ({
               calendarClassName="date-picker-calendar"
               wrapperClassName="date-picker-wrapper"
             />
-            <Calendar className="absolute right-7 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+            <Calendar className="absolute right-7 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#00FF7F] pointer-events-none" />
           </div>
         </div>
       </div>
 
       {/* Timezone Indicator */}
-      <div className="mt-1 text-xs text-[#BBA473]/70 text-right">
+      <div className="mt-1 text-xs text-[#00FF7F]/70 text-right">
         Dubai Time (GMT+4)
       </div>
 
@@ -221,7 +221,7 @@ const DateRangePicker = ({
           width: 100%;
           padding: 0.5rem 2rem 0.5rem 0.75rem;
           background-color: #1A1A1A;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           color: white;
           font-size: 0.875rem;
@@ -230,12 +230,12 @@ const DateRangePicker = ({
         }
 
         .date-picker-input:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .date-picker-input:focus {
-          border-color: #BBA473;
-          box-shadow: 0 0 0 3px rgba(187, 164, 115, 0.1);
+          border-color: #16A249;
+          box-shadow: 0 0 0 3px rgba(22, 162, 73, 0.1);
         }
 
         .date-picker-input::placeholder {
@@ -245,7 +245,7 @@ const DateRangePicker = ({
         /* Calendar Popup */
         :global(.date-picker-calendar) {
           background-color: #1A1A1A !important;
-          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border: 2px solid rgba(22, 162, 73, 0.3) !important;
           border-radius: 0.75rem !important;
           box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
           font-family: inherit !important;
@@ -254,20 +254,20 @@ const DateRangePicker = ({
         /* Calendar Header */
         :global(.date-picker-calendar .react-datepicker__header) {
           background-color: #2A2A2A !important;
-          border-bottom: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border-bottom: 2px solid rgba(22, 162, 73, 0.3) !important;
           border-radius: 0.75rem 0.75rem 0 0 !important;
           padding-top: 1rem !important;
         }
 
         :global(.date-picker-calendar .react-datepicker__current-month) {
-          color: #E8D5A3 !important;
+          color: #A8E6B8 !important;
           font-weight: 600 !important;
           font-size: 1rem !important;
           margin-bottom: 0.5rem !important;
         }
 
         :global(.date-picker-calendar .react-datepicker__day-name) {
-          color: #BBA473 !important;
+          color: #00FF7F !important;
           font-weight: 500 !important;
           width: 2.5rem !important;
           line-height: 2.5rem !important;
@@ -279,12 +279,12 @@ const DateRangePicker = ({
         }
 
         :global(.date-picker-calendar .react-datepicker__navigation-icon::before) {
-          border-color: #BBA473 !important;
+          border-color: #16A249 !important;
           border-width: 2px 2px 0 0 !important;
         }
 
         :global(.date-picker-calendar .react-datepicker__navigation:hover *::before) {
-          border-color: #E8D5A3 !important;
+          border-color: #A8E6B8 !important;
         }
 
         /* Calendar Days */
@@ -298,28 +298,28 @@ const DateRangePicker = ({
         }
 
         :global(.date-picker-calendar .react-datepicker__day:hover) {
-          background-color: rgba(187, 164, 115, 0.2) !important;
-          color: #E8D5A3 !important;
+          background-color: rgba(22, 162, 73, 0.2) !important;
+          color: #A8E6B8 !important;
         }
 
         :global(.date-picker-calendar .react-datepicker__day--selected) {
-          background: linear-gradient(135deg, #BBA473 0%, #8E7D5A 100%) !important;
+          background: linear-gradient(135deg, #16A249 0%, #1C4F2A 100%) !important;
           color: #000 !important;
           font-weight: 600 !important;
         }
 
         :global(.date-picker-calendar .react-datepicker__day--in-range) {
-          background-color: rgba(187, 164, 115, 0.3) !important;
+          background-color: rgba(22, 162, 73, 0.3) !important;
           color: white !important;
         }
 
         :global(.date-picker-calendar .react-datepicker__day--in-selecting-range) {
-          background-color: rgba(187, 164, 115, 0.2) !important;
+          background-color: rgba(22, 162, 73, 0.2) !important;
         }
 
         :global(.date-picker-calendar .react-datepicker__day--range-start),
         :global(.date-picker-calendar .react-datepicker__day--range-end) {
-          background: linear-gradient(135deg, #BBA473 0%, #8E7D5A 100%) !important;
+          background: linear-gradient(135deg, #16A249 0%, #1C4F2A 100%) !important;
           color: #000 !important;
           font-weight: 600 !important;
         }
@@ -338,7 +338,7 @@ const DateRangePicker = ({
         }
 
         :global(.date-picker-calendar .react-datepicker__day--today) {
-          border: 2px solid #BBA473 !important;
+          border: 2px solid #16A249 !important;
           font-weight: 600 !important;
         }
 
@@ -349,7 +349,7 @@ const DateRangePicker = ({
 
         /* Clear Button */
         :global(.date-picker-calendar .react-datepicker__close-icon::after) {
-          background-color: #BBA473 !important;
+          background-color: #16A249 !important;
           color: #000 !important;
           font-size: 1rem !important;
           padding: 0.25rem !important;
@@ -357,7 +357,7 @@ const DateRangePicker = ({
         }
 
         :global(.date-picker-calendar .react-datepicker__close-icon:hover::after) {
-          background-color: #E8D5A3 !important;
+          background-color: #A8E6B8 !important;
         }
 
         /* Animation */

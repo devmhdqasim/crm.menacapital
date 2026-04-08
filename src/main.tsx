@@ -67,11 +67,11 @@ initMocks().then(() => {
               style: {
                 background: '#2A2A2A',
                 color: '#fff',
-                border: '1px solid #BBA473',
+                border: '1px solid #16A249',
               },
               success: {
                 iconTheme: {
-                  primary: '#BBA473',
+                  primary: '#16A249',
                   secondary: '#1A1A1A',
                 },
               },

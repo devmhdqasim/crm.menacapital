@@ -28,14 +28,7 @@ const getEnvVar = (key) => {
 
 // Your web app's Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: getEnvVar('FIREBASE_API_KEY') || "AIzaSyAybyk9PwDpJtPwoqVAE0T7kkrqEq4ZWXo",
-  authDomain: getEnvVar('FIREBASE_AUTH_DOMAIN') || "saveingold-crm.firebaseapp.com",
-  projectId: getEnvVar('FIREBASE_PROJECT_ID') || "saveingold-crm",
-  storageBucket: getEnvVar('FIREBASE_STORAGE_BUCKET') || "saveingold-crm.firebasestorage.app",
-  messagingSenderId: getEnvVar('FIREBASE_MESSAGING_SENDER_ID') || "707006356857",
-  appId: getEnvVar('FIREBASE_APP_ID') || "1:707006356857:web:e0aefcbb186eb7d064a3a8",
-  measurementId: getEnvVar('FIREBASE_MEASUREMENT_ID') || "G-TQD9E1YR3Y",
-  databaseURL: getEnvVar('FIREBASE_DATABASE_URL') || "https://saveingold-crm-default-rtdb.firebaseio.com"
+
 };
 
 // Validate that all required config values are present

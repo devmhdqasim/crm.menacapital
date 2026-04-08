@@ -236,7 +236,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
       const value = typeof param === 'object' ? (param.value || `{{${idx + 1}}}`) : (param || `{{${key}}}`);
       text = text.replace(
         new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'),
-        `<span class="text-[#BBA473] font-semibold bg-[#BBA473]/10 px-1 rounded">${value}</span>`
+        `<span class="text-[#00FF7F] font-semibold bg-[#16A249]/10 px-1 rounded">${value}</span>`
       );
     });
     return text;
@@ -244,7 +244,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
   const renderTemplateText = (text) => {
     if (!text) return '';
-    return text.replace(/\{\{(\d+)\}\}/g, '<span class="text-[#BBA473] font-semibold">{{$1}}</span>');
+    return text.replace(/\{\{(\d+)\}\}/g, '<span class="text-[#00FF7F] font-semibold">{{$1}}</span>');
   };
 
   if (!isOpen) return null;
@@ -258,7 +258,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
 
       <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
         <div
-          className={`bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col border border-[#BBA473]/30 pointer-events-auto transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+          className={`bg-gradient-to-br from-[#1A1A1A] to-[#252525] rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col border border-[#16A249]/30 pointer-events-auto transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Main Container - Using Relative Positioning for Cross-Fade */}
@@ -269,11 +269,11 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
               className={`absolute inset-0 flex flex-col transition-all duration-300 ease-in-out ${selectedTemplate ? 'opacity-0 pointer-events-none scale-[0.98]' : 'opacity-100 scale-100 z-10'}`}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-6 flex-shrink-0">
+              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#16A249]/30 p-6 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center">
                         <FileText className="w-5 h-5 text-black" />
                       </div>
                       Template Manager
@@ -287,7 +287,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
               </div>
 
               {/* Filters */}
-              <div className="p-6 border-b border-[#BBA473]/20 flex-shrink-0">
+              <div className="p-6 border-b border-[#16A249]/20 flex-shrink-0">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -296,7 +296,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                       placeholder="Search templates..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300"
+                      className="w-full pl-10 pr-4 py-2.5 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300"
                     />
                   </div>
                   <div className="relative w-full md:w-64">
@@ -304,7 +304,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 appearance-none cursor-pointer"
+                      className="w-full pl-10 pr-4 py-2.5 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 appearance-none cursor-pointer"
                     >
                       <option value="all">All Categories</option>
                       {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -314,7 +314,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                   <button
                     onClick={fetchTemplates}
                     disabled={isLoading}
-                    className="px-4 py-2.5 bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] rounded-lg transition-all duration-300 flex items-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2.5 bg-[#16A249]/10 hover:bg-[#16A249]/20 text-[#00FF7F] rounded-lg transition-all duration-300 flex items-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                     Refresh
@@ -326,7 +326,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
               <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#BBA473]/20 border-t-[#BBA473]"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#16A249]/20 border-t-[#16A249]"></div>
                     <span className="text-gray-400 mt-4">Loading templates...</span>
                   </div>
                 ) : filteredTemplates.length === 0 ? (
@@ -343,25 +343,25 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                       <div
                         key={template.id || template.elementName}
                         onClick={() => handleSelectTemplate(template)}
-                        className="bg-[#2A2A2A] rounded-xl p-5 border border-[#BBA473]/20 hover:border-[#BBA473]/40 transition-all duration-300 hover:shadow-lg group flex flex-col h-full cursor-pointer hover:scale-[1.01]"
+                        className="bg-[#2A2A2A] rounded-xl p-5 border border-[#16A249]/20 hover:border-[#16A249]/40 transition-all duration-300 hover:shadow-lg group flex flex-col h-full cursor-pointer hover:scale-[1.01]"
                       >
                         <div className="flex items-start justify-between mb-3 gap-3">
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-semibold text-base truncate group-hover:text-[#BBA473] transition-colors">{template.elementName}</h3>
+                            <h3 className="text-white font-semibold text-base truncate group-hover:text-[#00FF7F] transition-colors">{template.elementName}</h3>
                             <p className="text-gray-400 text-xs mt-1">{template.category || 'UNCATEGORIZED'}</p>
                           </div>
                           <div className="flex-shrink-0">{getStatusBadge(template.status)}</div>
                         </div>
-                        <div className="bg-[#1A1A1A] rounded-lg p-3 mb-3 border border-[#BBA473]/10 flex-1">
+                        <div className="bg-[#1A1A1A] rounded-lg p-3 mb-3 border border-[#16A249]/10 flex-1">
                           <p className="text-gray-300 text-sm leading-relaxed line-clamp-3" dangerouslySetInnerHTML={{ __html: renderTemplateText(template.body) }} />
                         </div>
                         <div className="flex items-center gap-3 text-xs text-gray-500 mt-auto">
                           <span className="flex items-center gap-1">
-                            <span className="text-[#BBA473]">🌐</span>
+                            <span className="text-[#00FF7F]">🌐</span>
                             {template.language?.text || template.language?.key || 'N/A'}
                           </span>
                           <div className="flex-1"></div>
-                          <span className="text-[#BBA473] font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                          <span className="text-[#00FF7F] font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
                             Configure & Send <ArrowLeft className="w-4 h-4 rotate-180" />
                           </span>
                         </div>
@@ -377,18 +377,18 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
               className={`absolute inset-0 flex flex-col bg-[#1A1A1A] transition-all duration-300 ease-in-out ${selectedTemplate ? 'opacity-100 scale-100 z-20' : 'opacity-0 pointer-events-none scale-[1.02] z-0'}`}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#BBA473]/30 p-6 flex-shrink-0">
+              <div className="bg-gradient-to-r from-[#2A2A2A] to-[#1F1F1F] border-b border-[#16A249]/30 p-6 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={handleBackToList}
-                      className="p-2 rounded-lg bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] transition-all duration-300 group"
+                      className="p-2 rounded-lg bg-[#16A249]/10 hover:bg-[#16A249]/20 text-[#00FF7F] transition-all duration-300 group"
                     >
                       <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
                     </button>
                     <div>
                       <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-[#BBA473]" />
+                        <FileText className="w-5 h-5 text-[#00FF7F]" />
                         Configure Template
                       </h2>
                       <p className="text-gray-400 text-sm mt-0.5 max-w-md truncate">
@@ -406,7 +406,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
               <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
 
                 {/* Left Column: Template Details & Live Preview */}
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar border-b lg:border-b-0 lg:border-r border-[#BBA473]/20 bg-[#1A1A1A]/30">
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar border-b lg:border-b-0 lg:border-r border-[#16A249]/20 bg-[#1A1A1A]/30">
                   <div className="max-w-xl mx-auto space-y-6">
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-gray-400 text-sm font-semibold uppercase tracking-wider">Live Preview</label>
@@ -416,7 +416,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Phone Preview Box */}
-                    <div className="bg-[#1A1A1A] rounded-2xl min-h-[200px] p-6 border-2 border-[#BBA473]/20 shadow-xl relative overflow-hidden">
+                    <div className="bg-[#1A1A1A] rounded-2xl min-h-[200px] p-6 border-2 border-[#16A249]/20 shadow-xl relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                         <Users className="w-32 h-32" />
                       </div>
@@ -424,8 +424,8 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                       {selectedTemplate && (
                         <>
                           {selectedTemplate.header && selectedTemplate.header.text && (
-                            <div className="mb-4 pb-4 border-b border-[#BBA473]/10">
-                              <p className="text-[#BBA473] font-bold text-lg">{selectedTemplate.header.text}</p>
+                            <div className="mb-4 pb-4 border-b border-[#16A249]/10">
+                              <p className="text-[#00FF7F] font-bold text-lg">{selectedTemplate.header.text}</p>
                             </div>
                           )}
 
@@ -436,7 +436,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                           </div>
 
                           {selectedTemplate.footer && (
-                            <div className="mt-4 pt-4 border-t border-[#BBA473]/10">
+                            <div className="mt-4 pt-4 border-t border-[#16A249]/10">
                               <p className="text-gray-500 text-sm italic">{selectedTemplate.footer}</p>
                             </div>
                           )}
@@ -444,7 +444,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                           {selectedTemplate.buttons && selectedTemplate.buttons.length > 0 && (
                             <div className="mt-4 flex flex-col gap-2">
                               {selectedTemplate.buttons.map((btn, idx) => (
-                                <div key={idx} className="w-full py-2.5 bg-[#2A2A2A] rounded-lg text-center text-[#BBA473] text-sm font-semibold border border-[#BBA473]/20 shadow-sm">
+                                <div key={idx} className="w-full py-2.5 bg-[#2A2A2A] rounded-lg text-center text-[#00FF7F] text-sm font-semibold border border-[#16A249]/20 shadow-sm">
                                   {btn.parameter?.text}
                                 </div>
                               ))}
@@ -473,18 +473,18 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                   <div className="flex-1 overflow-y-auto custom-scrollbar relative">
 
                     {/* Sticky Tabs */}
-                    <div className="sticky top-0 z-30 bg-[#2A2A2A] border-b border-[#BBA473]/20 p-4 shadow-md bg-opacity-95 backdrop-blur-md">
-                      <div className="bg-[#1A1A1A] p-1 rounded-xl flex gap-1 border border-[#BBA473]/10">
+                    <div className="sticky top-0 z-30 bg-[#2A2A2A] border-b border-[#16A249]/20 p-4 shadow-md bg-opacity-95 backdrop-blur-md">
+                      <div className="bg-[#1A1A1A] p-1 rounded-xl flex gap-1 border border-[#16A249]/10">
                         <button
                           onClick={() => setSendMode('single')}
-                          className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${sendMode === 'single' ? 'bg-[#2A2A2A] text-[#BBA473] shadow-md' : 'text-gray-400 hover:text-gray-200'
+                          className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${sendMode === 'single' ? 'bg-[#2A2A2A] text-[#00FF7F] shadow-md' : 'text-gray-400 hover:text-gray-200'
                             }`}
                         >
                           <User className="w-4 h-4" /> Single
                         </button>
                         <button
                           onClick={() => setSendMode('bulk')}
-                          className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${sendMode === 'bulk' ? 'bg-[#2A2A2A] text-[#BBA473] shadow-md' : 'text-gray-400 hover:text-gray-200'
+                          className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${sendMode === 'bulk' ? 'bg-[#2A2A2A] text-[#00FF7F] shadow-md' : 'text-gray-400 hover:text-gray-200'
                             }`}
                         >
                           <Users className="w-4 h-4" /> Bulk
@@ -505,7 +505,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                               const val = e.target.value;
                               if (/^[0-9+]*$/.test(val)) setRecipientPhone(val);
                             }}
-                            className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white transition-all duration-300"
+                            className="w-full px-4 py-3 border-2 border-[#16A249]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white transition-all duration-300"
                           />
                         </div>
                       ) : (
@@ -517,7 +517,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                               <select
                                 value={bulkFilterStatus}
                                 onChange={(e) => setBulkFilterStatus(e.target.value)}
-                                className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#1A1A1A] text-white appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 border-2 border-[#16A249]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#1A1A1A] text-white appearance-none cursor-pointer"
                               >
                                 <option value="all">All Contacts</option>
                                 <option value="contacted">Contacted</option>
@@ -528,9 +528,9 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                               <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none w-5 h-5" />
                             </div>
                           </div>
-                          <div className="p-4 bg-[#BBA473]/10 rounded-xl border border-[#BBA473]/20 flex items-center justify-between">
+                          <div className="p-4 bg-[#16A249]/10 rounded-xl border border-[#16A249]/20 flex items-center justify-between">
                             <div>
-                              <span className="text-[#BBA473] font-semibold block">Estimated Reach</span>
+                              <span className="text-[#00FF7F] font-semibold block">Estimated Reach</span>
                               <span className="text-xs text-gray-400">Contacts matching filters</span>
                             </div>
                             <span className="text-3xl font-bold text-white">{estimatedRecipients}</span>
@@ -542,10 +542,10 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                       {Object.keys(templateParams).length > 0 && (
                         <div className="animate-fadeIn">
                           <label className="text-gray-300 text-sm font-medium mb-3 block flex items-center gap-2">
-                            <div className="w-5 h-5 rounded bg-[#BBA473]/20 flex items-center justify-center text-[#BBA473] text-xs">📝</div>
+                            <div className="w-5 h-5 rounded bg-[#16A249]/20 flex items-center justify-center text-[#00FF7F] text-xs">📝</div>
                             Template Variables
                           </label>
-                          <div className="space-y-3 bg-[#1A1A1A] p-4 rounded-xl border border-[#BBA473]/10">
+                          <div className="space-y-3 bg-[#1A1A1A] p-4 rounded-xl border border-[#16A249]/10">
                             {Object.keys(templateParams).sort((a, b) => parseInt(a) - parseInt(b)).map((paramKey) => {
                               const param = templateParams[paramKey];
                               const paramName = typeof param === 'object' ? param.name : paramKey;
@@ -561,7 +561,7 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                                       ...templateParams,
                                       [paramKey]: typeof param === 'object' ? { ...param, value: e.target.value } : e.target.value
                                     })}
-                                    className="w-full px-4 py-2.5 border border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 bg-[#2A2A2A] text-white text-sm"
+                                    className="w-full px-4 py-2.5 border border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 bg-[#2A2A2A] text-white text-sm"
                                   />
                                 </div>
                               );
@@ -573,12 +573,12 @@ const InboxTemplateManager = ({ isOpen, onClose }) => {
                   </div>
 
                   {/* Send Footer */}
-                  <div className="p-6 border-t border-[#BBA473]/30 bg-[#1A1A1A] flex-shrink-0 z-30">
+                  <div className="p-6 border-t border-[#16A249]/30 bg-[#1A1A1A] flex-shrink-0 z-30">
                     {selectedTemplate?.status === 'APPROVED' ? (
                       <button
                         onClick={handleSendTemplateMessage}
                         disabled={isSending || (sendMode === 'single' && !recipientPhone)}
-                        className="w-full px-6 py-4 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-xl transition-all duration-300 flex items-center justify-center gap-3 font-bold shadow-lg text-lg disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98] hover:shadow-xl hover:scale-[1.02]"
+                        className="w-full px-6 py-4 bg-gradient-to-r from-[#16A249] to-[#1C4F2A] hover:from-[#1EB956] hover:to-[#267A3D] text-black rounded-xl transition-all duration-300 flex items-center justify-center gap-3 font-bold shadow-lg text-lg disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98] hover:shadow-xl hover:scale-[1.02]"
                       >
                         {isSending ? (
                           <>

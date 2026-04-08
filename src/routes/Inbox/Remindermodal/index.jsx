@@ -61,12 +61,12 @@ const ReminderModal = ({ contact, onClose }) => {
 
   return (
     <div className="absolute inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-gradient-to-br from-[#2A2A2A] to-[#1F1F1F] rounded-2xl shadow-2xl w-full max-w-md border border-[#BBA473]/30 animate-scaleIn">
-        <div className="p-5 border-b border-[#BBA473]/20">
+      <div className="bg-gradient-to-br from-[#2A2A2A] to-[#1F1F1F] rounded-2xl shadow-2xl w-full max-w-md border border-[#16A249]/30 animate-scaleIn">
+        <div className="p-5 border-b border-[#16A249]/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#BBA473]/20 flex items-center justify-center">
-                <Bell className="w-5 h-5 text-[#BBA473]" />
+              <div className="w-10 h-10 rounded-xl bg-[#16A249]/20 flex items-center justify-center">
+                <Bell className="w-5 h-5 text-[#00FF7F]" />
               </div>
               <div>
                 <h3 className="text-white font-bold">Set Follow-up Reminder</h3>
@@ -86,7 +86,7 @@ const ReminderModal = ({ contact, onClose }) => {
         <div className="p-5 space-y-4">
           <div>
             <label className="text-gray-300 text-sm mb-2 block font-medium flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#BBA473]" />
+              <Calendar className="w-4 h-4 text-[#00FF7F]" />
               When to remind you?
             </label>
             <div className="relative">
@@ -100,12 +100,12 @@ const ReminderModal = ({ contact, onClose }) => {
                 placeholderText="Select date and time"
                 minDate={new Date()}
                 disabled={isSubmitting}
-                className="w-full px-4 py-3 pl-11 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 pl-11 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 wrapperClassName="w-full"
                 calendarClassName="custom-datepicker"
                 timeCaption="Time"
               />
-              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#00FF7F] pointer-events-none" />
             </div>
           </div>
 
@@ -117,7 +117,7 @@ const ReminderModal = ({ contact, onClose }) => {
               placeholder="Add a note about this follow-up..."
               rows="3"
               disabled={isSubmitting}
-              className="w-full px-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white placeholder-gray-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white placeholder-gray-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -146,7 +146,7 @@ const ReminderModal = ({ contact, onClose }) => {
                     }
                     setReminderTime(date.toISOString());
                   }}
-                  className="px-3 py-2 bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] rounded-lg text-xs font-medium transition-all duration-300 border border-[#BBA473]/20 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="px-3 py-2 bg-[#16A249]/10 hover:bg-[#16A249]/20 text-[#00FF7F] rounded-lg text-xs font-medium transition-all duration-300 border border-[#16A249]/20 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {preset.label}
                 </button>
@@ -155,7 +155,7 @@ const ReminderModal = ({ contact, onClose }) => {
           </div>
         </div>
 
-        <div className="p-5 border-t border-[#BBA473]/20 flex gap-3">
+        <div className="p-5 border-t border-[#16A249]/20 flex gap-3">
           <button
             onClick={onClose}
             disabled={isSubmitting}
@@ -166,7 +166,7 @@ const ReminderModal = ({ contact, onClose }) => {
           <button
             onClick={handleSetReminder}
             disabled={!reminderTime || isSubmitting}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] hover:from-[#d4bc89] hover:to-[#a69363] text-black rounded-xl transition-all duration-300 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#16A249] to-[#1C4F2A] hover:from-[#1EB956] hover:to-[#267A3D] text-black rounded-xl transition-all duration-300 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>

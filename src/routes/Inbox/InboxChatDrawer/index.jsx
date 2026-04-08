@@ -569,8 +569,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
     { label: 'Grid', value: 'pattern:grid', bg: '#1A1A1A', css: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)', size: '24px 24px' },
     { label: 'Diagonal', value: 'pattern:diagonal', bg: '#1A1A1A', css: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #222 10px, #222 11px)', size: 'auto' },
     { label: 'Cross', value: 'pattern:cross', bg: '#1A1A1A', css: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)', size: '32px 32px' },
-    { label: 'Gold Dots', value: 'pattern:golddots', bg: '#1A1A1A', css: 'radial-gradient(circle, #BBA47315 1px, transparent 1px)', size: '18px 18px' },
-    { label: 'Gold Grid', value: 'pattern:goldgrid', bg: '#1A1A1A', css: 'linear-gradient(#BBA47310 1px, transparent 1px), linear-gradient(90deg, #BBA47310 1px, transparent 1px)', size: '28px 28px' },
+    { label: 'Gold Dots', value: 'pattern:golddots', bg: '#1A1A1A', css: 'radial-gradient(circle, #16A24915 1px, transparent 1px)', size: '18px 18px' },
+    { label: 'Gold Grid', value: 'pattern:goldgrid', bg: '#1A1A1A', css: 'linear-gradient(#16A24910 1px, transparent 1px), linear-gradient(90deg, #16A24910 1px, transparent 1px)', size: '28px 28px' },
     { label: 'Checkers', value: 'pattern:checkers', bg: '#1A1A1A', css: 'conic-gradient(#1E1E1E 90deg, #1A1A1A 90deg 180deg, #1E1E1E 180deg 270deg, #1A1A1A 270deg)', size: '40px 40px' },
     { label: 'Waves', value: 'pattern:waves', bg: '#1A1A1A', css: 'repeating-linear-gradient(135deg, transparent, transparent 6px, #22222280 6px, #22222280 7px, transparent 7px, transparent 13px, #22222240 13px, #22222240 14px)', size: 'auto' },
     { label: 'Hex', value: 'pattern:hex', bg: '#1A1A1A', css: 'radial-gradient(circle at 0% 50%, #252525 25%, transparent 25%), radial-gradient(circle at 100% 50%, #252525 25%, transparent 25%)', size: '30px 52px' },
@@ -1238,14 +1238,14 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                       <div className="flex gap-3">
                         <button
                           onClick={() => window.open(`tel:${contact.phone}`, '_blank')}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
+                          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
                         >
                           <Phone className="w-4 h-4" />
                           Call Contact
                         </button>
                         <button
                           onClick={() => setContactNotFound(false)}
-                          className="px-4 py-2.5 bg-[#3A3A3A] text-white rounded-lg text-sm font-semibold transition-all duration-300 hover:bg-[#4A4A4A] border border-[#BBA473]/20"
+                          className="px-4 py-2.5 bg-[#3A3A3A] text-white rounded-lg text-sm font-semibold transition-all duration-300 hover:bg-[#4A4A4A] border border-[#16A249]/20"
                         >
                           Dismiss
                         </button>
@@ -1289,7 +1289,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
 
               {/* Chat Settings Panel */}
               {showChatSettings && (
-                <div className="border-b border-[#BBA473]/20 bg-[#222222] animate-slideDown flex-shrink-0">
+                <div className="border-b border-[#16A249]/20 bg-[#222222] animate-slideDown flex-shrink-0">
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-semibold text-white">Chat Background</h4>
@@ -1312,7 +1312,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                             onClick={() => handleChatBgChange(preset.value)}
                             className={`group relative rounded-lg h-10 border-2 transition-all duration-200 hover:scale-105 ${
                               isActive
-                                ? 'border-[#BBA473] ring-1 ring-[#BBA473]/50'
+                                ? 'border-[#16A249] ring-1 ring-[#16A249]/50'
                                 : 'border-[#333] hover:border-[#555]'
                             }`}
                             style={{ background: preset.value }}
@@ -1320,7 +1320,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                           >
                             {isActive && (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-[#BBA473]" />
+                                <div className="w-2 h-2 rounded-full bg-[#16A249]" />
                               </div>
                             )}
                             <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -1342,7 +1342,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                             onClick={() => handleChatBgChange(preset.value)}
                             className={`group relative rounded-lg h-10 border-2 transition-all duration-200 hover:scale-105 overflow-hidden ${
                               isActive
-                                ? 'border-[#BBA473] ring-1 ring-[#BBA473]/50'
+                                ? 'border-[#16A249] ring-1 ring-[#16A249]/50'
                                 : 'border-[#333] hover:border-[#555]'
                             }`}
                             style={{
@@ -1354,7 +1354,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                           >
                             {isActive && (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-[#BBA473] shadow-[0_0_4px_#BBA473]" />
+                                <div className="w-2 h-2 rounded-full bg-[#16A249] shadow-[0_0_4px_#16A249]" />
                               </div>
                             )}
                             <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -1376,7 +1376,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                             onClick={() => handleChatBgChange(preset.value)}
                             className={`group relative rounded-lg h-10 border-2 transition-all duration-200 hover:scale-105 overflow-hidden ${
                               isActive
-                                ? 'border-[#BBA473] ring-1 ring-[#BBA473]/50'
+                                ? 'border-[#16A249] ring-1 ring-[#16A249]/50'
                                 : 'border-[#333] hover:border-[#555]'
                             }`}
                             style={{
@@ -1387,7 +1387,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                           >
                             {isActive && (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-[#BBA473] shadow-[0_0_4px_#BBA473]" />
+                                <div className="w-2 h-2 rounded-full bg-[#16A249] shadow-[0_0_4px_#16A249]" />
                               </div>
                             )}
                             <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -1431,7 +1431,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
                           left: `${mousePos.x * 100}%`,
                           top: `${mousePos.y * 100}%`,
                           transform: 'translate(-50%, -50%)',
-                          background: 'radial-gradient(circle, rgba(255,140,50,0.04) 0%, rgba(187,164,115,0.06) 30%, transparent 70%)',
+                          background: 'radial-gradient(circle, rgba(255,140,50,0.04) 0%, rgba(22,162,73,0.06) 30%, transparent 70%)',
                         }}
                       />
                       {/* Shooting star 1 */}
@@ -1485,9 +1485,9 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               {/* Reply Preview Bar */}
               {replyToMessage && (
                 <div className="bg-[#1e1e1e] border-t border-[#333] px-4 pt-3 flex-shrink-0">
-                  <div className="flex items-start gap-3 bg-[#2A2A2A] rounded-xl px-3 py-2.5 border-l-[3px] border-[#BBA473]">
+                  <div className="flex items-start gap-3 bg-[#2A2A2A] rounded-xl px-3 py-2.5 border-l-[3px] border-[#16A249]">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-[#BBA473]">
+                      <p className="text-xs font-semibold text-[#00FF7F]">
                         {replyToMessage.sender === 'user' ? 'You' : contact?.name?.split(' ')[0] || 'Contact'}
                       </p>
                       <p className="text-sm text-gray-300 truncate">
@@ -1586,21 +1586,21 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           onClick={handleMediaPreviewCancel}
         >
           <div
-            className="bg-[#1E1E1E] rounded-2xl border border-[#BBA473]/20 shadow-2xl max-w-md w-full overflow-hidden animate-scaleIn"
+            className="bg-[#1E1E1E] rounded-2xl border border-[#16A249]/20 shadow-2xl max-w-md w-full overflow-hidden animate-scaleIn"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#333]">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#BBA473]/15 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-full bg-[#16A249]/15 flex items-center justify-center">
                   {mediaPreviewType === 'image' ? (
-                    <ImageIcon className="w-4 h-4 text-[#BBA473]" />
+                    <ImageIcon className="w-4 h-4 text-[#00FF7F]" />
                   ) : mediaPreviewType === 'video' ? (
-                    <Video className="w-4 h-4 text-[#BBA473]" />
+                    <Video className="w-4 h-4 text-[#00FF7F]" />
                   ) : mediaPreviewType === 'document' ? (
-                    <FileText className="w-4 h-4 text-[#BBA473]" />
+                    <FileText className="w-4 h-4 text-[#00FF7F]" />
                   ) : (
-                    <Music className="w-4 h-4 text-[#BBA473]" />
+                    <Music className="w-4 h-4 text-[#00FF7F]" />
                   )}
                 </div>
                 <div>
@@ -1640,8 +1640,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               )}
               {mediaPreviewType === 'audio' && (
                 <div className="w-full flex flex-col items-center gap-4 py-6">
-                  <div className="w-20 h-20 rounded-full bg-[#BBA473]/10 flex items-center justify-center">
-                    <Music className="w-10 h-10 text-[#BBA473]" />
+                  <div className="w-20 h-20 rounded-full bg-[#16A249]/10 flex items-center justify-center">
+                    <Music className="w-10 h-10 text-[#00FF7F]" />
                   </div>
                   <p className="text-gray-400 text-sm truncate max-w-[280px]">{mediaPreviewFile.name}</p>
                   <audio
@@ -1672,7 +1672,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
               </button>
               <button
                 onClick={handleMediaPreviewConfirm}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 Send
@@ -1761,8 +1761,8 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }
 
         @keyframes highlightPulse {
-          0% { background-color: rgba(187, 164, 115, 0.2); }
-          50% { background-color: rgba(187, 164, 115, 0.4); }
+          0% { background-color: rgba(22, 162, 73, 0.2); }
+          50% { background-color: rgba(22, 162, 73, 0.4); }
           100% { background-color: transparent; }
         }
 
@@ -1787,12 +1787,12 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #BBA473 0%, #8E7D5A 100%);
+          background: linear-gradient(180deg, #16A249 0%, #1C4F2A 100%);
           border-radius: 4px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #d4bc89 0%, #a69363 100%);
+          background: linear-gradient(180deg, #1EB956 0%, #267A3D 100%);
         }
 
         /* Shooting star animations — angled diagonal fall */
@@ -1832,7 +1832,7 @@ const InboxChatDrawer = ({ isOpen, onClose, contact, refreshContacts }) => {
           right: 100%;
           width: 90px;
           height: 2px;
-          background: linear-gradient(to left, rgba(255,200,80,0.7), rgba(255,120,30,0.4) 30%, rgba(187,164,115,0.2) 60%, transparent);
+          background: linear-gradient(to left, rgba(255,200,80,0.7), rgba(255,120,30,0.4) 30%, rgba(22,162,73,0.2) 60%, transparent);
           transform-origin: right center;
           transform: translateY(-50%);
           border-radius: 1px;

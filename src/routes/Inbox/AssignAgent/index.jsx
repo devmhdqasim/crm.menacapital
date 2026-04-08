@@ -66,7 +66,7 @@ const AssignAgent = ({ contact, refreshContacts }) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6">
-        <Loader2 className="w-10 h-10 text-[#BBA473] animate-spin mb-3" />
+        <Loader2 className="w-10 h-10 text-[#00FF7F] animate-spin mb-3" />
         <span className="text-gray-400 text-sm">Loading agents...</span>
       </div>
     );
@@ -75,11 +75,11 @@ const AssignAgent = ({ contact, refreshContacts }) => {
   return (
     <div className="p-5 space-y-4">
       {/* Current Assignment */}
-      <div className="bg-[#2A2A2A] rounded-xl border border-[#BBA473]/20 p-4">
+      <div className="bg-[#2A2A2A] rounded-xl border border-[#16A249]/20 p-4">
         <p className="text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">Currently Assigned</p>
         {currentAgentId ? (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center text-black font-bold text-sm">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center text-black font-bold text-sm">
               {(() => {
                 const assigned = agents.find((a) => a._id === currentAgentId);
                 return assigned ? assigned.firstName?.[0]?.toUpperCase() : '?';
@@ -117,7 +117,7 @@ const AssignAgent = ({ contact, refreshContacts }) => {
           placeholder="Search agents..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#BBA473]/50 transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 bg-[#2A2A2A] border border-[#16A249]/20 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#16A249]/50 transition-colors"
         />
       </div>
 
@@ -142,29 +142,29 @@ const AssignAgent = ({ contact, refreshContacts }) => {
                   disabled={isCurrentAgent || isAssigning}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     isCurrentAgent
-                      ? 'bg-[#BBA473]/10 border border-[#BBA473]/30 cursor-default'
-                      : 'bg-[#2A2A2A] border border-transparent hover:border-[#BBA473]/30 hover:bg-[#2A2A2A]/80'
+                      ? 'bg-[#16A249]/10 border border-[#16A249]/30 cursor-default'
+                      : 'bg-[#2A2A2A] border border-transparent hover:border-[#16A249]/30 hover:bg-[#2A2A2A]/80'
                   }`}
                 >
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
                     isCurrentAgent
-                      ? 'bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] text-black'
-                      : 'bg-[#1A1A1A] text-[#BBA473] border border-[#BBA473]/30'
+                      ? 'bg-gradient-to-br from-[#16A249] to-[#1C4F2A] text-white'
+                      : 'bg-[#1A1A1A] text-[#00FF7F] border border-[#16A249]/30'
                   }`}>
                     {agent.firstName?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${isCurrentAgent ? 'text-[#BBA473]' : 'text-white'}`}>
+                    <p className={`text-sm font-medium truncate ${isCurrentAgent ? 'text-[#00FF7F]' : 'text-white'}`}>
                       {agent.firstName} {agent.lastName}
                     </p>
                     <p className="text-xs text-gray-400 truncate">{agent.roleName || 'Agent'}</p>
                   </div>
                   {isAssigning ? (
-                    <Loader2 className="w-4 h-4 text-[#BBA473] animate-spin flex-shrink-0" />
+                    <Loader2 className="w-4 h-4 text-[#00FF7F] animate-spin flex-shrink-0" />
                   ) : isCurrentAgent ? (
-                    <span className="text-xs text-[#BBA473] font-medium flex-shrink-0">Assigned</span>
+                    <span className="text-xs text-[#00FF7F] font-medium flex-shrink-0">Assigned</span>
                   ) : (
-                    <UserCheck className="w-4 h-4 text-gray-500 group-hover:text-[#BBA473] flex-shrink-0" />
+                    <UserCheck className="w-4 h-4 text-gray-500 group-hover:text-[#00FF7F] flex-shrink-0" />
                   )}
                 </button>
               );

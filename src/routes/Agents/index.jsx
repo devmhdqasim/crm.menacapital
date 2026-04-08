@@ -430,15 +430,15 @@ const AgentManagement = () => {
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] bg-clip-text text-transparent">
                 Agents Management
               </h1>
-              <p className="text-gray-400 mt-2">Manage all Save In Gold Agents</p>
+              <p className="text-gray-400 mt-2">Manage all Mena Capital Agents</p>
             </div>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleAddAgent}
-                className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
+                className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white font-bold text-lg py-4 rounded-lg disabled:from-[#0E5A28] disabled:to-[#0D3D1E] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#16A249]/20 hover:shadow-[#16A249]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
               >
                 {!showPassIcon && <span className="inline-block">Add New Agent</span>}
               </button>
@@ -518,7 +518,7 @@ const AgentManagement = () => {
         .phone-input-custom .PhoneInputInput {
           width: 100%;
           padding: 0.75rem 1rem;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           background-color: #1A1A1A;
           color: white;
@@ -528,13 +528,13 @@ const AgentManagement = () => {
         }
 
         .phone-input-custom .PhoneInputInput:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputInput:focus {
-          border-color: #BBA473;
+          border-color: #16A249;
           ring: 2px;
-          ring-color: rgba(187, 164, 115, 0.5);
+          ring-color: rgba(22, 162, 73, 0.5);
         }
 
         .phone-input-error .PhoneInputInput {
@@ -550,13 +550,13 @@ const AgentManagement = () => {
           margin-right: 0.5rem;
           padding: 0.5rem;
           background-color: #1A1A1A;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           transition: all 0.3s ease;
         }
 
         .phone-input-custom .PhoneInputCountry:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputCountryIcon {
@@ -565,7 +565,7 @@ const AgentManagement = () => {
         }
 
         .phone-input-custom .PhoneInputCountrySelectArrow {
-          color: #BBA473;
+          color: #00FF7F;
           opacity: 0.8;
           margin-left: 0.5rem;
         }

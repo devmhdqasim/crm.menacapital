@@ -745,10 +745,10 @@ const LeadManagement = () => {
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] bg-clip-text text-transparent">
                 Lead Management
               </h1>
-              <p className="text-gray-400 mt-2">Manage and track your Save In Gold mobile application leads</p>
+              <p className="text-gray-400 mt-2">Manage and track your Mena Capital mobile application leads</p>
             </div>
             <div className="flex flex-col gap-3">
               <button
@@ -761,7 +761,7 @@ const LeadManagement = () => {
                     setDrawerOpen(true);
                   }
                 }}
-                className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
+                className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white font-bold text-lg py-4 rounded-lg disabled:from-[#0E5A28] disabled:to-[#0D3D1E] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#16A249]/20 hover:shadow-[#16A249]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
               >
                 {/* <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" /> */}
@@ -783,7 +783,7 @@ const LeadManagement = () => {
 
         {/* Tabs */}
         <div className="mb-6 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
+          <div className="flex gap-2 border-b border-[#16A249]/30 min-w-max">
             {tabs.map((tab) => (
               <button
                 key={tab}
@@ -795,7 +795,7 @@ const LeadManagement = () => {
                 }}
                 className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap flex items-center gap-2 ${
                   activeTab === tab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                    ? 'border-[#16A249] text-[#00FF7F] bg-[#16A249]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
@@ -822,8 +822,8 @@ const LeadManagement = () => {
                     onClick={() => setInterestedSubTab(subTab)}
                     className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 flex items-center gap-2 ${
                       interestedSubTab === subTab
-                        ? 'bg-[#BBA473] text-black'
-                        : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#BBA473]/30'
+                        ? 'bg-[#16A249] text-black'
+                        : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#16A249]/30'
                     }`}
                   >
                     {subTab}
@@ -851,8 +851,8 @@ const LeadManagement = () => {
                     onClick={() => setHotLeadsSubTab(subTab)}
                     className={`px-5 py-2 font-medium rounded-lg transition-all duration-300 flex items-center gap-2 ${
                       hotLeadsSubTab === subTab
-                        ? 'bg-[#BBA473] text-black'
-                        : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#BBA473]/30'
+                        ? 'bg-[#16A249] text-black'
+                        : 'bg-[#2A2A2A] text-gray-400 hover:text-white hover:bg-[#3A3A3A] border border-[#16A249]/30'
                     }`}
                   >
                     {subTab}
@@ -870,7 +870,7 @@ const LeadManagement = () => {
                 <select
                   value={selectedFilter}
                   onChange={(e) => setSelectedFilter(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                  className="w-full px-4 py-2 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
                 >
                   <option value="">Select Filter</option>
                   {filterOptions.map((option) => (
@@ -891,34 +891,34 @@ const LeadManagement = () => {
               placeholder="Search by name, email, phone, nationality, residency, or source..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+              className="w-full pl-10 pr-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
             />
           </div>
         </div>
 
         {/* Table Container */}
-        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#16A249]/20 animate-fadeIn">
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full ">
-              <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
+              <thead className="bg-[#1A1A1A] border-b border-[#16A249]/30">
                 <tr>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Name</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Nationality</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Source</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Created At</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Lead ID</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Name</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Phone</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Nationality</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Source</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Status</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Created At</th>
+                  <th className="text-center px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#BBA473]/10">
+              <tbody className="divide-y divide-[#16A249]/10">
                 {loading ? (
                   <tr>
                     <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
                       <div className="flex flex-col items-center gap-3">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#BBA473]"></div>
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#16A249]"></div>
                         <span>Loading leads...</span>
                       </div>
                     </td>
@@ -938,7 +938,7 @@ const LeadManagement = () => {
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{lead.leadId || lead.id.slice(-6)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                          <span className="font-medium text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                             {lead.name}
                           </span>
                         </div>
@@ -973,7 +973,7 @@ const LeadManagement = () => {
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => handleEdit(lead)}
-                            className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
+                            className="p-2 rounded-lg bg-[#16A249]/20 text-[#00FF7F] hover:bg-[#16A249] hover:text-black transition-all duration-300 hover:scale-110"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
@@ -995,7 +995,7 @@ const LeadManagement = () => {
           </div>
 
           {/* Pagination - Updated to show proper counts */}
-          <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#16A249]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="text-gray-400 text-sm">
                 Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
@@ -1005,19 +1005,19 @@ const LeadManagement = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30"
                 >
                   <span className="text-sm">{itemsPerPage} per page</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 {showPerPageDropdown && (
-                  <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
+                  <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
                     {perPageOptions.map(option => (
                       <button
                         key={option}
                         onClick={() => handlePerPageChange(option)}
                         className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                          option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                          option === itemsPerPage ? 'bg-[#16A249]/20 text-[#00FF7F]' : 'text-white'
                         }`}
                       >
                         {option} per page
@@ -1032,7 +1032,7 @@ const LeadManagement = () => {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -1041,7 +1041,7 @@ const LeadManagement = () => {
                 <>
                   <button
                     onClick={() => handlePageChange(1)}
-                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                   >
                     1
                   </button>
@@ -1055,8 +1055,8 @@ const LeadManagement = () => {
                   onClick={() => handlePageChange(page)}
                   className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
                     currentPage === page
-                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
-                      : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
+                      ? 'bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white border-[#16A249] font-semibold shadow-lg'
+                      : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#16A249]/30 hover:border-[#16A249]'
                   }`}
                 >
                   {page}
@@ -1068,7 +1068,7 @@ const LeadManagement = () => {
                   {currentPage < totalPages - 2 && <span className="text-gray-400">...</span>}
                   <button
                     onClick={() => handlePageChange(totalPages)}
-                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                   >
                     {totalPages}
                   </button>
@@ -1078,7 +1078,7 @@ const LeadManagement = () => {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -1095,9 +1095,9 @@ const LeadManagement = () => {
       >
         <div className="h-full flex flex-col">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
+          <div className="flex items-center justify-between p-6 border-b border-[#16A249]/30 bg-gradient-to-r from-[#16A249]/10 to-transparent">
             <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">
+              <h2 className="text-2xl font-bold text-[#00FF7F]">
                 {editingLead ? 'Edit Lead' : 'Add New Lead'}
               </h2>
               <p className="text-gray-400 text-sm mt-1">
@@ -1117,7 +1117,7 @@ const LeadManagement = () => {
             <div className="space-y-6">
               {/* Personal Information Section */}
               <div className="grid space-y-4">
-                <h3 className="text-lg font-semibold text-[#E8D5A3] border-b border-[#BBA473]/30 pb-2">
+                <h3 className="text-lg font-semibold text-[#A8E6B8] border-b border-[#16A249]/30 pb-2">
                   Lead Information
                 </h3>
 
@@ -1125,7 +1125,7 @@ const LeadManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Full Name */}
                   <div className="space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1138,7 +1138,7 @@ const LeadManagement = () => {
                       className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.name && formik.errors.name
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     />
                     {formik.touched.name && formik.errors.name && (
@@ -1148,7 +1148,7 @@ const LeadManagement = () => {
 
                   {/* Language */}
                   <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Preferred Language <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -1160,7 +1160,7 @@ const LeadManagement = () => {
                         className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                           formik.touched.language && formik.errors.language
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                         }`}
                       >
                         <option value="">Select Language</option>
@@ -1177,7 +1177,7 @@ const LeadManagement = () => {
 
                   {/* Status */}
                   <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Status <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -1194,7 +1194,7 @@ const LeadManagement = () => {
                         className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                           formik.touched.status && formik.errors.status
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                         }`}
                       >
                         <option value="">Select Status</option>
@@ -1212,7 +1212,7 @@ const LeadManagement = () => {
                   {/* Deposit Status - Shows only when Status is "Real" */}
                   {formik.values.status === 'Real' && (
                     <div className="relative space-y-2">
-                      <label className="text-sm text-[#E8D5A3] font-medium block">
+                      <label className="text-sm text-[#A8E6B8] font-medium block">
                         Deposit Status <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
@@ -1224,7 +1224,7 @@ const LeadManagement = () => {
                           className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                             formik.touched.depositStatus && formik.errors.depositStatus
                               ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                              : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                              : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                           }`}
                         >
                           <option value="">Select Deposit Status</option>
@@ -1242,7 +1242,7 @@ const LeadManagement = () => {
 
                   {/* Kiosk Member */}
                   <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Kiosk Team <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -1254,7 +1254,7 @@ const LeadManagement = () => {
                         className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                           formik.touched.kioskMember && formik.errors.kioskMember
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                         }`}
                       >
                         <option value="">Select Kiosk Member</option>
@@ -1271,7 +1271,7 @@ const LeadManagement = () => {
 
                   {/* Nationality - Custom Searchable Dropdown with Clear Button */}
                   <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Nationality
                     </label>
                     <div className="relative">
@@ -1280,7 +1280,7 @@ const LeadManagement = () => {
                         className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 cursor-pointer flex items-center justify-between ${
                           formik.touched.nationality && formik.errors.nationality
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 hover:border-[#BBA473]'
+                            : 'border-[#16A249]/30 hover:border-[#16A249]'
                         }`}
                       >
                         <span className={formik.values.nationality ? 'text-white' : 'text-gray-400'}>
@@ -1306,9 +1306,9 @@ const LeadManagement = () => {
                       </div>
                       
                       {showNationalityDropdown && (
-                        <div className="absolute z-50 w-full mt-1 bg-[#2A2A2A] border-2 border-[#BBA473]/30 rounded-lg shadow-xl max-h-64 overflow-hidden">
+                        <div className="absolute z-50 w-full mt-1 bg-[#2A2A2A] border-2 border-[#16A249]/30 rounded-lg shadow-xl max-h-64 overflow-hidden">
                           {/* Search Input */}
-                          <div className="p-2 border-b border-[#BBA473]/30">
+                          <div className="p-2 border-b border-[#16A249]/30">
                             <div className="relative">
                               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                               <input
@@ -1317,7 +1317,7 @@ const LeadManagement = () => {
                                 value={nationalitySearch}
                                 onChange={(e) => setNationalitySearch(e.target.value)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473]"
+                                className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border border-[#16A249]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#16A249]"
                               />
                             </div>
                           </div>
@@ -1335,7 +1335,7 @@ const LeadManagement = () => {
                                   }}
                                   className={`px-4 py-2 cursor-pointer transition-colors ${
                                     formik.values.nationality === country
-                                      ? 'bg-[#BBA473]/20 text-[#BBA473]'
+                                      ? 'bg-[#16A249]/20 text-[#00FF7F]'
                                       : 'text-white hover:bg-[#3A3A3A]'
                                   }`}
                                 >
@@ -1358,7 +1358,7 @@ const LeadManagement = () => {
 
                   {/* Source */}
                   <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Lead Source
                     </label>
                     <div className="relative">
@@ -1370,7 +1370,7 @@ const LeadManagement = () => {
                         className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                           formik.touched.source && formik.errors.source
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                         }`}
                       >
                         <option value="">Select Source</option>
@@ -1388,7 +1388,7 @@ const LeadManagement = () => {
 
                 {/* Phone Number - Full Width */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
                   <PhoneInput
@@ -1410,7 +1410,7 @@ const LeadManagement = () => {
 
                 {/* Remarks - Full Width */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Remarks
                   </label>
                   <textarea
@@ -1423,7 +1423,7 @@ const LeadManagement = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
                       formik.touched.remarks && formik.errors.remarks
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   <div className="flex justify-between items-center">
@@ -1441,7 +1441,7 @@ const LeadManagement = () => {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-auto">
+            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#16A249]/30 mt-auto">
               <button
                 type="button"
                 onClick={handleCloseDrawer}
@@ -1453,7 +1453,7 @@ const LeadManagement = () => {
                 <button
                   type="submit"
                   disabled={formik.isSubmitting || (editingLead && !hasFormChanged)}
-                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:hover:scale-100"
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:from-[#1EB956] hover:to-[#267A3D] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95 disabled:hover:scale-100"
                 >
                   {formik.isSubmitting 
                     ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 
@@ -1482,7 +1482,7 @@ const LeadManagement = () => {
         .phone-input-custom .PhoneInputInput {
           width: 100%;
           padding: 0.75rem 1rem;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           background-color: #1A1A1A;
           color: white;
@@ -1492,13 +1492,13 @@ const LeadManagement = () => {
         }
 
         .phone-input-custom .PhoneInputInput:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputInput:focus {
-          border-color: #BBA473;
+          border-color: #16A249;
           ring: 2px;
-          ring-color: rgba(187, 164, 115, 0.5);
+          ring-color: rgba(22, 162, 73, 0.5);
         }
 
         .phone-input-error .PhoneInputInput {
@@ -1514,13 +1514,13 @@ const LeadManagement = () => {
           margin-right: 0.5rem;
           padding: 0.5rem;
           background-color: #1A1A1A;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           transition: all 0.3s ease;
         }
 
         .phone-input-custom .PhoneInputCountry:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputCountryIcon {
@@ -1529,7 +1529,7 @@ const LeadManagement = () => {
         }
 
         .phone-input-custom .PhoneInputCountrySelectArrow {
-          color: #BBA473;
+          color: #00FF7F;
           opacity: 0.8;
           margin-left: 0.5rem;
         }

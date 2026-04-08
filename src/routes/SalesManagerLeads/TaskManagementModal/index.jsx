@@ -112,8 +112,8 @@ const TaskManagementModal = ({
         {/* Modal Header - Sticky */}
         <div className="sticky top-0 bg-[#262626] border-b border-gray-600 px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#BBA473]/10">
-              <FileText className="w-4 h-4 text-[#BBA473]" />
+            <div className="p-2 rounded-lg bg-[#16A249]/10">
+              <FileText className="w-4 h-4 text-[#00FF7F]" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">Set Task</h2>
@@ -135,7 +135,7 @@ const TaskManagementModal = ({
           <div className="p-6 space-y-5">
             {/* Title Input */}
             <div className="space-y-2">
-              <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+              <label className="text-[10px] text-[#00FF7F]/60 font-semibold uppercase tracking-widest block">
                 Task Title <span className="text-red-400">*</span>
               </label>
               <input
@@ -148,7 +148,7 @@ const TaskManagementModal = ({
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white text-sm transition-all duration-300 placeholder-gray-600 ${
                   formik.touched.title && formik.errors.title
                     ? 'border-red-500/50 focus:border-red-400 focus:ring-red-500/30'
-                    : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
+                    : 'border-white/[0.06] focus:border-[#16A249]/50 focus:ring-[#16A249]/20 hover:border-white/10'
                 }`}
               />
               <div className="flex justify-between items-center">
@@ -165,7 +165,7 @@ const TaskManagementModal = ({
 
             {/* Description Input */}
             <div className="space-y-2">
-              <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+              <label className="text-[10px] text-[#00FF7F]/60 font-semibold uppercase tracking-widest block">
                 Description <span className="text-red-400">*</span>
               </label>
               <textarea
@@ -178,7 +178,7 @@ const TaskManagementModal = ({
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white text-sm resize-none transition-all duration-300 placeholder-gray-600 ${
                   formik.touched.description && formik.errors.description
                     ? 'border-red-500/50 focus:border-red-400 focus:ring-red-500/30'
-                    : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
+                    : 'border-white/[0.06] focus:border-[#16A249]/50 focus:ring-[#16A249]/20 hover:border-white/10'
                 }`}
               />
               <div className="flex justify-between items-center">
@@ -197,11 +197,11 @@ const TaskManagementModal = ({
             <div className="p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
-                  <Bell className="w-4 h-4 text-[#BBA473]" />
+                  <Bell className="w-4 h-4 text-[#00FF7F]" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">
-                    Task will be auto created and scheduled according to the lead Status and Protocol for <span className="font-semibold text-[#BBA473]">{selectedLead.name}</span>
+                    Task will be auto created and scheduled according to the lead Status and Protocol for <span className="font-semibold text-[#00FF7F]">{selectedLead.name}</span>
                   </p>
                 </div>
               </div>
@@ -222,7 +222,7 @@ const TaskManagementModal = ({
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black transition-all duration-300 shadow-lg shadow-[#BBA473]/10 hover:shadow-[#BBA473]/25 transform hover:scale-[1.02] active:scale-[0.98] disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white transition-all duration-300 shadow-lg shadow-[#16A249]/10 hover:shadow-[#16A249]/25 transform hover:scale-[1.02] active:scale-[0.98] disabled:from-[#0E5A28] disabled:to-[#0D3D1E] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               >
                 {formik.isSubmitting ? 'Creating...' : 'Create Task'}
               </button>
@@ -248,11 +248,11 @@ const TaskManagementModal = ({
           background: transparent;
         }
         .modal-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(187, 164, 115, 0.15);
+          background: rgba(22, 162, 73, 0.15);
           border-radius: 10px;
         }
         .modal-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(187, 164, 115, 0.3);
+          background: rgba(22, 162, 73, 0.3);
         }
       `}</style>
     </div>

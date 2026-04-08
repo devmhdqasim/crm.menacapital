@@ -799,7 +799,7 @@ const AssignLeadModal = ({
             {/* Status Options */}
             <div className="border-t border-white/[0.06] pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest">Update Task</h3>
+                <h3 className="text-[10px] text-[#00FF7F]/60 font-semibold uppercase tracking-widest">Update Task</h3>
                 
                 {/* Date Time Picker */}
                 <div className="flex items-center gap-2">
@@ -814,7 +814,7 @@ const AssignLeadModal = ({
                       placeholderText="Set reminder"
                       minDate={new Date()}
                       disabled={!isReminderDateEnabled()}
-                      className={`px-3 py-2 pl-10 rounded-lg bg-white/[0.04] text-white border focus:border-[#BBA473]/50 focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all duration-300 text-sm ${
+                      className={`px-3 py-2 pl-10 rounded-lg bg-white/[0.04] text-white border focus:border-[#16A249]/50 focus:outline-none focus:ring-2 focus:ring-[#16A249]/20 transition-all duration-300 text-sm ${
                         isReminderDateEnabled() ? 'cursor-pointer border-white/10' : 'cursor-not-allowed border-gray-600 opacity-50'
                       }`}
                       calendarClassName="custom-datepicker"
@@ -822,7 +822,7 @@ const AssignLeadModal = ({
                       timeCaption="Time"
                     />
                     <Clock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                      isReminderDateEnabled() ? 'text-[#BBA473]' : 'text-gray-600'
+                      isReminderDateEnabled() ? 'text-[#00FF7F]' : 'text-gray-600'
                     }`} />
                   </div>
                 </div>
@@ -830,7 +830,7 @@ const AssignLeadModal = ({
 
               {/* Task Status Toggle Switch */}
               <div className="space-y-4 mb-6">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Task Status <span className="text-red-400">*</span>
                 </label>
 
@@ -861,15 +861,15 @@ const AssignLeadModal = ({
 
               {/* Answered Status Section */}
               <div className="space-y-4 mb-6">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                <label className="text-[10px] text-[#00FF7F]/60 font-semibold uppercase tracking-widest block">
                   Answered Status <span className="text-red-400">*</span>
                 </label>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     answeredStatus === 'Answered'
-                      ? 'bg-[#BBA473]/10 border-[#BBA473]/40 ring-1 ring-[#BBA473]/30 cursor-pointer'
-                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30 cursor-pointer'
+                      ? 'bg-[#16A249]/10 border-[#16A249]/40 ring-1 ring-[#16A249]/30 cursor-pointer'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#16A249]/10 hover:border-[#16A249]/30 cursor-pointer'
                   }`}>
                     <input
                       type="radio"
@@ -880,15 +880,15 @@ const AssignLeadModal = ({
                         setAnsweredStatus(e.target.value);
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                      className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 cursor-pointer"
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
                   
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     answeredStatus === 'Not Answered'
-                      ? 'bg-[#BBA473]/10 border-[#BBA473]/40 ring-1 ring-[#BBA473]/30 cursor-pointer'
-                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#BBA473]/10 hover:border-[#BBA473]/30 cursor-pointer'
+                      ? 'bg-[#16A249]/10 border-[#16A249]/40 ring-1 ring-[#16A249]/30 cursor-pointer'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-[#16A249]/10 hover:border-[#16A249]/30 cursor-pointer'
                   }`}>
                     <input
                       type="radio"
@@ -899,7 +899,7 @@ const AssignLeadModal = ({
                         setAnsweredStatus(e.target.value);
                         setModalErrors({});
                       }}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 cursor-pointer"
+                      className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 cursor-pointer"
                     />
                     <span className="text-white font-medium">Not Answered</span>
                   </label>
@@ -941,7 +941,7 @@ const AssignLeadModal = ({
 
               {/* Update Status Section */}
               <div className={`space-y-4 ${isUpdateStatusDisabled() ? 'opacity-40 pointer-events-none' : ''}`}>
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                <label className="text-[10px] text-[#00FF7F]/60 font-semibold uppercase tracking-widest block">
                   Update Status
                 </label>
 
@@ -950,7 +950,7 @@ const AssignLeadModal = ({
                   <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                     isStatusDisabled('Answered') || isUpdateStatusDisabled()
                       ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
-                      : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                      : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                   }`}>
                     <input
                       type="radio"
@@ -967,7 +967,7 @@ const AssignLeadModal = ({
                         setModalErrors({});
                       }}
                       disabled={isStatusDisabled('Answered') || isUpdateStatusDisabled()}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                      className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-white font-medium">Answered</span>
                   </label>
@@ -977,7 +977,7 @@ const AssignLeadModal = ({
                       ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                       : isFinalSelectedStatus('Not Answered')
                         ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
-                        : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                        : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                   }`}>
                     <input
                       type="radio"
@@ -994,7 +994,7 @@ const AssignLeadModal = ({
                         setModalErrors({});
                       }}
                       disabled={isStatusDisabled('Not Answered') || isUpdateStatusDisabled()}
-                      className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                      className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                     />
                     <span className={`font-medium ${isFinalSelectedStatus('Not Answered') ? 'text-green-400' : 'text-white'}`}>Not Answered</span>
                     {isFinalSelectedStatus('Not Answered') && <SelectedStatusIndicator />}
@@ -1008,7 +1008,7 @@ const AssignLeadModal = ({
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Interested')
                           ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
-                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                       }`}>
                         <input
                           type="radio"
@@ -1024,7 +1024,7 @@ const AssignLeadModal = ({
                             setModalErrors({});
                           }}
                           disabled={isStatusDisabled('Interested')}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                          className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Interested</span>
                       </label>
@@ -1035,8 +1035,8 @@ const AssignLeadModal = ({
                           : isFinalSelectedStatus('Not Interested')
                             ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
                             : shouldShowNotInterestedAvailable()
-                              ? 'bg-white/[0.04] hover:bg-white/[0.07] cursor-pointer border-[#BBA473]/20 hover:border-[#BBA473]/40 animate-pulse-border-subtle'
-                              : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                              ? 'bg-white/[0.04] hover:bg-white/[0.07] cursor-pointer border-[#16A249]/20 hover:border-[#16A249]/40 animate-pulse-border-subtle'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                       }`}>
                         <input
                           type="radio"
@@ -1052,7 +1052,7 @@ const AssignLeadModal = ({
                             setModalErrors({});
                           }}
                           disabled={isStatusDisabled('Not Interested')}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                          className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Not Interested') ? 'text-green-400' : 'text-white'}`}>Not Interested</span>
                         {isFinalSelectedStatus('Not Interested') && <SelectedStatusIndicator />}
@@ -1074,7 +1074,7 @@ const AssignLeadModal = ({
                             ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                             : isFinalSelectedStatus('Warm')
                               ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
-                              : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                         }`}>
                           <input
                             type="radio"
@@ -1089,7 +1089,7 @@ const AssignLeadModal = ({
                               setModalErrors({});
                             }}
                             disabled={isStatusDisabled('Warm')}
-                            className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                            className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                           />
                           <span className={`font-medium ${isFinalSelectedStatus('Warm') ? 'text-green-400' : 'text-white'}`}>Warm Lead</span>
                           {isFinalSelectedStatus('Warm') && <SelectedStatusIndicator />}
@@ -1101,7 +1101,7 @@ const AssignLeadModal = ({
                           ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                           : isFinalSelectedStatus('Hot')
                             ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
-                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                       }`}>
                         <input
                           type="radio"
@@ -1116,7 +1116,7 @@ const AssignLeadModal = ({
                             setModalErrors({});
                           }}
                           disabled={isStatusDisabled('Hot')}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                          className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Hot') ? 'text-green-400' : 'text-white'}`}>Hot Lead</span>
                         {isFinalSelectedStatus('Hot') && <SelectedStatusIndicator />}
@@ -1137,7 +1137,7 @@ const AssignLeadModal = ({
                           ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                           : isFinalSelectedStatus('Demo')
                             ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
-                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                       }`}>
                         <input
                           type="radio"
@@ -1151,7 +1151,7 @@ const AssignLeadModal = ({
                             setModalErrors({});
                           }}
                           disabled={isStatusDisabled('Demo')}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                          className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Demo') ? 'text-green-400' : 'text-white'}`}>Demo</span>
                         {isFinalSelectedStatus('Demo') && <SelectedStatusIndicator />}
@@ -1160,7 +1160,7 @@ const AssignLeadModal = ({
                       <label className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 border ${
                         isStatusDisabled('Real')
                           ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
-                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                       }`}>
                         <input
                           type="radio"
@@ -1174,7 +1174,7 @@ const AssignLeadModal = ({
                             setModalErrors({});
                           }}
                           disabled={isStatusDisabled('Real')}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                          className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className="text-white font-medium">Real</span>
                       </label>
@@ -1188,7 +1188,7 @@ const AssignLeadModal = ({
                 {/* Demo Checkboxes */}
                 {modalHotLeadType === 'Demo' && (
                   <div className="mt-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] animate-fadeIn">
-                    <h4 className="text-[#BBA473] font-semibold mb-3 flex items-center gap-2">
+                    <h4 className="text-[#00FF7F] font-semibold mb-3 flex items-center gap-2">
                       <span className="text-sm">Demo Steps</span>
                       <span className="text-xs text-gray-400">(First 2 are required)</span>
                     </h4>
@@ -1202,9 +1202,9 @@ const AssignLeadModal = ({
                             setDemoInstallApp(e.target.checked);
                             setModalErrors({});
                           }}
-                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/20 cursor-pointer transition-all"
+                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#16A249] checked:border-[#16A249] focus:ring-2 focus:ring-[#16A249]/20 cursor-pointer transition-all"
                         />
-                        <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                        <span className="text-white group-hover:text-[#00FF7F] transition-colors flex items-center gap-2">
                           <span className="font-medium">1. Install the App</span>
                           <span className="text-red-400 text-xs">*Required</span>
                         </span>
@@ -1218,9 +1218,9 @@ const AssignLeadModal = ({
                             setDemoEducationVideo(e.target.checked);
                             setModalErrors({});
                           }}
-                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/20 cursor-pointer transition-all"
+                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#16A249] checked:border-[#16A249] focus:ring-2 focus:ring-[#16A249]/20 cursor-pointer transition-all"
                         />
-                        <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                        <span className="text-white group-hover:text-[#00FF7F] transition-colors flex items-center gap-2">
                           <span className="font-medium">2. Education Video</span>
                           <span className="text-red-400 text-xs">*Required</span>
                         </span>
@@ -1231,9 +1231,9 @@ const AssignLeadModal = ({
                           type="checkbox"
                           checked={demoAnalyzeChannel}
                           onChange={(e) => setDemoAnalyzeChannel(e.target.checked)}
-                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#BBA473] checked:border-[#BBA473] focus:ring-2 focus:ring-[#BBA473]/20 cursor-pointer transition-all"
+                          className="w-5 h-5 rounded border border-white/10 bg-white/[0.04] checked:bg-[#16A249] checked:border-[#16A249] focus:ring-2 focus:ring-[#16A249]/20 cursor-pointer transition-all"
                         />
-                        <span className="text-white group-hover:text-[#BBA473] transition-colors flex items-center gap-2">
+                        <span className="text-white group-hover:text-[#00FF7F] transition-colors flex items-center gap-2">
                           <span className="font-medium">3. Analyze Channel</span>
                           <span className="text-gray-400 text-xs">Optional</span>
                         </span>
@@ -1258,7 +1258,7 @@ const AssignLeadModal = ({
                           ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                           : isFinalSelectedStatus('Deposit')
                             ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
-                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                       }`}>
                         <input
                           type="radio"
@@ -1271,7 +1271,7 @@ const AssignLeadModal = ({
                             setModalErrors({});
                           }}
                           disabled={isStatusDisabled('Deposit')}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                          className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Deposit') ? 'text-green-400' : 'text-white'}`}>Deposit</span>
                         {isFinalSelectedStatus('Deposit') && <SelectedStatusIndicator />}
@@ -1282,7 +1282,7 @@ const AssignLeadModal = ({
                           ? 'bg-white/[0.02] cursor-not-allowed opacity-40 border-gray-800'
                           : isFinalSelectedStatus('Not Deposit')
                             ? 'bg-green-500/10 border-green-500/40 ring-1 ring-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)] cursor-pointer scale-[1.01]'
-                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#BBA473]/10 hover:border-[#BBA473]/30'
+                            : 'bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer border-[#16A249]/10 hover:border-[#16A249]/30'
                       }`}>
                         <input
                           type="radio"
@@ -1295,7 +1295,7 @@ const AssignLeadModal = ({
                             setModalErrors({});
                           }}
                           disabled={isStatusDisabled('Not Deposit')}
-                          className="w-4 h-4 text-[#BBA473] focus:ring-[#BBA473] focus:ring-2 disabled:cursor-not-allowed"
+                          className="w-4 h-4 text-[#00FF7F] focus:ring-[#16A249] focus:ring-2 disabled:cursor-not-allowed"
                         />
                         <span className={`font-medium ${isFinalSelectedStatus('Not Deposit') ? 'text-green-400' : 'text-white'}`}>Not Deposit</span>
                         {isFinalSelectedStatus('Not Deposit') && <SelectedStatusIndicator />}
@@ -1311,7 +1311,7 @@ const AssignLeadModal = ({
 
               {/* Remarks - Always active regardless of answered status */}
               <div className="space-y-2 pt-4">
-                <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                <label className="text-[10px] text-[#00FF7F]/60 font-semibold uppercase tracking-widest block">
                   Notes / Remarks
                 </label>
                 <textarea
@@ -1328,7 +1328,7 @@ const AssignLeadModal = ({
                   className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white resize-none transition-all duration-300 ${
                     modalErrors.remarks
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10'
+                      : 'border-white/[0.06] focus:border-[#16A249]/50 focus:ring-[#16A249]/20 hover:border-white/10'
                   }`}
                 />
                 <div className="flex justify-between items-center">
@@ -1347,7 +1347,7 @@ const AssignLeadModal = ({
               <div className={`${isUpdateStatusDisabled() ? 'opacity-40 pointer-events-none' : ''}`}>
                 {/* Task Title */}
                 <div className="space-y-2 pt-4 border-t border-white/[0.06]">
-                  <label className="text-[10px] text-[#BBA473]/60 font-semibold uppercase tracking-widest block">
+                  <label className="text-[10px] text-[#00FF7F]/60 font-semibold uppercase tracking-widest block">
                     Task Title <span className="text-xs text-gray-400">(Optional)</span>
                   </label>
                   <input
@@ -1357,7 +1357,7 @@ const AssignLeadModal = ({
                     value={`Follow Up with lead ( ${leadResponseStatus || selectedLead?.status} - lead )`}
                     onChange={(e) => setTaskTitle(e.target.value)}
                     maxLength={100}
-                    className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white transition-all duration-300 border-white/[0.06] focus:border-[#BBA473]/50 focus:ring-[#BBA473]/20 hover:border-white/10"
+                    className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 bg-white/[0.04] text-white transition-all duration-300 border-white/[0.06] focus:border-[#16A249]/50 focus:ring-[#16A249]/20 hover:border-white/10"
                   />
                   <div className="flex justify-between items-center">
                     <p className="text-xs text-gray-400">
@@ -1388,8 +1388,8 @@ const AssignLeadModal = ({
                 disabled={!isFormValid()}
                 className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all duration-300 ${
                   isFormValid()
-                    ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:shadow-[#BBA473]/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg shadow-[#BBA473]/10'
-                    : 'bg-gradient-to-r from-[#6b6354] to-[#5a5447] text-gray-400 cursor-not-allowed transform-none shadow-none'
+                    ? 'bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:shadow-[#16A249]/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg shadow-[#16A249]/10'
+                    : 'bg-gradient-to-r from-[#0E5A28] to-[#0D3D1E] text-gray-400 cursor-not-allowed transform-none shadow-none'
                 }`}
               >
                 Save Changes
@@ -1410,12 +1410,12 @@ const AssignLeadModal = ({
 
         @keyframes pulse-border-subtle {
           0%, 100% {
-            border-color: rgba(187, 164, 115, 0.15);
-            box-shadow: 0 0 0 0 rgba(187, 164, 115, 0);
+            border-color: rgba(22, 162, 73, 0.15);
+            box-shadow: 0 0 0 0 rgba(22, 162, 73, 0);
           }
           50% {
-            border-color: rgba(187, 164, 115, 0.4);
-            box-shadow: 0 0 8px 2px rgba(187, 164, 115, 0.2);
+            border-color: rgba(22, 162, 73, 0.4);
+            box-shadow: 0 0 8px 2px rgba(22, 162, 73, 0.2);
           }
         }
         
@@ -1426,20 +1426,20 @@ const AssignLeadModal = ({
         /* Custom DatePicker Styling */
         .custom-datepicker {
           background-color: #0C0C0C !important;
-          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border: 2px solid rgba(22, 162, 73, 0.3) !important;
           border-radius: 12px !important;
           font-family: inherit !important;
         }
 
         .react-datepicker {
           background-color: #0C0C0C !important;
-          border: 2px solid rgba(187, 164, 115, 0.3) !important;
+          border: 2px solid rgba(22, 162, 73, 0.3) !important;
           border-radius: 12px !important;
         }
 
         .react-datepicker__header {
           background-color: #0C0C0C !important;
-          border-bottom: 1px solid rgba(187, 164, 115, 0.3) !important;
+          border-bottom: 1px solid rgba(22, 162, 73, 0.3) !important;
           border-top-left-radius: 12px !important;
           border-top-right-radius: 12px !important;
         }
@@ -1447,7 +1447,7 @@ const AssignLeadModal = ({
         .react-datepicker__current-month,
         .react-datepicker-time__header,
         .react-datepicker__day-name {
-          color: #E8D5A3 !important;
+          color: #A8E6B8 !important;
           font-weight: 600 !important;
         }
 
@@ -1458,8 +1458,8 @@ const AssignLeadModal = ({
         }
 
         .react-datepicker__day:hover {
-          background-color: rgba(187, 164, 115, 0.2) !important;
-          color: #BBA473 !important;
+          background-color: rgba(22, 162, 73, 0.2) !important;
+          color: #00FF7F !important;
         }
 
         .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list {
@@ -1472,7 +1472,7 @@ const AssignLeadModal = ({
 
         .react-datepicker__day--selected,
         .react-datepicker__day--keyboard-selected {
-          background-color: #BBA473 !important;
+          background-color: #16A249 !important;
           color: #000000 !important;
           font-weight: 600 !important;
         }
@@ -1485,9 +1485,9 @@ const AssignLeadModal = ({
         .react-datepicker__time-container {
           position: absolute;
           right: 100%;
-          border: 2px solid #e8d5a33d;
+          border: 2px solid #A8E6B83d;
           border-radius: 12px;
-          border-left: 1px solid rgba(187, 164, 115, 0.3) !important;
+          border-left: 1px solid rgba(22, 162, 73, 0.3) !important;
         }
 
         .react-datepicker__time-list-item {
@@ -1496,22 +1496,22 @@ const AssignLeadModal = ({
         }
 
         .react-datepicker__time-list-item:hover {
-          background-color: rgba(187, 164, 115, 0.2) !important;
-          color: #BBA473 !important;
+          background-color: rgba(22, 162, 73, 0.2) !important;
+          color: #00FF7F !important;
         }
 
         .react-datepicker__time-list-item--selected {
-          background-color: #BBA473 !important;
+          background-color: #16A249 !important;
           color: #000000 !important;
           font-weight: 600 !important;
         }
 
         .react-datepicker__navigation-icon::before {
-          border-color: #BBA473 !important;
+          border-color: #16A249 !important;
         }
 
         .react-datepicker__navigation:hover *::before {
-          border-color: #E8D5A3 !important;
+          border-color: #A8E6B8 !important;
         }
 
         .react-datepicker__triangle {
@@ -1526,11 +1526,11 @@ const AssignLeadModal = ({
           background: transparent;
         }
         .modal-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(187, 164, 115, 0.15);
+          background: rgba(22, 162, 73, 0.15);
           border-radius: 10px;
         }
         .modal-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(187, 164, 115, 0.3);
+          background: rgba(22, 162, 73, 0.3);
         }
       `}</style>
     </div>

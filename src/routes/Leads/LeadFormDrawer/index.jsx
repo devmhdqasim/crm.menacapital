@@ -136,9 +136,9 @@ const LeadFormDrawer = ({
     >
       <div className="h-full flex flex-col">
         {/* Drawer Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
+        <div className="flex items-center justify-between p-6 border-b border-[#16A249]/30 bg-gradient-to-r from-[#16A249]/10 to-transparent">
           <div>
-            <h2 className="text-2xl font-bold text-[#BBA473]">
+            <h2 className="text-2xl font-bold text-[#00FF7F]">
               {editingLead ? 'Edit Lead' : 'Add New Lead'}
             </h2>
             <p className="text-gray-400 text-sm mt-1">
@@ -158,13 +158,13 @@ const LeadFormDrawer = ({
           <div className="space-y-6">
             {/* Personal Information Section */}
             <div className="grid space-y-4">
-              <h3 className="text-lg font-semibold text-[#E8D5A3] border-b border-[#BBA473]/30 pb-2">
+              <h3 className="text-lg font-semibold text-[#A8E6B8] border-b border-[#16A249]/30 pb-2">
                 Lead Information
               </h3>
 
               {/* Full Name */}
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -177,7 +177,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                     formik.touched.name && formik.errors.name
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 />
                 {formik.touched.name && formik.errors.name && (
@@ -187,7 +187,7 @@ const LeadFormDrawer = ({
 
               {/* Email */}
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Email Address 
                 </label>
                 <input
@@ -200,7 +200,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                     formik.touched.email && formik.errors.email
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 />
                 {formik.touched.email && formik.errors.email && (
@@ -211,7 +211,7 @@ const LeadFormDrawer = ({
               {/* Phone Number */}
               <div className="space-y-2">
               {!isLeadsSelectedId && (
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Phone Number <span className="text-red-500">*</span>
                 </label>
               )}
@@ -220,14 +220,14 @@ const LeadFormDrawer = ({
                     <button
                       type="button"
                       onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                      className="h-full px-3 py-3 border-2 border-[#BBA473]/30 rounded-lg bg-[#1A1A1A] hover:border-[#BBA473] transition-all duration-300 flex items-center gap-2 min-w-[100px]"
+                      className="h-full px-3 py-3 border-2 border-[#16A249]/30 rounded-lg bg-[#1A1A1A] hover:border-[#16A249] transition-all duration-300 flex items-center gap-2 min-w-[100px]"
                     >
                       <span className="text-xl">{selectedCountry.flag}</span>
                       <span className="text-white text-sm">{selectedCountry.dialCode}</span>
                       <ChevronDown className="w-4 h-4 text-gray-400" />
                     </button>
                     {showCountryDropdown && (
-                      <div className="absolute top-full mt-2 left-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[280px] max-h-60 overflow-y-auto">
+                      <div className="absolute top-full mt-2 left-0 bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg shadow-xl z-10 min-w-[280px] max-h-60 overflow-y-auto">
                         {countryCodes.map((country) => (
                           <button
                             key={country.code}
@@ -263,7 +263,7 @@ const LeadFormDrawer = ({
                     className={`flex-1 px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.phone && formik.errors.phone
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                 </div>
@@ -274,7 +274,7 @@ const LeadFormDrawer = ({
 
               {/* Date of Birth */}
               <div className="space-y-2 relative">
-                <label className="text-sm text-[#E8D5A3] font-medium block">Date of Birth</label>
+                <label className="text-sm text-[#A8E6B8] font-medium block">Date of Birth</label>
                 <input
                   type="date"
                   name="dateOfBirth"
@@ -284,7 +284,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                     formik.touched.dateOfBirth && formik.errors.dateOfBirth
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 />
                 <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -295,7 +295,7 @@ const LeadFormDrawer = ({
 
               {/* Nationality */}
               <div className="relative space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Nationality
                 </label>
                 <select
@@ -306,7 +306,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                     formik.touched.nationality && formik.errors.nationality
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 >
                   <option value="">Select Nationality</option>
@@ -322,7 +322,7 @@ const LeadFormDrawer = ({
 
               {/* Residency */}
               <div className="relative space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Country of Residency
                 </label>
                 <select
@@ -333,7 +333,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                     formik.touched.residency && formik.errors.residency
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 >
                   <option value="">Select Residency</option>
@@ -349,7 +349,7 @@ const LeadFormDrawer = ({
 
               {/* Language */}
               <div className="relative space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Preferred Language
                 </label>
                 <select
@@ -360,7 +360,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                     formik.touched.language && formik.errors.language
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 >
                   <option value="">Select Language</option>
@@ -376,7 +376,7 @@ const LeadFormDrawer = ({
 
               {/* Source */}
               <div className="relative space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Lead Source
                 </label>
                 <select
@@ -387,7 +387,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                     formik.touched.source && formik.errors.source
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 >
                   <option value="">Select Source</option>
@@ -403,7 +403,7 @@ const LeadFormDrawer = ({
 
               {/* Remarks */}
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Remarks
                 </label>
               {!isLeadsSelectedId && (
@@ -417,7 +417,7 @@ const LeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
                     formik.touched.remarks && formik.errors.remarks
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 />
               )}
@@ -436,7 +436,7 @@ const LeadFormDrawer = ({
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30">
+          <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#16A249]/30">
             <button
               type="button"
               onClick={handleCloseDrawer}
@@ -447,7 +447,7 @@ const LeadFormDrawer = ({
             <button
               type="submit"
               disabled={formik.isSubmitting}
-              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:from-[#1EB956] hover:to-[#267A3D] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95"
             >
               {formik.isSubmitting 
                 ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 

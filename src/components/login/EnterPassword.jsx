@@ -225,26 +225,26 @@ export default function EnterPassword({
       {/* Enhanced Grid Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Base Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(22,162,73,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(22,162,73,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
         {/* Brighter Major Grid Lines */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(187,164,115,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(187,164,115,0.07)_1px,transparent_1px)] bg-[size:200px_200px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(22,162,73,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(22,162,73,0.07)_1px,transparent_1px)] bg-[size:200px_200px]"></div>
 
         {/* Radial Glows */}
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(187,164,115,0.15),transparent_70%)]"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(22,162,73,0.15),transparent_70%)]"></div>
 
         {/* Animated Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#BBA473] rounded-full mix-blend-screen filter blur-[128px] opacity-10 animate-pulse" style={{ animationDuration: '4s' }}></div>
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#8E7D5A] rounded-full mix-blend-screen filter blur-[128px] opacity-5 animate-pulse" style={{ animationDuration: '7s' }}></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#16A249] rounded-full mix-blend-screen filter blur-[128px] opacity-10 animate-pulse" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#1C4F2A] rounded-full mix-blend-screen filter blur-[128px] opacity-5 animate-pulse" style={{ animationDuration: '7s' }}></div>
       </div>
 
       <div className={`w-full max-w-lg relative z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
 
         {/* Card Container */}
-        <div className="bg-[#1a1a1a]/60 backdrop-blur-xl border border-[#BBA473]/20 rounded-2xl p-8 shadow-2xl relative overflow-hidden group-hover:border-[#BBA473]/40 transition-all duration-500">
+        <div className="bg-[#1a1a1a]/60 backdrop-blur-xl border border-[#16A249]/20 rounded-2xl p-8 shadow-2xl relative overflow-hidden group-hover:border-[#16A249]/40 transition-all duration-500">
 
           {/* Top shine border */}
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#BBA473]/50 to-transparent opacity-50"></div>
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#16A249]/50 to-transparent opacity-50"></div>
 
           {/* Logo */}
           <div className="flex justify-center mb-6">
@@ -256,10 +256,10 @@ export default function EnterPassword({
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
               Welcome Back
             </h1>
-            <p className="text-[#BBA473]/60 text-[10px] font-semibold uppercase tracking-[0.25em] mb-4">
-              SIG CRM Portal
+            <p className="text-[#00FF7F]/60 text-[10px] font-semibold uppercase tracking-[0.25em] mb-4">
+              MenaCapital CRM Portal
             </p>
-            <p className="text-[#BBA473]/80 text-sm font-medium uppercase tracking-widest">
+            <p className="text-[#00FF7F]/80 text-sm font-medium uppercase tracking-widest">
               Enter Password
             </p>
           </div>
@@ -299,9 +299,9 @@ export default function EnterPassword({
             )}
 
             {/* Login (Email/Username) Field with Edit */}
-            <div className="flex items-center justify-between bg-[#252525]/80 rounded-lg p-3 border border-[#BBA473]/10 hover:border-[#BBA473]/30 transition-all duration-300 group">
+            <div className="flex items-center justify-between bg-[#252525]/80 rounded-lg p-3 border border-[#16A249]/10 hover:border-[#16A249]/30 transition-all duration-300 group">
               <div className="flex items-center gap-3 overflow-hidden">
-                <div className="w-8 h-8 rounded-full bg-[#BBA473]/10 flex items-center justify-center text-[#BBA473]">
+                <div className="w-8 h-8 rounded-full bg-[#16A249]/10 flex items-center justify-center text-[#00FF7F]">
                   <span className="text-xs font-bold">ID</span>
                 </div>
                 <div className="flex flex-col">
@@ -317,7 +317,7 @@ export default function EnterPassword({
                 type="button"
                 onClick={() => !isLoading && (onBack ? onBack() : setCurrentStep?.('login'))}
                 disabled={isLoading}
-                className="text-gray-400 hover:text-[#BBA473] p-2 rounded-full hover:bg-[#BBA473]/10 transition-all duration-300 disabled:opacity-50"
+                className="text-gray-400 hover:text-[#00FF7F] p-2 rounded-full hover:bg-[#16A249]/10 transition-all duration-300 disabled:opacity-50"
                 aria-label="Edit login"
               >
                 <Edit2 size={16} />
@@ -345,14 +345,14 @@ export default function EnterPassword({
                   disabled={isLoading}
                   className={`w-full px-4 py-4 pr-12 bg-[#0f0f0f]/80 text-white rounded-lg border transition-all duration-300 placeholder-gray-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${formik.touched.password && formik.errors.password
                     ? 'border-red-500/50 focus:border-red-500'
-                    : 'border-[#BBA473]/10 focus:border-[#BBA473] hover:border-[#BBA473]/30'
+                    : 'border-[#16A249]/10 focus:border-[#16A249] hover:border-[#16A249]/30'
                     }`}
                   placeholder=" "
                 />
                 <label
                   htmlFor="password"
                   className={`absolute left-4 transition-all duration-300 pointer-events-none ${isFocused || formik.values.password
-                      ? '-top-2.5 text-xs bg-[#1a1a1a] px-1 text-[#BBA473]'
+                      ? '-top-2.5 text-xs bg-[#1a1a1a] px-1 text-[#00FF7F]'
                       : 'top-4 text-gray-500'
                     }`}
                 >
@@ -363,7 +363,7 @@ export default function EnterPassword({
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
-                  className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-all duration-300 disabled:opacity-50 hover:text-[#BBA473]`}
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-all duration-300 disabled:opacity-50 hover:text-[#00FF7F]`}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -383,7 +383,7 @@ export default function EnterPassword({
                 type="button"
                 onClick={formik.handleSubmit}
                 disabled={isButtonDisabled}
-                className="btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+                className="btn-animated btn-gold flex justify-center mx-auto !max-w-64 !w-full bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white font-bold text-lg py-4 rounded-lg disabled:from-[#0E5A28] disabled:to-[#0D3D1E] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#16A249]/20 hover:shadow-[#16A249]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
                 >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {isLoading ? (
@@ -408,7 +408,7 @@ export default function EnterPassword({
               <button
                 type="button"
                 onClick={() => !isLoading && (onForgotPassword ? onForgotPassword() : setCurrentStep?.('forgotPassword'))}
-                className={`text-gray-400 hover:text-[#BBA473] text-sm transition-all duration-300 hover:underline decoration-[#BBA473]/50 underline-offset-4 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`text-gray-400 hover:text-[#00FF7F] text-sm transition-all duration-300 hover:underline decoration-[#16A249]/50 underline-offset-4 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Forgot your password?
               </button>
@@ -419,9 +419,9 @@ export default function EnterPassword({
 
         {/* Footer Text */}
         <div className="text-center mt-8 space-y-2">
-          <p className="text-[#BBA473]/50 text-xs tracking-widest uppercase">Secured by Save In Gold</p>
-          <p className="text-[#BBA473]/30 text-[10px] tracking-wider">
-            v{APP_VERSION} &middot; &copy; {new Date().getFullYear()} Save In Gold
+          <p className="text-[#00FF7F]/50 text-xs tracking-widest uppercase">Secured by Mena Capital</p>
+          <p className="text-[#00FF7F]/30 text-[10px] tracking-wider">
+            v{APP_VERSION} &middot; &copy; {new Date().getFullYear()} Mena Capital
           </p>
         </div>
 

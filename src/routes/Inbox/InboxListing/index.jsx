@@ -51,21 +51,21 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
       onClick={() => handleContactClick(contact)}
       className={`p-5 transition-all duration-300 cursor-pointer group relative ${
         isPinned
-          ? 'bg-[#BBA473]/[0.03] border-l-2 border-l-[#BBA473]/30 hover:bg-[#BBA473]/[0.08]'
+          ? 'bg-[#16A249]/[0.03] border-l-2 border-l-[#16A249]/30 hover:bg-[#16A249]/[0.08]'
           : hasActiveSession
-            ? 'bg-[#BBA473]/[0.04] hover:bg-[#BBA473]/[0.09] border-l-2 border-l-[#BBA473]/40'
+            ? 'bg-[#16A249]/[0.04] hover:bg-[#16A249]/[0.09] border-l-2 border-l-[#16A249]/40'
             : 'hover:bg-gradient-to-r hover:from-[#2A2A2A] hover:to-[#252525]'
       }`}
     >
       {!hasActiveSession && !isPinned && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#BBA473] to-[#8E7D5A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#16A249] to-[#1C4F2A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       )}
 
       <div className="flex items-start gap-4 pl-1">
         {/* Avatar */}
         <div className="relative flex-shrink-0">
           {contact.avatar ? (
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 p-0.5 ${isMuted ? 'opacity-60' : ''}`}>
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 p-0.5 ${isMuted ? 'opacity-60' : ''}`}>
               <img
                 src={contact.avatar}
                 alt={contact.name}
@@ -76,14 +76,14 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
-              <div className="hidden w-full h-full rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
+              <div className="hidden w-full h-full rounded-2xl bg-gradient-to-br from-[#16A249] to-[#1C4F2A] items-center justify-center">
                 <span className="text-2xl font-bold text-white">
                   {(contact.name || '?').charAt(0).toUpperCase()}
                 </span>
               </div>
             </div>
           ) : (
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 ${isMuted ? 'opacity-60' : ''}`}>
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 ${isMuted ? 'opacity-60' : ''}`}>
               <span className="text-2xl font-bold text-white">
                 {(contact.name || '?').charAt(0).toUpperCase()}
               </span>
@@ -108,11 +108,11 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 min-w-0">
-              <h3 className={`text-lg font-semibold truncate group-hover:text-[#BBA473] transition-colors duration-300 ${isMuted ? 'text-gray-400' : 'text-white'}`}>
+              <h3 className={`text-lg font-semibold truncate group-hover:text-[#00FF7F] transition-colors duration-300 ${isMuted ? 'text-gray-400' : 'text-white'}`}>
                 {capitalizeWords(contact.name)}
               </h3>
               {isPinned && (
-                <Pin className="w-3.5 h-3.5 text-[#BBA473]/60 flex-shrink-0 rotate-45" />
+                <Pin className="w-3.5 h-3.5 text-[#00FF7F]/60 flex-shrink-0 rotate-45" />
               )}
               {isMuted && (
                 <BellOff className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
@@ -132,13 +132,13 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
                     e.stopPropagation();
                     setShowActions(!showActions);
                   }}
-                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#00FF7F] hover:bg-[#16A249]/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </button>
 
                 {showActions && (
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl z-30 overflow-hidden" style={{ animation: 'scaleIn 0.15s ease-out' }}>
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-[#2A2A2A] border border-[#16A249]/20 rounded-xl shadow-2xl z-30 overflow-hidden" style={{ animation: 'scaleIn 0.15s ease-out' }}>
                     <div className="p-1">
                       <button
                         onClick={(e) => {
@@ -146,9 +146,9 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
                           onTogglePin(contact.id);
                           setShowActions(false);
                         }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#16A249]/10 text-gray-300 hover:text-white"
                       >
-                        {isPinned ? <PinOff className="w-4 h-4 text-[#BBA473]" /> : <Pin className="w-4 h-4 text-[#BBA473]" />}
+                        {isPinned ? <PinOff className="w-4 h-4 text-[#00FF7F]" /> : <Pin className="w-4 h-4 text-[#00FF7F]" />}
                         {isPinned ? 'Unpin' : 'Pin to Top'}
                       </button>
                       <button
@@ -157,9 +157,9 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
                           onToggleMute(contact.id);
                           setShowActions(false);
                         }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#16A249]/10 text-gray-300 hover:text-white"
                       >
-                        {isMuted ? <Bell className="w-4 h-4 text-[#BBA473]" /> : <BellOff className="w-4 h-4 text-gray-400" />}
+                        {isMuted ? <Bell className="w-4 h-4 text-[#00FF7F]" /> : <BellOff className="w-4 h-4 text-gray-400" />}
                         {isMuted ? 'Unmute' : 'Mute'}
                       </button>
                       <button
@@ -169,9 +169,9 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
                           setShowActions(false);
                           toast.success('Marked as unread', { duration: 1500 });
                         }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 hover:bg-[#16A249]/10 text-gray-300 hover:text-white"
                       >
-                        <Eye className="w-4 h-4 text-[#BBA473]" />
+                        <Eye className="w-4 h-4 text-[#00FF7F]" />
                         Mark as Unread
                       </button>
                     </div>
@@ -183,17 +183,17 @@ const ContactRow = ({ contact, handleContactClick, capitalizeWords, formatPhoneD
 
           <div className={`flex items-center gap-2 mb-2 ${isMuted ? 'opacity-50' : ''}`}>
             {contact.lastMessageDirection === 'outbound' ? (
-              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-xs font-semibold px-2 py-0.5 rounded-md flex-shrink-0">
+              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white text-xs font-semibold px-2 py-0.5 rounded-md flex-shrink-0">
                 <CornerUpRight className="w-3 h-3" />
                 You
               </span>
             ) : contact.lastMessageDirection === 'inbound' ? (
-              <span className="inline-flex items-center gap-1 bg-[#2A2A2A] text-white text-xs font-semibold px-2 py-0.5 rounded-md border border-[#BBA473]/20 flex-shrink-0">
-                <CornerDownLeft className="w-3 h-3 text-[#BBA473]" />
+              <span className="inline-flex items-center gap-1 bg-[#2A2A2A] text-white text-xs font-semibold px-2 py-0.5 rounded-md border border-[#16A249]/20 flex-shrink-0">
+                <CornerDownLeft className="w-3 h-3 text-[#00FF7F]" />
                 Lead
               </span>
             ) : null}
-            <p className={`text-sm truncate leading-relaxed ${contact.lastMessageDirection === 'outbound' ? 'text-[#BBA473]/80' : 'text-gray-300'}`}>
+            <p className={`text-sm truncate leading-relaxed ${contact.lastMessageDirection === 'outbound' ? 'text-[#00FF7F]/80' : 'text-gray-300'}`}>
               {contact.lastMessage}
             </p>
           </div>
@@ -250,10 +250,10 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
       onClick={() => handleContactClick(contact)}
       className={`p-4 rounded-xl transition-all duration-300 cursor-pointer group relative border ${
         isPinned
-          ? 'bg-[#BBA473]/[0.03] border-[#BBA473]/30 hover:bg-[#BBA473]/[0.08]'
+          ? 'bg-[#16A249]/[0.03] border-[#16A249]/30 hover:bg-[#16A249]/[0.08]'
           : hasActiveSession
-            ? 'bg-[#BBA473]/[0.04] border-[#BBA473]/40 hover:bg-[#BBA473]/[0.09]'
-            : 'bg-[#2A2A2A] border-[#BBA473]/10 hover:border-[#BBA473]/30'
+            ? 'bg-[#16A249]/[0.04] border-[#16A249]/40 hover:bg-[#16A249]/[0.09]'
+            : 'bg-[#2A2A2A] border-[#16A249]/10 hover:border-[#16A249]/30'
       }`}
     >
       {/* Header: Avatar + Name + Actions */}
@@ -261,7 +261,7 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="relative flex-shrink-0">
             {contact.avatar ? (
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg p-0.5 ${isMuted ? 'opacity-60' : ''}`}>
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center shadow-lg p-0.5 ${isMuted ? 'opacity-60' : ''}`}>
                 <img
                   src={contact.avatar}
                   alt={contact.name}
@@ -272,14 +272,14 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
                     if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
                   }}
                 />
-                <div className="hidden w-full h-full rounded-xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] items-center justify-center">
+                <div className="hidden w-full h-full rounded-xl bg-gradient-to-br from-[#16A249] to-[#1C4F2A] items-center justify-center">
                   <span className="text-lg font-bold text-white">
                     {(contact.name || '?').charAt(0).toUpperCase()}
                   </span>
                 </div>
               </div>
             ) : (
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center shadow-lg ${isMuted ? 'opacity-60' : ''}`}>
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center shadow-lg ${isMuted ? 'opacity-60' : ''}`}>
                 <span className="text-lg font-bold text-white">
                   {(contact.name || '?').charAt(0).toUpperCase()}
                 </span>
@@ -298,10 +298,10 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <h3 className={`text-sm font-semibold truncate group-hover:text-[#BBA473] transition-colors ${isMuted ? 'text-gray-400' : 'text-white'}`}>
+              <h3 className={`text-sm font-semibold truncate group-hover:text-[#00FF7F] transition-colors ${isMuted ? 'text-gray-400' : 'text-white'}`}>
                 {capitalizeWords(contact.name)}
               </h3>
-              {isPinned && <Pin className="w-3 h-3 text-[#BBA473]/60 flex-shrink-0 rotate-45" />}
+              {isPinned && <Pin className="w-3 h-3 text-[#00FF7F]/60 flex-shrink-0 rotate-45" />}
               {isMuted && <BellOff className="w-3 h-3 text-gray-500 flex-shrink-0" />}
             </div>
             <p className="text-xs text-gray-400 truncate">{formatPhoneDisplay(contact.phone)}</p>
@@ -312,25 +312,25 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
         <div className="relative flex-shrink-0 ml-2" ref={actionsRef}>
           <button
             onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
-            className="p-1.5 rounded-lg text-gray-500 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all opacity-0 group-hover:opacity-100"
+            className="p-1.5 rounded-lg text-gray-500 hover:text-[#00FF7F] hover:bg-[#16A249]/10 transition-all opacity-0 group-hover:opacity-100"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
           {showActions && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl z-30 overflow-hidden" style={{ animation: 'scaleIn 0.15s ease-out' }}>
+            <div className="absolute right-0 top-full mt-1 w-48 bg-[#2A2A2A] border border-[#16A249]/20 rounded-xl shadow-2xl z-30 overflow-hidden" style={{ animation: 'scaleIn 0.15s ease-out' }}>
               <div className="p-1">
                 <button
                   onClick={(e) => { e.stopPropagation(); onTogglePin(contact.id); setShowActions(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#16A249]/10 text-gray-300 hover:text-white"
                 >
-                  {isPinned ? <PinOff className="w-4 h-4 text-[#BBA473]" /> : <Pin className="w-4 h-4 text-[#BBA473]" />}
+                  {isPinned ? <PinOff className="w-4 h-4 text-[#00FF7F]" /> : <Pin className="w-4 h-4 text-[#00FF7F]" />}
                   {isPinned ? 'Unpin' : 'Pin to Top'}
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onToggleMute(contact.id); setShowActions(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#16A249]/10 text-gray-300 hover:text-white"
                 >
-                  {isMuted ? <Bell className="w-4 h-4 text-[#BBA473]" /> : <BellOff className="w-4 h-4 text-gray-400" />}
+                  {isMuted ? <Bell className="w-4 h-4 text-[#00FF7F]" /> : <BellOff className="w-4 h-4 text-gray-400" />}
                   {isMuted ? 'Unmute' : 'Mute'}
                 </button>
                 <button
@@ -340,9 +340,9 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
                     setShowActions(false);
                     toast.success('Marked as unread', { duration: 1500 });
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#BBA473]/10 text-gray-300 hover:text-white"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[#16A249]/10 text-gray-300 hover:text-white"
                 >
-                  <Eye className="w-4 h-4 text-[#BBA473]" />
+                  <Eye className="w-4 h-4 text-[#00FF7F]" />
                   Mark as Unread
                 </button>
               </div>
@@ -354,17 +354,17 @@ const ContactCard = ({ contact, handleContactClick, capitalizeWords, formatPhone
       {/* Last Message */}
       <div className={`flex items-center gap-1.5 mb-3 ${isMuted ? 'opacity-50' : ''}`}>
         {contact.lastMessageDirection === 'outbound' ? (
-          <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0">
+          <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0">
             <CornerUpRight className="w-2.5 h-2.5" />
             You
           </span>
         ) : contact.lastMessageDirection === 'inbound' ? (
-          <span className="inline-flex items-center gap-0.5 bg-[#2A2A2A] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[#BBA473]/20 flex-shrink-0">
-            <CornerDownLeft className="w-2.5 h-2.5 text-[#BBA473]" />
+          <span className="inline-flex items-center gap-0.5 bg-[#2A2A2A] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[#16A249]/20 flex-shrink-0">
+            <CornerDownLeft className="w-2.5 h-2.5 text-[#00FF7F]" />
             Lead
           </span>
         ) : null}
-        <p className={`text-xs truncate leading-relaxed ${contact.lastMessageDirection === 'outbound' ? 'text-[#BBA473]/80' : 'text-gray-300'}`}>
+        <p className={`text-xs truncate leading-relaxed ${contact.lastMessageDirection === 'outbound' ? 'text-[#00FF7F]/80' : 'text-gray-300'}`}>
           {contact.lastMessage || 'No messages yet'}
         </p>
       </div>
@@ -539,7 +539,7 @@ const InboxListing = ({
       <div className="mb-8 animate-fadeIn">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] bg-clip-text text-transparent">
               Inbox
             </h1>
             <p className="text-gray-400 mt-2">
@@ -551,17 +551,17 @@ const InboxListing = ({
 
           <div className="flex items-center gap-3">
             {/* Layout Toggle */}
-            <div className="flex items-center bg-[#2A2A2A] rounded-lg p-1 border border-[#BBA473]/20">
+            <div className="flex items-center bg-[#2A2A2A] rounded-lg p-1 border border-[#16A249]/20">
               <button
                 onClick={() => handleViewModeChange('list')}
-                className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list' ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-gray-400 hover:text-white'}`}
+                className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list' ? 'bg-[#16A249]/20 text-[#00FF7F]' : 'text-gray-400 hover:text-white'}`}
                 title="List view"
               >
                 <LayoutList className="w-5 h-5" />
               </button>
               <button
                 onClick={() => handleViewModeChange('cards')}
-                className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'cards' ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-gray-400 hover:text-white'}`}
+                className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'cards' ? 'bg-[#16A249]/20 text-[#00FF7F]' : 'text-gray-400 hover:text-white'}`}
                 title="Card view"
               >
                 <LayoutGrid className="w-5 h-5" />
@@ -570,7 +570,7 @@ const InboxListing = ({
 
             <button
               onClick={() => setShowTemplateManager(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black rounded-lg font-semibold transition-all duration-300 hover:from-[#d4bc89] hover:to-[#a69363] shadow-lg hover:shadow-xl hover:scale-105"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white rounded-lg font-semibold transition-all duration-300 hover:from-[#1EB956] hover:to-[#267A3D] shadow-lg hover:shadow-xl hover:scale-105"
             >
               <FileText className="w-5 h-5" />
               Manage Templates
@@ -581,14 +581,14 @@ const InboxListing = ({
         <div className="flex flex-col gap-3 mt-4">
           {userRole === 'Sales Manager' && (
             <div className="flex items-center gap-4 ml-auto">
-              <label className="text-[#E8D5A3] font-medium text-sm whitespace-nowrap">
+              <label className="text-[#A8E6B8] font-medium text-sm whitespace-nowrap">
                 Filter by Agent:
               </label>
               <div className="relative w-full max-w-xs min-w-64">
                 <select
                   value={selectedAgentFilter}
                   onChange={(e) => setSelectedAgentFilter(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+                  className="w-full px-4 py-2 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
                 >
                   <option value="">All Agents</option>
                   {agents.map((agent) => (
@@ -622,7 +622,7 @@ const InboxListing = ({
             placeholder="Search by name, email, phone, nationality, residency, or source..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+            className="w-full pl-10 pr-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
           />
         </div>
         <div className="relative w-full lg:w-48">
@@ -630,7 +630,7 @@ const InboxListing = ({
           <select
             value={unreadFilter}
             onChange={(e) => setUnreadFilter(e.target.value)}
-            className="w-full pl-10 pr-10 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473] appearance-none cursor-pointer"
+            className="w-full pl-10 pr-10 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249] appearance-none cursor-pointer"
           >
             <option value="all">All Messages</option>
             <option value="true">Unread Only</option>
@@ -640,11 +640,11 @@ const InboxListing = ({
       </div>
 
       {/* Contacts Grid/List */}
-      <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+      <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#16A249]/20 animate-fadeIn">
         {loading ? (
           <div className="px-6 py-12 text-center text-gray-400">
             <div className="flex flex-col items-center gap-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#BBA473]"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#16A249]"></div>
               <span>Loading contacts...</span>
             </div>
           </div>
@@ -674,7 +674,7 @@ const InboxListing = ({
             ))}
           </div>
         ) : (
-          <div className="divide-y divide-[#BBA473]/10">
+          <div className="divide-y divide-[#16A249]/10">
             {/* Pinned section divider */}
             {sortedContacts.some(c => pinnedIds.includes(c.id)) && sortedContacts.some(c => !pinnedIds.includes(c.id)) && (
               <div className="sr-only">Pinned contacts above</div>
@@ -700,11 +700,11 @@ const InboxListing = ({
                   {/* Visual divider between pinned and unpinned sections */}
                   {isPinned && !nextIsPinned && (
                     <div className="flex items-center gap-3 px-6 py-1.5 bg-[#1A1A1A]">
-                      <div className="flex-1 h-px bg-[#BBA473]/15"></div>
-                      <span className="text-[10px] text-[#BBA473]/40 font-medium uppercase tracking-widest flex items-center gap-1.5">
+                      <div className="flex-1 h-px bg-[#16A249]/15"></div>
+                      <span className="text-[10px] text-[#00FF7F]/40 font-medium uppercase tracking-widest flex items-center gap-1.5">
                         <Pin className="w-2.5 h-2.5 rotate-45" /> Pinned
                       </span>
-                      <div className="flex-1 h-px bg-[#BBA473]/15"></div>
+                      <div className="flex-1 h-px bg-[#16A249]/15"></div>
                     </div>
                   )}
                 </React.Fragment>
@@ -714,7 +714,7 @@ const InboxListing = ({
         )}
 
         {/* Pagination */}
-        <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#16A249]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="text-gray-400 text-sm">
               Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
@@ -724,18 +724,18 @@ const InboxListing = ({
             <div className="relative">
               <button
                 onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30"
               >
                 <span className="text-sm">{itemsPerPage} per page</span>
                 <ChevronDown className="w-4 h-4" />
               </button>
               {showPerPageDropdown && (
-                <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
+                <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
                   {perPageOptions.map(option => (
                     <button
                       key={option}
                       onClick={() => handlePerPageChange(option)}
-                      className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                      className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${option === itemsPerPage ? 'bg-[#16A249]/20 text-[#00FF7F]' : 'text-white'
                         }`}
                     >
                       {option} per page
@@ -750,7 +750,7 @@ const InboxListing = ({
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -759,7 +759,7 @@ const InboxListing = ({
               <>
                 <button
                   onClick={() => handlePageChange(1)}
-                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                 >
                   1
                 </button>
@@ -772,8 +772,8 @@ const InboxListing = ({
                 key={page}
                 onClick={() => handlePageChange(page)}
                 className={`px-4 py-2 rounded-lg transition-all duration-300 border ${currentPage === page
-                    ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
-                    : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
+                    ? 'bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white border-[#16A249] font-semibold shadow-lg'
+                    : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#16A249]/30 hover:border-[#16A249]'
                   }`}
               >
                 {page}
@@ -785,7 +785,7 @@ const InboxListing = ({
                 {currentPage < totalPages - 2 && <span className="text-gray-400">...</span>}
                 <button
                   onClick={() => handlePageChange(totalPages)}
-                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                  className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                 >
                   {totalPages}
                 </button>
@@ -795,7 +795,7 @@ const InboxListing = ({
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+              className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

@@ -253,7 +253,7 @@ const Dashboard = () => {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="border border-[#BBA473]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
+            className="border border-[#16A249]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -271,7 +271,7 @@ const Dashboard = () => {
         {[1, 2].map((i) => (
           <div
             key={i}
-            className="border border-[#BBA473]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
+            className="border border-[#16A249]/30 rounded-lg p-6 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]"
           >
             <div className="h-6 bg-gray-700 rounded w-48 mx-auto mb-6"></div>
             <div className="h-[400px] bg-gray-900/30 rounded"></div>
@@ -285,9 +285,9 @@ const Dashboard = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1A1A1A] border-2 border-[#BBA473] rounded-lg p-4 shadow-2xl backdrop-blur-sm">
+        <div className="bg-[#1A1A1A] border-2 border-[#16A249] rounded-lg p-4 shadow-2xl backdrop-blur-sm">
           <p className="text-white font-semibold mb-2">{label}</p>
-          <p className="text-[#BBA473] font-bold text-lg">
+          <p className="text-[#00FF7F] font-bold text-lg">
             {payload[0].value} leads
           </p>
         </div>
@@ -301,10 +301,10 @@ const Dashboard = () => {
       <div className="min-h-screen bg-black text-white p-6">
         <main>
           {/* Header with Gradient Background */}
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between mb-8 bg-gradient-to-r from-[#BBA473]/10 to-transparent border border-[#BBA473]/30 rounded-2xl p-6 backdrop-blur-sm z-10">
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between mb-8 bg-gradient-to-r from-[#16A249]/10 to-transparent border border-[#16A249]/30 rounded-2xl p-6 backdrop-blur-sm z-10">
             <div className="flex-1">
-              <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#BBA473] to-yellow-200 mb-3 animate-fade-in">
-                Welcome to the SIG Sales CRM
+              <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#16A249] to-yellow-200 mb-3 animate-fade-in">
+                Welcome to the MenaCapital Sales CRM
               </h2>
               <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                 Monitor your monthly performance, revenue growth, and conversion progress in real-time.
@@ -326,14 +326,14 @@ const Dashboard = () => {
               {/* Kiosk Member Filter */}
               {kioskMemberOptions.length > 0 && (
                 <div className='flex items-center gap-3'>
-                  <label htmlFor="" className='text-[#E8D5A3] font-medium text-sm whitespace-nowrap'>
+                  <label htmlFor="" className='text-[#A8E6B8] font-medium text-sm whitespace-nowrap'>
                     Filter by Agent:
                   </label>
                   <div className="relative">
                     <select
                       value={selectedKioskMember}
                       onChange={(e) => setSelectedKioskMember(e.target.value)}
-                      className="w-full md:w-64 px-4 py-2.5 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[#BBA473]/40 rounded-lg text-white text-sm font-medium appearance-none cursor-pointer hover:border-[#BBA473] focus:border-[#BBA473] focus:outline-none focus:ring-2 focus:ring-[#BBA473]/20 transition-all pl-10 duration-300 shadow-lg"
+                      className="w-full md:w-64 px-4 py-2.5 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[#16A249]/40 rounded-lg text-white text-sm font-medium appearance-none cursor-pointer hover:border-[#16A249] focus:border-[#16A249] focus:outline-none focus:ring-2 focus:ring-[#16A249]/20 transition-all pl-10 duration-300 shadow-lg"
                       style={{
                         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23BBA473' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
@@ -354,7 +354,7 @@ const Dashboard = () => {
                         </option>
                       ))}
                     </select>
-                    <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BBA473] pointer-events-none" />
+                    <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#00FF7F] pointer-events-none" />
                   </div>
                 </div>
               )}
@@ -366,11 +366,11 @@ const Dashboard = () => {
             <div className="text-center py-16">
               <div className="relative inline-block">
                 {/* Outer spinning ring */}
-                <div className="absolute inset-0 rounded-full border-4 border-[#BBA473]/20 animate-pulse"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-[#16A249]/20 animate-pulse"></div>
                 {/* Main spinner */}
-                <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#BBA473]"></div>
+                <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#16A249]"></div>
                 {/* Inner spinning dot */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#BBA473] rounded-full animate-ping"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#16A249] rounded-full animate-ping"></div>
               </div>
               <p className="text-gray-300 mt-6 text-lg font-medium animate-pulse">
                 Loading dashboard data...
@@ -394,14 +394,14 @@ const Dashboard = () => {
                       {kioskMemberOptions.map((member, index) => (
                         <div
                           key={member.kioskMemberId}
-                          className="group relative w-full border border-[#BBA473]/40 rounded-lg p-4 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-105 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                          className="group relative w-full border border-[#16A249]/40 rounded-lg p-4 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#16A249] hover:scale-105 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
                           style={{ animation: `slideInUp 0.5s ease-out ${index * 0.1}s both` }}
                         >
                           {/* Gradient Overlay on Hover */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#16A249]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                           {/* Animated Corner Accent */}
-                          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#16A249]/20 to-transparent rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
 
                           <div className="relative">
                             {/* Header with Icon */}
@@ -427,7 +427,7 @@ const Dashboard = () => {
                               {/* Leads */}
                               <div className="flex items-center justify-between">
                                 <p className="text-gray-400 text-xs font-medium">Leads</p>
-                                <p className="text-lg font-bold text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                                <p className="text-lg font-bold text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                                   {member.leadCount || 0}
                                 </p>
                               </div>
@@ -459,7 +459,7 @@ const Dashboard = () => {
                           </div>
 
                           {/* Bottom Accent Line */}
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#16A249] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                         </div>
                       ))}
                     </div>
@@ -470,14 +470,14 @@ const Dashboard = () => {
                       return member ? (
                         <div className="max-w-full mx-auto">
                           <div
-                            className="group relative w-full border border-[#BBA473]/40 rounded-lg p-4 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                            className="group relative w-full border border-[#16A249]/40 rounded-lg p-4 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#16A249] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
                             style={{ animation: 'slideInUp 0.5s ease-out' }}
                           >
                             {/* Gradient Overlay on Hover */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#16A249]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                             {/* Animated Corner Accent */}
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#16A249]/20 to-transparent rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
 
                             <div className="relative">
                               {/* Header with Icon */}
@@ -503,7 +503,7 @@ const Dashboard = () => {
                                 {/* Leads */}
                                 <div className="flex items-center justify-between">
                                   <p className="text-gray-400 text-xs font-medium">Leads</p>
-                                  <p className="text-lg font-bold text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                                  <p className="text-lg font-bold text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                                     {member.leadCount || 0}
                                   </p>
                                 </div>
@@ -535,7 +535,7 @@ const Dashboard = () => {
                             </div>
 
                             {/* Bottom Accent Line */}
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#16A249] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                           </div>
                         </div>
                       ) : null;
@@ -553,23 +553,23 @@ const Dashboard = () => {
                   return (
                     <div
                       key={index}
-                      className="group relative w-full border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#BBA473] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
+                      className="group relative w-full border border-[#16A249]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#16A249] hover:scale-101 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] overflow-hidden"
                       style={{
                         animation: `slideInUp 0.5s ease-out ${index * 0.1}s both`,
                       }}
                     >
                       {/* Gradient Overlay on Hover */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#BBA473]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#16A249]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                       {/* Animated Corner Accent */}
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#BBA473]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform pl-10 duration-500"></div>
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#16A249]/20 to-transparent rounded-bl-full transform translate-x-10 -translate-y-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform pl-10 duration-500"></div>
 
                       <div className="relative flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-gray-400 text-sm font-medium mb-2 group-hover:text-gray-300 transition-colors duration-300">
                             {stat.label}
                           </p>
-                          <p className="text-3xl font-bold text-white mt-1 group-hover:text-[#BBA473] transition-colors duration-300">
+                          <p className="text-3xl font-bold text-white mt-1 group-hover:text-[#00FF7F] transition-colors duration-300">
                             {stat.value}
                           </p>
                         </div>
@@ -585,7 +585,7 @@ const Dashboard = () => {
                       </div>
 
                       {/* Bottom Accent Line */}
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#BBA473] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#16A249] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                     </div>
                   );
                 })}
@@ -595,15 +595,15 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 {/* Pie Chart with Enhanced Styling */}
                 <div
-                  className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
+                  className="border border-[#16A249]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#16A249]"
                   style={{ animation: 'slideInLeft 0.6s ease-out' }}
                 >
                   <div className="flex items-center justify-center mb-4">
-                    <div className="h-1 w-12 bg-gradient-to-r from-transparent to-[#BBA473] mr-3"></div>
+                    <div className="h-1 w-12 bg-gradient-to-r from-transparent to-[#16A249] mr-3"></div>
                     <h3 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                       Leads Overview
                     </h3>
-                    <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
+                    <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#16A249] ml-3"></div>
                   </div>
 
                   {pieData.length > 0 ? (
@@ -636,12 +636,12 @@ const Dashboard = () => {
                         </PieChart>
                       </ResponsiveContainer>
 
-                      <div className="bg-[#0A0A0A] rounded-lg p-4 border border-[#BBA473]/30">
+                      <div className="bg-[#0A0A0A] rounded-lg p-4 border border-[#16A249]/30">
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-semibold text-gray-300">
                             Total Leads
                           </h3>
-                          <span className="text-3xl font-bold text-[#BBA473] animate-pulse">
+                          <span className="text-3xl font-bold text-[#00FF7F] animate-pulse">
                             {totalLeads}
                           </span>
                         </div>
@@ -658,23 +658,23 @@ const Dashboard = () => {
 
                 {/* Bar Chart with Enhanced Styling */}
                 <div
-                  className="border border-[#BBA473]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#BBA473]"
+                  className="border border-[#16A249]/40 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] hover:border-[#16A249]"
                   style={{ animation: 'slideInRight 0.6s ease-out' }}
                 >
                   <div className="flex items-center justify-center mb-4">
-                    <div className="h-1 w-12 bg-gradient-to-r from-transparent to-[#BBA473] mr-3"></div>
+                    <div className="h-1 w-12 bg-gradient-to-r from-transparent to-[#16A249] mr-3"></div>
                     <h3 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                       Monthly Summary
                     </h3>
-                    <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#BBA473] ml-3"></div>
+                    <div className="h-1 w-12 bg-gradient-to-l from-transparent to-[#16A249] ml-3"></div>
                   </div>
 
                   <ResponsiveContainer width="100%" height={450}>
                     <BarChart data={barData}>
                       <defs>
                         <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#BBA473" stopOpacity={0.8} />
-                          <stop offset="100%" stopColor="#BBA473" stopOpacity={0.3} />
+                          <stop offset="0%" stopColor="#16A249" stopOpacity={0.8} />
+                          <stop offset="100%" stopColor="#16A249" stopOpacity={0.3} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
@@ -716,7 +716,7 @@ const Dashboard = () => {
           {/* No Data State with Enhanced Design */}
           {!loading && !dashboardData && (
             <div className="text-center py-20 animate-fade-in">
-              <div className="inline-block p-8 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] rounded-2xl border border-[#BBA473]/30 shadow-2xl">
+              <div className="inline-block p-8 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] rounded-2xl border border-[#16A249]/30 shadow-2xl">
                 <Activity className="w-20 h-20 text-gray-600 mx-auto mb-4 animate-pulse" />
                 <p className="text-gray-400 text-xl font-semibold mb-2">No dashboard data available</p>
                 <p className="text-gray-500 text-sm">Please check back later or adjust your filters</p>
@@ -797,7 +797,7 @@ const Dashboard = () => {
         }
 
         select option:hover {
-          background-color: #BBA473 !important;
+          background-color: #16A249 !important;
         }
       `}</style>
     </>

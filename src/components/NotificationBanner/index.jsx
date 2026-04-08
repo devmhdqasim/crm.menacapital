@@ -20,15 +20,15 @@ const typeThemes = {
   },
   lead: {
     bg: 'from-[#141414] via-[#1e1e1e] to-[#141414]',
-    iconBg: 'bg-gradient-to-br from-[#BBA473] to-[#8E7D5A]',
-    iconRing: 'ring-[#BBA473]/30',
+    iconBg: 'bg-gradient-to-br from-[#16A249] to-[#1C4F2A]',
+    iconRing: 'ring-[#16A249]/30',
     textColor: 'text-white',
     subtextColor: 'text-gray-200',
-    tagBg: 'bg-[#BBA473]/25',
-    tagText: 'text-[#d4bc89]',
+    tagBg: 'bg-[#16A249]/25',
+    tagText: 'text-[#1EB956]',
     closeBg: 'bg-white/5 hover:bg-white/10',
     closeIcon: 'text-gray-300',
-    shadow: 'shadow-[#BBA473]/20',
+    shadow: 'shadow-[#16A249]/20',
     label: 'Lead',
     Icon: Bell,
   },
@@ -48,15 +48,15 @@ const typeThemes = {
   },
   general: {
     bg: 'from-[#141414] via-[#1e1e1e] to-[#141414]',
-    iconBg: 'bg-gradient-to-br from-[#BBA473] to-[#8E7D5A]',
-    iconRing: 'ring-[#BBA473]/30',
+    iconBg: 'bg-gradient-to-br from-[#16A249] to-[#1C4F2A]',
+    iconRing: 'ring-[#16A249]/30',
     textColor: 'text-white',
     subtextColor: 'text-gray-200',
-    tagBg: 'bg-[#BBA473]/25',
-    tagText: 'text-[#d4bc89]',
+    tagBg: 'bg-[#16A249]/25',
+    tagText: 'text-[#1EB956]',
     closeBg: 'bg-white/5 hover:bg-white/10',
     closeIcon: 'text-gray-300',
-    shadow: 'shadow-[#BBA473]/20',
+    shadow: 'shadow-[#16A249]/20',
     label: 'Notification',
     Icon: Bell,
   },
@@ -93,7 +93,7 @@ export default function NotificationBanner() {
     >
       <div
         className={`bg-gradient-to-r ${theme.bg} rounded-2xl shadow-2xl ${theme.shadow} border ${
-          isWhatsApp ? 'border-[#25D366]/30' : 'border-[#BBA473]/20'
+          isWhatsApp ? 'border-[#25D366]/30' : 'border-[#16A249]/20'
         } overflow-hidden backdrop-blur-xl`}
       >
         {/* Top accent line */}
@@ -103,7 +103,7 @@ export default function NotificationBanner() {
               ? 'bg-gradient-to-r from-transparent via-[#25D366] to-transparent'
               : isHighPriority
               ? 'bg-gradient-to-r from-transparent via-red-500 to-transparent'
-              : 'bg-gradient-to-r from-transparent via-[#BBA473] to-transparent'
+              : 'bg-gradient-to-r from-transparent via-[#16A249] to-transparent'
           }`}
         />
 
@@ -191,7 +191,7 @@ export default function NotificationBanner() {
         {/* Bottom progress bar - auto dismiss indicator */}
         <div className="h-[2px] w-full bg-black/20 overflow-hidden">
           <div
-            className={`h-full ${isWhatsApp ? 'bg-[#25D366]' : isHighPriority ? 'bg-red-400' : 'bg-[#BBA473]'}`}
+            className={`h-full ${isWhatsApp ? 'bg-[#25D366]' : isHighPriority ? 'bg-red-400' : 'bg-[#16A249]'}`}
             style={{
               animation: 'shrinkWidth 8s linear forwards',
             }}

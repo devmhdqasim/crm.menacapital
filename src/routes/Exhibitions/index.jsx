@@ -342,10 +342,10 @@ const BranchManagement = () => {
             style: {
               background: '#2A2A2A',
               color: '#fff',
-              border: '1px solid #BBA473',
+              border: '1px solid #16A249',
             },
             iconTheme: {
-              primary: '#BBA473',
+              primary: '#16A249',
               secondary: '#1A1A1A',
             },
           });
@@ -474,10 +474,10 @@ const BranchManagement = () => {
             style: {
               background: '#2A2A2A',
               color: '#fff',
-              border: '1px solid #BBA473',
+              border: '1px solid #16A249',
             },
             iconTheme: {
-              primary: '#BBA473',
+              primary: '#16A249',
               secondary: '#1A1A1A',
             },
           });
@@ -540,23 +540,23 @@ const BranchManagement = () => {
       ...provided,
       backgroundColor: '#1A1A1A',
       borderColor: state.isFocused 
-        ? '#BBA473' 
+        ? '#16A249' 
         : formik.touched.branchMembers && formik.errors.branchMembers 
           ? '#ef4444' 
-          : 'rgba(187, 164, 115, 0.3)',
+          : 'rgba(22, 162, 73, 0.3)',
       borderWidth: '2px',
       borderRadius: '0.5rem',
       padding: '0.25rem',
-      boxShadow: state.isFocused ? '0 0 0 2px rgba(187, 164, 115, 0.5)' : 'none',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(22, 162, 73, 0.5)' : 'none',
       '&:hover': {
-        borderColor: '#BBA473',
+        borderColor: '#16A249',
       },
       minHeight: '48px',
     }),
     menu: (provided) => ({
       ...provided,
       backgroundColor: '#2A2A2A',
-      border: '2px solid rgba(187, 164, 115, 0.3)',
+      border: '2px solid rgba(22, 162, 73, 0.3)',
       borderRadius: '0.5rem',
       boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
       zIndex: 30,
@@ -569,34 +569,34 @@ const BranchManagement = () => {
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected 
-        ? 'rgba(187, 164, 115, 0.2)' 
+        ? 'rgba(22, 162, 73, 0.2)' 
         : state.isFocused 
           ? '#3A3A3A' 
           : 'transparent',
-      color: state.isSelected ? '#BBA473' : '#fff',
+      color: state.isSelected ? '#16A249' : '#fff',
       padding: '0.75rem 1rem',
       cursor: 'pointer',
       '&:active': {
-        backgroundColor: 'rgba(187, 164, 115, 0.3)',
+        backgroundColor: 'rgba(22, 162, 73, 0.3)',
       },
     }),
     multiValue: (provided) => ({
       ...provided,
-      backgroundColor: 'rgba(187, 164, 115, 0.2)',
+      backgroundColor: 'rgba(22, 162, 73, 0.2)',
       borderRadius: '0.375rem',
-      border: '1px solid rgba(187, 164, 115, 0.3)',
+      border: '1px solid rgba(22, 162, 73, 0.3)',
     }),
     multiValueLabel: (provided) => ({
       ...provided,
-      color: '#BBA473',
+      color: '#00FF7F',
       padding: '0.25rem 0.5rem',
     }),
     multiValueRemove: (provided) => ({
       ...provided,
-      color: '#BBA473',
+      color: '#00FF7F',
       cursor: 'pointer',
       '&:hover': {
-        backgroundColor: '#BBA473',
+        backgroundColor: '#16A249',
         color: '#1A1A1A',
       },
     }),
@@ -617,16 +617,16 @@ const BranchManagement = () => {
     }),
     dropdownIndicator: (provided) => ({
       ...provided,
-      color: '#BBA473',
+      color: '#00FF7F',
       '&:hover': {
-        color: '#d4bc89',
+        color: '#1EB956',
       },
     }),
     clearIndicator: (provided) => ({
       ...provided,
-      color: '#BBA473',
+      color: '#00FF7F',
       '&:hover': {
-        color: '#d4bc89',
+        color: '#1EB956',
       },
     }),
   };
@@ -638,16 +638,16 @@ const BranchManagement = () => {
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] bg-clip-text text-transparent">
                 Event Management
               </h1>
-              <p className="text-gray-400 mt-2">Manage your Save In Gold branches locations and information</p>
+              <p className="text-gray-400 mt-2">Manage your Mena Capital branches locations and information</p>
             </div>
 
             <div className="flex flex-col gap-3">
             <button
               onClick={handleAddBranch}
-              className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
+              className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95 ml-auto"
             >
               <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               <Building2 className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
@@ -669,14 +669,14 @@ const BranchManagement = () => {
 
         {/* Tabs */}
         <div className="mb-6 overflow-x-auto animate-fadeIn">
-          <div className="flex gap-2 border-b border-[#BBA473]/30 min-w-max">
+          <div className="flex gap-2 border-b border-[#16A249]/30 min-w-max">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 whitespace-nowrap ${
                   activeTab === tab
-                    ? 'border-[#BBA473] text-[#BBA473] bg-[#BBA473]/10'
+                    ? 'border-[#16A249] text-[#00FF7F] bg-[#16A249]/10'
                     : 'border-transparent text-gray-400 hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
@@ -695,28 +695,28 @@ const BranchManagement = () => {
               placeholder="Search by name, location, manager, or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+              className="w-full pl-10 pr-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
             />
           </div>
         </div>
 
         {/* Table Container */}
-        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#16A249]/20 animate-fadeIn">
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
+              <thead className="bg-[#1A1A1A] border-b border-[#16A249]/30">
                 <tr>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Event ID</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Event Name</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Location</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Manager</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Email</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Event ID</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Event Name</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Location</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Manager</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Phone</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Email</th>
+                  <th className="text-center px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#BBA473]/10">
+              <tbody className="divide-y divide-[#16A249]/10">
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
@@ -740,17 +740,17 @@ const BranchManagement = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 aspect-square rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+                          <div className="w-10 h-10 aspect-square rounded-full bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                             <Building2 className="w-5 h-5 text-black" />
                           </div>
-                          <span className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                          <span className="font-medium text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                             {event.branchName}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-2 max-w-xs">
-                          <MapPin className="w-4 h-4 text-[#BBA473] mt-0.5 flex-shrink-0" />
+                          <MapPin className="w-4 h-4 text-[#00FF7F] mt-0.5 flex-shrink-0" />
                           <span className="text-gray-300 text-sm">{event.branchLocation}</span>
                         </div>
                       </td>
@@ -761,7 +761,7 @@ const BranchManagement = () => {
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => handleEdit(event)}
-                            className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
+                            className="p-2 rounded-lg bg-[#16A249]/20 text-[#00FF7F] hover:bg-[#16A249] hover:text-black transition-all duration-300 hover:scale-110"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
@@ -783,7 +783,7 @@ const BranchManagement = () => {
           </div>
 
           {/* Pagination */}
-          <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#16A249]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="text-gray-400 text-sm">
                 Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
@@ -793,19 +793,19 @@ const BranchManagement = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30"
                 >
                   <span className="text-sm">{itemsPerPage} per page</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 {showPerPageDropdown && (
-                  <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
+                  <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
                     {perPageOptions.map(option => (
                       <button
                         key={option}
                         onClick={() => handlePerPageChange(option)}
                         className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                          option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                          option === itemsPerPage ? 'bg-[#16A249]/20 text-[#00FF7F]' : 'text-white'
                         }`}
                       >
                         {option} per page
@@ -820,7 +820,7 @@ const BranchManagement = () => {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -829,7 +829,7 @@ const BranchManagement = () => {
                 <>
                   <button
                     onClick={() => handlePageChange(1)}
-                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                   >
                     1
                   </button>
@@ -843,8 +843,8 @@ const BranchManagement = () => {
                   onClick={() => handlePageChange(page)}
                   className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
                     currentPage === page
-                      ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black border-[#BBA473] font-semibold shadow-lg'
-                      : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#BBA473]/30 hover:border-[#BBA473]'
+                      ? 'bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white border-[#16A249] font-semibold shadow-lg'
+                      : 'bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] border-[#16A249]/30 hover:border-[#16A249]'
                   }`}
                 >
                   {page}
@@ -856,7 +856,7 @@ const BranchManagement = () => {
                   {currentPage < totalPages - 2 && <span className="text-gray-400">...</span>}
                   <button
                     onClick={() => handlePageChange(totalPages)}
-                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473]"
+                    className="px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249]"
                   >
                     {totalPages}
                   </button>
@@ -866,7 +866,7 @@ const BranchManagement = () => {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30 hover:border-[#BBA473] disabled:hover:border-[#BBA473]/30"
+                className="p-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30 hover:border-[#16A249] disabled:hover:border-[#16A249]/30"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -891,9 +891,9 @@ const BranchManagement = () => {
       >
         <div className="h-full flex flex-col">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
+          <div className="flex items-center justify-between p-6 border-b border-[#16A249]/30 bg-gradient-to-r from-[#16A249]/10 to-transparent">
             <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">
+              <h2 className="text-2xl font-bold text-[#00FF7F]">
                 {editingBranch ? 'Edit Event' : 'Add New Event'}
               </h2>
               <p className="text-gray-400 text-sm mt-1">
@@ -911,15 +911,15 @@ const BranchManagement = () => {
           {/* Drawer Form */}
           <form onSubmit={formik.handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Event Information */}
-            <div className="bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-[#BBA473]/30 pb-3">
+            <div className="bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-white border-b border-[#16A249]/30 pb-3">
                 Event Information
               </h3>
 
               <div className="grid grid-cols-1 gap-4">
                 {/* Event Name */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Event Name <span className="text-red-500">*</span>
                   </label>
                   {!isBranchMembersVisible && (
@@ -933,7 +933,7 @@ const BranchManagement = () => {
                       className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.branchName && formik.errors.branchName
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     />
                   )}
@@ -944,7 +944,7 @@ const BranchManagement = () => {
 
                 {/* Event Location */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Event Location <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -957,7 +957,7 @@ const BranchManagement = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.branchLocation && formik.errors.branchLocation
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.branchLocation && formik.errors.branchLocation && (
@@ -967,7 +967,7 @@ const BranchManagement = () => {
 
                 {/* Phone Number - International Phone Input */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
                   <PhoneInput
@@ -989,7 +989,7 @@ const BranchManagement = () => {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1002,7 +1002,7 @@ const BranchManagement = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.branchEmail && formik.errors.branchEmail
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.branchEmail && formik.errors.branchEmail && (
@@ -1012,7 +1012,7 @@ const BranchManagement = () => {
 
                 {/* Password */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Event Password {!editingBranch && <span className="text-red-500">*</span>}
                     {editingBranch && <span className="text-gray-500 text-xs ml-2">(Leave blank to keep current)</span>}
                   </label>
@@ -1027,7 +1027,7 @@ const BranchManagement = () => {
                       className={`w-full px-4 py-3 pr-20 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.branchPassword && formik.errors.branchPassword
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     />
                     <button
@@ -1048,7 +1048,7 @@ const BranchManagement = () => {
                         const generatedPassword = generatePassword();
                         formik.setFieldValue('branchPassword', generatedPassword);
                       }}
-                      className="flex items-center gap-2 px-3 py-1.5 text-xs bg-[#BBA473]/20 text-[#BBA473] rounded-lg hover:bg-[#BBA473]/30 transition-all duration-300 border border-[#BBA473]/30"
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs bg-[#16A249]/20 text-[#00FF7F] rounded-lg hover:bg-[#16A249]/30 transition-all duration-300 border border-[#16A249]/30"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Generate Password
@@ -1059,7 +1059,7 @@ const BranchManagement = () => {
 
                 {/* Sales Manager Select */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Sales Manager <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -1070,7 +1070,7 @@ const BranchManagement = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.salesManager && formik.errors.salesManager
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   >
                     <option value="" disabled>
@@ -1089,21 +1089,21 @@ const BranchManagement = () => {
 
                 {/* ── NEW: Event Source (optional) ──────────────────────────────── */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Event Source
                     <span className="text-gray-500 text-xs ml-2">(Optional)</span>
                   </label>
                   <input
                     type="text"
                     name="eventSource"
-                    placeholder="Save In Gold Event(WTC)"
+                    placeholder="Mena Capital Event(WTC)"
                     value={formik.values.eventSource}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.eventSource && formik.errors.eventSource
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.eventSource && formik.errors.eventSource && (
@@ -1115,9 +1115,9 @@ const BranchManagement = () => {
             </div>
 
             {/* Coordinates */}
-            <div className="bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg p-6 space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#BBA473]/30 pb-3">
-                <MapPin className="w-5 h-5 text-[#BBA473]" />
+            <div className="bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg p-6 space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#16A249]/30 pb-3">
+                <MapPin className="w-5 h-5 text-[#00FF7F]" />
                 <h3 className="text-lg font-semibold text-white">GPS Coordinates</h3>
               </div>
 
@@ -1128,7 +1128,7 @@ const BranchManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 {/* Latitude */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Latitude <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1142,7 +1142,7 @@ const BranchManagement = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.latitude && formik.errors.latitude
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.latitude && formik.errors.latitude && (
@@ -1152,7 +1152,7 @@ const BranchManagement = () => {
 
                 {/* Longitude */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Longitude <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1166,7 +1166,7 @@ const BranchManagement = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.longitude && formik.errors.longitude
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.longitude && formik.errors.longitude && (
@@ -1177,7 +1177,7 @@ const BranchManagement = () => {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30">
+            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#16A249]/30">
               <button
                 type="button"
                 onClick={handleCloseDrawer}
@@ -1189,7 +1189,7 @@ const BranchManagement = () => {
                 <button
                   type="submit"
                   disabled={formik.isSubmitting}
-                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:from-[#1EB956] hover:to-[#267A3D] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95"
                 >
                   {formik.isSubmitting 
                     ? (editingBranch ? 'Updating Event...' : 'Creating Event...') 
@@ -1237,7 +1237,7 @@ const BranchManagement = () => {
         .phone-input-custom .PhoneInputInput {
           width: 100%;
           padding: 0.75rem 1rem;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           background-color: #1A1A1A;
           color: white;
@@ -1246,14 +1246,14 @@ const BranchManagement = () => {
         }
         
         .phone-input-custom .PhoneInputInput:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
         
         .phone-input-custom .PhoneInputInput:focus {
           outline: none;
-          border-color: #BBA473;
+          border-color: #16A249;
           ring: 2;
-          ring-color: rgba(187, 164, 115, 0.5);
+          ring-color: rgba(22, 162, 73, 0.5);
         }
         
         .phone-input-error .PhoneInputInput {
@@ -1269,13 +1269,13 @@ const BranchManagement = () => {
           margin-right: 0.5rem;
           padding: 0.5rem;
           background-color: #1A1A1A;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           transition: all 0.3s ease;
         }
 
         .phone-input-custom .PhoneInputCountry:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputCountryIcon {
@@ -1284,7 +1284,7 @@ const BranchManagement = () => {
         }
 
         .phone-input-custom .PhoneInputCountrySelectArrow {
-          color: #BBA473;
+          color: #00FF7F;
           opacity: 0.8;
           margin-left: 0.5rem;
         }

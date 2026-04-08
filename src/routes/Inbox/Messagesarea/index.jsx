@@ -111,7 +111,7 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
         className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 active:scale-90 ${
           isUserMessage
             ? 'bg-black/20 hover:bg-black/30 text-black'
-            : 'bg-[#BBA473]/20 hover:bg-[#BBA473]/30 text-[#BBA473]'
+            : 'bg-[#16A249]/20 hover:bg-[#16A249]/30 text-[#00FF7F]'
         }`}
       >
         {isPlaying
@@ -135,8 +135,8 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
                 key={i}
                 className={`flex-1 rounded-full transition-colors duration-150 ${
                   isFilled
-                    ? isUserMessage ? 'bg-black/60' : 'bg-[#BBA473]'
-                    : isUserMessage ? 'bg-black/15' : 'bg-[#BBA473]/25'
+                    ? isUserMessage ? 'bg-black/60' : 'bg-[#16A249]'
+                    : isUserMessage ? 'bg-black/15' : 'bg-[#16A249]/25'
                 }`}
                 style={{ height: `${h}px` }}
               />
@@ -167,14 +167,14 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
           className={`min-w-[32px] h-7 rounded-lg flex items-center justify-center text-[10px] font-bold transition-all ${
             isUserMessage
               ? 'bg-black/15 hover:bg-black/25 text-black/70'
-              : 'bg-[#BBA473]/15 hover:bg-[#BBA473]/25 text-[#BBA473]'
+              : 'bg-[#16A249]/15 hover:bg-[#16A249]/25 text-[#00FF7F]'
           }`}
           title="Playback speed"
         >
           {playbackRate !== 1 ? `${playbackRate}x` : <Gauge className="w-3.5 h-3.5" />}
         </button>
         {showAudioMenu && (
-          <div className={`absolute right-0 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl py-1.5 min-w-[130px] z-40 animate-scaleIn ${
+          <div className={`absolute right-0 bg-[#2A2A2A] border border-[#16A249]/20 rounded-xl shadow-2xl py-1.5 min-w-[130px] z-40 animate-scaleIn ${
             audioMenuUp ? 'bottom-full mb-1' : 'top-full mt-1'
           }`}>
             <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Speed</p>
@@ -184,15 +184,15 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
                 onClick={(e) => { e.stopPropagation(); changeSpeed(s); }}
                 className={`w-full flex items-center justify-between px-3 py-1.5 text-sm transition-colors ${
                   playbackRate === s
-                    ? 'text-[#BBA473] bg-[#BBA473]/10'
-                    : 'text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473]'
+                    ? 'text-[#00FF7F] bg-[#16A249]/10'
+                    : 'text-gray-200 hover:bg-[#16A249]/10 hover:text-[#00FF7F]'
                 }`}
               >
                 <span>{s}x</span>
-                {playbackRate === s && <span className="text-[#BBA473] text-xs">&#10003;</span>}
+                {playbackRate === s && <span className="text-[#00FF7F] text-xs">&#10003;</span>}
               </button>
             ))}
-            <div className="my-1 border-t border-[#BBA473]/10" />
+            <div className="my-1 border-t border-[#16A249]/10" />
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -204,7 +204,7 @@ const AudioPlayer = ({ src, isUserMessage, onError }) => {
                 }
                 setShowAudioMenu(false);
               }}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-200 hover:bg-[#16A249]/10 hover:text-[#00FF7F] transition-colors"
             >
               <Download className="w-3 h-3" />
               Download
@@ -472,8 +472,8 @@ const MessagesArea = ({
     if (message.type === 'image' && !message.mediaUrl) {
       return (
         <div className="flex items-center gap-2 py-2 px-1">
-          <ImageIcon className="w-5 h-5 text-[#BBA473]" />
-          <span className="text-sm text-[#BBA473]/80">{message.text || 'Image'}</span>
+          <ImageIcon className="w-5 h-5 text-[#00FF7F]" />
+          <span className="text-sm text-[#00FF7F]/80">{message.text || 'Image'}</span>
         </div>
       );
     }
@@ -485,14 +485,14 @@ const MessagesArea = ({
       return (
         <div className="space-y-2">
           {hasFailed ? (
-            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
-              <svg className="w-12 h-12 text-[#BBA473]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#16A249]/10 to-[#1C4F2A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <svg className="w-12 h-12 text-[#00FF7F]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-[#BBA473]/70 text-sm">Image preview</p>
+              <p className="text-[#00FF7F]/70 text-sm">Image preview</p>
               <button
                 onClick={() => handleMediaDownload(message)}
-                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all"
+                className="mt-3 px-3 py-1.5 bg-[#16A249]/20 hover:bg-[#16A249]/30 rounded-lg text-[#00FF7F] font-medium text-xs transition-all"
               >
                 Retry
               </button>
@@ -514,9 +514,9 @@ const MessagesArea = ({
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
-              <Loader2 className="w-12 h-12 text-[#BBA473] animate-spin mb-2" />
-              <p className="text-[#BBA473]/70 text-sm">Loading image...</p>
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#16A249]/10 to-[#1C4F2A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <Loader2 className="w-12 h-12 text-[#00FF7F] animate-spin mb-2" />
+              <p className="text-[#00FF7F]/70 text-sm">Loading image...</p>
             </div>
           )}
 
@@ -531,8 +531,8 @@ const MessagesArea = ({
     if (message.type === 'audio' && !message.mediaUrl) {
       return (
         <div className="flex items-center gap-2 py-2 px-1">
-          <Mic className="w-5 h-5 text-[#BBA473]" />
-          <span className="text-sm text-[#BBA473]/80">{message.text || 'Voice Note'}</span>
+          <Mic className="w-5 h-5 text-[#00FF7F]" />
+          <span className="text-sm text-[#00FF7F]/80">{message.text || 'Voice Note'}</span>
         </div>
       );
     }
@@ -546,7 +546,7 @@ const MessagesArea = ({
       return (
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <Mic className={`w-4 h-4 flex-shrink-0 ${isUser ? 'text-black/50' : 'text-[#BBA473]'}`} />
+            <Mic className={`w-4 h-4 flex-shrink-0 ${isUser ? 'text-black/50' : 'text-[#00FF7F]'}`} />
             <div className="flex-1 min-w-0">
               {hasFailed ? (
                 <div className="flex items-center gap-2">
@@ -565,7 +565,7 @@ const MessagesArea = ({
                   onError={() => setFailedImages(prev => new Set(prev).add(message.id))}
                 />
               ) : (
-                <div className={`flex items-center gap-2 ${isUser ? 'text-black/50' : 'text-[#BBA473]'}`}>
+                <div className={`flex items-center gap-2 ${isUser ? 'text-black/50' : 'text-[#00FF7F]'}`}>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">Loading audio...</span>
                 </div>
@@ -584,8 +584,8 @@ const MessagesArea = ({
     if (message.type === 'video' && !message.mediaUrl) {
       return (
         <div className="flex items-center gap-2 py-2 px-1">
-          <Video className="w-5 h-5 text-[#BBA473]" />
-          <span className="text-sm text-[#BBA473]/80">{message.text || 'Video'}</span>
+          <Video className="w-5 h-5 text-[#00FF7F]" />
+          <span className="text-sm text-[#00FF7F]/80">{message.text || 'Video'}</span>
         </div>
       );
     }
@@ -599,12 +599,12 @@ const MessagesArea = ({
       return (
         <div className="space-y-2">
           {hasFailed ? (
-            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
-              <Video className={`w-12 h-12 mb-2 ${isUser ? 'text-black/30' : 'text-[#BBA473]/50'}`} />
-              <p className={`text-sm ${isUser ? 'text-black/50' : 'text-[#BBA473]/70'}`}>Failed to load video</p>
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#16A249]/10 to-[#1C4F2A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <Video className={`w-12 h-12 mb-2 ${isUser ? 'text-black/30' : 'text-[#00FF7F]/50'}`} />
+              <p className={`text-sm ${isUser ? 'text-black/50' : 'text-[#00FF7F]/70'}`}>Failed to load video</p>
               <button
                 onClick={() => handleMediaDownload(message)}
-                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all"
+                className="mt-3 px-3 py-1.5 bg-[#16A249]/20 hover:bg-[#16A249]/30 rounded-lg text-[#00FF7F] font-medium text-xs transition-all"
               >
                 Retry
               </button>
@@ -623,9 +623,9 @@ const MessagesArea = ({
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[150px] max-w-[300px]">
-              <Loader2 className="w-12 h-12 text-[#BBA473] animate-spin mb-2" />
-              <p className="text-[#BBA473]/70 text-sm">Loading video...</p>
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#16A249]/10 to-[#1C4F2A]/10 rounded-xl min-h-[150px] max-w-[300px]">
+              <Loader2 className="w-12 h-12 text-[#00FF7F] animate-spin mb-2" />
+              <p className="text-[#00FF7F]/70 text-sm">Loading video...</p>
             </div>
           )}
 
@@ -640,8 +640,8 @@ const MessagesArea = ({
     if (message.type === 'document' && !message.mediaUrl) {
       return (
         <div className="flex items-center gap-2 py-2 px-1">
-          <FileText className="w-5 h-5 text-[#BBA473]" />
-          <span className="text-sm text-[#BBA473]/80">{message.text || 'Document'}</span>
+          <FileText className="w-5 h-5 text-[#00FF7F]" />
+          <span className="text-sm text-[#00FF7F]/80">{message.text || 'Document'}</span>
         </div>
       );
     }
@@ -656,12 +656,12 @@ const MessagesArea = ({
       return (
         <div className="space-y-2">
           {hasFailed ? (
-            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl min-h-[100px] max-w-[280px]">
-              <FileText className={`w-10 h-10 mb-2 ${isUser ? 'text-black/30' : 'text-[#BBA473]/50'}`} />
-              <p className={`text-sm ${isUser ? 'text-black/50' : 'text-[#BBA473]/70'}`}>Failed to load document</p>
+            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#16A249]/10 to-[#1C4F2A]/10 rounded-xl min-h-[100px] max-w-[280px]">
+              <FileText className={`w-10 h-10 mb-2 ${isUser ? 'text-black/30' : 'text-[#00FF7F]/50'}`} />
+              <p className={`text-sm ${isUser ? 'text-black/50' : 'text-[#00FF7F]/70'}`}>Failed to load document</p>
               <button
                 onClick={() => handleMediaDownload(message)}
-                className="mt-3 px-3 py-1.5 bg-[#BBA473]/20 hover:bg-[#BBA473]/30 rounded-lg text-[#BBA473] font-medium text-xs transition-all"
+                className="mt-3 px-3 py-1.5 bg-[#16A249]/20 hover:bg-[#16A249]/30 rounded-lg text-[#00FF7F] font-medium text-xs transition-all"
               >
                 Retry
               </button>
@@ -669,7 +669,7 @@ const MessagesArea = ({
           ) : isDownloaded ? (
             <div
               className={`flex items-center gap-3 p-3 rounded-xl max-w-[280px] cursor-pointer transition-all hover:opacity-80 ${
-                isUser ? 'bg-black/10' : 'bg-[#BBA473]/10'
+                isUser ? 'bg-black/10' : 'bg-[#16A249]/10'
               }`}
               onClick={() => window.open(docUrl, '_blank')}
             >
@@ -684,12 +684,12 @@ const MessagesArea = ({
                 </p>
                 <p className={`text-xs ${isUser ? 'text-black/50' : 'text-gray-400'}`}>PDF &middot; Tap to open</p>
               </div>
-              <Download className={`w-4 h-4 flex-shrink-0 ${isUser ? 'text-black/40' : 'text-[#BBA473]/60'}`} />
+              <Download className={`w-4 h-4 flex-shrink-0 ${isUser ? 'text-black/40' : 'text-[#00FF7F]/60'}`} />
             </div>
           ) : (
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-[#BBA473]/10 to-[#8E7D5A]/10 rounded-xl max-w-[280px]">
-              <Loader2 className="w-5 h-5 text-[#BBA473] animate-spin flex-shrink-0" />
-              <span className="text-[#BBA473]/70 text-sm">Loading document...</span>
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-[#16A249]/10 to-[#1C4F2A]/10 rounded-xl max-w-[280px]">
+              <Loader2 className="w-5 h-5 text-[#00FF7F] animate-spin flex-shrink-0" />
+              <span className="text-[#00FF7F]/70 text-sm">Loading document...</span>
             </div>
           )}
 
@@ -706,9 +706,9 @@ const MessagesArea = ({
       return (
         <div className="rounded-2xl px-4 py-3 shadow-md bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] min-w-[200px]">
           {message.templateName && (
-            <div className={`flex items-center gap-1.5 mb-2 pb-2 border-b ${isUser ? 'border-white/20' : 'border-[#BBA473]/20'}`}>
-              <FileText className={`w-3.5 h-3.5 ${isUser ? 'text-white/70' : 'text-[#BBA473]'}`} />
-              <span className={`text-xs font-semibold uppercase tracking-wide ${isUser ? 'text-white/70' : 'text-[#BBA473]'}`}>
+            <div className={`flex items-center gap-1.5 mb-2 pb-2 border-b ${isUser ? 'border-white/20' : 'border-[#16A249]/20'}`}>
+              <FileText className={`w-3.5 h-3.5 ${isUser ? 'text-white/70' : 'text-[#00FF7F]'}`} />
+              <span className={`text-xs font-semibold uppercase tracking-wide ${isUser ? 'text-white/70' : 'text-[#00FF7F]'}`}>
                 {message.templateName.replace(/_/g, ' ')}
               </span>
             </div>
@@ -726,9 +726,9 @@ const MessagesArea = ({
     return (
       <div className="flex flex-col items-center justify-center h-full p-6">
         <div className="relative">
-          <div className="animate-spin rounded-full h-14 w-14 border-4 border-[#BBA473]/20 border-t-[#BBA473]"></div>
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-[#16A249]/20 border-t-[#16A249]"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A]"></div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#16A249] to-[#1C4F2A]"></div>
           </div>
         </div>
         <span className="text-gray-400 mt-4 font-medium">Loading messages...</span>
@@ -740,8 +740,8 @@ const MessagesArea = ({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center animate-fadeIn p-6">
         <div className="relative mb-6">
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#BBA473]/20 to-[#8E7D5A]/20 flex items-center justify-center animate-pulse-slow">
-            <svg className="w-14 h-14 text-[#BBA473]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#16A249]/20 to-[#1C4F2A]/20 flex items-center justify-center animate-pulse-slow">
+            <svg className="w-14 h-14 text-[#00FF7F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
@@ -765,14 +765,14 @@ const MessagesArea = ({
       {/* Loading overlay while media is downloading */}
       {!mediaProgress.isComplete && (
         <div className="sticky top-0 z-20 flex justify-center mb-2">
-          <div className="bg-[#2A2A2A]/95 backdrop-blur-sm px-5 py-2.5 rounded-full border border-[#BBA473]/30 shadow-xl flex items-center gap-3">
-            <Loader2 className="w-4 h-4 text-[#BBA473] animate-spin" />
+          <div className="bg-[#2A2A2A]/95 backdrop-blur-sm px-5 py-2.5 rounded-full border border-[#16A249]/30 shadow-xl flex items-center gap-3">
+            <Loader2 className="w-4 h-4 text-[#00FF7F] animate-spin" />
             <span className="text-sm text-gray-300">
               Loading media {mediaProgress.downloaded}/{mediaProgress.total}
             </span>
             <div className="w-20 h-1.5 bg-[#1A1A1A] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-[#16A249] to-[#1C4F2A] rounded-full transition-all duration-300"
                 style={{ width: `${(mediaProgress.downloaded / mediaProgress.total) * 100}%` }}
               />
             </div>
@@ -786,7 +786,7 @@ const MessagesArea = ({
           {pinnedMessages.map(pin => (
             <div
               key={pin.id}
-              className="bg-[#2A2A2A]/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-[#BBA473]/30 shadow-xl cursor-pointer hover:bg-[#333]/95 transition-colors"
+              className="bg-[#2A2A2A]/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-[#16A249]/30 shadow-xl cursor-pointer hover:bg-[#333]/95 transition-colors"
               onClick={() => {
                 const el = document.getElementById(`message-${pin.id}`);
                 if (el) {
@@ -797,9 +797,9 @@ const MessagesArea = ({
               }}
             >
               <div className="flex items-center gap-2.5">
-                <Pin className="w-3.5 h-3.5 text-[#BBA473] flex-shrink-0" />
+                <Pin className="w-3.5 h-3.5 text-[#00FF7F] flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold text-[#BBA473]">Pinned</p>
+                  <p className="text-[11px] font-semibold text-[#00FF7F]">Pinned</p>
                   <p className="text-xs text-gray-300 truncate">{pin.text || 'Media'}</p>
                 </div>
               </div>
@@ -812,7 +812,7 @@ const MessagesArea = ({
         <div key={dateKey} className="space-y-3">
           {/* Sticky Date Separator */}
           <div className="sticky top-0 z-10 flex items-center justify-center py-2">
-            <div className="bg-[#2A2A2A] px-4 py-1.5 rounded-full text-xs font-semibold text-gray-400 border border-[#BBA473]/20 shadow-lg backdrop-blur-sm">
+            <div className="bg-[#2A2A2A] px-4 py-1.5 rounded-full text-xs font-semibold text-gray-400 border border-[#16A249]/20 shadow-lg backdrop-blur-sm">
               {dateKey}
             </div>
           </div>
@@ -837,7 +837,7 @@ const MessagesArea = ({
             >
               <div className={`max-w-[80%] group ${message.sender === 'user' || (message.isTemplate && message.text) ? 'items-end' : 'items-start'} flex flex-col`}>
                 {message.isTemplate && (
-                  <div className={`flex items-center gap-1 mb-1 text-xs ${message.sender === 'user' || (message.isTemplate && message.text) ? 'text-[#BBA473]' : 'text-gray-400'}`}>
+                  <div className={`flex items-center gap-1 mb-1 text-xs ${message.sender === 'user' || (message.isTemplate && message.text) ? 'text-[#00FF7F]' : 'text-gray-400'}`}>
                     <FileText className="w-3 h-3" />
                     <span>Template</span>
                   </div>
@@ -850,8 +850,8 @@ const MessagesArea = ({
                         ? 'bg-red-500/20 text-white border border-red-500/30'
                         : message.isTemplate
                           ? 'bg-gradient-to-r from-[#005C4B] to-[#128C7E] text-white border border-[#25D366]/30'
-                          : 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
-                      : 'bg-[#2A2A2A] text-white border border-[#BBA473]/20'
+                          : 'bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white'
+                      : 'bg-[#2A2A2A] text-white border border-[#16A249]/20'
                       } transition-all duration-300 hover:shadow-lg ${message.sender === 'user' && !message.failed ? 'hover:scale-[1.02]' : ''}`}
                   >
                     {/* Reply quote */}
@@ -860,7 +860,7 @@ const MessagesArea = ({
                         className={`mb-2 rounded-lg px-3 py-1.5 cursor-pointer border-l-[3px] ${
                           message.sender === 'user'
                             ? 'bg-black/10 border-white/40'
-                            : 'bg-white/5 border-[#BBA473]'
+                            : 'bg-white/5 border-[#16A249]'
                         }`}
                         onClick={() => {
                           const el = document.getElementById(`message-${message.replyTo.id}`);
@@ -872,7 +872,7 @@ const MessagesArea = ({
                         }}
                       >
                         <p className={`text-[11px] font-semibold ${
-                          message.sender === 'user' ? 'text-black/60' : 'text-[#BBA473]'
+                          message.sender === 'user' ? 'text-black/60' : 'text-[#00FF7F]'
                         }`}>
                           {message.replyTo.sender === 'user' ? 'You' : contact?.name?.split(' ')[0] || 'Contact'}
                         </p>
@@ -921,45 +921,45 @@ const MessagesArea = ({
                         <MoreVertical className="w-4 h-4" />
                       </button>
                       {activeMenuId === message.id && (
-                        <div className={`absolute left-0 bg-[#2A2A2A] border border-[#BBA473]/20 rounded-xl shadow-2xl py-1.5 min-w-[160px] z-30 animate-scaleIn ${
+                        <div className={`absolute left-0 bg-[#2A2A2A] border border-[#16A249]/20 rounded-xl shadow-2xl py-1.5 min-w-[160px] z-30 animate-scaleIn ${
                           menuOpenUp ? 'bottom-full mb-1' : 'top-full mt-1'
                         }`}>
                           <button
                             onClick={() => { onReply?.(message); setActiveMenuId(null); }}
-                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#16A249]/10 hover:text-[#00FF7F] transition-colors"
                           >
                             <CornerUpLeft className="w-3.5 h-3.5" />
                             Reply
                           </button>
                           <button
                             onClick={() => { navigator.clipboard.writeText(message.text || ''); toast.success('Copied to clipboard'); setActiveMenuId(null); }}
-                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#16A249]/10 hover:text-[#00FF7F] transition-colors"
                           >
                             <Copy className="w-3.5 h-3.5" />
                             Copy
                           </button>
                           <button
                             onClick={() => { toast('Forward coming soon', { icon: '🔜' }); setActiveMenuId(null); }}
-                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#16A249]/10 hover:text-[#00FF7F] transition-colors"
                           >
                             <Share2 className="w-3.5 h-3.5" />
                             Forward
                           </button>
                           <button
                             onClick={() => { onToggleStar?.(message.id); setActiveMenuId(null); }}
-                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#16A249]/10 hover:text-[#00FF7F] transition-colors"
                           >
                             <Star className={`w-3.5 h-3.5 ${starredMessages?.has(message.id) ? 'text-yellow-400 fill-yellow-400' : ''}`} />
                             {starredMessages?.has(message.id) ? 'Unstar' : 'Star'}
                           </button>
                           <button
                             onClick={() => { onTogglePin?.(message); setActiveMenuId(null); }}
-                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#BBA473]/10 hover:text-[#BBA473] transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-200 hover:bg-[#16A249]/10 hover:text-[#00FF7F] transition-colors"
                           >
-                            <Pin className={`w-3.5 h-3.5 ${pinnedMessages?.some(p => p.id === message.id) ? 'text-[#BBA473]' : ''}`} />
+                            <Pin className={`w-3.5 h-3.5 ${pinnedMessages?.some(p => p.id === message.id) ? 'text-[#00FF7F]' : ''}`} />
                             {pinnedMessages?.some(p => p.id === message.id) ? 'Unpin' : 'Pin'}
                           </button>
-                          <div className="my-1 border-t border-[#BBA473]/10" />
+                          <div className="my-1 border-t border-[#16A249]/10" />
                           <button
                             onClick={() => { toast('Delete coming soon', { icon: '🗑️' }); setActiveMenuId(null); }}
                             className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"

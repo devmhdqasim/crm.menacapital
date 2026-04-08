@@ -403,16 +403,16 @@ const SalesManagers = () => {
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] bg-clip-text text-transparent">
                 Sales Managers
               </h1>
-              <p className="text-gray-400 mt-2">Manage all Save In Gold Sales Managers</p>
+              <p className="text-gray-400 mt-2">Manage all Mena Capital Sales Managers</p>
             </div>
 
             <div className="flex flex-col gap-3">
             <button
               onClick={handleAddSalesManager}
-              className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 ml-auto"
+              className="group relative w-fit inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white overflow-hidden transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95 ml-auto"
             >
               <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" />
@@ -441,28 +441,28 @@ const SalesManagers = () => {
               placeholder="Search by name, email, or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-[#BBA473]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BBA473]/50 focus:border-[#BBA473] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#BBA473]"
+              className="w-full pl-10 pr-4 py-3 border-2 border-[#16A249]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A249]/50 focus:border-[#16A249] bg-[#1A1A1A] text-white transition-all duration-300 hover:border-[#16A249]"
             />
           </div>
         </div>
 
         {/* Table Container */}
-        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#BBA473]/20 animate-fadeIn">
+        <div className="bg-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden border border-[#16A249]/20 animate-fadeIn">
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#1A1A1A] border-b border-[#BBA473]/30">
+              <thead className="bg-[#1A1A1A] border-b border-[#16A249]/30">
                 <tr>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">ID</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Full Name</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Email</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Phone</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Department</th>
-                  <th className="text-left px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Branch</th>
-                  <th className="text-center px-6 py-4 text-[#E8D5A3] font-semibold text-sm uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">ID</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Full Name</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Email</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Phone</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Department</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Branch</th>
+                  <th className="text-center px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#BBA473]/10">
+              <tbody className="divide-y divide-[#16A249]/10">
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
@@ -490,15 +490,15 @@ const SalesManagers = () => {
                             <img
                               src={manager.image}
                               alt={manager.fullName}
-                              className="w-10 h-10 rounded-full object-cover border-2 border-[#BBA473]/30"
+                              className="w-10 h-10 rounded-full object-cover border-2 border-[#16A249]/30"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center text-black font-semibold">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center text-black font-semibold">
                               {manager.firstName?.[0]}{manager.lastName?.[0]}
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-white group-hover:text-[#BBA473] transition-colors duration-300">
+                            <div className="font-medium text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                               {manager.fullName}
                             </div>
                           </div>
@@ -507,7 +507,7 @@ const SalesManagers = () => {
                       <td className="px-6 py-4 text-gray-300">{manager.email}</td>
                       <td className="px-6 py-4 text-gray-300 font-mono text-sm">{formatPhoneDisplay(manager.phone)}</td>
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#BBA473]/20 text-[#E8D5A3] border border-[#BBA473]/30">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#16A249]/20 text-[#A8E6B8] border border-[#16A249]/30">
                           {manager.department}
                         </span>
                       </td>
@@ -516,7 +516,7 @@ const SalesManagers = () => {
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => handleEdit(manager)}
-                            className="p-2 rounded-lg bg-[#BBA473]/20 text-[#BBA473] hover:bg-[#BBA473] hover:text-black transition-all duration-300 hover:scale-110"
+                            className="p-2 rounded-lg bg-[#16A249]/20 text-[#00FF7F] hover:bg-[#16A249] hover:text-black transition-all duration-300 hover:scale-110"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
@@ -539,7 +539,7 @@ const SalesManagers = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#BBA473]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="px-6 py-4 bg-[#1A1A1A] border-t border-[#16A249]/30 flex flex-col lg:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="text-gray-400 text-sm">
                   Showing <span className="text-white font-semibold">{showingFrom}</span> to{' '}
@@ -549,19 +549,19 @@ const SalesManagers = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowPerPageDropdown(!showPerPageDropdown)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#BBA473]/30"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2A2A] text-white hover:bg-[#3A3A3A] transition-all duration-300 border border-[#16A249]/30"
                   >
                     <span className="text-sm">{itemsPerPage} per page</span>
                     <ChevronDown className="w-4 h-4" />
                   </button>
                   {showPerPageDropdown && (
-                    <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
+                    <div className="absolute bottom-full mb-2 right-0 bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg shadow-xl z-10 min-w-[150px]">
                       {perPageOptions.map(option => (
                         <button
                           key={option}
                           onClick={() => handlePerPageChange(option)}
                           className={`w-full px-4 py-2 text-left hover:bg-[#3A3A3A] transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                            option === itemsPerPage ? 'bg-[#BBA473]/20 text-[#BBA473]' : 'text-white'
+                            option === itemsPerPage ? 'bg-[#16A249]/20 text-[#00FF7F]' : 'text-white'
                           }`}
                         >
                           {option} per page
@@ -576,7 +576,7 @@ const SalesManagers = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30"
+                  className="p-2 rounded-lg bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -584,9 +584,9 @@ const SalesManagers = () => {
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border border-[#BBA473]/30 ${
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border border-[#16A249]/30 ${
                       currentPage === page
-                        ? 'bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black'
+                        ? 'bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white'
                         : 'bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white'
                     }`}
                   >
@@ -596,7 +596,7 @@ const SalesManagers = () => {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#BBA473]/30"
+                  className="p-2 rounded-lg bg-[#2A2A2A] text-gray-400 hover:bg-[#3A3A3A] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-[#16A249]/30"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -613,9 +613,9 @@ const SalesManagers = () => {
         }`}
       >
         <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
+          <div className="flex items-center justify-between p-6 border-b border-[#16A249]/30 bg-gradient-to-r from-[#16A249]/10 to-transparent">
             <div>
-              <h2 className="text-2xl font-bold text-[#BBA473]">
+              <h2 className="text-2xl font-bold text-[#00FF7F]">
                 {editingSalesManager ? 'Edit Sales Manager' : 'Add New Sales Manager'}
               </h2>
               <p className="text-gray-400 text-sm mt-1">
@@ -632,15 +632,15 @@ const SalesManagers = () => {
 
           <form onSubmit={formik.handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Personal Information Section */}
-            <div className="bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-[#BBA473]/30 pb-3">
+            <div className="bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-white border-b border-[#16A249]/30 pb-3">
                 Personal Information
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     First Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -653,7 +653,7 @@ const SalesManagers = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.firstName && formik.errors.firstName
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.firstName && formik.errors.firstName && (
@@ -663,7 +663,7 @@ const SalesManagers = () => {
 
                 {/* Last Name */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -676,7 +676,7 @@ const SalesManagers = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.lastName && formik.errors.lastName
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.lastName && formik.errors.lastName && (
@@ -686,7 +686,7 @@ const SalesManagers = () => {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Email <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -699,7 +699,7 @@ const SalesManagers = () => {
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.email && formik.errors.email
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.email && formik.errors.email && (
@@ -709,7 +709,7 @@ const SalesManagers = () => {
 
                 {/* Date of Birth with Calendar */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Date of Birth <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -723,13 +723,13 @@ const SalesManagers = () => {
                       className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.dateOfBirth && formik.errors.dateOfBirth
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                       style={{
                         colorScheme: 'dark'
                       }}
                     />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00FF7F] pointer-events-none" />
                   </div>
                   {formik.touched.dateOfBirth && formik.errors.dateOfBirth && (
                     <div className="text-red-400 text-sm animate-pulse">{formik.errors.dateOfBirth}</div>
@@ -738,7 +738,7 @@ const SalesManagers = () => {
 
                 {/* Phone - International */}
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
                   <PhoneInput
@@ -761,15 +761,15 @@ const SalesManagers = () => {
             </div>
 
             {/* Professional Information Section */}
-            <div className="bg-[#2A2A2A] border border-[#BBA473]/30 rounded-lg p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-[#BBA473]/30 pb-3">
+            <div className="bg-[#2A2A2A] border border-[#16A249]/30 rounded-lg p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-white border-b border-[#16A249]/30 pb-3">
                 Professional Information
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Department */}
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Department <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -781,7 +781,7 @@ const SalesManagers = () => {
                       className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
                         formik.touched.department && formik.errors.department
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     >
                       <option value="">Select Department</option>
@@ -789,7 +789,7 @@ const SalesManagers = () => {
                         <option key={dept} value={dept}>{dept}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00FF7F] pointer-events-none" />
                   </div>
                   {formik.touched.department && formik.errors.department && (
                     <div className="text-red-400 text-sm animate-pulse">{formik.errors.department}</div>
@@ -798,7 +798,7 @@ const SalesManagers = () => {
 
                 {/* Branch */}
                 {/* <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Branch <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -810,7 +810,7 @@ const SalesManagers = () => {
                       className={`w-full px-4 py-3 pr-10 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 appearance-none ${
                         formik.touched.inBranch && formik.errors.inBranch
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     >
                       <option value="">Select Branch</option>
@@ -818,7 +818,7 @@ const SalesManagers = () => {
                         <option key={branch.id} value={branch.id}>{branch.branchName}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BBA473] pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00FF7F] pointer-events-none" />
                   </div>
                   {formik.touched.inBranch && formik.errors.inBranch && (
                     <div className="text-red-400 text-sm animate-pulse">{formik.errors.inBranch}</div>
@@ -828,7 +828,7 @@ const SalesManagers = () => {
                 {/* Password - only for new sales managers */}
                 {!editingSalesManager && (
                   <div className="space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Password <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -842,7 +842,7 @@ const SalesManagers = () => {
                         className={`w-full px-4 py-3 pr-24 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                           formik.touched.password && formik.errors.password
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                         }`}
                       />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
@@ -856,7 +856,7 @@ const SalesManagers = () => {
                         <button
                           type="button"
                           onClick={generatePassword}
-                          className="h-7 px-2 flex items-center justify-center bg-[#BBA473] text-black rounded-md hover:bg-[#d4bc89] focus:outline-none text-xs transition-all duration-300 hover:scale-105"
+                          className="h-7 px-2 flex items-center justify-center bg-[#16A249] text-black rounded-md hover:bg-[#1EB956] focus:outline-none text-xs transition-all duration-300 hover:scale-105"
                           title="Generate Password"
                         >
                           <RefreshCw className="h-3 w-3 mr-1" />
@@ -873,12 +873,12 @@ const SalesManagers = () => {
 
               {/* Image Upload Section */}
               <div className="space-y-2 pt-4">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Profile Image
                 </label>
                 
                 {!imagePreview ? (
-                  <div className="border-2 border-dashed border-[#BBA473]/30 rounded-lg p-6 text-center hover:border-[#BBA473] transition-all duration-300">
+                  <div className="border-2 border-dashed border-[#16A249]/30 rounded-lg p-6 text-center hover:border-[#16A249] transition-all duration-300">
                     <input
                       id="image-upload"
                       type="file"
@@ -900,7 +900,7 @@ const SalesManagers = () => {
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-32 h-32 object-cover rounded-lg border-2 border-[#BBA473]"
+                      className="w-32 h-32 object-cover rounded-lg border-2 border-[#16A249]"
                     />
                     <button
                       type="button"
@@ -919,7 +919,7 @@ const SalesManagers = () => {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30">
+            <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#16A249]/30">
               <button
                 type="button"
                 onClick={handleCloseDrawer}
@@ -930,7 +930,7 @@ const SalesManagers = () => {
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95"
+                className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:from-[#1EB956] hover:to-[#267A3D] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95"
               >
                 {formik.isSubmitting 
                   ? (editingSalesManager ? 'Updating...' : 'Creating...') 
@@ -958,7 +958,7 @@ const SalesManagers = () => {
         .phone-input-custom .PhoneInputInput {
           width: 100%;
           padding: 0.75rem 1rem;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           background-color: #1A1A1A;
           color: white;
@@ -968,13 +968,13 @@ const SalesManagers = () => {
         }
 
         .phone-input-custom .PhoneInputInput:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputInput:focus {
-          border-color: #BBA473;
+          border-color: #16A249;
           ring: 2px;
-          ring-color: rgba(187, 164, 115, 0.5);
+          ring-color: rgba(22, 162, 73, 0.5);
         }
 
         .phone-input-error .PhoneInputInput {
@@ -990,13 +990,13 @@ const SalesManagers = () => {
           margin-right: 0.5rem;
           padding: 0.5rem;
           background-color: #1A1A1A;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           transition: all 0.3s ease;
         }
 
         .phone-input-custom .PhoneInputCountry:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputCountryIcon {
@@ -1005,7 +1005,7 @@ const SalesManagers = () => {
         }
 
         .phone-input-custom .PhoneInputCountrySelectArrow {
-          color: #BBA473;
+          color: #00FF7F;
           opacity: 0.8;
           margin-left: 0.5rem;
         }

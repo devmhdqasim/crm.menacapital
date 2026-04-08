@@ -230,9 +230,9 @@ const SalesManagerLeadFormDrawer = ({
       }`}
     >
       <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-[#BBA473]/30 bg-gradient-to-r from-[#BBA473]/10 to-transparent">
+        <div className="flex items-center justify-between p-6 border-b border-[#16A249]/30 bg-gradient-to-r from-[#16A249]/10 to-transparent">
           <div>
-            <h2 className="text-2xl font-bold text-[#BBA473]">
+            <h2 className="text-2xl font-bold text-[#00FF7F]">
               {editingLead ? 'Edit Lead' : 'Add New Lead'}
             </h2>
             <p className="text-gray-400 text-sm mt-1">
@@ -250,13 +250,13 @@ const SalesManagerLeadFormDrawer = ({
         <form onSubmit={formik.handleSubmit} className="flex-1 flex flex-col overflow-y-auto p-6">
           <div className="space-y-6">
             <div className="grid space-y-4">
-              <h3 className="text-lg font-semibold text-[#E8D5A3] border-b border-[#BBA473]/30 pb-2">
+              <h3 className="text-lg font-semibold text-[#A8E6B8] border-b border-[#16A249]/30 pb-2">
                 Lead Information
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -269,7 +269,7 @@ const SalesManagerLeadFormDrawer = ({
                     className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                       formik.touched.name && formik.errors.name
                         ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                        : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                        : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                     }`}
                   />
                   {formik.touched.name && formik.errors.name && (
@@ -278,7 +278,7 @@ const SalesManagerLeadFormDrawer = ({
                 </div>
 
                 <div className="relative space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Preferred Language <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -290,7 +290,7 @@ const SalesManagerLeadFormDrawer = ({
                       className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.language && formik.errors.language
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     >
                       <option value="">Select Language</option>
@@ -306,7 +306,7 @@ const SalesManagerLeadFormDrawer = ({
                 </div>
 
                 <div className="relative space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Status <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -323,7 +323,7 @@ const SalesManagerLeadFormDrawer = ({
                       className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.status && formik.errors.status
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     >
                       <option value="">Select Status</option>
@@ -340,7 +340,7 @@ const SalesManagerLeadFormDrawer = ({
 
                 {formik.values.status === 'Real' && (
                   <div className="relative space-y-2">
-                    <label className="text-sm text-[#E8D5A3] font-medium block">
+                    <label className="text-sm text-[#A8E6B8] font-medium block">
                       Deposit Status <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -352,7 +352,7 @@ const SalesManagerLeadFormDrawer = ({
                         className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                           formik.touched.depositStatus && formik.errors.depositStatus
                             ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                         }`}
                       >
                         <option value="">Select Deposit Status</option>
@@ -369,7 +369,7 @@ const SalesManagerLeadFormDrawer = ({
                 )}
 
                 <div className="relative space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Kiosk Team <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -381,7 +381,7 @@ const SalesManagerLeadFormDrawer = ({
                       className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.kioskMember && formik.errors.kioskMember
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     >
                       <option value="">Select Kiosk Member</option>
@@ -397,7 +397,7 @@ const SalesManagerLeadFormDrawer = ({
                 </div>
 
                 <div className="relative space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Nationality
                   </label>
                   <div className="relative">
@@ -406,7 +406,7 @@ const SalesManagerLeadFormDrawer = ({
                       className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 cursor-pointer flex items-center justify-between ${
                         formik.touched.nationality && formik.errors.nationality
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 hover:border-[#16A249]'
                       }`}
                     >
                       <span className={formik.values.nationality ? 'text-white' : 'text-gray-400'}>
@@ -432,8 +432,8 @@ const SalesManagerLeadFormDrawer = ({
                     </div>
                     
                     {showNationalityDropdown && (
-                      <div className="absolute z-50 w-full mt-1 bg-[#2A2A2A] border-2 border-[#BBA473]/30 rounded-lg shadow-xl max-h-64 overflow-hidden">
-                        <div className="p-2 border-b border-[#BBA473]/30">
+                      <div className="absolute z-50 w-full mt-1 bg-[#2A2A2A] border-2 border-[#16A249]/30 rounded-lg shadow-xl max-h-64 overflow-hidden">
+                        <div className="p-2 border-b border-[#16A249]/30">
                           <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
@@ -442,7 +442,7 @@ const SalesManagerLeadFormDrawer = ({
                               value={nationalitySearch}
                               onChange={(e) => setNationalitySearch(e.target.value)}
                               onClick={(e) => e.stopPropagation()}
-                              className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#BBA473]"
+                              className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border border-[#16A249]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#16A249]"
                             />
                           </div>
                         </div>
@@ -459,7 +459,7 @@ const SalesManagerLeadFormDrawer = ({
                                 }}
                                 className={`px-4 py-2 cursor-pointer transition-colors ${
                                   formik.values.nationality === country
-                                    ? 'bg-[#BBA473]/20 text-[#BBA473]'
+                                    ? 'bg-[#16A249]/20 text-[#00FF7F]'
                                     : 'text-white hover:bg-[#3A3A3A]'
                                 }`}
                               >
@@ -481,7 +481,7 @@ const SalesManagerLeadFormDrawer = ({
                 </div>
 
                 <div className="relative space-y-2">
-                  <label className="text-sm text-[#E8D5A3] font-medium block">
+                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Lead Source
                   </label>
                   <div className="relative">
@@ -493,7 +493,7 @@ const SalesManagerLeadFormDrawer = ({
                       className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
                         formik.touched.source && formik.errors.source
                           ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                       }`}
                     >
                       <option value="">Select Source</option>
@@ -510,7 +510,7 @@ const SalesManagerLeadFormDrawer = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Phone Number <span className="text-red-500">*</span>
                 </label>
                 <PhoneInput
@@ -531,7 +531,7 @@ const SalesManagerLeadFormDrawer = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-[#E8D5A3] font-medium block">
+                <label className="text-sm text-[#A8E6B8] font-medium block">
                   Remarks
                 </label>
                 <textarea
@@ -544,7 +544,7 @@ const SalesManagerLeadFormDrawer = ({
                   className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white resize-none transition-all duration-300 ${
                     formik.touched.remarks && formik.errors.remarks
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                      : 'border-[#BBA473]/30 focus:border-[#BBA473] focus:ring-[#BBA473]/50 hover:border-[#BBA473]'
+                      : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
                   }`}
                 />
                 <div className="flex justify-between items-center">
@@ -561,7 +561,7 @@ const SalesManagerLeadFormDrawer = ({
             </div>
           </div>
 
-          <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#BBA473]/30 mt-auto">
+          <div className="flex gap-3 sticky bottom-0 bg-[#1A1A1A] pt-4 border-t border-[#16A249]/30 mt-auto">
             <button
               type="button"
               onClick={handleCloseDrawer}
@@ -572,7 +572,7 @@ const SalesManagerLeadFormDrawer = ({
             <button
               type="submit"
               disabled={formik.isSubmitting || (editingLead && !hasFormChanged)}
-              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black hover:from-[#d4bc89] hover:to-[#a69363] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#BBA473]/40 transform hover:scale-105 active:scale-95 disabled:hover:scale-100"
+              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white hover:from-[#1EB956] hover:to-[#267A3D] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#16A249]/40 transform hover:scale-105 active:scale-95 disabled:hover:scale-100"
             >
               {formik.isSubmitting 
                 ? (editingLead ? 'Updating Lead...' : 'Creating Lead...') 
@@ -587,7 +587,7 @@ const SalesManagerLeadFormDrawer = ({
         .phone-input-custom .PhoneInputInput {
           width: 100%;
           padding: 0.75rem 1rem;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           background-color: #1A1A1A;
           color: white;
@@ -597,13 +597,13 @@ const SalesManagerLeadFormDrawer = ({
         }
 
         .phone-input-custom .PhoneInputInput:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputInput:focus {
-          border-color: #BBA473;
+          border-color: #16A249;
           ring: 2px;
-          ring-color: rgba(187, 164, 115, 0.5);
+          ring-color: rgba(22, 162, 73, 0.5);
         }
 
         .phone-input-error .PhoneInputInput {
@@ -619,13 +619,13 @@ const SalesManagerLeadFormDrawer = ({
           margin-right: 0.5rem;
           padding: 0.5rem;
           background-color: #1A1A1A;
-          border: 2px solid rgba(187, 164, 115, 0.3);
+          border: 2px solid rgba(22, 162, 73, 0.3);
           border-radius: 0.5rem;
           transition: all 0.3s ease;
         }
 
         .phone-input-custom .PhoneInputCountry:hover {
-          border-color: #BBA473;
+          border-color: #16A249;
         }
 
         .phone-input-custom .PhoneInputCountryIcon {
@@ -634,7 +634,7 @@ const SalesManagerLeadFormDrawer = ({
         }
 
         .phone-input-custom .PhoneInputCountrySelectArrow {
-          color: #BBA473;
+          color: #00FF7F;
           opacity: 0.8;
           margin-left: 0.5rem;
         }

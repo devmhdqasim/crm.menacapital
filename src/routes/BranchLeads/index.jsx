@@ -235,10 +235,10 @@ const BranchLeadsManagement = () => {
         <div className="mb-8 animate-fadeIn">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#16A249] to-[#1C4F2A] bg-clip-text text-transparent">
                 Lead Management
               </h1>
-              <p className="text-gray-400 mt-2">Manage and track your Save In Gold mobile application leads</p>
+              <p className="text-gray-400 mt-2">Manage and track your Mena Capital mobile application leads</p>
             </div>
             <div className="flex flex-col gap-3">
               <button
@@ -246,7 +246,7 @@ const BranchLeadsManagement = () => {
                   setEditingLead(null);
                   setDrawerOpen(true);
                 }}
-                className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black font-bold text-lg py-4 rounded-lg disabled:from-[#6b6354] disabled:to-[#5a5447] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#BBA473]/20 hover:shadow-[#BBA473]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
+                className="btn-animated btn-gold w-fit bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white font-bold text-lg py-4 rounded-lg disabled:from-[#0E5A28] disabled:to-[#0D3D1E] disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all duration-300 shadow-lg shadow-[#16A249]/20 hover:shadow-[#16A249]/40 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group ml-auto"
               >
                 {/* <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 <UserPlus className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:rotate-12" /> */}

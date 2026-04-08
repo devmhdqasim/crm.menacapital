@@ -52,11 +52,11 @@ const ProfileSidebar = ({
   };
 
   return (
-    <div className="w-80 bg-[#1A1A1A] border-l border-[#BBA473]/30 flex flex-col animate-slideInRight overflow-hidden">
+    <div className="w-80 bg-[#1A1A1A] border-l border-[#16A249]/30 flex flex-col animate-slideInRight overflow-hidden">
       {/* Profile Header */}
-      <div className="p-5 border-b border-[#BBA473]/20 flex-shrink-0">
+      <div className="p-5 border-b border-[#16A249]/20 flex-shrink-0">
         <div className="text-center">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#BBA473] to-[#8E7D5A] flex items-center justify-center mx-auto mb-4 shadow-xl">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center mx-auto mb-4 shadow-xl">
             <span className="text-4xl font-bold text-white">
               {contact.name.charAt(0).toUpperCase()}
             </span>
@@ -69,13 +69,13 @@ const ProfileSidebar = ({
       {/* Profile Details */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
         {/* Contact Info */}
-        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/10">
+        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#16A249]/10">
           <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Contact Info</h4>
           <div className="space-y-3">
             {contact.email && (
               <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 rounded-full bg-[#BBA473]/10 flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-4 h-4 text-[#BBA473]" />
+                <div className="w-8 h-8 rounded-full bg-[#16A249]/10 flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-4 h-4 text-[#00FF7F]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-400 text-xs">Email</p>
@@ -85,8 +85,8 @@ const ProfileSidebar = ({
             )}
             {contact.nationality && (
               <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 rounded-full bg-[#BBA473]/10 flex items-center justify-center flex-shrink-0">
-                  <Globe className="w-4 h-4 text-[#BBA473]" />
+                <div className="w-8 h-8 rounded-full bg-[#16A249]/10 flex items-center justify-center flex-shrink-0">
+                  <Globe className="w-4 h-4 text-[#00FF7F]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-400 text-xs">Nationality</p>
@@ -96,7 +96,7 @@ const ProfileSidebar = ({
             )}
             {contact.source && (
               <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 rounded-full bg-[#BBA473]/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-[#16A249]/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-base">📍</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -107,8 +107,8 @@ const ProfileSidebar = ({
             )}
             {contact.agent && contact.agent !== 'Not Assigned' && (
               <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 rounded-full bg-[#BBA473]/10 flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-[#BBA473]" />
+                <div className="w-8 h-8 rounded-full bg-[#16A249]/10 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-[#00FF7F]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-400 text-xs">Assigned Agent</p>
@@ -117,8 +117,8 @@ const ProfileSidebar = ({
               </div>
             )}
             <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-full bg-[#BBA473]/10 flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-4 h-4 text-[#BBA473]" />
+              <div className="w-8 h-8 rounded-full bg-[#16A249]/10 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-4 h-4 text-[#00FF7F]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-gray-400 text-xs">First Contact</p>
@@ -133,12 +133,12 @@ const ProfileSidebar = ({
         </div>
 
         {/* Tags */}
-        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/10">
+        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#16A249]/10">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Tags</h4>
             <button
               onClick={() => setShowTagInput(!showTagInput)}
-              className="text-[#BBA473] hover:text-[#d4bc89] text-xs font-medium transition-colors"
+              className="text-[#00FF7F] hover:text-[#00FF7F] text-xs font-medium transition-colors"
             >
               {showTagInput ? '✕ Cancel' : '+ Add'}
             </button>
@@ -153,12 +153,12 @@ const ProfileSidebar = ({
                 onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
                 placeholder="Enter tag..."
                 autoFocus
-                className="flex-1 px-3 py-1.5 text-sm bg-[#1A1A1A] border border-[#BBA473]/30 rounded-lg text-white focus:outline-none focus:border-[#BBA473]"
+                className="flex-1 px-3 py-1.5 text-sm bg-[#1A1A1A] border border-[#16A249]/30 rounded-lg text-white focus:outline-none focus:border-[#16A249]"
               />
               <button
                 onClick={handleAddTag}
                 disabled={!newTag.trim()}
-                className="px-3 py-1.5 bg-[#BBA473] text-black rounded-lg text-sm font-medium hover:bg-[#d4bc89] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 bg-[#16A249] text-black rounded-lg text-sm font-medium hover:bg-[#1EB956] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add
               </button>
@@ -172,7 +172,7 @@ const ProfileSidebar = ({
               {contactTags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#BBA473]/10 text-[#BBA473] rounded-full text-xs font-medium border border-[#BBA473]/20 group hover:bg-[#BBA473]/20 transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#16A249]/10 text-[#00FF7F] rounded-full text-xs font-medium border border-[#16A249]/20 group hover:bg-[#16A249]/20 transition-all"
                 >
                   <Tag className="w-3 h-3" />
                   {tag}
@@ -190,7 +190,7 @@ const ProfileSidebar = ({
 
         {/* Status Badge */}
         {contact.kioskLeadStatus && contact.kioskLeadStatus !== '-' && (
-          <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/10">
+          <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#16A249]/10">
             <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Status</h4>
             <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${contact.kioskLeadStatus === 'Demo'
               ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
@@ -205,19 +205,19 @@ const ProfileSidebar = ({
         )}
 
         {/* Quick Actions */}
-        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/10">
+        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#16A249]/10">
           <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Quick Actions</h4>
           <div className="space-y-2">
             <button
               onClick={() => window.open(`tel:${contact.phone}`, '_blank')}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#16A249]/10 hover:bg-[#16A249]/20 text-[#00FF7F] rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
             >
               <Phone className="w-4 h-4" />
               Call Contact
             </button>
             {/* <button
               onClick={() => setShowReminderModal(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#BBA473]/10 hover:bg-[#BBA473]/20 text-[#BBA473] rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#16A249]/10 hover:bg-[#16A249]/20 text-[#00FF7F] rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
             >
               <Bell className="w-4 h-4" />
               Set Follow-up
@@ -226,7 +226,7 @@ const ProfileSidebar = ({
         </div>
 
         {/* Block & Spam */}
-        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#BBA473]/10">
+        <div className="bg-[#2A2A2A] rounded-xl p-4 border border-[#16A249]/10">
           <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Contact Controls</h4>
           <div className="space-y-2">
             {onToggleBlock && (

@@ -334,9 +334,20 @@ const ChatInput = ({
       setIsRecording(true);
       setRecordingDuration(0);
 
-      // Start duration timer
+      // Start duration timer with auto-stop at 2 minutes
       const timer = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
+        setRecordingDuration(prev => {
+          const next = prev + 1;
+          if (next === 90) {
+            toast('30 seconds remaining', { icon: '⏱️', duration: 2000 });
+          }
+          if (next >= 120) {
+            // Auto-stop at 2 minutes
+            toast('Max duration reached (2 min). Sending voice note...', { icon: '⏱️', duration: 2500 });
+            setTimeout(() => stopVoiceRecording(), 0);
+          }
+          return next;
+        });
       }, 1000);
       setRecordingTimer(timer);
 
@@ -510,6 +521,15 @@ const ChatInput = ({
       const mp3Blob = await convertToMp3(audioBlob);
       const filename = `voice-note-${Date.now()}.mp3`;
 
+      // Validate file size — recommended max 5 MB for WATI stability
+      const MAX_VOICE_SIZE = 5 * 1024 * 1024; // 5 MB
+      if (mp3Blob.size > MAX_VOICE_SIZE) {
+        const sizeMB = (mp3Blob.size / (1024 * 1024)).toFixed(1);
+        toast.error(`Voice note too large (${sizeMB} MB). Max 5 MB. Try a shorter recording.`);
+        markFailed();
+        return;
+      }
+
       console.log('📤 Sending voice note via Wati API:', {
         phone: contact.phone,
         originalSize: audioBlob.size,
@@ -665,7 +685,7 @@ const ChatInput = ({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-white font-medium">{isRecordingPaused ? 'Paused' : 'Recording...'}</p>
-            <p className={`text-lg font-mono ${isRecordingPaused ? 'text-yellow-400' : 'text-red-400'}`}>{formatRecordingTime(recordingDuration)}</p>
+            <p className={`text-lg font-mono ${isRecordingPaused ? 'text-yellow-400' : recordingDuration >= 90 ? 'text-orange-400' : 'text-red-400'}`}>{formatRecordingTime(recordingDuration)}<span className="text-xs text-gray-500 ml-1">/ 2:00</span></p>
           </div>
           <button
             onClick={cancelVoiceRecording}
@@ -687,7 +707,7 @@ const ChatInput = ({
           </button>
           <button
             onClick={stopVoiceRecording}
-            className="w-11 h-11 rounded-full bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-lg flex-shrink-0"
+            className="w-11 h-11 rounded-full bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-lg flex-shrink-0"
             title="Send"
           >
             <Send className="w-5 h-5" />
@@ -707,7 +727,7 @@ const ChatInput = ({
                 placeholder="Type a message..."
                 rows="1"
                 disabled={isSending}
-                className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#3a3a3a] rounded-xl text-white text-sm placeholder-gray-500 resize-none transition-all duration-200 focus:outline-none focus:border-[#BBA473]/60 disabled:opacity-50"
+                className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#3a3a3a] rounded-xl text-white text-sm placeholder-gray-500 resize-none transition-all duration-200 focus:outline-none focus:border-[#16A249]/60 disabled:opacity-50"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
               />
             </div>
@@ -717,7 +737,7 @@ const ChatInput = ({
               <button
                 onClick={() => handleSendMessage()}
                 disabled={!messageInput.trim() || isSending}
-                className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSending ? (
                   <RefreshCw className="w-4.5 h-4.5 animate-spin" />
@@ -729,7 +749,7 @@ const ChatInput = ({
               <button
                 onClick={startVoiceRecording}
                 disabled={isSending}
-                className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#BBA473] to-[#8E7D5A] text-black flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#16A249] to-[#1C4F2A] text-white flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Record Voice Message"
               >
                 <Mic className="w-4.5 h-4.5" />
@@ -746,8 +766,8 @@ const ChatInput = ({
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
                     showEmojiPicker
-                      ? 'bg-[#BBA473] text-black'
-                      : 'text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10'
+                      ? 'bg-[#16A249] text-black'
+                      : 'text-gray-400 hover:text-[#00FF7F] hover:bg-[#16A249]/10'
                   }`}
                   title="Emoji"
                 >
@@ -772,7 +792,7 @@ const ChatInput = ({
               <button
                 onClick={handleFileAttachment}
                 disabled={isSending}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#00FF7F] hover:bg-[#16A249]/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Attach file"
               >
                 <Paperclip className="w-4 h-4" />
@@ -782,7 +802,7 @@ const ChatInput = ({
               <button
                 onClick={handleCameraCapture}
                 disabled={isSending}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#00FF7F] hover:bg-[#16A249]/10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Camera"
               >
                 <Camera className="w-4 h-4" />
@@ -794,7 +814,7 @@ const ChatInput = ({
               {/* Template */}
               <button
                 onClick={() => setShowTemplatePicker(true)}
-                className="h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-gray-400 hover:text-[#BBA473] hover:bg-[#BBA473]/10 transition-all duration-200 text-xs"
+                className="h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-gray-400 hover:text-[#00FF7F] hover:bg-[#16A249]/10 transition-all duration-200 text-xs"
                 title="Send Template"
               >
                 <FileText className="w-3.5 h-3.5" />

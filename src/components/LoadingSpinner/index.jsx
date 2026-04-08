@@ -16,7 +16,7 @@ const LoadingSpinner = ({
   };
 
   const containerClasses = fullScreen
-    ? 'fixed inset-0 flex items-center justify-center bg-[#BBA473] z-50'
+    ? 'fixed inset-0 flex items-center justify-center bg-[#16A249] z-50'
     : 'flex items-center justify-center w-full h-full min-h-[200px]';
 
   return (
@@ -26,14 +26,14 @@ const LoadingSpinner = ({
         <div className="relative">
           {/* Outer ring */}
           <div
-            className={`${sizeClasses[size]} border-4 border-[#8E7D5A]/30 border-t-[#8E7D5A] rounded-full animate-spin`}
+            className={`${sizeClasses[size]} border-4 border-[#1C4F2A]/30 border-t-[#1C4F2A] rounded-full animate-spin`}
           />
           
           {/* Inner pulse */}
           <div
             className={`absolute inset-0 m-auto ${
               size === 'small' ? 'w-3 h-3' : size === 'medium' ? 'w-6 h-6' : 'w-8 h-8'
-            } bg-[#8E7D5A]/20 rounded-full animate-pulse`}
+            } bg-[#1C4F2A]/20 rounded-full animate-pulse`}
           />
         </div>
 
@@ -45,9 +45,9 @@ const LoadingSpinner = ({
             </p>
             {/* Animated dots */}
             <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-[#8E7D5A] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-[#8E7D5A] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-[#8E7D5A] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="w-2 h-2 bg-[#1C4F2A] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-[#1C4F2A] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-[#1C4F2A] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           </div>
         )}
@@ -280,7 +280,7 @@ export const ComponentLoadingFallback = () => {
 export const InlineLoader = ({ message = '' }) => {
   return (
     <div className="flex items-center justify-center space-x-2">
-      <div className="w-4 h-4 border-2 border-[#8E7D5A]/30 border-t-[#8E7D5A] rounded-full animate-spin" />
+      <div className="w-4 h-4 border-2 border-[#1C4F2A]/30 border-t-[#1C4F2A] rounded-full animate-spin" />
       {message && <span className="text-sm text-gray-600">{message}</span>}
     </div>
   );

@@ -124,7 +124,7 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
       {/* Bottom Sheet - Smooth slide with drag */}
       <div
         ref={sheetRef}
-        className={`absolute left-0 right-0 bottom-0 bg-[#1A1A1A] shadow-2xl border-t border-[#BBA473]/30 z-50 ${
+        className={`absolute left-0 right-0 bottom-0 bg-[#1A1A1A] shadow-2xl border-t border-[#16A249]/30 z-50 ${
           isDragging ? '' : 'transition-transform duration-350 ease-out'
         } ${
           isAnimating ? 'translate-y-0' : 'translate-y-full'
@@ -146,15 +146,15 @@ const AgentBottomSheet = ({ isOpen, onClose, selectedAgent }) => {
           >
             {/* Drag Handle */}
             <div className="flex justify-center pt-4 pb-2">
-              <div className="w-12 h-1.5 bg-[#BBA473]/30 rounded-full" />
+              <div className="w-12 h-1.5 bg-[#16A249]/30 rounded-full" />
             </div>
 
             {/* Header Content */}
-            <div className="flex items-center justify-between px-6 py-2 border-b border-[#BBA473]/30">
+            <div className="flex items-center justify-between px-6 py-2 border-b border-[#16A249]/30">
               <div>
                 {selectedAgent && (
                   <div>
-                    <h2 className="text-xl font-bold text-[#BBA473]">
+                    <h2 className="text-xl font-bold text-[#00FF7F]">
                       {selectedAgent.fullName}'s Assigned Leads
                     </h2>
                     <p className="text-sm text-gray-400 mt-1">
