@@ -10,7 +10,7 @@ import axios from 'axios';
  * - Delete User (PATCH)
  */
 
-const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1'; 
+const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1'; 
 
 /**
  * Get refresh token from localStorage

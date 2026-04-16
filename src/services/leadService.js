@@ -10,7 +10,7 @@ import axios from 'axios';
  * - Delete Lead
  */
  
-const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1';
 
 /**
  * Get refresh token from localStorage
@@ -1305,7 +1305,7 @@ export const getWatiContacts = async (page = 1, limit = 10, fromDate = '', toDat
       queryParams.append('unread', unread);
     }
 
-    // const refreshUrl = `https://staging.crm.saveingold.app/api/v1/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
+    // const refreshUrl = `https://crm-staging-api.mena-capital.com/api/v1/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
     const refreshUrl = `${API_BASE_URL}/lead/getAllByLastMessage/en?${queryParams.toString().replace(/%2B/gi, '+')}`;
 
     const response = await axios.get(

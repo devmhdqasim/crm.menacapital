@@ -678,7 +678,7 @@ export const fetchWatiImage = async (imageUrl) => {
  * @returns {Promise} API response with messages
  */
 export const getPreviousMessages = async (waId, pageSize = 40, pageNumber = 1) => {
-  const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+  const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
   try {
@@ -733,7 +733,7 @@ export const getPreviousMessages = async (waId, pageSize = 40, pageNumber = 1) =
  * @returns {Promise} API response
  */
 export const markMessagesRead = async (phoneNumber) => {
-  const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+  const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
   try {
@@ -776,7 +776,7 @@ export const markMessagesRead = async (phoneNumber) => {
 };
 
 export const markMessagesUnread = async (phoneNumber) => {
-  const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+  const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
   try {
@@ -824,7 +824,7 @@ export const markMessagesUnread = async (phoneNumber) => {
  * @returns {Promise} API response with unread count
  */
 export const getUnreadCount = async (phoneNumber) => {
-  const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+  const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
   try {
@@ -874,7 +874,7 @@ export const getUnreadCount = async (phoneNumber) => {
  * @returns {Promise} API response with conversations
  */
 export const getConversations = async (page = 1, limit = 10) => {
-  const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+  const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
   try {
@@ -926,7 +926,7 @@ export const getConversations = async (page = 1, limit = 10) => {
  * @returns {Promise} API response
  */
 export const sendMessageViaBackend = async (waId, type, text, name, file = null) => {
-  const API_BASE_URL = 'https://staging.crm.saveingold.app/api/v1';
+  const API_BASE_URL = 'https://crm-staging-api.mena-capital.com/api/v1';
   const authToken = localStorage.getItem('refreshToken');
 
   try {
