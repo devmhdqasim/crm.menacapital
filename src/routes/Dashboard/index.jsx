@@ -131,6 +131,7 @@ const Dashboard = () => {
   const stats = dashboardData
     ? Object.entries(dashboardData)
       .filter(([key, value]) => typeof value === 'string' || typeof value === 'number')
+      .filter(([key]) => !(userRole === 'Sales Manager' && key === 'totalKioskMembers'))
       .map(([key, value]) => {
         // Format key into a readable title
         const label = key
@@ -358,7 +359,7 @@ const Dashboard = () => {
               />
 
               {/* Kiosk Member Filter */}
-              {kioskMemberOptions.length > 0 && userRole !== 'Agent' && (
+              {kioskMemberOptions.length > 0 && userRole !== 'Agent' && userRole !== 'Sales Manager' && (
                 <div className='flex items-center gap-3'>
                   <label htmlFor="" className='text-[#A8E6B8] font-medium text-sm whitespace-nowrap'>
                     Filter by Agent:
@@ -420,7 +421,7 @@ const Dashboard = () => {
           {!loading && dashboardData && (
             <div className="animate-fade-in">
               {/* Kiosk Member Total Leads Card */}
-              {kioskMemberOptions.length > 0 && userRole !== 'Agent' && (
+              {kioskMemberOptions.length > 0 && userRole !== 'Agent' && userRole !== 'Sales Manager' && (
                 <div className="mb-6">
                   <div
                     className="group relative w-full border border-[#16A249]/20 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:border-[#16A249]/50 hover:scale-[1.01] bg-[#1A1A1A]/60 backdrop-blur-sm overflow-hidden"
