@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Wati API Configuration
-const WATI_API_URL = 'https://live-mt-server.wati.io/1071091/api/v1';
+const WATI_API_URL = 'https://live-mt-server.wati.io/10119483/api/v1';
 const WATI_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InNhbGVzQHNhdmVpbmdvbGQuYWUiLCJuYW1laWQiOiJzYWxlc0BzYXZlaW5nb2xkLmFlIiwiZW1haWwiOiJzYWxlc0BzYXZlaW5nb2xkLmFlIiwiYXV0aF90aW1lIjoiMDIvMDUvMjAyNiAwNjozOToyNyIsInRlbmFudF9pZCI6IjEwNzEwOTEiLCJkYl9uYW1lIjoibXQtcHJvZC1UZW5hbnRzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQURNSU5JU1RSQVRPUiIsImV4cCI6MjUzNDAyMzAwODAwLCJpc3MiOiJDbGFyZV9BSSIsImF1ZCI6IkNsYXJlX0FJIn0.t9wvx6-EtH0zdMZFzhQWXlL0pWz-SWwZQ13E9tKkmV4';
 
 // Phone number formatting utilities
@@ -640,7 +640,7 @@ export const fetchWatiImage = async (imageUrl) => {
     // use the /api/file/showFile endpoint
     const isRelativePath = imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('blob:');
 
-    const WATI_BASE = 'https://live-mt-server.wati.io/1071091';
+    const WATI_BASE = 'https://live-mt-server.wati.io/10119483';
     const url = isRelativePath
       ? `${WATI_BASE}/api/file/showFile?fileName=${encodeURIComponent(imageUrl)}`
       : imageUrl;
