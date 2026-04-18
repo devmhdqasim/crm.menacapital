@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ChevronDown, Eye, EyeOff, RefreshCw, Upload, Calendar } from 'lucide-react';
+import { X, ChevronDown, Eye, EyeOff, RefreshCw, Calendar } from 'lucide-react';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
@@ -11,9 +11,6 @@ const AgentFormDrawer = ({
   showPassword,
   setShowPassword,
   showPassIcon,
-  imagePreview,
-  handleImageChange,
-  removeImage,
   generatePassword,
   departments,
   branches
@@ -260,51 +257,6 @@ const AgentFormDrawer = ({
                 )}
               </div>
 
-              {/* Image Upload Section */}
-              <div className="space-y-2 pt-4">
-                <label className="text-sm text-[#A8E6B8] font-medium block">
-                  Profile Image
-                </label>
-                
-                {!imagePreview ? (
-                  <div className="border-2 border-dashed border-[#16A249]/30 rounded-lg p-6 text-center hover:border-[#16A249] transition-all duration-300">
-                    <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className="cursor-pointer flex flex-col items-center space-y-2"
-                    >
-                      <Upload className="w-12 h-12 text-gray-400 transition-transform duration-300 hover:scale-110" />
-                      <span className="text-gray-400">Click to upload image</span>
-                      <span className="text-xs text-gray-500">JPG, PNG or GIF (Max 5MB)</span>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative inline-block">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-lg border-2 border-[#16A249]"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-all duration-300 hover:scale-110 hover:rotate-90"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                
-                {formik.touched.image && formik.errors.image && (
-                  <div className="text-red-400 text-sm animate-pulse">{formik.errors.image}</div>
-                )}
-              </div>
             </div>
 
             {/* Submit Buttons */}

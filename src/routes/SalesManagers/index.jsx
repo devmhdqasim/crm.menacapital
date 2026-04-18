@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import toast, { Toaster } from 'react-hot-toast';
-import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, EyeOff, RefreshCw, Upload, Calendar } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, EyeOff, RefreshCw, Calendar } from 'lucide-react';
 import { getAllUsers, createUser, updateUser, deleteUser, getDeviceInfo } from '../../services/teamService';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -43,16 +43,6 @@ const salesManagerValidationSchema = Yup.object({
     }),
   department: Yup.string().required('Department is required'),
 //   inBranch: Yup.string().required('Branch is required'),
-  image: Yup.mixed()
-    .nullable()
-    .test('fileSize', 'File size must be less than 5MB', function(value) {
-      if (!value) return true;
-      return value.size <= 5 * 1024 * 1024;
-    })
-    .test('fileType', 'Only image files are allowed (JPG, PNG, GIF)', function(value) {
-      if (!value) return true;
-      return ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(value.type);
-    }),
   password: Yup.string()
     .when('$isEditing', {
       is: false,
@@ -77,7 +67,6 @@ const SalesManagers = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingSalesManager, setEditingSalesManager] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [totalSalesManagers, setTotalSalesManagers] = useState(0);
   const [startDate, setStartDate] = useState(null);
@@ -193,7 +182,6 @@ const SalesManagers = () => {
       department: editingSalesManager?.department || 'Sales',
       role: 'Sales Manager', // Fixed to Sales Manager role
     //   inBranch: editingSalesManager?.branch || '',
-      image: null,
       password: '',
       gender: 'Male',
       nationality: 'Pakistani',
@@ -214,8 +202,7 @@ const SalesManagers = () => {
           phoneNumber: phoneNumber,
           dateOfBirthday: values.dateOfBirth,
           gender: values.gender,
-          imageUrl: values.imageUrl || "https://example.com/images/default.jpg",
-          roleName: 'Sales Manager', // Always Sales Manager
+          roleName: 'Sales Manager',
           department: values.department,
         //   inBranch: values.inBranch,
           countryOfResidence: values.countryOfResidence,
@@ -243,7 +230,6 @@ const SalesManagers = () => {
         if (result.success) {
           toast.success(result.message || (editingSalesManager ? 'Sales Manager updated successfully!' : 'Sales Manager created successfully!'));
           resetForm();
-          setImagePreview(null);
           setDrawerOpen(false);
           setEditingSalesManager(null);
           fetchSalesManagers();
@@ -307,7 +293,6 @@ const SalesManagers = () => {
 
   const handleEdit = (manager) => {
     setEditingSalesManager(manager);
-    setImagePreview(manager.image || null);
     setDrawerOpen(true);
   };
 
@@ -336,7 +321,6 @@ const SalesManagers = () => {
   const handleAddSalesManager = () => {
     setEditingSalesManager(null);
     formik.resetForm();
-    setImagePreview(null);
     setDrawerOpen(true);
   };
 
@@ -344,7 +328,6 @@ const SalesManagers = () => {
     setDrawerOpen(false);
     setEditingSalesManager(null);
     formik.resetForm();
-    setImagePreview(null);
   };
 
   const generatePassword = () => {
@@ -366,23 +349,6 @@ const SalesManagers = () => {
     }
     password = password.split('').sort(() => Math.random() - 0.5).join('');
     formik.setFieldValue('password', password);
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      formik.setFieldValue('image', file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    formik.setFieldValue('image', null);
-    setImagePreview(null);
   };
 
   const formatPhoneDisplay = (phone) => {
@@ -486,17 +452,9 @@ const SalesManagers = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {manager.image ? (
-                            <img
-                              src={manager.image}
-                              alt={manager.fullName}
-                              className="w-10 h-10 rounded-full object-cover border-2 border-[#16A249]/30"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center text-black font-semibold">
-                              {manager.firstName?.[0]}{manager.lastName?.[0]}
-                            </div>
-                          )}
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#16A249] to-[#1C4F2A] flex items-center justify-center text-black font-semibold">
+                            {manager.firstName?.[0]}{manager.lastName?.[0]}
+                          </div>
                           <div>
                             <div className="font-medium text-white group-hover:text-[#00FF7F] transition-colors duration-300">
                               {manager.fullName}
@@ -871,51 +829,6 @@ const SalesManagers = () => {
                 )}
               </div>
 
-              {/* Image Upload Section */}
-              <div className="space-y-2 pt-4">
-                <label className="text-sm text-[#A8E6B8] font-medium block">
-                  Profile Image
-                </label>
-                
-                {!imagePreview ? (
-                  <div className="border-2 border-dashed border-[#16A249]/30 rounded-lg p-6 text-center hover:border-[#16A249] transition-all duration-300">
-                    <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className="cursor-pointer flex flex-col items-center space-y-2"
-                    >
-                      <Upload className="w-12 h-12 text-gray-400 transition-transform duration-300 hover:scale-110" />
-                      <span className="text-gray-400">Click to upload image</span>
-                      <span className="text-xs text-gray-500">JPG, PNG or GIF (Max 5MB)</span>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative inline-block">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-lg border-2 border-[#16A249]"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-all duration-300 hover:scale-110 hover:rotate-90"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                
-                {formik.touched.image && formik.errors.image && (
-                  <div className="text-red-400 text-sm animate-pulse">{formik.errors.image}</div>
-                )}
-              </div>
             </div>
 
             {/* Submit Buttons */}

@@ -43,16 +43,6 @@ const agentValidationSchema = Yup.object({
       return value <= cutoff;
     }),
   department: Yup.string().required('Department is required'),
-  image: Yup.mixed()
-    .nullable()
-    .test('fileSize', 'File size must be less than 5MB', function(value) {
-      if (!value) return true;
-      return value.size <= 5 * 1024 * 1024;
-    })
-    .test('fileType', 'Only image files are allowed (JPG, PNG, GIF)', function(value) {
-      if (!value) return true;
-      return ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(value.type);
-    }),
   password: Yup.string()
     .when('$isEditing', {
       is: false,
@@ -79,7 +69,6 @@ const AgentManagement = () => {
   const [editingAgent, setEditingAgent] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPassIcon, setShowPassIcon] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [totalAgents, setTotalAgents] = useState(0);
   const [startDate, setStartDate] = useState(null);
@@ -240,7 +229,6 @@ const AgentManagement = () => {
       dateOfBirth: editingAgent?.dateOfBirth || '',
       department: editingAgent?.department || 'Sales',
       role: 'Agent',
-      image: null,
       password: '',
       gender: 'Male',
       nationality: 'Pakistani',
@@ -261,7 +249,6 @@ const AgentManagement = () => {
           phoneNumber: phoneNumber,
           dateOfBirthday: values.dateOfBirth,
           gender: values.gender,
-          imageUrl: values.imageUrl || "https://example.com/images/default.jpg",
           roleName: 'Agent',
           department: values.department,
           countryOfResidence: values.countryOfResidence,
@@ -288,7 +275,6 @@ const AgentManagement = () => {
         if (result.success) {
           toast.success(result.message || (editingAgent ? 'Agent updated successfully!' : 'Agent created successfully!'));
           resetForm();
-          setImagePreview(null);
           setDrawerOpen(false);
           setEditingAgent(null);
           fetchAgents();
@@ -310,7 +296,6 @@ const AgentManagement = () => {
 
   const handleEdit = (agent) => {
     setEditingAgent(agent);
-    setImagePreview(agent.image || null);
     setDrawerOpen(true);
   };
 
@@ -339,7 +324,6 @@ const AgentManagement = () => {
   const handleAddAgent = () => {
     setEditingAgent(null);
     formik.resetForm();
-    setImagePreview(null);
     setDrawerOpen(true);
   };
 
@@ -352,7 +336,6 @@ const AgentManagement = () => {
     setDrawerOpen(false);
     setEditingAgent(null);
     formik.resetForm();
-    setImagePreview(null);
   };
 
   const handleCloseBottomSheet = () => {
@@ -380,23 +363,6 @@ const AgentManagement = () => {
     password = password.split('').sort(() => Math.random() - 0.5).join('');
     formik.setFieldValue('password', password);
   };  
-
-  const handleImageChange = (e) => {  
-    const file = e.target.files?.[0]; 
-    if (file) {
-      formik.setFieldValue('image', file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    formik.setFieldValue('image', null);
-    setImagePreview(null);
-  };
 
   const formatPhoneDisplay = (phone) => {
     if (!phone) return '';
@@ -494,9 +460,6 @@ const AgentManagement = () => {
         showPassword={showPassword}
         setShowPassword={setShowPassword}
         showPassIcon={showPassIcon}
-        imagePreview={imagePreview}
-        handleImageChange={handleImageChange}
-        removeImage={removeImage}
         generatePassword={generatePassword}
         departments={departments}
         branches={branches}
