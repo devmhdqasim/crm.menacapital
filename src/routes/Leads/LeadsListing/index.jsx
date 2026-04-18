@@ -328,7 +328,7 @@ const LeadsListing = ({
                 {!isLeadsSelectedId && (
                   <>
                     <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Source</th>
-                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Kiosk - Lead - Task</th>
+                    <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Status</th>
                     </>
                 )}
                 <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Created At</th>
@@ -370,16 +370,10 @@ const LeadsListing = ({
                     {!isLeadsSelectedId && (
                       <>
                         <td className="px-6 py-4 text-gray-300 text-sm" onClick={() => handleRowClick(lead)}>{lead.source} {lead?.leadSource ? `- ${lead?.leadSource}` : ''}</td>
-                        <td className="flex items-center gap-1.5 px-6 py-4" onClick={() => handleRowClick(lead)}> 
-                          {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                            {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
-                          </span> : ''}
+                        <td className="px-6 py-4" onClick={() => handleRowClick(lead)}>
                           {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
-                            {(lead.status == 'Deposit' || lead.status == 'Not Deposit') ? `Real - ${lead.status}` : lead.status}
-                          </span>: ''}
-                          {lead.lastTaskStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.lastTaskStatus)}`}>
-                            {lead.lastTaskStatus}
-                          </span>: ''}
+                            {lead.status}
+                          </span> : ''}
                         </td>
                       </>
                     )}

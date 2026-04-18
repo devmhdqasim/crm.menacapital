@@ -710,7 +710,6 @@ const SalesManagerLeadManagement = () => {
         fetchLeads={fetchLeads}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
-        kioskMembers={kioskMembers}
         currentUserId={currentUserId}
       />
 

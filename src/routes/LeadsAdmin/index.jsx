@@ -5,7 +5,6 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Search, Plus, Edit, Trash2, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Eye, Clock } from 'lucide-react';
 import { getAllLeads, createLead, updateLead, deleteLead } from '../../services/leadService';
-import { getAllUsers } from '../../services/teamService';
 import { Calendar } from 'lucide-react';
 import DateRangePicker from '../../components/DateRangePicker';
 import toast from 'react-hot-toast';
@@ -38,7 +37,6 @@ const leadValidationSchema = Yup.object({
   residency: Yup.string(),
   language: Yup.string()
     .required('Preferred language is required'),
-  source: Yup.string().required('Source is required'),
   status: Yup.string()
     .required('Status is required'),
   depositStatus: Yup.string()
@@ -47,7 +45,6 @@ const leadValidationSchema = Yup.object({
       then: (schema) => schema.required('Deposit status is required when status is Real'),
       otherwise: (schema) => schema.notRequired(),
     }),
-  kioskMember: Yup.string().required('Kiosk Team is required'),
   remarks: Yup.string().max(500, 'Remarks must not exceed 500 characters'),
 });
 
@@ -73,7 +70,6 @@ const LeadManagement = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('');
-  const [kioskMembers, setKioskMembers] = useState([]);
   const [countries, setCountries] = useState([]);
   const [nationalitySearch, setNationalitySearch] = useState('');
   const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
@@ -107,8 +103,6 @@ const LeadManagement = () => {
   const residencies = ['United Arab Emirates', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Pakistan', 'India', 'Egypt', 'Jordan', 'Lebanon', 'United Kingdom', 'United States', 'Canada', 'Australia', 'Other'];
 
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
-
-  const sources = ['Kiosk'];
 
   // Fetch countries from REST Countries API
   const fetchCountries = async () => {
@@ -146,26 +140,6 @@ const LeadManagement = () => {
   const filteredCountries = countries.filter(country =>
     country.toLowerCase().includes(nationalitySearch.toLowerCase())
   );
-
-  // Fetch kiosk members from API
-  const fetchKioskMembers = async () => {
-    try {
-      const result = await getAllUsers(1, 100);
-      if (result.success && result.data) {
-        const kioskMembersData = result.data.filter(user => 
-          user.roleName === 'Kiosk Member'
-        );
-        const transformedKioskMembers = kioskMembersData.map((user) => ({
-          id: user._id,
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-        }));
-        setKioskMembers(transformedKioskMembers);
-      }
-    } catch (error) {
-      console.error('Error fetching kiosk members:', error);
-    }
-  };
 
   // Fetch dashboard data
   const fetchDashboardData = async () => {
@@ -274,7 +248,6 @@ const LeadManagement = () => {
   useEffect(() => {
     setIsLoaded(true);
     fetchCountries();
-    fetchKioskMembers();
   }, []);
 
   // Reset to page 1 when search or filters change
@@ -296,10 +269,8 @@ const LeadManagement = () => {
       nationality: '',
       residency: '',
       language: '',
-      source: 'Kiosk',
       status: '',
       depositStatus: '',
-      kioskMember: '',
       remarks: '',
     },
     validationSchema: leadValidationSchema,
@@ -316,10 +287,8 @@ const LeadManagement = () => {
           leadDateOfBirth: values.dateOfBirth,
           leadNationality: values.nationality,
           leadDescription: values.remarks,
-          leadSource: values.source,
           leadStatus: "Not Assigned",
           kioskLeadStatus: values.status,
-          leadSourceId: values.kioskMember,
           depositStatus: values.depositStatus,
         };
 
@@ -411,10 +380,8 @@ const LeadManagement = () => {
       nationality: lead.nationality || '',
       residency: lead.residency || '',
       language: lead.language || '',
-      source: lead.source || 'Kiosk',
       status: lead.kioskLeadStatus || '',
       depositStatus: lead.depositStatus || '',
-      kioskMember: lead.leadSourceId ? lead.leadSourceId._id : '',
       remarks: lead.remarks || '',
     };
     
@@ -954,13 +921,10 @@ const LeadManagement = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-300 text-sm">{lead.source}</td>
                       {!isLeadsDrawerOpen && (
-                        <td className="flex items-center gap-1.5 px-6 py-4">
-                          {lead?.kioskLeadStatus ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                            {lead?.kioskLeadStatus} {lead.depositStatus && `- ${lead.depositStatus}`}
-                          </span> : ''}
+                        <td className="px-6 py-4">
                           {lead.status ? <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                             {lead.status}
-                          </span>: ''}
+                          </span> : ''}
                         </td>
                       )}
                       <td className="px-6 py-4">
@@ -1240,35 +1204,6 @@ const LeadManagement = () => {
                     </div>
                   )}
 
-                  {/* Kiosk Member */}
-                  <div className="relative space-y-2">
-                    <label className="text-sm text-[#A8E6B8] font-medium block">
-                      Kiosk Team <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="kioskMember"
-                        value={formik.values.kioskMember}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                          formik.touched.kioskMember && formik.errors.kioskMember
-                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
-                        }`}
-                      >
-                        <option value="">Select Kiosk Member</option>
-                        {kioskMembers.map((member) => (
-                          <option key={member.id} value={member.id}>{member.name}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="leads-chevron-icon absolute right-3 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
-                    </div>
-                    {formik.touched.kioskMember && formik.errors.kioskMember && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.kioskMember}</div>
-                    )}
-                  </div>
-
                   {/* Nationality - Custom Searchable Dropdown with Clear Button */}
                   <div className="relative space-y-2">
                     <label className="text-sm text-[#A8E6B8] font-medium block">
@@ -1356,34 +1291,6 @@ const LeadManagement = () => {
                     )}
                   </div>
 
-                  {/* Source */}
-                  <div className="relative space-y-2">
-                    <label className="text-sm text-[#A8E6B8] font-medium block">
-                      Lead Source
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="source"
-                        value={formik.values.source}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                          formik.touched.source && formik.errors.source
-                            ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                            : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
-                        }`}
-                      >
-                        <option value="">Select Source</option>
-                        {sources.map((source) => (
-                          <option key={source} value={source}>{source}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
-                    </div>
-                    {formik.touched.source && formik.errors.source && (
-                      <div className="text-red-400 text-sm animate-pulse">{formik.errors.source}</div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Phone Number - Full Width */}

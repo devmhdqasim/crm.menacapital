@@ -26,7 +26,6 @@ const leadValidationSchema = Yup.object({
   nationality: Yup.string(),
   language: Yup.string()
     .required('Preferred language is required'),
-  source: Yup.string().required('Source is required'),
   status: Yup.string()
     .required('Status is required'),
   depositStatus: Yup.string()
@@ -35,7 +34,6 @@ const leadValidationSchema = Yup.object({
       then: (schema) => schema.required('Deposit status is required when status is Real'),
       otherwise: (schema) => schema.notRequired(),
     }),
-  kioskMember: Yup.string().required('Kiosk Team is required'),
   remarks: Yup.string().max(500, 'Remarks must not exceed 500 characters'),
 });
 
@@ -46,7 +44,6 @@ const SalesManagerLeadFormDrawer = ({
   fetchLeads,
   currentPage,
   itemsPerPage,
-  kioskMembers,
   currentUserId
 }) => {
   const [countries, setCountries] = useState([]);
@@ -59,8 +56,6 @@ const SalesManagerLeadFormDrawer = ({
   const statusOptions = ['Lead', 'Demo', 'Real'];
   const depositStatusOptions = ['Deposit', 'Not Deposit'];
   const languages = ['English', 'Arabic', 'Urdu', 'Hindi', 'French', 'Spanish', 'German', 'Chinese (Mandarin)', 'Russian', 'Portuguese', 'Italian', 'Japanese', 'Korean', 'Turkish', 'Persian (Farsi)', 'Bengali', 'Tamil', 'Telugu', 'Malayalam'];
-  const sources = ['Kiosk'];
-
   const fetchCountries = async () => {
     try {
       const response = await fetch('https://restcountries.com/v3.1/all?fields=name,demonyms');
@@ -106,10 +101,8 @@ const SalesManagerLeadFormDrawer = ({
       phone: '',
       nationality: '',
       language: '',
-      source: 'Kiosk',
       status: '',
       depositStatus: '',
-      kioskMember: '',
       remarks: '',
     },
     validationSchema: leadValidationSchema,
@@ -129,9 +122,7 @@ const SalesManagerLeadFormDrawer = ({
           leadPreferredLanguage: values.language,
           leadNationality: values.nationality,
           leadDescription: values.remarks,
-          leadSource: values.source,
           kioskLeadStatus: values.status,
-          leadSourceId: values.kioskMember,
           depositStatus: values.depositStatus,
         };
 
@@ -191,10 +182,8 @@ const SalesManagerLeadFormDrawer = ({
         phone: editingLead.phone || '',
         nationality: editingLead.nationality || '',
         language: editingLead.language || '',
-        source: editingLead.source || 'Kiosk',
         status: editingLead.kioskLeadStatus || '',
         depositStatus: editingLead.depositStatus || '',
-        kioskMember: editingLead.leadSourceId ? editingLead.leadSourceId._id : '',
         remarks: editingLead.remarks || '',
       };
       
@@ -370,34 +359,6 @@ const SalesManagerLeadFormDrawer = ({
 
                 <div className="relative space-y-2">
                   <label className="text-sm text-[#A8E6B8] font-medium block">
-                    Kiosk Team <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="kioskMember"
-                      value={formik.values.kioskMember}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.kioskMember && formik.errors.kioskMember
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
-                      }`}
-                    >
-                      <option value="">Select Kiosk Member</option>
-                      {kioskMembers.map((member) => (
-                        <option key={member.id} value={member.id}>{member.name}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-                  {formik.touched.kioskMember && formik.errors.kioskMember && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.kioskMember}</div>
-                  )}
-                </div>
-
-                <div className="relative space-y-2">
-                  <label className="text-sm text-[#A8E6B8] font-medium block">
                     Nationality
                   </label>
                   <div className="relative">
@@ -480,33 +441,6 @@ const SalesManagerLeadFormDrawer = ({
                   )}
                 </div>
 
-                <div className="relative space-y-2">
-                  <label className="text-sm text-[#A8E6B8] font-medium block">
-                    Lead Source
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="source"
-                      value={formik.values.source}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 bg-[#1A1A1A] text-white transition-all duration-300 ${
-                        formik.touched.source && formik.errors.source
-                          ? 'border-red-500 focus:border-red-400 focus:ring-red-500/50'
-                          : 'border-[#16A249]/30 focus:border-[#16A249] focus:ring-[#16A249]/50 hover:border-[#16A249]'
-                      }`}
-                    >
-                      <option value="">Select Source</option>
-                      {sources.map((source) => (
-                        <option key={source} value={source}>{source}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="leads-chevron-icon absolute right-3 top-2/4 -translate-y-2/4 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-                  {formik.touched.source && formik.errors.source && (
-                    <div className="text-red-400 text-sm animate-pulse">{formik.errors.source}</div>
-                  )}
-                </div>
               </div>
 
               <div className="space-y-2">

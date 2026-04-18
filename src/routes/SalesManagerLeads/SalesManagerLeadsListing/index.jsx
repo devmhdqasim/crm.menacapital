@@ -1072,7 +1072,7 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                   <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Nationality</th>
                   <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Agent</th>
                   <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Source</th>
-                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase tracking-wider">Kiosk - Lead - Task</th>
+                  <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Status</th>
                   <th className="text-left px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Created At</th>
                   <th className="text-center px-6 py-4 text-[#A8E6B8] font-semibold text-sm uppercase whitespace-nowrap tracking-wider">Actions</th>
                 </tr>
@@ -1127,20 +1127,10 @@ const result = data.status === 'success' && data.payload?.allBranchLeads?.[0]?.d
                           : (lead.source ?? 'Kiosk') + (lead?.leadSourceId?.firstName ? ` - ${lead?.leadSourceId?.firstName} ${lead?.leadSourceId?.lastName}` : '')
                         }
                       </td>
-                      <td className="px-6 py-4 flex items-center gap-2">
-                        {lead?.kioskLeadStatus ? (
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.kioskLeadStatus)}`}>
-                            {lead?.kioskLeadStatus} {lead?.kioskLeadStatus == 'Real' ? (lead.depositStatus && `- ${lead.depositStatus}`) : ''}
-                          </span>
-                        ) : ''}
+                      <td className="px-6 py-4">
                         {lead.status ? (
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.status)}`}>
                             {lead.status}
-                          </span>
-                        ) : ''}
-                        {lead.lastTaskStatus ? (
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border ${getStatusColor(lead.lastTaskStatus)}`}>
-                            {lead.lastTaskStatus}
                           </span>
                         ) : ''}
                       </td>
