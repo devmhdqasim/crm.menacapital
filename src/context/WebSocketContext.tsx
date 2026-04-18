@@ -38,7 +38,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const connect = () => {
     try {
       // Connect to Socket.IO server
-      const socket = io('https://staging.crm.saveingold.app', {
+      const socket = io('https://crm-staging-api.mena-capital.com', {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 3000,
