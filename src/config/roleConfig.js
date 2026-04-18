@@ -11,24 +11,18 @@
 export const ROUTES = {
   // Public routes
   LOGIN: '/',
-  
+
   // Protected routes
   DASHBOARD: '/dashboard',
-  BRANCHDASHBOARD: '/br-dashboard',
-  AGENT: '/agents',                    // Changed from '/agent' to '/agents'
+  AGENT: '/agents',
   LEADS: '/leads',
-  BRANCHLEADS: '/br-leads',
   ADMINLEADS: '/ad-leads',
   SALESMANAGERLEADS: '/sm-leads',
-  EVENTLEADS: '/ev-leads',
-  BRANCHES: '/branches',
-  EXHIBITION: '/exhibition',
   INBOX: '/inbox',
-  KIOSKMEMBER: '/kiosk-members',
   ROLE_MANAGEMENT: '/role-management',
   SETTINGS: '/settings',
   TASKS: '/tasks',
-  SALES_MANAGERS: '/sales-managers',   // Changed from '/sales-manager' to '/sales-managers'
+  SALES_MANAGERS: '/sales-managers',
   UPDATE_PASSWORD: '/update-password',
   NOTIFICATIONS: '/notifications',
 };
@@ -41,8 +35,6 @@ export const ROLES = {
   SUPER_ADMIN: 'Admin',
   SALES_MANAGER: 'Sales Manager',
   AGENT: 'Agent',
-  KIOSK_MEMBER: 'Kiosk Member',
-  EVENT_MEMBER: 'Event Member',
 };
 
 /**
@@ -60,68 +52,42 @@ export const ROLE_PERMISSIONS = {
   [ROLES.SUPER_ADMIN]: {
     allowedRoutes: [
       ROUTES.DASHBOARD,
-      ROUTES.SALES_MANAGERS,  // Admin can access Sales Managers
-      ROUTES.AGENT,           // Admin can access Agents
-      ROUTES.KIOSKMEMBER,
+      ROUTES.SALES_MANAGERS,
+      ROUTES.AGENT,
       ROUTES.ADMINLEADS,
-      ROUTES.BRANCHES,
-      ROUTES.EXHIBITION,
       ROUTES.ROLE_MANAGEMENT,
       ROUTES.UPDATE_PASSWORD,
       ROUTES.NOTIFICATIONS,
     ],
     label: 'Admin',
-    description: 'Access to dashboard, sales managers, agents, leads, branches, and role management',
+    description: 'Access to dashboard, sales managers, agents, leads, and role management',
   },
-  
+
   [ROLES.SALES_MANAGER]: {
     allowedRoutes: [
       ROUTES.DASHBOARD,
-      ROUTES.AGENT,           // Sales Manager can access Agents
+      ROUTES.AGENT,
       ROUTES.SALESMANAGERLEADS,
-      ROUTES.TASKS,           // Sales Manager can access Tasks
+      ROUTES.TASKS,
       ROUTES.UPDATE_PASSWORD,
       ROUTES.NOTIFICATIONS,
       ROUTES.INBOX,
-      // ROUTES.KIOSKMEMBER,
     ],
     label: 'Sales Manager',
     description: 'Access to dashboard, agents, leads, and tasks',
   },
-  
+
   [ROLES.AGENT]: {
     allowedRoutes: [
       ROUTES.DASHBOARD,
       ROUTES.LEADS,
-      ROUTES.TASKS,           // Agents can access Tasks
+      ROUTES.TASKS,
       ROUTES.UPDATE_PASSWORD,
       ROUTES.NOTIFICATIONS,
       ROUTES.INBOX,
     ],
     label: 'Agent',
     description: 'Access to dashboard, leads, and tasks',
-  },
-  
-  [ROLES.KIOSK_MEMBER]: {
-    allowedRoutes: [
-      ROUTES.BRANCHDASHBOARD,
-      ROUTES.BRANCHLEADS,
-      ROUTES.UPDATE_PASSWORD,
-      ROUTES.NOTIFICATIONS,
-    ],
-    label: 'Kiosk Member',
-    description: 'Access to dashboard and leads only',
-  },
-  
-  [ROLES.EVENT_MEMBER]: {
-    allowedRoutes: [
-      ROUTES.DASHBOARD,
-      ROUTES.EVENTLEADS,
-      ROUTES.UPDATE_PASSWORD,
-      ROUTES.NOTIFICATIONS,
-    ],
-    label: 'Event Member',
-    description: 'Access to dashboard and event leads',
   },
 };
 
@@ -142,12 +108,7 @@ export const SIDEBAR_MENU_CONFIG = [
     icon: 'Home',
   },
   {
-    label: 'Dashboard',
-    route: ROUTES.BRANCHDASHBOARD,
-    icon: 'Home',
-  },
-  {
-    label: 'Agents',              // Changed from 'SIG Team' to 'Agents'
+    label: 'Agents',
     route: ROUTES.AGENT,
     icon: 'User',
   },
@@ -155,11 +116,6 @@ export const SIDEBAR_MENU_CONFIG = [
     label: 'Sales Managers',
     route: ROUTES.SALES_MANAGERS,
     icon: 'Users',
-  },
-  {
-    label: 'Kiosk Members',
-    route: ROUTES.KIOSKMEMBER,
-    icon: 'CheckSquare',
   },
   {
     label: 'Leads',
@@ -173,33 +129,13 @@ export const SIDEBAR_MENU_CONFIG = [
   },
   {
     label: 'Leads',
-    route: ROUTES.BRANCHLEADS,
-    icon: 'TrendingUp',
-  },
-  {
-    label: 'Leads',
     route: ROUTES.SALESMANAGERLEADS,
-    icon: 'TrendingUp',
-  },
-  {
-    label: 'Leads',
-    route: ROUTES.EVENTLEADS,
     icon: 'TrendingUp',
   },
   {
     label: 'Tasks',
     route: ROUTES.TASKS,
     icon: 'CheckSquare',
-  },
-  {
-    label: 'Branches',
-    route: ROUTES.BRANCHES,
-    icon: 'GitBranch',
-  },
-  {
-    label: 'Exhibition',
-    route: ROUTES.EXHIBITION,
-    icon: 'Calendar1',
   },
   {
     label: 'Role Management',

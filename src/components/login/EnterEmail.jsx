@@ -17,13 +17,13 @@ const LoginSchema = Yup.object().shape({
       if (emailRegex.test(value)) return true;
 
       // 2. If not email, validate username prefix
-      const allowedPrefixes = ['br', 'sm', 'sa', 'ev', 'ad'];
+      const allowedPrefixes = ['sm', 'sa', 'ad'];
       const lowerValue = value.toLowerCase();
       const hasValidPrefix = allowedPrefixes.some(prefix => lowerValue.startsWith(prefix));
 
       if (!hasValidPrefix) {
         return this.createError({
-          message: 'Username must start with BR, SM, SA, EV, or AD'
+          message: 'Username must start with SM, SA, or AD'
         });
       }
 
@@ -43,8 +43,6 @@ const LoginSchema = Yup.object().shape({
 export default function EnterEmailOrUsername({
   setLogin,
   setLoginBy,
-  setIsBranchLogin,
-  setIsEventLogin,
   onNext
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -70,24 +68,15 @@ export default function EnterEmailOrUsername({
       const isEmail = emailRegex.test(loginValue);
       const loginType = isEmail ? 'email' : 'username';
 
-      // One-liner to check for branch (BR) or event (EV) login
-      const upperLogin = loginValue.toUpperCase();
-      const isBranch = upperLogin.startsWith('BR');
-      const isEvent = upperLogin.startsWith('EV');
-
       console.log('🔍 Login Detection:', {
         login: loginValue,
         loginType,
-        isBranch,
-        isEvent,
         isEmail
       });
 
       // Set login states
       setLogin(loginValue);
       setLoginBy(loginType);
-      setIsBranchLogin(isBranch);
-      setIsEventLogin(isEvent);
 
       // Small delay for better UX
       setTimeout(() => {

@@ -33,16 +33,10 @@ const LoginPage = lazyWithRetry(() => import('@/routes/Login'));
 const UpdatePasswordPage = lazyWithRetry(() => import('@/routes/UpdatePassword'));
 const DashboardPage = lazyWithRetry(() => import('@/routes/Dashboard'));
 const NotificationsPage = lazyWithRetry(() => import('@/routes/Notifications'));
-const BranchDashboardPage = lazyWithRetry(() => import('@/routes/BranchDashboard'));
 const AgentsPage = lazyWithRetry(() => import('@/routes/Agents'));
-const KioskMembersPage = lazyWithRetry(() => import('@/routes/KioskMembers'));
 const LeadsPage = lazyWithRetry(() => import('@/routes/Leads'));
 const AdminLeadsPage = lazyWithRetry(() => import('@/routes/LeadsAdmin'));
-const BranchesPage = lazyWithRetry(() => import('@/routes/Branches'));
-const ExhibitionPage = lazyWithRetry(() => import('@/routes/Exhibitions'));
 const WatiInboxPage = lazyWithRetry(() => import('@/routes/Inbox'));
-const BranchLeadsPage = lazyWithRetry(() => import('@/routes/BranchLeads'));
-const EventLeadsPage = lazyWithRetry(() => import('@/routes/EventLeads'));
 const SalesManagerLeadsPage = lazyWithRetry(() => import('@/routes/SalesManagerLeads'));
 const RoleManagementPage = lazyWithRetry(() => import('@/routes/RoleManagement'));
 const TasksPage = lazyWithRetry(() => import('@/routes/Tasks'));
@@ -81,31 +75,11 @@ export function AppRoutes() {
       ),
     },
     {
-      path: '/br-dashboard',
-      element: (
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <ProtectedRoute requiredRoute={ROUTES.BRANCHDASHBOARD}>
-            <BranchDashboardPage />
-          </ProtectedRoute>
-        </Suspense>
-      ),
-    },
-    {
       path: '/agents',  // Changed from '/agent' to '/agents'
       element: (
         <Suspense fallback={<RouteLoadingFallback />}>
           <ProtectedRoute requiredRoute={ROUTES.AGENT}>
             <AgentsPage />
-          </ProtectedRoute>
-        </Suspense>
-      ),
-    },
-    {
-      path: '/kiosk-members',  // Changed from '/agent' to '/agents'
-      element: (
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <ProtectedRoute requiredRoute={ROUTES.KIOSKMEMBER}>
-            <KioskMembersPage />
           </ProtectedRoute>
         </Suspense>
       ),
@@ -137,47 +111,6 @@ export function AppRoutes() {
         <Suspense fallback={<RouteLoadingFallback />}>
           <ProtectedRoute requiredRoute={ROUTES.SALESMANAGERLEADS}>
             <SalesManagerLeadsPage />
-          </ProtectedRoute>
-        </Suspense>
-      ),
-    },
-    {
-      path: '/br-leads',
-      element: (
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <ProtectedRoute requiredRoute={ROUTES.BRANCHLEADS}>
-            <BranchLeadsPage />
-          </ProtectedRoute>
-        </Suspense>
-      ),
-    },
-    {
-      path: '/ev-leads',
-      element: (
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <ProtectedRoute requiredRoute={ROUTES.EVENTLEADS}>
-            <EventLeadsPage />
-          </ProtectedRoute>
-        </Suspense>
-      ),
-    },
-
-    {
-      path: '/branches',
-      element: (
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <ProtectedRoute requiredRoute={ROUTES.BRANCHES}>
-            <BranchesPage />
-          </ProtectedRoute>
-        </Suspense>
-      ),
-    },
-    {
-      path: '/exhibition',
-      element: (
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <ProtectedRoute requiredRoute={ROUTES.EXHIBITION}>
-            <ExhibitionPage />
           </ProtectedRoute>
         </Suspense>
       ),

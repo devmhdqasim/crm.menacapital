@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Eye, EyeOff, Edit2, Loader2, ShieldAlert, Globe, Mail, Phone } from 'lucide-react';
-import { loginUser, loginBranch, loginEvent } from '../../services/authService'; // Update path as needed
+import { loginUser } from '../../services/authService';
 import toast from 'react-hot-toast';
 
 
@@ -49,8 +49,6 @@ export default function EnterPassword({
   onNext,
   setCurrentStep,
   onLoginSuccess,
-  isBranchLogin,
-  isEventLogin,
   onBack,
   onForgotPassword
 }) {
@@ -131,14 +129,9 @@ export default function EnterPassword({
           login: values.login,
           loginBy: loginBy,
           passwordLength: values.password.length,
-          isBranchLogin,
-          isEventLogin
         });
 
-        // One-liner selection for login type
-        const result = isEventLogin ? await loginEvent(values.login, values.password, loginBy)
-          : isBranchLogin ? await loginBranch(values.login, values.password, loginBy)
-            : await loginUser(values.login, values.password, loginBy);
+        const result = await loginUser(values.login, values.password, loginBy);
 
         if (result?.success) {
           console.log('✅ Login successful:', result.data);

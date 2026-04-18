@@ -10,8 +10,6 @@ const Login = () => {
   const navigate = useNavigate();
   const [login, setLogin] = useState(''); // Can be email or username
   const [loginBy, setLoginBy] = useState(''); // 'email' or 'username'
-  const [isBranchLogin, setIsBranchLogin] = useState(false);
-  const [isEventLogin, setIsEventLogin] = useState(false);
   const [currentStep, setCurrentStep] = useState('login'); // login, password, otp, forgotPassword
   const [userData, setUserData] = useState(null);
 
@@ -26,14 +24,7 @@ const Login = () => {
     console.log('Login type used:', loginBy);
     setUserData(data);
     
-    // After successful login, move to OTP verification
-    // The refresh token API has already been called automatically after login
-    // setCurrentStep('otp');
-    if(data?.userInfo?.branchName) {
-      navigate('/br-dashboard');
-    } else {
-      navigate('/dashboard');
-    }
+    navigate('/dashboard');
   };
 
   // Handle successful OTP verification
@@ -69,8 +60,6 @@ const Login = () => {
           <EnterEmailOrUsername
             setLogin={setLogin}
             setLoginBy={setLoginBy}
-            setIsBranchLogin={setIsBranchLogin}
-            setIsEventLogin={setIsEventLogin}
             onNext={() => handleNext('password')}
           />
         );
@@ -81,8 +70,6 @@ const Login = () => {
             loginBy={loginBy}
             setCurrentStep={setCurrentStep}
             onNext={handleLoginSuccess}
-            isBranchLogin={isBranchLogin}
-            isEventLogin={isEventLogin}
             onLoginSuccess={handleLoginSuccess}
             onBack={() => handleBack('login')}
             onForgotPassword={() => handleNext('forgotPassword')}
@@ -110,11 +97,10 @@ const Login = () => {
         );
       default:
         return (
-          <EnterEmailOrUsername 
+          <EnterEmailOrUsername
             setLogin={setLogin}
             setLoginBy={setLoginBy}
-            setCurrentStep={setCurrentStep} 
-            onNext={() => handleNext('password')} 
+            onNext={() => handleNext('password')}
           />
         );
     }

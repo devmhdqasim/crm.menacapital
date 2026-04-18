@@ -47,7 +47,7 @@ const RoleManagement = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
-  const tabs = ['All', 'Sales Managers', 'Agents', 'Kiosk Team'];
+  const tabs = ['All', 'Sales Managers', 'Agents'];
   const perPageOptions = [10, 20, 30, 50, 100];
   const departments = ['Sales'];
 
