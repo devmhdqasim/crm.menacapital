@@ -28,7 +28,13 @@ const getEnvVar = (key) => {
 
 // Your web app's Firebase configuration from environment variables
 const firebaseConfig = {
-
+  apiKey: "AIzaSyDmUsA-aAVy7X2-Zd0QnFq8c8m7qG5OVB0",
+  authDomain: "mena-capital-crm.firebaseapp.com",
+  projectId: "mena-capital-crm",
+  storageBucket: "mena-capital-crm.firebasestorage.app",
+  messagingSenderId: "992722139382",
+  appId: "1:992722139382:web:0c3abe03ae6151732a54d7",
+  measurementId: "G-JPG1RGZKC6"
 };
 
 // Validate that all required config values are present
